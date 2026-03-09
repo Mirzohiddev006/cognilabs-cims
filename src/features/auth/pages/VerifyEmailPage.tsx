@@ -48,7 +48,7 @@ export function VerifyEmailPage() {
       startTransition(() => navigate('/', { replace: true }))
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Email tasdiqlanmadi.'))
+      setSubmitError(getErrorMessage(error, 'Email verification failed.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -70,9 +70,9 @@ export function VerifyEmailPage() {
 
     try {
       const response = await authService.resendVerification(values.email)
-      setStatusMessage(response.message || 'Tasdiqlash kodi qayta yuborildi.')
+      setStatusMessage(response.message || 'Verification code has been resent.')
     } catch (error) {
-      setSubmitError(getErrorMessage(error, 'Kod qayta yuborilmadi.'))
+      setSubmitError(getErrorMessage(error, 'Failed to resend code.'))
     } finally {
       setIsResending(false)
     }
@@ -81,8 +81,8 @@ export function VerifyEmailPage() {
   return (
     <AuthFormShell
       eyebrow="Auth / Verify"
-      title="Emailni tasdiqlash"
-      description="Verify email endpoint kodi va email qiymatini qabul qiladi. Muvaffaqiyatli javobdan keyin access token saqlanadi."
+      title="Verify your email"
+      description="Enter the verification code sent to your email to activate your account and receive access tokens."
       footerLinks={[
         { label: 'Login', to: '/auth/login' },
         { label: 'Register', to: '/auth/register' },
@@ -105,7 +105,7 @@ export function VerifyEmailPage() {
         <AuthField
           label="Verification code"
           name="code"
-          placeholder="Emailga kelgan kod"
+          placeholder="Code from email"
           value={values.code}
           error={errors.code}
           onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
@@ -113,10 +113,10 @@ export function VerifyEmailPage() {
 
         <div className="flex flex-wrap gap-3">
           <Button size="lg" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Tasdiqlanmoqda...' : 'Verify email'}
+            {isSubmitting ? 'Verifying...' : 'Verify email'}
           </Button>
           <Button type="button" variant="secondary" disabled={isResending} onClick={handleResend}>
-            {isResending ? 'Yuborilmoqda...' : 'Resend code'}
+            {isResending ? 'Resending...' : 'Resend code'}
           </Button>
         </div>
       </form>

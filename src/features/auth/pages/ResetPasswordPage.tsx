@@ -61,13 +61,13 @@ export function ResetPasswordPage() {
         navigate('/auth/login', {
           replace: true,
           state: {
-            statusMessage: response.message || 'Parol muvaffaqiyatli yangilandi. Endi login qiling.',
+            statusMessage: response.message || 'Password successfully updated. You can now log in.',
           },
         }),
       )
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Parol yangilanmadi.'))
+      setSubmitError(getErrorMessage(error, 'Failed to update password.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -76,8 +76,8 @@ export function ResetPasswordPage() {
   return (
     <AuthFormShell
       eyebrow="Auth / Reset"
-      title="Yangi parol o'rnatish"
-      description="Reset password endpoint email, code va yangi parol bilan ulanadi."
+      title="Set new password"
+      description="Confirm your email and code to establish a new access password."
       footerLinks={[
         { label: 'Forgot password', to: '/auth/forgot-password' },
         { label: 'Login', to: '/auth/login' },
@@ -100,7 +100,7 @@ export function ResetPasswordPage() {
         <AuthField
           label="Reset code"
           name="code"
-          placeholder="Emailga kelgan kod"
+          placeholder="Code from email"
           value={values.code}
           error={errors.code}
           onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
@@ -111,7 +111,7 @@ export function ResetPasswordPage() {
             label="New password"
             name="new_password"
             autoComplete="new-password"
-            placeholder="Yangi parol"
+            placeholder="New password"
             value={values.new_password}
             error={errors.new_password}
             onChange={(event) => setValues((current) => ({ ...current, new_password: event.target.value }))}
@@ -120,7 +120,7 @@ export function ResetPasswordPage() {
             label="Confirm password"
             name="confirm_password"
             autoComplete="new-password"
-            placeholder="Parolni takrorlang"
+            placeholder="Confirm password"
             value={values.confirm_password}
             error={errors.confirm_password}
             onChange={(event) => setValues((current) => ({ ...current, confirm_password: event.target.value }))}
@@ -128,7 +128,7 @@ export function ResetPasswordPage() {
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Yangilanmoqda...' : 'Reset password'}
+          {isSubmitting ? 'Updating...' : 'Reset password'}
         </Button>
       </form>
     </AuthFormShell>

@@ -32,8 +32,8 @@ export function UserFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={mode === 'create' ? 'Yangi user yaratish' : 'User ma`lumotlarini tahrirlash'}
-      description="CEO user CRUD formi registerga o'xshash maydonlar bilan qurildi."
+      title={mode === 'create' ? 'Create new user' : 'Edit user details'}
+      description="CEO user CRUD form built with fields consistent with registration."
       size="lg"
       footer={
         <>
@@ -41,50 +41,53 @@ export function UserFormModal({
             Cancel
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saqlanmoqda...' : mode === 'create' ? 'Create user' : 'Save changes'}
+            {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create user' : 'Save changes'}
           </Button>
         </>
       }
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Email</span>
-          <Input value={values.email} onChange={(event) => onChange('email', event.target.value)} />
+          <span className="text-sm font-bold text-white tracking-tight">Email</span>
+          <Input value={values.email} placeholder="user@example.com" onChange={(event) => onChange('email', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Company code</span>
+          <span className="text-sm font-bold text-white tracking-tight">Company code</span>
           <Input
             value={values.company_code}
+            placeholder="e.g. oddiy"
             onChange={(event) => onChange('company_code', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Name</span>
-          <Input value={values.name} onChange={(event) => onChange('name', event.target.value)} />
+          <span className="text-sm font-bold text-white tracking-tight">Name</span>
+          <Input value={values.name} placeholder="First name" onChange={(event) => onChange('name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Surname</span>
-          <Input value={values.surname} onChange={(event) => onChange('surname', event.target.value)} />
+          <span className="text-sm font-bold text-white tracking-tight">Surname</span>
+          <Input value={values.surname} placeholder="Last name" onChange={(event) => onChange('surname', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">
-            Password {mode === 'edit' ? '(ixtiyoriy)' : ''}
+          <span className="text-sm font-bold text-white tracking-tight">
+            Password {mode === 'edit' ? '(optional)' : ''}
           </span>
           <Input
             type="password"
+            placeholder="Minimum 6 characters"
             value={values.password}
             onChange={(event) => onChange('password', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Telegram ID</span>
+          <span className="text-sm font-bold text-white tracking-tight">Telegram ID</span>
           <Input
             value={values.telegram_id ?? ''}
+            placeholder="@username or ID"
             onChange={(event) => onChange('telegram_id', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Default salary</span>
+          <span className="text-sm font-bold text-white tracking-tight">Default salary</span>
           <Input
             type="number"
             min="0"
@@ -93,14 +96,14 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Role</span>
+          <span className="text-sm font-bold text-white tracking-tight">Role</span>
           <select
             value={values.role}
             onChange={(event) => onChange('role', event.target.value)}
-            className="min-h-12 rounded-2xl border border-[var(--border)] bg-white/80 px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+            className="min-h-12 rounded-xl border border-[var(--border)] bg-white/5 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
           >
             {roleOptions.map((role) => (
-              <option key={role} value={role}>
+              <option key={role} value={role} className="bg-black">
                 {role}
               </option>
             ))}
@@ -108,13 +111,13 @@ export function UserFormModal({
         </label>
       </div>
 
-      <label className="mt-4 flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3">
+      <label className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white/5 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
         <input
           type="checkbox"
           checked={values.is_active}
           onChange={(event) => onChange('is_active', event.target.checked)}
         />
-        <span className="text-sm text-[var(--muted-strong)]">Active user</span>
+        <span className="text-sm font-bold text-white">Active user</span>
       </label>
     </Modal>
   )

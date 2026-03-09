@@ -12,10 +12,10 @@ export function AuthField({ label, error, hint, id, ...props }: AuthFieldProps) 
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      <span className="text-sm font-medium text-[var(--foreground)]">{label}</span>
+      <span className="text-sm font-bold text-white tracking-tight">{label}</span>
       <Input id={inputId} {...props} />
-      {error ? <span className="text-sm text-red-600">{error}</span> : null}
-      {!error && hint ? <span className="text-xs text-[var(--muted)]">{hint}</span> : null}
+      {error ? <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
+      {!error && hint ? <span className="text-xs font-medium text-zinc-500">{hint}</span> : null}
     </label>
   )
 }

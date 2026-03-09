@@ -22,13 +22,13 @@ function RawDataCard({
   payload: unknown
 }) {
   return (
-    <Card className="p-6">
+    <Card className="p-6 bg-white/5 border-white/10">
       <SectionTitle
         eyebrow={eyebrow}
         title={title}
-        description="API javobi to'g'ridan-to'g'ri preview formatida ko'rsatilmoqda."
+        description="Direct API response preview for debugging and verification."
       />
-      <pre className="mt-5 overflow-x-auto rounded-lg border border-[var(--border)] bg-[#0f172a] p-4 text-xs leading-6 text-slate-100">
+      <pre className="mt-5 overflow-x-auto rounded-xl border border-white/10 bg-black/40 p-5 text-[11px] leading-relaxed font-medium text-blue-400">
         {stringifyApiData(payload)}
       </pre>
     </Card>
@@ -67,8 +67,8 @@ export function UpdateTrackingPage() {
       missingQuery.refetch(),
     ])
     showToast({
-      title: 'Update tracking yangilandi',
-      description: "Barcha update-tracking bloklari qayta yuklandi.",
+      title: 'Tracking data updated',
+      description: 'All update-tracking blocks have been reloaded.',
       tone: 'success',
     })
   }
@@ -76,9 +76,9 @@ export function UpdateTrackingPage() {
   if (myStatsQuery.isLoading && !myStatsQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="Updates / Day 8"
-        title="Update tracking yuklanmoqda"
-        description="Stats, company metrics va report endpointlari backenddan olinmoqda."
+        eyebrow="Updates / Tracking"
+        title="Tracking data loading"
+        description="Fetching statistics, company metrics, and report data."
       />
     )
   }
@@ -86,9 +86,9 @@ export function UpdateTrackingPage() {
   if (myStatsQuery.isError && !myStatsQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="Updates / Day 8"
-        title="Update tracking ochilmadi"
-        description="Asosiy update-tracking statistikalari olinmadi."
+        eyebrow="Updates / Tracking"
+        title="Tracking data unavailable"
+        description="Could not retrieve core update-tracking statistics."
         actionLabel="Retry"
         onAction={() => {
           void refreshAll()
@@ -101,74 +101,73 @@ export function UpdateTrackingPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--muted)]">Updates / Day 8</p>
-          <h1 className="mt-2 text-4xl font-semibold text-[var(--foreground)]">Update tracking va release polish</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted-strong)]">
-            My stats, company stats, recent, missing, monthly report, trends va calendar endpointlari bitta dashboard
-            ichida ulandi.
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">Updates / Tracking</p>
+          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">Activity & Submission Tracking</h1>
+          <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+            Comprehensive overview of individual and company-wide update submissions and compliance metrics.
           </p>
         </div>
         <Button onClick={() => void refreshAll()}>Refresh all</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">This week</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">This week</p>
+          <p className="mt-3 text-3xl font-bold text-white tracking-tight">
             {formatCompactNumber(myStatsQuery.data?.updates_this_week ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {Math.round(myStatsQuery.data?.percentage_this_week ?? 0)}% completion.
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">
+            {Math.round(myStatsQuery.data?.percentage_this_week ?? 0)}% completion rate.
           </p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">This month</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">This month</p>
+          <p className="mt-3 text-3xl font-bold text-white tracking-tight">
             {formatCompactNumber(myStatsQuery.data?.updates_this_month ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">{monthlyCompletion}% oy yakuni.</p>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">{monthlyCompletion}% monthly goal.</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Company today</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Company today</p>
+          <p className="mt-3 text-3xl font-bold text-white tracking-tight">
             {formatCompactNumber(companyStatsQuery.data?.total_updates_today ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {companyStatsQuery.data?.total_employees ?? 0} employee bazasidan.
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">
+            From {companyStatsQuery.data?.total_employees ?? 0} active employees.
           </p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Company weekly avg</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Company weekly avg</p>
+          <p className="mt-3 text-3xl font-bold text-white tracking-tight">
             {Math.round(companyStatsQuery.data?.avg_percentage_this_week ?? 0)}%
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">Team bo'yicha weekly completion.</p>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Team weekly completion avg.</p>
         </Card>
       </div>
 
-      <Card className="p-6">
-        <div className="flex flex-wrap items-end gap-3">
+      <Card className="p-6 bg-white/5 border-white/10">
+        <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Month</span>
+              <span className="text-sm font-bold text-white tracking-tight">Month</span>
               <Input type="number" min="1" max="12" value={month} onChange={(event) => setMonth(Number(event.target.value))} />
             </label>
           </div>
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Year</span>
+              <span className="text-sm font-bold text-white tracking-tight">Year</span>
               <Input type="number" min="2020" max="2035" value={year} onChange={(event) => setYear(Number(event.target.value))} />
             </label>
           </div>
           <div className="min-w-[180px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Missing date</span>
+              <span className="text-sm font-bold text-white tracking-tight">Missing date</span>
               <Input type="date" value={dateCheck} onChange={(event) => setDateCheck(event.target.value)} />
             </label>
           </div>
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Recent limit</span>
+              <span className="text-sm font-bold text-white tracking-tight">Recent limit</span>
               <Input
                 type="number"
                 min="1"

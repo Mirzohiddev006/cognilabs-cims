@@ -34,13 +34,13 @@ export function ForgotPasswordPage() {
         navigate(`/auth/reset-password?email=${encodeURIComponent(email)}`, {
           replace: true,
           state: {
-            statusMessage: response.message || 'Reset kodi yuborildi. Yangi parolni kiriting.',
+            statusMessage: response.message || 'A reset code has been sent. Please enter your new password.',
           },
         }),
       )
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Reset kodi yuborilmadi.'))
+      setSubmitError(getErrorMessage(error, 'Failed to send reset code.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -49,8 +49,8 @@ export function ForgotPasswordPage() {
   return (
     <AuthFormShell
       eyebrow="Auth / Forgot"
-      title="Parolni tiklash"
-      description="Forgot password endpoint email qabul qiladi va reset flow'ni boshlaydi."
+      title="Recover password"
+      description="Enter your email to initiate the password reset process."
       footerLinks={[
         { label: 'Login', to: '/auth/login' },
         { label: 'Reset password', to: '/auth/reset-password' },
@@ -71,7 +71,7 @@ export function ForgotPasswordPage() {
         />
 
         <Button size="lg" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Jo'natilmoqda..." : 'Send reset code'}
+          {isSubmitting ? 'Sending...' : 'Send reset code'}
         </Button>
       </form>
     </AuthFormShell>

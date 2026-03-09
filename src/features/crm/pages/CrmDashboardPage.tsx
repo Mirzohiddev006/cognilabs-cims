@@ -32,9 +32,6 @@ const initialFormValues: CustomerFormValues = {
   conversation_language: 'uz',
 }
 
-const selectClassName =
-  'min-h-10 rounded-md border border-[var(--border)] bg-white px-3 text-sm text-[var(--foreground)] shadow-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(15,23,42,0.08)]'
-
 function toDateTimeLocalValue(value?: string | null) {
   if (!value) {
     return ''
@@ -241,8 +238,8 @@ export function CrmDashboardPage() {
 
   async function handleDeleteCustomer(customer: CustomerSummary) {
     const approved = await confirm({
-      title: `${customer.full_name} o'chirilsinmi?`,
-      description: "Mijoz yozuvi butunlay o'chiriladi va ortga qaytarilmaydi.",
+      title: `Delete ${customer.full_name}?`,
+      description: 'The customer record will be permanently removed and cannot be undone.',
       confirmLabel: 'Delete customer',
       cancelLabel: 'Cancel',
       tone: 'danger',
@@ -256,13 +253,13 @@ export function CrmDashboardPage() {
       await crmService.deleteCustomer(customer.id)
       await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch(), conversionQuery.refetch()])
       showToast({
-        title: "Customer o'chirildi",
-        description: `${customer.full_name} CRM ro'yxatidan olib tashlandi.`,
+        title: 'Customer deleted',
+        description: `${customer.full_name} has been removed from the CRM list.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: "Customer o'chirilmadi",
+        title: 'Delete failed',
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -272,16 +269,16 @@ export function CrmDashboardPage() {
   async function handleBulkDelete() {
     if (selectedCustomerIds.length === 0) {
       showToast({
-        title: 'Customer tanlanmagan',
-        description: "Bulk delete uchun kamida bitta customer belgilang.",
+        title: 'No customers selected',
+        description: 'Please select at least one customer for bulk deletion.',
         tone: 'info',
       })
       return
     }
 
     const approved = await confirm({
-      title: `${selectedCustomerIds.length} ta customer o'chirilsinmi?`,
-      description: "Bulk delete tasdiqlansa barcha tanlangan customerlar tizimdan o'chiriladi.",
+      title: `Delete ${selectedCustomerIds.length} customers?`,
+      description: 'Selected customers will be permanently removed from the system.',
       confirmLabel: 'Delete selected',
       cancelLabel: 'Cancel',
       tone: 'danger',
@@ -296,13 +293,13 @@ export function CrmDashboardPage() {
       setSelectedCustomerIds([])
       await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch(), conversionQuery.refetch()])
       showToast({
-        title: 'Bulk delete bajarildi',
-        description: "Tanlangan customerlar muvaffaqiyatli o'chirildi.",
+        title: 'Bulk delete complete',
+        description: 'Selected customers have been successfully removed.',
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Bulk delete bajarilmadi',
+        title: 'Bulk delete failed',
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -317,8 +314,8 @@ export function CrmDashboardPage() {
       !formValues.status.trim()
     ) {
       showToast({
-        title: "Majburiy maydonlar to'liq emas",
-        description: 'Full name, platform, phone number va status kiritilishi kerak.',
+        title: 'Required fields missing',
+        description: 'Full name, platform, phone number, and status are required.',
         tone: 'error',
       })
       return
@@ -344,13 +341,13 @@ export function CrmDashboardPage() {
         conversionQuery.refetch(),
       ])
       showToast({
-        title: modalMode === 'create' ? 'Customer yaratildi' : 'Customer yangilandi',
-        description: "CRM dashboard ro'yxati yangilandi.",
+        title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
+        description: 'The CRM dashboard list has been refreshed.',
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Customer saqlanmadi',
+        title: 'Save failed',
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -362,9 +359,9 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM / Day 7"
-        title="CRM dashboard yuklanmoqda"
-        description="Customers, status stats va sales bloklari backenddan olinmoqda."
+        eyebrow="CRM / Leads"
+        title="CRM dashboard loading"
+        description="Retrieving customers, status statistics, and sales data."
       />
     )
   }
@@ -372,9 +369,9 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM / Day 7"
-        title="CRM dashboard ochilmadi"
-        description="CRM dashboard endpoint xatolik qaytardi. Retry qilib qayta urinib ko'ring."
+        eyebrow="CRM / Leads"
+        title="CRM dashboard failed to load"
+        description="Could not retrieve CRM data. Please retry."
         actionLabel="Retry"
         onAction={() => {
           void refreshAll()
@@ -387,11 +384,10 @@ export function CrmDashboardPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--muted)]">CRM / Day 7</p>
-          <h1 className="mt-2 text-4xl font-semibold text-[var(--foreground)]">Customers va sales analytics</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted-strong)]">
-            Search, status/platform filter, create-edit multipart form, bulk delete, detail sahifa va sales bloklari
-            shu dashboard ichida ishlaydi.
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">CRM / Leads</p>
+          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">Customer & Sales Analytics</h1>
+          <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+            Manage leads with advanced search, status filtering, and comprehensive sales tracking.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -406,57 +402,57 @@ export function CrmDashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Visible customers</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Visible customers</p>
+          <p className="mt-3 text-3xl font-bold text-white">
             {formatCompactNumber(displayedCustomers.length)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">Dashboard query va platform filter asosida.</p>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Based on active filters.</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Today leads</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Today leads</p>
+          <p className="mt-3 text-3xl font-bold text-white">
             {formatCompactNumber(salesStatsQuery.data?.today ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">Daily sales stats endpoint.</p>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Incoming today.</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">This week</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">This week</p>
+          <p className="mt-3 text-3xl font-bold text-white">
             {formatCompactNumber(salesStatsQuery.data?.this_week ?? 0)}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">Local/international filter bilan.</p>
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Weekly performance.</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Conversion</p>
-          <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Conversion</p>
+          <p className="mt-3 text-3xl font-bold text-white">
             {`${Math.round(conversionQuery.data?.conversion_rate ?? 0)}%`}
           </p>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            {conversionQuery.data?.project_started_count ?? 0} / {conversionQuery.data?.total_customers ?? 0} lead.
+          <p className="mt-2 text-xs font-medium text-[var(--muted)]">
+            {conversionQuery.data?.project_started_count ?? 0} projects / {conversionQuery.data?.total_customers ?? 0} leads.
           </p>
         </Card>
       </div>
 
-      <Card className="p-6">
-        <div className="flex flex-wrap items-end gap-3">
+      <Card className="p-6 bg-white/5 border-white/10">
+        <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-[220px] flex-1">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Search</span>
+              <span className="text-sm font-bold text-white tracking-tight">Search</span>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name, phone, username yoki note bo'yicha qidirish"
+                placeholder="Search by name, phone, or notes..."
               />
             </label>
           </div>
           <div className="min-w-[180px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Status</span>
+              <span className="text-sm font-bold text-white tracking-tight">Status</span>
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value)}
-                className={selectClassName}
+                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
               >
                 <option value="">All statuses</option>
                 {(dashboardQuery.data?.status_choices ?? statusOptions).map((option) => (
@@ -469,15 +465,15 @@ export function CrmDashboardPage() {
           </div>
           <div className="min-w-[180px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Platform</span>
+              <span className="text-sm font-bold text-white tracking-tight">Platform</span>
               <select
                 value={platformFilter}
                 onChange={(event) => setPlatformFilter(event.target.value)}
-                className={selectClassName}
+                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
               >
-                <option value="">All platforms</option>
+                <option value="" className="bg-black">All platforms</option>
                 {availablePlatforms.map((platform) => (
-                  <option key={platform} value={platform}>
+                  <option key={platform} value={platform} className="bg-black">
                     {platform}
                   </option>
                 ))}
@@ -486,31 +482,31 @@ export function CrmDashboardPage() {
           </div>
           <div className="min-w-[180px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">Sales type</span>
+              <span className="text-sm font-bold text-white tracking-tight">Sales type</span>
               <select
                 value={salesCustomerType}
                 onChange={(event) => setSalesCustomerType(event.target.value)}
-                className={selectClassName}
+                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
               >
-                <option value="">All leads</option>
-                <option value="local">Local</option>
-                <option value="international">International</option>
+                <option value="" className="bg-black">All leads</option>
+                <option value="local" className="bg-black">Local</option>
+                <option value="international" className="bg-black">International</option>
               </select>
             </label>
           </div>
-          <label className="flex min-h-10 items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--accent-soft)]/55 px-3">
-            <input type="checkbox" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
-            <span className="text-sm text-[var(--muted-strong)]">Show all</span>
+          <label className="flex min-h-10 items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 cursor-pointer transition hover:bg-white/10">
+            <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-black/40 text-blue-500 focus:ring-blue-500/50" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
+            <span className="text-sm font-bold text-white tracking-tight">Show all</span>
           </label>
         </div>
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="p-6">
+        <Card className="p-6 bg-white/5 border-white/10">
           <SectionTitle
             eyebrow="Customers"
             title="CRM dashboard table"
-            description="Checkbox selection, detail route, edit/delete actionlari va dynamic status ranglari shu yerda."
+            description="Advanced table with status indicators and quick actions."
           />
           <div className="mt-6">
             <DataTable
@@ -520,8 +516,8 @@ export function CrmDashboardPage() {
               emptyState={
                 <EmptyStateBlock
                   eyebrow="CRM"
-                  title="Customer topilmadi"
-                  description="Filterlar hozircha natija qaytarmadi yoki dashboard bo'sh."
+                  title="No customers found"
+                  description="Current filters yielded no results or the database is empty."
                 />
               }
               columns={[
@@ -552,11 +548,11 @@ export function CrmDashboardPage() {
                       <button
                         type="button"
                         onClick={() => navigate(`/crm/customers/${row.id}`)}
-                        className="text-left font-semibold text-[var(--foreground)] transition hover:text-[var(--accent)]"
+                        className="text-left font-bold text-white tracking-tight transition hover:text-blue-400"
                       >
                         {row.full_name}
                       </button>
-                      <p className="text-xs text-[var(--muted)]">{row.username || row.phone_number}</p>
+                      <p className="text-xs font-medium text-zinc-500">{row.username || row.phone_number}</p>
                     </div>
                   ),
                 },
@@ -603,40 +599,40 @@ export function CrmDashboardPage() {
         </Card>
 
         <div className="grid gap-6">
-          <Card className="p-6">
+          <Card className="p-6 bg-white/5 border-white/10">
             <SectionTitle
               eyebrow="Status summary"
-              title="Dynamic status breakdown"
-              description="Backenddan kelgan status foizlari va count ko'rinishi."
+              title="Breakdown"
+              description="Real-time status distribution percentage."
             />
             <div className="mt-5 grid gap-3">
               {Object.entries(summaryQuery.data?.status_percentages ?? {}).length > 0 ? (
                 Object.entries(summaryQuery.data?.status_percentages ?? {}).map(([statusKey, value]) => (
-                  <div key={statusKey} className="rounded-lg border border-[var(--border)] bg-[var(--accent-soft)]/45 p-4">
+                  <div key={statusKey} className="rounded-xl border border-white/10 bg-black/40 p-4">
                     <div className="flex items-center justify-between gap-3">
                       <StatusPill status={statusKey} statusMetaMap={statusMetaMap} />
-                      <span className="text-sm font-semibold text-[var(--foreground)]">{Math.round(value)}%</span>
+                      <span className="text-sm font-bold text-white">{Math.round(value)}%</span>
                     </div>
-                    <p className="mt-2 text-sm text-[var(--muted)]">
-                      Count: {dashboardQuery.data?.status_stats?.[statusKey] ?? summaryQuery.data?.status_dict?.[statusKey] ?? 0}
+                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                      Volume: {dashboardQuery.data?.status_stats?.[statusKey] ?? summaryQuery.data?.status_dict?.[statusKey] ?? 0}
                     </p>
                   </div>
                 ))
               ) : (
                 <EmptyStateBlock
                   eyebrow="Status"
-                  title="Status statistikasi yo'q"
-                  description="Status summary endpointdan ma'lumot kelmadi."
+                  title="No statistics"
+                  description="Status summary data unavailable."
                 />
               )}
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 bg-white/5 border-white/10">
             <SectionTitle
               eyebrow="Sales"
-              title="Sales stats va conversion"
-              description="Leadlar oqimi va project_started conversion ko'rsatkichlari."
+              title="Analytics"
+              description="Lead flow and project conversion rates."
             />
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {[
@@ -645,16 +641,16 @@ export function CrmDashboardPage() {
                 ['This week', salesStatsQuery.data?.this_week ?? 0],
                 ['Last week', salesStatsQuery.data?.last_week ?? 0],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-lg border border-[var(--border)] bg-white p-4 shadow-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
-                  <p className="mt-2 text-2xl font-semibold text-[var(--foreground)]">{formatCompactNumber(Number(value))}</p>
+                <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">{label}</p>
+                  <p className="mt-2 text-2xl font-bold text-white tracking-tight">{formatCompactNumber(Number(value))}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--accent-soft)]/45 p-4">
-              <p className="text-sm font-semibold text-[var(--foreground)]">Conversion period</p>
-              <p className="mt-2 text-sm text-[var(--muted-strong)]">
-                {conversionQuery.data?.period ?? 'Last 100 leads'} | Started:{' '}
+            <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4">
+              <p className="text-xs font-bold text-white tracking-tight">Conversion period</p>
+              <p className="mt-2 text-xs font-medium text-zinc-500">
+                {conversionQuery.data?.period ?? 'Last 100 leads'} | Projects:{' '}
                 {conversionQuery.data?.project_started_count ?? 0} | Total:{' '}
                 {conversionQuery.data?.total_customers ?? 0}
               </p>

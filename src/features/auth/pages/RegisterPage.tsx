@@ -52,13 +52,13 @@ export function RegisterPage() {
         navigate(`/auth/verify-email?email=${encodeURIComponent(values.email)}`, {
           replace: true,
           state: {
-            statusMessage: "Ro'yxatdan o'tish muvaffaqiyatli. Emailga yuborilgan kodni kiriting.",
+            statusMessage: 'Registration successful. Please enter the code sent to your email.',
           },
         }),
       )
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, "Ro'yxatdan o'tish bajarilmadi."))
+      setSubmitError(getErrorMessage(error, 'Registration failed.'))
     } finally {
       setIsSubmitting(false)
     }
@@ -67,8 +67,8 @@ export function RegisterPage() {
   return (
     <AuthFormShell
       eyebrow="Auth / Register"
-      title="Yangi account ochish"
-      description="Register endpoint email, company code va role bilan bog'landi. Keyin verify email sahifasiga o'tadi."
+      title="Create new account"
+      description="Register with your email, company code, and role to join the workspace."
       footerLinks={[
         { label: 'Login', to: '/auth/login' },
         { label: 'Verify email', to: '/auth/verify-email' },
@@ -123,7 +123,7 @@ export function RegisterPage() {
           label="Password"
           name="password"
           autoComplete="new-password"
-          placeholder="Kamida 6 ta belgi"
+          placeholder="Minimum 6 characters"
           value={values.password}
           error={errors.password}
           onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
@@ -133,22 +133,22 @@ export function RegisterPage() {
           <AuthField
             label="Telegram ID"
             name="telegram_id"
-            placeholder="@username yoki id"
+            placeholder="@username or ID"
             value={values.telegram_id}
             error={errors.telegram_id}
             onChange={(event) => setValues((current) => ({ ...current, telegram_id: event.target.value }))}
           />
 
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-[var(--foreground)]">Role</span>
+            <span className="text-sm font-bold text-white tracking-tight">Role</span>
             <select
               name="role"
               value={values.role}
               onChange={(event) => setValues((current) => ({ ...current, role: event.target.value }))}
-              className="min-h-12 rounded-2xl border border-[var(--border)] bg-white/80 px-4 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+              className="min-h-12 rounded-xl border border-[var(--border)] bg-white/5 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
             >
               {roleOptions.map((role) => (
-                <option key={role} value={role}>
+                <option key={role} value={role} className="bg-black">
                   {role}
                 </option>
               ))}
@@ -157,7 +157,7 @@ export function RegisterPage() {
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Jo'natilmoqda..." : 'Register'}
+          {isSubmitting ? 'Processing...' : 'Register'}
         </Button>
       </form>
     </AuthFormShell>

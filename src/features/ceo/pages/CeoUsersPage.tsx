@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { cn } from '../../../shared/lib/cn'
 import {
   ceoService,
   type CeoUserRecord,
@@ -181,8 +182,8 @@ export function CeoUsersPage() {
         }
 
         showToast({
-          title: 'Permissionlar yuklanmadi',
-          description: error instanceof Error ? error.message : 'User permission detail olib kelishda xato.',
+          title: 'Permissions failed to load',
+          description: error instanceof Error ? error.message : 'Error fetching user permission details.',
           tone: 'error',
         })
       } finally {
@@ -220,8 +221,8 @@ export function CeoUsersPage() {
   async function handleSubmitUser() {
     if (!userFormValues.email.trim() || !userFormValues.name.trim() || !userFormValues.surname.trim()) {
       showToast({
-        title: "Majburiy maydonlar to'ldirilmagan",
-        description: 'Email, name va surname kiritilishi kerak.',
+        title: 'Required fields missing',
+        description: 'Email, name, and surname are required.',
         tone: 'error',
       })
       return
@@ -229,8 +230,8 @@ export function CeoUsersPage() {
 
     if (userModalMode === 'create' && !userFormValues.password.trim()) {
       showToast({
-        title: 'Password kerak',
-        description: "Yangi user yaratishda password bo'sh bo'lmasligi kerak.",
+        title: 'Password required',
+        description: 'Password cannot be empty when creating a new user.',
         tone: 'error',
       })
       return
@@ -250,14 +251,14 @@ export function CeoUsersPage() {
       await refreshAll()
       setIsUserModalOpen(false)
       showToast({
-        title: userModalMode === 'create' ? 'User yaratildi' : 'User yangilandi',
-        description: 'CEO user list muvaffaqiyatli yangilandi.',
+        title: userModalMode === 'create' ? 'User created' : 'User updated',
+        description: 'CEO user list has been successfully updated.',
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'User saqlanmadi',
-        description: error instanceof Error ? error.message : 'User CRUD so`rovida xato.',
+        title: 'User not saved',
+        description: error instanceof Error ? error.message : 'Error in user CRUD request.',
         tone: 'error',
       })
     } finally {
@@ -267,8 +268,8 @@ export function CeoUsersPage() {
 
   async function handleDeleteUser(user: CeoUserRecord) {
     const approved = await confirm({
-      title: `${user.name} ${user.surname} o'chirilsinmi?`,
-      description: "Bu user butunlay tizimdan o'chiriladi.",
+      title: `Delete ${user.name} ${user.surname}?`,
+      description: 'This user will be permanently removed from the system.',
       confirmLabel: 'Delete user',
       cancelLabel: 'Cancel',
       tone: 'danger',
@@ -282,14 +283,14 @@ export function CeoUsersPage() {
       await ceoService.deleteUser(user.id)
       await refreshAll()
       showToast({
-        title: "User o'chirildi",
-        description: `${user.email} tizimdan olib tashlandi.`,
+        title: 'User deleted',
+        description: `${user.email} has been removed from the system.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete bajarilmadi',
-        description: error instanceof Error ? error.message : 'User delete flow xatolikka uchradi.',
+        title: 'Delete failed',
+        description: error instanceof Error ? error.message : 'User delete flow failed.',
         tone: 'error',
       })
     }
@@ -300,14 +301,14 @@ export function CeoUsersPage() {
       await ceoService.toggleUserActive(user.id)
       await dashboardQuery.refetch()
       showToast({
-        title: 'Active status yangilandi',
-        description: `${user.email} uchun active/inactive holat o'zgartirildi.`,
+        title: 'Active status updated',
+        description: `Active/inactive status changed for ${user.email}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Toggle bajarilmadi',
-        description: error instanceof Error ? error.message : 'Active status o`zgartirishda xato.',
+        title: 'Toggle failed',
+        description: error instanceof Error ? error.message : 'Error changing active status.',
         tone: 'error',
       })
     }
@@ -338,14 +339,14 @@ export function CeoUsersPage() {
       const nextActiveCount = Object.values(permissionState).filter(Boolean).length
       setActivePermissionsCount(nextActiveCount)
       showToast({
-        title: 'Permissionlar yangilandi',
-        description: `${permissionTargetUser.email} uchun checkbox qiymatlari saqlandi.`,
+        title: 'Permissions updated',
+        description: `Checkbox values saved for ${permissionTargetUser.email}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permissionlar saqlanmadi',
-        description: error instanceof Error ? error.message : 'Permission replace flow xato berdi.',
+        title: 'Permissions not saved',
+        description: error instanceof Error ? error.message : 'Permission replace flow failed.',
         tone: 'error',
       })
     } finally {
@@ -367,14 +368,14 @@ export function CeoUsersPage() {
       setActivePermissionsCount(refreshed.active_permissions_count)
       await permissionsOverviewQuery.refetch()
       showToast({
-        title: "Permission qo'shildi",
-        description: "True bo'lgan permissionlar userga qo'shildi.",
+        title: 'Permissions added',
+        description: 'Selected permissions have been added to the user.',
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permission qo`shilmadi',
-        description: error instanceof Error ? error.message : 'Add permission flow xato berdi.',
+        title: 'Permissions not added',
+        description: error instanceof Error ? error.message : 'Add permission flow failed.',
         tone: 'error',
       })
     } finally {
@@ -396,14 +397,14 @@ export function CeoUsersPage() {
       setActivePermissionsCount((current) => Math.max(0, current - 1))
       await permissionsOverviewQuery.refetch()
       showToast({
-        title: 'Permission olib tashlandi',
-        description: `${permissionKey} userdan olib tashlandi.`,
+        title: 'Permission removed',
+        description: `${permissionKey} has been removed from the user.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permission o`chirilmadi',
-        description: error instanceof Error ? error.message : 'Single remove flow ishlamadi.',
+        title: 'Permission not removed',
+        description: error instanceof Error ? error.message : 'Single remove flow failed.',
         tone: 'error',
       })
     }
@@ -422,8 +423,8 @@ export function CeoUsersPage() {
   async function handleSendSingleMessage() {
     if (!messageValues.receiver_id || !messageValues.subject.trim() || !messageValues.body.trim()) {
       showToast({
-        title: "Message to'liq emas",
-        description: 'Receiver, subject va body kerak.',
+        title: 'Message incomplete',
+        description: 'Receiver, subject, and body are required.',
         tone: 'error',
       })
       return
@@ -439,14 +440,14 @@ export function CeoUsersPage() {
       })
       setIsMessageModalOpen(false)
       showToast({
-        title: 'Message yuborildi',
+        title: 'Message sent',
         description: messageValues.receiver_label,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Message yuborilmadi',
-        description: error instanceof Error ? error.message : 'Single user message xato berdi.',
+        title: 'Message not sent',
+        description: error instanceof Error ? error.message : 'Single user message flow failed.',
         tone: 'error',
       })
     } finally {
@@ -458,8 +459,8 @@ export function CeoUsersPage() {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Users"
-        title="User moduli yuklanmoqda"
-        description="CEO users list va permissions overview olib kelinmoqda."
+        title="Users module loading"
+        description="Fetching CEO users list and permissions overview."
       />
     )
   }
@@ -468,8 +469,8 @@ export function CeoUsersPage() {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Users"
-        title="Users moduli ochilmadi"
-        description="Dashboard user ma`lumotlari olinmadi. Qayta urinib ko`ring."
+        title="Users module failed to load"
+        description="Could not fetch user data. Please retry."
         actionLabel="Retry"
         onAction={() => {
           void refreshAll()
@@ -482,11 +483,10 @@ export function CeoUsersPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 5</p>
-          <h1 className="mt-3 text-4xl font-semibold text-[var(--foreground)]">Users va permissions</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--muted-strong)]">
-            User create, edit, delete, active toggle, permission detail, add/remove va overview jadvali shu sahifada
-            boshqariladi.
+          <p className="text-sm font-bold uppercase tracking-[0.26em] text-blue-500">CEO / Day 5</p>
+          <h1 className="mt-3 text-4xl font-bold text-white tracking-tight">Users & Permissions</h1>
+          <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+            Manage user creation, edits, deletion, active status, permission details, and system overview.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -504,18 +504,18 @@ export function CeoUsersPage() {
         <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} />
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 bg-white/5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
             eyebrow="Users list"
             title="CEO users table"
-            description="Qidiruv, edit, toggle, permission va single-message actionlari table ichida tayyor."
+            description="Search, edit, toggle status, manage permissions, and send messages directly from the table."
           />
           <Input
             className="w-full md:w-80"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Email, name yoki role bo`yicha qidirish"
+            placeholder="Search by email, name, or role"
           />
         </div>
 
@@ -527,8 +527,8 @@ export function CeoUsersPage() {
             emptyState={
               <EmptyStateBlock
                 eyebrow="Users"
-                title="User topilmadi"
-                description="Qidiruvga mos user yo`q yoki backend hali bo`sh."
+            title="No users found"
+            description="There are no users matching your search or the database is empty."
               />
             }
             columns={[
@@ -537,15 +537,15 @@ export function CeoUsersPage() {
                 header: 'User',
                 render: (row) => (
                   <div>
-                    <p className="font-semibold text-[var(--foreground)]">{row.name} {row.surname}</p>
-                    <p className="text-xs text-[var(--muted)]">{row.email}</p>
+                    <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
+                    <p className="text-xs font-medium text-zinc-500">{row.email}</p>
                   </div>
                 ),
               },
               {
                 key: 'role',
                 header: 'Role',
-                render: (row) => <Badge className="bg-white/70 text-[var(--muted-strong)]">{String(row.role)}</Badge>,
+                render: (row) => <Badge className="bg-white/5 text-white border-white/10">{String(row.role)}</Badge>,
               },
               {
                 key: 'company',
@@ -556,7 +556,7 @@ export function CeoUsersPage() {
                 key: 'status',
                 header: 'Status',
                 render: (row) => (
-                  <span className={row.is_active ? 'text-emerald-700' : 'text-red-600'}>
+                  <span className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}>
                     {row.is_active ? 'Active' : 'Inactive'}
                   </span>
                 ),
@@ -589,16 +589,16 @@ export function CeoUsersPage() {
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 bg-white/5">
         <SectionTitle
           eyebrow="Permissions overview"
-          title="Barcha userlar permission summary"
-          description="Filterlangan jadval va summary chiplar bilan permission overview ko`rsatiladi."
+          title="User permissions summary"
+          description="Detailed overview of permissions across all users with filtered results."
         />
 
         <div className="mt-5 flex flex-wrap gap-2">
           {Object.entries(permissionsOverviewQuery.data?.summary ?? {}).map(([key, value]) => (
-            <Badge key={key}>{`${key}: ${value}`}</Badge>
+            <Badge key={key} className="bg-blue-600/10 text-blue-400 border-blue-500/20">{`${key}: ${value}`}</Badge>
           ))}
         </div>
 
@@ -610,8 +610,8 @@ export function CeoUsersPage() {
             emptyState={
               <EmptyStateBlock
                 eyebrow="Permissions"
-                title="Permission overview bo`sh"
-                description="Backenddan overview response qaytmadi yoki filter natija topmadi."
+                title="Permission overview empty"
+                description="No overview data returned from backend or filter yielded no results."
               />
             }
             columns={[
@@ -620,8 +620,8 @@ export function CeoUsersPage() {
                 header: 'User',
                 render: (row) => (
                   <div>
-                    <p className="font-semibold text-[var(--foreground)]">{row.name}</p>
-                    <p className="text-xs text-[var(--muted)]">{row.email}</p>
+                    <p className="font-bold text-white tracking-tight">{row.name}</p>
+                    <p className="text-xs font-medium text-zinc-500">{row.email}</p>
                   </div>
                 ),
               },
@@ -642,12 +642,12 @@ export function CeoUsersPage() {
                 render: (row) => (
                   <div className="flex flex-wrap gap-2">
                     {row.permissions_display.slice(0, 4).map((permission) => (
-                      <Badge key={permission} className="bg-white/70 text-[var(--muted-strong)]">
+                      <Badge key={permission} className="bg-white/5 text-white border-white/10">
                         {permission}
                       </Badge>
                     ))}
                     {row.permissions_display.length > 4 ? (
-                      <Badge className="bg-white/70 text-[var(--muted-strong)]">
+                      <Badge className="bg-white/5 text-white border-white/10">
                         +{row.permissions_display.length - 4}
                       </Badge>
                     ) : null}

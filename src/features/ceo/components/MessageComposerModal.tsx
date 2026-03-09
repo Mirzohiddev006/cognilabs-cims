@@ -32,11 +32,11 @@ export function MessageComposerModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isBroadcast ? 'Barcha userlarga xabar yuborish' : 'Tanlangan userga xabar yuborish'}
+      title={isBroadcast ? 'Broadcast message to all users' : 'Send message to selected user'}
       description={
         isBroadcast
-          ? 'CEO broadcast formi send-message-all endpoint bilan bog`lanadi.'
-          : 'Single user message formi send-message endpoint bilan bog`lanadi.'
+          ? 'The CEO broadcast form is connected to the send-message-all endpoint.'
+          : 'The single user message form is connected to the send-message endpoint.'
       }
       footer={
         <>
@@ -44,28 +44,29 @@ export function MessageComposerModal({
             Cancel
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Yuborilmoqda...' : 'Send message'}
+            {isSubmitting ? 'Sending...' : 'Send message'}
           </Button>
         </>
       }
     >
       {!isBroadcast ? (
-        <div className="rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3 text-sm text-[var(--muted-strong)]">
-          Receiver: <span className="font-medium text-[var(--foreground)]">{values.receiver_label}</span>
+        <div className="rounded-xl border border-[var(--border)] bg-white/5 px-4 py-3 text-sm text-[var(--muted)]">
+          Receiver: <span className="font-bold text-white ml-2">{values.receiver_label}</span>
         </div>
       ) : null}
       <div className="mt-4 grid gap-4">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Subject</span>
-          <Input value={values.subject} onChange={(event) => onChange('subject', event.target.value)} />
+          <span className="text-sm font-bold text-white tracking-tight">Subject</span>
+          <Input value={values.subject} placeholder="Enter message subject" onChange={(event) => onChange('subject', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Body</span>
+          <span className="text-sm font-bold text-white tracking-tight">Body</span>
           <textarea
             rows={7}
             value={values.body}
+            placeholder="Enter message body"
             onChange={(event) => onChange('body', event.target.value)}
-            className="w-full rounded-[24px] border border-[var(--border)] bg-white/80 px-4 py-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--accent)]"
+            className="w-full rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-500/50"
           />
         </label>
       </div>

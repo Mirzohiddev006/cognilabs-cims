@@ -24,21 +24,21 @@ export function AuthFormShell({
 }: AuthFormShellProps) {
   return (
     <Card className="border-none bg-transparent p-0 shadow-none">
-      <div>
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--accent)]">{eyebrow}</p>
-        <h2 className="mt-4 text-4xl font-semibold text-[var(--foreground)]">{title}</h2>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--muted-strong)]">{description}</p>
+      <div className="space-y-4">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-500">{eyebrow}</p>
+        <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">{title}</h2>
+        <p className="max-w-xl text-sm font-medium leading-relaxed text-zinc-500">{description}</p>
       </div>
 
-      <div className="mt-8">{children}</div>
+      <div className="mt-10">{children}</div>
 
       {footerLinks.length > 0 ? (
-        <div className="mt-6 flex flex-wrap gap-3 text-sm text-[var(--muted-strong)]">
+        <div className="mt-8 flex flex-wrap gap-3">
           {footerLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-full border border-[var(--border)] bg-white/70 px-4 py-2 transition-colors hover:bg-white"
+              className="text-xs font-bold uppercase tracking-wider text-zinc-500 transition hover:text-white"
             >
               {link.label}
             </Link>

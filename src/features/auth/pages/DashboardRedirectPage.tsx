@@ -22,11 +22,11 @@ export function DashboardRedirectPage() {
 
   return (
     <div className="grid min-h-[55vh] place-items-center">
-      <Card className="max-w-xl p-8 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--accent)]">Redirect</p>
-        <h1 className="mt-4 text-3xl font-semibold text-[var(--foreground)]">Dashboard yo'naltirilmoqda</h1>
-        <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">
-          API `auth/dashboard-redirect` javobiga ko'ra foydalanuvchi o'ziga mos bo'limga yuboriladi.
+      <Card className="max-w-xl p-10 text-center border-none bg-transparent">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-500">Redirecting</p>
+        <h1 className="mt-6 text-3xl font-bold text-white tracking-tight">Accessing Dashboard</h1>
+        <p className="mt-6 text-sm font-medium leading-relaxed text-zinc-500">
+          We are determining the best entry point for your account role. One moment...
         </p>
       </Card>
     </div>
