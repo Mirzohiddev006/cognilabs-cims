@@ -39,9 +39,9 @@ export function CustomerDetailPage() {
   if (!Number.isFinite(customerId) || customerId <= 0) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM detail"
-        title="Noto'g'ri customer ID"
-        description="Route ichidagi customer identifikatori yaroqsiz."
+        eyebrow="CRM / Detail"
+        title="Invalid Customer ID"
+        description="The customer identifier in the route is invalid."
         actionLabel="Back to CRM"
         onAction={() => navigate('/crm')}
       />
@@ -51,9 +51,9 @@ export function CustomerDetailPage() {
   if (detailQuery.isLoading && !detailQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM detail"
-        title="Customer detail yuklanmoqda"
-        description="Customer haqida batafsil ma'lumotlar olinmoqda."
+        eyebrow="CRM / Detail"
+        title="Customer profile loading"
+        description="Retrieving comprehensive customer details."
       />
     )
   }
@@ -61,9 +61,9 @@ export function CustomerDetailPage() {
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM detail"
-        title="Customer topilmadi"
-        description="Bitta mijoz detail endpointi ma'lumot qaytarmadi yoki xato berdi."
+        eyebrow="CRM / Detail"
+        title="Customer not found"
+        description="Could not retrieve details for this customer."
         actionLabel="Back to CRM"
         onAction={() => navigate('/crm')}
       />
@@ -76,9 +76,9 @@ export function CustomerDetailPage() {
     <section className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--muted)]">CRM detail</p>
-          <h1 className="mt-2 text-4xl font-semibold text-[var(--foreground)]">{customer.full_name}</h1>
-          <p className="mt-3 text-sm text-[var(--muted-strong)]">
+          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">CRM / Detail</p>
+          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">{customer.full_name}</h1>
+          <p className="mt-3 text-sm font-medium text-zinc-500">
             {customer.platform} | {customer.phone_number}
           </p>
         </div>
@@ -97,29 +97,29 @@ export function CustomerDetailPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Status</p>
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Status</p>
           <div className="mt-3">
-            <Badge>{customer.status}</Badge>
+            <Badge className="bg-white/10 text-white border-white/20">{customer.status}</Badge>
           </div>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Assistant</p>
-          <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">{customer.assistant_name || '-'}</p>
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Assistant</p>
+          <p className="mt-3 text-lg font-bold text-white tracking-tight">{customer.assistant_name || '-'}</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Language</p>
-          <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">{customer.conversation_language || '-'}</p>
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Language</p>
+          <p className="mt-3 text-lg font-bold text-white tracking-tight">{customer.conversation_language || '-'}</p>
         </Card>
-        <Card className="p-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Created</p>
-          <p className="mt-3 text-lg font-semibold text-[var(--foreground)]">{formatShortDate(customer.created_at)}</p>
+        <Card className="p-6 bg-white/5 border-white/10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Created</p>
+          <p className="mt-3 text-lg font-bold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
         </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">Profile</h2>
+        <Card className="p-6 bg-white/5 border-white/10">
+          <h2 className="text-xl font-bold text-white tracking-tight">Profile</h2>
           <div className="mt-5 grid gap-4">
             {[
               ['Username', customer.username || '-'],
@@ -128,31 +128,31 @@ export function CustomerDetailPage() {
               ['Audio file ID', customer.audio_file_id || '-'],
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-lg border border-[var(--border)] bg-[var(--accent-soft)]/40 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{label}</p>
-                <p className="mt-2 text-sm text-[var(--foreground)]">{value}</p>
+              <div key={label} className="rounded-xl border border-white/10 bg-black/40 px-5 py-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">{label}</p>
+                <p className="mt-2 text-sm font-medium text-white">{value}</p>
               </div>
             ))}
           </div>
         </Card>
 
         <div className="grid gap-6">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">Notes</h2>
+          <Card className="p-6 bg-white/5 border-white/10">
+            <h2 className="text-xl font-bold text-white tracking-tight">Notes</h2>
             {customer.notes ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--muted-strong)]">{customer.notes}</p>
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed font-medium text-zinc-400">{customer.notes}</p>
             ) : (
-              <EmptyStateBlock eyebrow="Notes" title="Notes yo'q" description="Mijoz uchun notes kiritilmagan." />
+              <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
             )}
           </Card>
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">AI summary</h2>
+          <Card className="p-6 bg-white/5 border-white/10">
+            <h2 className="text-xl font-bold text-white tracking-tight">AI Summary</h2>
             {customer.aisummary ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[var(--muted-strong)]">
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed font-medium text-zinc-400">
                 {customer.aisummary}
               </p>
             ) : (
-              <EmptyStateBlock eyebrow="AI" title="AI summary yo'q" description="AI summary hali mavjud emas." />
+              <EmptyStateBlock eyebrow="AI" title="No AI summary" description="AI summary is not available for this record." />
             )}
           </Card>
         </div>

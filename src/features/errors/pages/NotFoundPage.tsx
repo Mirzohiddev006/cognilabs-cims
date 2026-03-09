@@ -4,14 +4,14 @@ import { Button } from '../../../shared/ui/button'
 export function NotFoundPage() {
   return (
     <div className="grid min-h-screen place-items-center px-4">
-      <div className="glass-panel max-w-lg rounded-[28px] p-8 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.32em] text-[var(--accent)]">404</p>
-        <h1 className="mt-4 text-4xl font-semibold text-[var(--foreground)]">Route topilmadi</h1>
-        <p className="mt-4 text-base text-[var(--muted-strong)]">
-          Router skeleti tayyor. Bu manzil hali modulga ulanmagan yoki noto'g'ri yo'l ishlatildi.
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-black/40 p-12 text-center backdrop-blur-sm">
+        <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-blue-500">Error 404</p>
+        <h1 className="mt-6 text-4xl font-bold text-white tracking-tight">Page not found</h1>
+        <p className="mt-6 text-sm font-medium leading-relaxed text-zinc-500">
+          The requested route is not available. Please check the URL or navigate back to the dashboard.
         </p>
-        <Button asChild className="mt-6">
-          <Link to="/">Overview ga qaytish</Link>
+        <Button asChild className="mt-10">
+          <Link to="/">Back to Overview</Link>
         </Button>
       </div>
     </div>

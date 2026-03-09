@@ -10,11 +10,11 @@ type ProtectedRouteProps = {
 function LoadingState() {
   return (
     <div className="grid min-h-[50vh] place-items-center">
-      <div className="glass-panel w-full max-w-md rounded-[28px] p-6 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-[var(--accent)]">Session</p>
-        <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">Hisob tekshirilmoqda</h2>
-        <p className="mt-3 text-sm leading-6 text-[var(--muted-strong)]">
-          Access token, refresh flow va foydalanuvchi ruxsatlari yuklanmoqda.
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-black/40 p-8 text-center backdrop-blur-sm">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-500">Session</p>
+        <h2 className="mt-4 text-2xl font-bold text-white tracking-tight">Verifying credentials</h2>
+        <p className="mt-4 text-sm font-medium leading-relaxed text-zinc-500">
+          Validating access tokens, refresh flow, and user permissions.
         </p>
       </div>
     </div>
@@ -36,7 +36,7 @@ export function ProtectedRoute({ permissionKey, children }: ProtectedRouteProps)
         replace
         state={{
           from: `${location.pathname}${location.search}${location.hash}`,
-          statusMessage: 'Session topilmadi yoki tugagan. Qayta login qiling.',
+          statusMessage: 'Session expired or not found. Please log in again.',
         }}
       />
     )
