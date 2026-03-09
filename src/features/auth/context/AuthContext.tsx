@@ -1,0 +1,166 @@
+import {
+  createContext,
+  startTransition,
+  useEffect,
+  useState,
+  type PropsWithChildren,
+} from 'react'
+import { authService } from '../../../shared/api/services/auth.service'
+import type { CurrentUser, TokenResponse } from '../../../shared/api/types'
+import { getDefaultDashboardPath, hasPermission as canAccess } from '../../../shared/lib/permissions'
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  setSessionTokens,
+} from '../../../shared/lib/session'
+
+type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
+
+type LogoutScope = 'current' | 'all'
+
+type AuthContextValue = {
+  user: CurrentUser | null
+  status: AuthStatus
+  isAuthenticated: boolean
+  isReady: boolean
+  isRefreshingUser: boolean
+  acceptTokens: (tokens: TokenResponse) => Promise<CurrentUser | null>
+  refreshUser: () => Promise<CurrentUser | null>
+  logout: (scope?: LogoutScope) => Promise<void>
+  hasPermission: (permissionKey?: string) => boolean
+  getDefaultPath: () => string
+  resolveDashboardPath: () => Promise<string>
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+function normalizeRedirectPath(redirectUrl: string | null | undefined) {
+  if (!redirectUrl?.trim()) {
+    return null
+  }
+
+  try {
+    const normalized = redirectUrl.startsWith('http')
+      ? new URL(redirectUrl)
+      : new URL(redirectUrl, 'http://cims.local')
+
+    return `${normalized.pathname}${normalized.search}${normalized.hash}`
+  } catch {
+    return redirectUrl.startsWith('/') ? redirectUrl : null
+  }
+}
+
+export function AuthProvider({ children }: PropsWithChildren) {
+  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [status, setStatus] = useState<AuthStatus>(() => {
+    return getAccessToken() || getRefreshToken() ? 'loading' : 'anonymous'
+  })
+  const [isRefreshingUser, setIsRefreshingUser] = useState(false)
+
+  async function refreshUser() {
+    setIsRefreshingUser(true)
+
+    try {
+      const currentUser = await authService.me()
+      setUser(currentUser)
+      setStatus('authenticated')
+
+      return currentUser
+    } catch {
+      clearSession()
+      setUser(null)
+      setStatus('anonymous')
+      return null
+    } finally {
+      setIsRefreshingUser(false)
+    }
+  }
+
+  useEffect(() => {
+    async function initializeAuth() {
+      const accessToken = getAccessToken()
+      const refreshToken = getRefreshToken()
+
+      if (!accessToken && !refreshToken) {
+        setUser(null)
+        setStatus('anonymous')
+        return
+      }
+
+      await refreshUser()
+    }
+
+    void initializeAuth()
+  }, [])
+
+  async function acceptTokens(tokens: TokenResponse) {
+    setSessionTokens(tokens)
+    setStatus('loading')
+
+    return refreshUser()
+  }
+
+  async function logout(scope: LogoutScope = 'current') {
+    try {
+      if (scope === 'all') {
+        await authService.logoutAll()
+      } else {
+        const refreshToken = getRefreshToken()
+
+        if (refreshToken) {
+          await authService.logout(refreshToken)
+        }
+      }
+    } catch {
+      // Session cleanup still needs to happen locally even if server logout fails.
+    } finally {
+      clearSession()
+      setUser(null)
+      startTransition(() => setStatus('anonymous'))
+    }
+  }
+
+  function hasPermission(permissionKey?: string) {
+    return canAccess(user, permissionKey)
+  }
+
+  function getDefaultPath() {
+    return getDefaultDashboardPath(user)
+  }
+
+  async function resolveDashboardPath() {
+    const fallbackPath = getDefaultPath()
+
+    try {
+      const response = await authService.dashboardRedirect()
+      const normalizedPath = normalizeRedirectPath(response.redirect_url)
+
+      return normalizedPath || fallbackPath
+    } catch {
+      return fallbackPath
+    }
+  }
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        status,
+        isAuthenticated: status === 'authenticated',
+        isReady: status !== 'loading',
+        isRefreshingUser,
+        acceptTokens,
+        refreshUser,
+        logout,
+        hasPermission,
+        getDefaultPath,
+        resolveDashboardPath,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export { AuthContext }

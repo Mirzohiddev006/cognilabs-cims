@@ -1,0 +1,233 @@
+import { request } from '../http'
+import type {
+  CreateResponse,
+  DailyMetrics,
+  PaymentItem,
+  PermissionMap,
+  SuccessResponse,
+  UserRole,
+} from '../types'
+
+export type CeoUserRecord = {
+  id: number
+  email: string
+  name: string
+  surname: string
+  company_code?: string
+  telegram_id?: string | null
+  default_salary?: number | null
+  role: UserRole
+  is_active: boolean
+} & Record<string, unknown>
+
+export type CeoMessageRecord = {
+  id: number
+  receiver_name: string
+  receiver_email: string
+  subject: string
+  body: string
+  sent_at: string
+}
+
+export type UserPayload = {
+  email: string
+  name: string
+  surname: string
+  password?: string
+  company_code: string
+  telegram_id?: string
+  default_salary?: number
+  role: UserRole
+  is_active: boolean
+}
+
+export type DashboardResponse = {
+  users: CeoUserRecord[]
+  statistics: {
+    user_count: number
+    messages_count: number
+    active_user_count: number
+    inactive_user_count: number
+  }
+}
+
+export type PermissionsOverviewResponse = {
+  users: Array<{
+    user_id: number
+    email: string
+    name: string
+    role: string
+    is_active: boolean
+    permissions: string[]
+    permissions_display: string[]
+    permissions_count: number
+  }>
+  total_users: number
+  available_pages: string[]
+  summary: Record<string, number>
+}
+
+export const ceoService = {
+  getDashboard() {
+    return request<DashboardResponse>({ path: '/ceo/dashboard' })
+  },
+
+  getTodayMetrics() {
+    return request<DailyMetrics>({ path: '/ceo/metrics/today' })
+  },
+
+  createUser(payload: UserPayload) {
+    return request<CreateResponse>({
+      path: '/ceo/users',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateUser(userId: number, payload: UserPayload) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deleteUser(userId: number) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}`,
+      method: 'DELETE',
+    })
+  },
+
+  toggleUserActive(userId: number) {
+    return request<{
+      is_active: boolean
+      active_user_count: number
+      inactive_user_count: number
+    }>({
+      path: `/ceo/users/${userId}/toggle-active`,
+      method: 'PATCH',
+    })
+  },
+
+  getUserPermissions(userId: number) {
+    return request<{
+      user_id: number
+      user_email: string
+      user_name: string
+      permissions: PermissionMap
+      active_permissions_count: number
+      total_available_pages: number
+    }>({
+      path: `/ceo/users/${userId}/permissions`,
+    })
+  },
+
+  updateUserPermissions(userId: number, permissions: PermissionMap) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}/permissions`,
+      method: 'PUT',
+      body: permissions,
+    })
+  },
+
+  addUserPermissions(userId: number, permissions: PermissionMap) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}/permissions/add`,
+      method: 'POST',
+      body: permissions,
+    })
+  },
+
+  addSingleUserPermissions(userId: number, permissions: PermissionMap) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}/permissions/add-single`,
+      method: 'POST',
+      body: permissions,
+    })
+  },
+
+  removeUserPermission(userId: number, pageName: string) {
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}/permissions/${pageName}`,
+      method: 'DELETE',
+    })
+  },
+
+  permissionsOverview() {
+    return request<PermissionsOverviewResponse>({
+      path: '/ceo/users/permissions/overview',
+    })
+  },
+
+  sendMessageToAll(payload: { subject: string; body: string }) {
+    return request<SuccessResponse>({
+      path: '/ceo/send-message-all',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  sendMessageToUser(payload: { receiver_id: number; subject: string; body: string }) {
+    return request<SuccessResponse>({
+      path: '/ceo/send-message',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  listMessages() {
+    return request<{
+      messages: CeoMessageRecord[]
+    }>({
+      path: '/ceo/messages',
+    })
+  },
+
+  deleteMessage(messageId: number) {
+    return request<SuccessResponse>({
+      path: `/ceo/messages/${messageId}`,
+      method: 'DELETE',
+    })
+  },
+
+  listPayments() {
+    return request<{ payments: PaymentItem[] }>({
+      path: '/ceo/payments',
+    })
+  },
+
+  createPayment(payload: { project: string; date: string; summ: number; payment: boolean }) {
+    return request<CreateResponse>({
+      path: '/ceo/payments',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updatePayment(paymentId: number, payload: { project: string; date: string | null; summ: number; payment: boolean }) {
+    return request<SuccessResponse>({
+      path: `/ceo/payments/${paymentId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deletePayment(paymentId: number) {
+    return request<SuccessResponse>({
+      path: `/ceo/payments/${paymentId}`,
+      method: 'DELETE',
+    })
+  },
+
+  togglePayment(paymentId: number) {
+    return request<{
+      message: string
+      payment_id: number
+      payment_status: boolean
+    }>({
+      path: `/ceo/payments/${paymentId}/toggle`,
+      method: 'PATCH',
+    })
+  },
+}
