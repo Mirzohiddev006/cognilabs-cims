@@ -62,8 +62,8 @@ export function LoginPage() {
   return (
     <AuthFormShell
       eyebrow="Auth / Login"
-      title="Tizimga kirish"
-      description="Access va refresh token olish uchun login endpoint bilan bog'langan forma."
+      title="Sign in to your account"
+      description="Enter your credentials to access the management system."
       footerLinks={[
         { label: 'Register', to: '/auth/register' },
         { label: 'Forgot password', to: '/auth/forgot-password' },
@@ -93,7 +93,7 @@ export function LoginPage() {
           label="Password"
           name="password"
           autoComplete="current-password"
-          placeholder="Parolingizni kiriting"
+          placeholder="Enter your password"
           value={values.password}
           error={errors.password}
           onChange={(event) =>
@@ -105,12 +105,12 @@ export function LoginPage() {
         />
 
         <Button size="lg" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Kirilmoqda...' : 'Login'}
+          {isSubmitting ? 'Signing in...' : 'Login'}
         </Button>
 
-        <p className="text-sm text-[var(--muted-strong)]">
-          Email tasdiqlanmagan bo'lsa, <Link className="text-[var(--accent)]" to="/auth/verify-email">verify email</Link>{' '}
-          sahifasidan kodni yuborib tasdiqlang.
+        <p className="text-sm text-[var(--muted)]">
+          Email not verified? <Link className="text-blue-500 font-bold" to="/auth/verify-email">Verify email</Link>{' '}
+          to activate your account.
         </p>
       </form>
     </AuthFormShell>
