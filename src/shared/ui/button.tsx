@@ -19,19 +19,19 @@ type SharedButtonProps = {
 type ButtonProps = SharedButtonProps & ButtonHTMLAttributes<HTMLButtonElement>
 
 const variants = {
-  primary: 'border border-transparent bg-[var(--accent)] text-white shadow-sm hover:bg-[var(--accent-strong)]',
-  secondary: 'border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-sm hover:bg-[var(--accent-soft)]',
-  ghost: 'border border-transparent bg-transparent text-[var(--muted-strong)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
-  danger: 'border border-transparent bg-[var(--danger)] text-white shadow-sm hover:bg-[#b91c1c]',
+  primary: 'border border-transparent bg-[var(--accent)] text-white shadow-lg shadow-blue-700/40 hover:bg-[var(--accent-strong)] hover:scale-[1.02] active:scale-[0.98]',
+  secondary: 'border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-sm hover:bg-[var(--accent-soft)] hover:scale-[1.02] active:scale-[0.98]',
+  ghost: 'border border-transparent bg-transparent text-[var(--muted-strong)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] active:scale-[0.98]',
+  danger: 'border border-transparent bg-[var(--danger)] text-white shadow-lg shadow-red-900/40 hover:bg-[#b91c1c] active:scale-[0.98]',
 }
 
 const sizes = {
-  md: 'min-h-9 px-4 text-sm',
-  lg: 'min-h-10 px-5 text-sm',
+  md: 'min-h-10 px-6 text-sm',
+  lg: 'min-h-12 px-8 text-base',
 }
 
 const baseClassName =
-  'inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2'
+  'inline-flex items-center justify-center gap-2 rounded-full font-bold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-black'
 
 export function Button({
   variant = 'primary',

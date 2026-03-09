@@ -30,10 +30,10 @@ export function AppHeader() {
   async function handleLogout(scope: 'current' | 'all') {
     if (scope === 'all') {
       const approved = await confirm({
-        title: 'Barcha qurilmalardan chiqilsinmi?',
-        description: 'Bu amaldan keyin barcha refresh tokenlar bekor qilinadi va foydalanuvchi barcha sessiyalardan chiqadi.',
+        title: 'Logout from all devices?',
+        description: 'All refresh tokens will be revoked and you will be logged out from all active sessions.',
         confirmLabel: 'Logout all',
-        cancelLabel: 'Bekor qilish',
+        cancelLabel: 'Cancel',
         tone: 'danger',
       })
 
@@ -47,11 +47,11 @@ export function AppHeader() {
     try {
       await logout(scope)
       showToast({
-        title: scope === 'all' ? 'Barcha sessiyalar yopildi' : 'Session yopildi',
+        title: scope === 'all' ? 'Logged out from all sessions' : 'Logged out',
         description:
           scope === 'all'
-            ? 'Server tomonda barcha refresh tokenlar bekor qilindi.'
-            : 'Joriy qurilmadagi sessiya muvaffaqiyatli yopildi.',
+            ? 'All refresh tokens have been successfully revoked.'
+            : 'Your current session has been closed.',
         tone: 'success',
       })
       startTransition(() =>
@@ -60,8 +60,8 @@ export function AppHeader() {
           state: {
             statusMessage:
               scope === 'all'
-                ? 'Barcha qurilmalardan chiqildi.'
-                : 'Session yopildi. Qayta login qilishingiz mumkin.',
+                ? 'Successfully logged out from all devices.'
+                : 'Session closed. You can log in again.',
           },
         }),
       )
@@ -71,62 +71,67 @@ export function AppHeader() {
   }
 
   return (
-    <header className="relative z-10 border-b border-[var(--border)] bg-[rgba(248,250,252,0.82)] px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+    <header className="relative z-10 border-b border-[var(--border)] bg-black/40 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={toggleSidebar}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--foreground)] shadow-sm md:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white/5 text-white shadow-lg md:hidden"
               aria-label="Toggle navigation"
             >
               <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
             </button>
-            <div className="hidden h-9 w-px bg-[var(--border)] md:block" />
+            <div className="hidden h-10 w-px bg-[var(--border)] md:block" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-md border border-[var(--border)] bg-white text-[var(--muted-strong)] shadow-sm">
+              <div className="grid h-10 w-10 place-items-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-blue-500 shadow-sm">
                 <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-lg font-semibold text-[var(--foreground)]">
+                <p className="truncate text-xl font-bold text-white tracking-tight">
                   {currentItem?.label ?? env.appName}
                 </p>
-                <p className="truncate text-sm text-[var(--muted)]">
+                <p className="truncate text-xs font-medium uppercase tracking-widest text-[var(--muted)]">
                   {currentItem?.description ?? 'CIMS workspace'}
                 </p>
               </div>
             </div>
             {user ? (
-              <p className="mt-2 text-sm text-[var(--muted-strong)]">
-                {user.name} {user.surname} | {user.email}
+              <p className="mt-2 text-xs font-semibold text-[var(--muted)]">
+                {user.name} {user.surname} <span className="mx-1 opacity-30">|</span> {user.email}
               </p>
             ) : null}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>{env.appEnv}</Badge>
-          {user ? <Badge className="bg-white text-[var(--muted-strong)]">{user.role}</Badge> : null}
-          <div className="rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--muted-strong)] shadow-sm">
-            API base: {env.apiBaseUrl}
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge className="bg-blue-600/10 text-blue-400 border-blue-500/20">{env.appEnv}</Badge>
+          {user ? <Badge className="bg-white/5 text-white border-white/10">{user.role}</Badge> : null}
+          <div className="rounded-full border border-[var(--border)] bg-white/5 px-4 py-1.5 text-xs font-bold text-[var(--muted)] shadow-sm">
+            <span className="opacity-50 font-medium">API:</span> {env.apiBaseUrl}
           </div>
-          <Button
-            variant="secondary"
-            disabled={isSubmitting !== null}
-            onClick={() => handleLogout('current')}
-          >
-            {isSubmitting === 'current' ? 'Chiqilmoqda...' : 'Logout'}
-          </Button>
-          <Button
-            variant="ghost"
-            disabled={isSubmitting !== null}
-            onClick={() => handleLogout('all')}
-          >
-            {isSubmitting === 'all' ? 'Yopilmoqda...' : 'Logout all'}
-          </Button>
+          <div className="flex items-center gap-2 ml-2">
+            <Button
+              variant="secondary"
+              size="md"
+              disabled={isSubmitting !== null}
+              onClick={() => handleLogout('current')}
+            >
+              {isSubmitting === 'current' ? 'Logging out...' : 'Logout'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="md"
+              className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
+              disabled={isSubmitting !== null}
+              onClick={() => handleLogout('all')}
+            >
+              {isSubmitting === 'all' ? 'Closing...' : 'Logout all'}
+            </Button>
+          </div>
         </div>
       </div>
     </header>

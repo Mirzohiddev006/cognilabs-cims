@@ -42,20 +42,20 @@ export function AppSidebar() {
       >
         <div className="glass-panel flex h-full flex-col rounded-xl px-3 py-3 sm:px-4">
           <div className="border-b border-[var(--border)] px-2 pb-4 pt-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Cognilabs</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Cognilabs</p>
             <div className="mt-2 flex items-center gap-2">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--accent)] text-white shadow-sm">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                 <NavGlyph name="overview" />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-[var(--foreground)]">{env.appName}</h2>
-                <p className="text-xs text-[var(--muted)]">Admin workspace</p>
+                <h2 className="text-base font-bold text-white tracking-tight">{env.appName}</h2>
+                <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--muted)]">Management System</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between px-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">Navigation</p>
+          <div className="mt-6 flex items-center justify-between px-2">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Menu</p>
             <Badge>{visibleNavigation.length} modules</Badge>
           </div>
 
@@ -67,39 +67,42 @@ export function AppSidebar() {
                 end={item.to === '/overview'}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors duration-150',
+                    'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-300',
                     isActive
-                      ? 'border-[var(--border)] bg-[var(--accent-soft)] text-[var(--foreground)]'
-                      : 'border-transparent text-[var(--muted-strong)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)]/80 hover:text-[var(--foreground)]',
+                      ? 'border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+                      : 'border-transparent text-[var(--muted)] hover:bg-white/5 hover:text-white',
                   )
                 }
               >
-                <div className="grid h-8 w-8 place-items-center rounded-md border border-[var(--border)] bg-white text-[var(--muted-strong)]">
+                <div className={cn(
+                  "grid h-8 w-8 place-items-center rounded-lg border transition-colors",
+                  "border-[var(--border)] bg-[#1a1a1a] text-[var(--muted-strong)]"
+                )}>
                   <NavGlyph name={getNavigationGlyphName(item.to)} />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{item.label}</p>
-                  <p className="truncate text-xs text-[var(--muted)]">{item.group}</p>
+                  <p className="truncate font-semibold">{item.label}</p>
+                  <p className="truncate text-[10px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
                 </div>
               </NavLink>
             ))}
           </nav>
 
-          <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--accent-soft)]/70 p-3">
+          <div className="mt-4 rounded-2xl border border-[var(--border)] bg-white/5 p-4">
             <div className="flex items-center gap-3">
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-[var(--accent)] text-sm font-semibold text-white">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-700/20">
                 {getInitials(user?.name, user?.surname)}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                <p className="truncate text-sm font-bold text-white">
                   {user ? `${user.name} ${user.surname}` : 'Authenticated user'}
                 </p>
-                <p className="truncate text-xs text-[var(--muted)]">{user?.email ?? user?.role ?? 'User'}</p>
+                <p className="truncate text-[10px] uppercase tracking-wider text-[var(--muted)]">{user?.email ?? user?.role ?? 'User'}</p>
               </div>
             </div>
-            <div className="mt-3 flex items-center justify-between text-xs text-[var(--muted)]">
+            <div className="mt-4 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
               <span>{user?.role ?? 'Session'}</span>
-              <span>{env.appEnv}</span>
+              <Badge className="bg-white/10 text-white border-white/20">{env.appEnv}</Badge>
             </div>
           </div>
         </div>
