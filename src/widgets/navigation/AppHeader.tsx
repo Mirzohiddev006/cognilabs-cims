@@ -6,8 +6,6 @@ import { useConfirm } from '../../shared/confirm/useConfirm'
 import { env } from '../../shared/config/env'
 import { navigationItems } from '../../shared/config/navigation'
 import { useToast } from '../../shared/toast/useToast'
-import { Badge } from '../../shared/ui/badge'
-import { Button } from '../../shared/ui/button'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
@@ -71,67 +69,40 @@ export function AppHeader() {
   }
 
   return (
-    <header className="relative z-10 border-b border-[var(--border)] bg-black/40 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white/5 text-white shadow-lg md:hidden"
-              aria-label="Toggle navigation"
-            >
-              <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
-            </button>
-            <div className="hidden h-10 w-px bg-[var(--border)] md:block" />
+    <header className="relative z-10 border-b border-white/5 bg-black px-4 py-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white md:hidden"
+            aria-label="Toggle navigation"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
+          <div className="flex h-5 w-5 items-center justify-center text-zinc-500">
+            <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
           </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="grid h-10 w-10 place-items-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-blue-500 shadow-sm">
-                <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-xl font-bold text-white tracking-tight">
-                  {currentItem?.label ?? env.appName}
-                </p>
-                <p className="truncate text-xs font-medium uppercase tracking-widest text-[var(--muted)]">
-                  {currentItem?.description ?? 'CIMS workspace'}
-                </p>
-              </div>
-            </div>
-            {user ? (
-              <p className="mt-2 text-xs font-semibold text-[var(--muted)]">
-                {user.name} {user.surname} <span className="mx-1 opacity-30">|</span> {user.email}
-              </p>
-            ) : null}
-          </div>
+          <h1 className="text-sm font-bold text-white tracking-tight">
+            {currentItem?.label ?? env.appName}
+          </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge className="bg-blue-600/10 text-blue-400 border-blue-500/20">{env.appEnv}</Badge>
-          {user ? <Badge className="bg-white/5 text-white border-white/10">{user.role}</Badge> : null}
-          <div className="rounded-full border border-[var(--border)] bg-white/5 px-4 py-1.5 text-xs font-bold text-[var(--muted)] shadow-sm">
-            <span className="opacity-50 font-medium">API:</span> {env.apiBaseUrl}
+        <div className="flex items-center gap-4">
+          <div className="hidden items-center gap-3 md:flex">
+             {user ? <span className="text-xs font-medium text-zinc-500">{user.email}</span> : null}
           </div>
-          <div className="flex items-center gap-2 ml-2">
-            <Button
-              variant="secondary"
-              size="md"
-              disabled={isSubmitting !== null}
-              onClick={() => handleLogout('current')}
-            >
-              {isSubmitting === 'current' ? 'Logging out...' : 'Logout'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
-              disabled={isSubmitting !== null}
-              onClick={() => handleLogout('all')}
-            >
-              {isSubmitting === 'all' ? 'Closing...' : 'Logout all'}
-            </Button>
-          </div>
+          <button
+            onClick={() => handleLogout('current')}
+            disabled={isSubmitting !== null}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-zinc-400 hover:text-white transition-colors"
+          >
+             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+             </svg>
+          </button>
         </div>
       </div>
     </header>

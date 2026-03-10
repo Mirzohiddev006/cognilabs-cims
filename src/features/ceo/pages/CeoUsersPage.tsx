@@ -481,41 +481,37 @@ export function CeoUsersPage() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.26em] text-blue-500">CEO / Day 5</p>
-          <h1 className="mt-3 text-4xl font-bold text-white tracking-tight">Users & Permissions</h1>
-          <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
-            Manage user creation, edits, deletion, active status, permission details, and system overview.
+          <h1 className="text-3xl font-bold text-white tracking-tight">Users Management</h1>
+          <p className="mt-2 text-sm font-medium text-zinc-500">
+            Manage users, roles, and permissions across the enterprise workspace.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={() => void refreshAll()}>
-            Refresh
-          </Button>
-          <Button onClick={openCreateUserModal}>Create user</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
+            <Button size="md" variant="ghost" className="rounded-md bg-white/5 px-4 text-white">Overview</Button>
+            <Button size="md" variant="ghost" className="rounded-md px-4">Permissions</Button>
+            <Button size="md" variant="ghost" className="rounded-md px-4">Messages</Button>
+          </div>
+          <Button variant="action" onClick={openCreateUserModal}>+ Add User</Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Users" value={formatCompactNumber(statistics?.user_count ?? users.length)} />
-        <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} />
-        <MetricCard label="Active" value={formatCompactNumber(statistics?.active_user_count ?? 0)} />
-        <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} />
+      <div className="grid gap-5 md:grid-cols-4">
+        <MetricCard label="Total Users" value={formatCompactNumber(statistics?.user_count ?? users.length)} caption="System accounts" />
+        <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} caption="Global activity" />
+        <MetricCard label="Active" value={formatCompactNumber(statistics?.active_user_count ?? 0)} caption="Online now" />
+        <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} caption="Pending review" />
       </div>
 
-      <Card className="p-6 bg-white/5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <SectionTitle
-            eyebrow="Users list"
-            title="CEO users table"
-            description="Search, edit, toggle status, manage permissions, and send messages directly from the table."
-          />
+      <Card className="border-white/5 bg-transparent p-0 shadow-none">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <Input
-            className="w-full md:w-80"
+            className="w-full max-w-sm rounded-xl border-white/10 bg-white/5 px-4 py-2.5 text-sm"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by email, name, or role"
+            placeholder="Search users by name, email, or role..."
           />
         </div>
 
@@ -536,51 +532,74 @@ export function CeoUsersPage() {
                 key: 'identity',
                 header: 'User',
                 render: (row) => (
-                  <div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-[10px] font-bold text-zinc-400">
+                      {row.name.charAt(0)}{row.surname.charAt(0)}
+                    </div>
                     <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
-                    <p className="text-xs font-medium text-zinc-500">{row.email}</p>
                   </div>
                 ),
               },
               {
-                key: 'role',
-                header: 'Role',
-                render: (row) => <Badge className="bg-white/5 text-white border-white/10">{String(row.role)}</Badge>,
+                key: 'email',
+                header: 'Email',
+                render: (row) => <span className="text-zinc-400">{row.email}</span>,
               },
               {
-                key: 'company',
-                header: 'Company',
-                render: (row) => row.company_code ?? '-',
+                key: 'role',
+                header: 'Role',
+                render: (row) => <span className="text-zinc-400">{String(row.role)}</span>,
+              },
+              {
+                key: 'salary',
+                header: 'Salary',
+                render: (row) => <span className="font-bold text-emerald-500">${(row.default_salary ?? 0).toLocaleString()}</span>,
               },
               {
                 key: 'status',
                 header: 'Status',
                 render: (row) => (
-                  <span className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}>
+                  <span className={cn('rounded px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider', row.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500')}>
                     {row.is_active ? 'Active' : 'Inactive'}
                   </span>
                 ),
               },
               {
-                key: 'actions',
-                header: 'Actions',
+                key: 'message',
+                header: 'Message',
                 render: (row) => (
-                  <div className="flex flex-wrap gap-2">
-                    <Button className="min-h-9 px-3 text-xs" variant="secondary" onClick={() => openEditUserModal(row)}>
-                      Edit
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => void handleToggleUser(row)}>
-                      Toggle
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => openPermissionModal(row)}>
-                      Permissions
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => openMessageModal(row)}>
-                      Message
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => void handleDeleteUser(row)}>
-                      Delete
-                    </Button>
+                  <button onClick={() => openMessageModal(row)} className="text-zinc-500 hover:text-white transition-colors">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                ),
+              },
+              {
+                key: 'actions',
+                header: '',
+                render: (row) => (
+                  <div className="flex items-center justify-end gap-3">
+                    <button onClick={() => openPermissionModal(row)} className="text-zinc-500 hover:text-white transition-colors" title="Permissions">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </button>
+                    <button onClick={() => void handleToggleUser(row)} className="text-zinc-500 hover:text-white transition-colors" title="Toggle Active">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </button>
+                    <button onClick={() => openEditUserModal(row)} className="text-zinc-500 hover:text-white transition-colors" title="Edit">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button onClick={() => void handleDeleteUser(row)} className="text-zinc-500 hover:text-rose-500 transition-colors" title="Delete">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 ),
               },

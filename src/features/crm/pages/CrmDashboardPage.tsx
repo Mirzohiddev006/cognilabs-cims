@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { MetricCard } from '../../ceo/components/MetricCard'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -382,56 +383,27 @@ export function CrmDashboardPage() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/5 pb-8">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">CRM / Leads</p>
-          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">Customer & Sales Analytics</h1>
-          <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
-            Manage leads with advanced search, status filtering, and comprehensive sales tracking.
+          <h1 className="text-3xl font-bold text-white tracking-tight">Sales Dashboard</h1>
+          <p className="mt-2 text-sm font-medium text-zinc-500">
+            Track customer leads, sales performance, and conversion metrics in real-time.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => void refreshAll()}>
-            Refresh
-          </Button>
-          <Button variant="ghost" onClick={() => void handleBulkDelete()}>
-            Delete selected
-          </Button>
-          <Button onClick={openCreateModal}>Add customer</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-1 rounded-lg bg-white/5 p-1">
+            <Button size="md" variant="ghost" className="rounded-md bg-white/5 px-4 text-white">Overview</Button>
+            <Button size="md" variant="ghost" className="rounded-md px-4">Analytics</Button>
+          </div>
+          <Button variant="action" onClick={openCreateModal}>+ Add Customer</Button>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Visible customers</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(displayedCustomers.length)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Based on active filters.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Today leads</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(salesStatsQuery.data?.today ?? 0)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Incoming today.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">This week</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(salesStatsQuery.data?.this_week ?? 0)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Weekly performance.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Conversion</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {`${Math.round(conversionQuery.data?.conversion_rate ?? 0)}%`}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">
-            {conversionQuery.data?.project_started_count ?? 0} projects / {conversionQuery.data?.total_customers ?? 0} leads.
-          </p>
-        </Card>
+      <div className="grid gap-5 md:grid-cols-4">
+        <MetricCard label="Today's Customers" value={formatCompactNumber(salesStatsQuery.data?.today ?? 0)} caption="Direct leads" />
+        <MetricCard label="Need to Call" value={formatCompactNumber(salesStatsQuery.data?.this_week ?? 0)} caption="Follow-ups required" />
+        <MetricCard label="Total Leads" value={formatCompactNumber(displayedCustomers.length)} caption="System records" />
+        <MetricCard label="Conversion Rate" value={`${Math.round(conversionQuery.data?.conversion_rate ?? 0)}%`} caption="Lead to project" />
       </div>
 
       <Card className="p-6 bg-white/5 border-white/10">
@@ -578,18 +550,30 @@ export function CrmDashboardPage() {
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                header: '',
                   render: (row) => (
-                    <div className="flex flex-wrap gap-2">
-                      <Button className="px-3 text-xs" variant="secondary" onClick={() => navigate(`/crm/customers/${row.id}`)}>
-                        View
-                      </Button>
-                      <Button className="px-3 text-xs" variant="ghost" onClick={() => openEditModal(row)}>
-                        Edit
-                      </Button>
-                      <Button className="px-3 text-xs" variant="danger" onClick={() => void handleDeleteCustomer(row)}>
-                        Delete
-                      </Button>
+                  <div className="flex items-center justify-end gap-3">
+                    <button onClick={() => navigate(`/crm/customers/${row.id}`)} className="text-zinc-500 hover:text-white transition-colors" title="View Detail">
+                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                       </svg>
+                    </button>
+                    <button onClick={() => openEditModal(row)} className="text-zinc-500 hover:text-white transition-colors" title="Edit">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button onClick={() => void handleDeleteCustomer(row)} className="text-zinc-500 hover:text-rose-500 transition-colors" title="Delete">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <button onClick={() => void handleBulkDelete()} className="text-zinc-500 hover:text-white transition-colors" title="Bulk Ops">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-7 0V4" />
+                      </svg>
+                    </button>
                     </div>
                   ),
                 },

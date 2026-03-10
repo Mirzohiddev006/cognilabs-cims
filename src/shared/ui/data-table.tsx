@@ -34,17 +34,17 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm">
+    <div className="overflow-hidden rounded-xl border border-white/5 bg-[#0f0f0f]">
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead>
-            <tr className="border-b border-white/10 bg-white/[0.02]">
+            <tr className="border-b border-white/5 bg-[#0f0f0f]">
               {columns.map((column) => (
                 <th
                   key={column.key}
                   className={cn(
-                    'px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-blue-500',
+                    'px-6 py-4 text-[11px] font-medium text-zinc-500',
                     alignClassName[column.align ?? 'left'],
                   )}
                 >
@@ -57,13 +57,13 @@ export function DataTable<T>({
             {rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="group text-white transition-colors hover:bg-white/[0.02]"
+                className="group text-white transition-colors hover:bg-white/[0.01]"
               >
                 {columns.map((column) => (
                   <td
                     key={column.key}
                     className={cn(
-                      'px-6 py-4 text-sm font-medium text-zinc-400 group-hover:text-white transition-colors',
+                      'px-6 py-4 text-[13px] font-medium text-zinc-300 group-hover:text-white transition-colors',
                       alignClassName[column.align ?? 'left'],
                     )}
                   >
