@@ -1,5 +1,5 @@
 import { startTransition, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -48,15 +48,24 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Auth / Forgot"
-      title="Recover password"
-      description="Enter your email to initiate the password reset process."
-      footerLinks={[
-        { label: 'Login', to: '/auth/login' },
-        { label: 'Reset password', to: '/auth/reset-password' },
-      ]}
+      eyebrow="Account Recovery"
+      title="Recover your account"
+      description="Request a reset code or switch to password reset if you already received one."
+      footerLinks={[{ label: 'Back to login', to: '/auth/login' }]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
+          <span className="rounded-md bg-[var(--card)] px-3 py-2 text-center text-sm font-medium text-white">
+            Forgot Password
+          </span>
+          <Link
+            to="/auth/reset-password"
+            className="rounded-md px-3 py-2 text-center text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
+          >
+            Reset Password
+          </Link>
+        </div>
+
         <AuthFeedback tone="error" message={submitError} />
 
         <AuthField
@@ -70,7 +79,7 @@ export function ForgotPasswordPage() {
           onChange={(event) => setEmail(event.target.value)}
         />
 
-        <Button size="lg" type="submit" disabled={isSubmitting}>
+        <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Sending...' : 'Send reset code'}
         </Button>
       </form>

@@ -61,13 +61,10 @@ export function LoginPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Auth / Login"
-      title="Sign in to your account"
-      description="Enter your credentials to access the management system."
-      footerLinks={[
-        { label: 'Register', to: '/auth/register' },
-        { label: 'Forgot password', to: '/auth/forgot-password' },
-      ]}
+      eyebrow="Login"
+      title="Login to your account"
+      description="Enter your email below to login to your account."
+      footerLinks={[]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
         <AuthFeedback tone="success" message={statusMessage} />
@@ -81,6 +78,7 @@ export function LoginPage() {
           placeholder="user@example.com"
           value={values.username}
           error={errors.username}
+          className="min-h-11"
           onChange={(event) =>
             setValues((current) => ({
               ...current,
@@ -89,29 +87,41 @@ export function LoginPage() {
           }
         />
 
-        <PasswordField
-          label="Password"
-          name="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          value={values.password}
-          error={errors.password}
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              password: event.target.value,
-            }))
-          }
-        />
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-bold text-white tracking-tight">Password</span>
+            <Link className="text-sm text-[var(--muted)] transition hover:text-white" to="/auth/forgot-password">
+              Forgot password?
+            </Link>
+          </div>
 
-        <Button size="lg" type="submit" disabled={isSubmitting}>
+          <PasswordField
+            label=""
+            name="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            value={values.password}
+            error={errors.password}
+            className="min-h-11"
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                password: event.target.value,
+              }))
+            }
+          />
+        </div>
+
+        <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Signing in...' : 'Login'}
         </Button>
 
-        <p className="text-sm text-[var(--muted)]">
-          Email not verified? <Link className="text-blue-500 font-bold" to="/auth/verify-email">Verify email</Link>{' '}
-          to activate your account.
-        </p>
+        <div className="text-center text-sm text-[var(--muted)]">
+          Email not verified?{' '}
+          <Link className="underline underline-offset-4 transition hover:text-white" to="/auth/verify-email">
+            Verify email
+          </Link>
+        </div>
       </form>
     </AuthFormShell>
   )

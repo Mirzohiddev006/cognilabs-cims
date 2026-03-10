@@ -13,6 +13,7 @@ import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
+import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { SectionTitle } from '../../../shared/ui/section-title'
@@ -297,17 +298,19 @@ export function CeoUsersPage() {
   }
 
   async function handleToggleUser(user: CeoUserRecord) {
+    const nextStatusLabel = user.is_active ? 'inactive' : 'active'
+
     try {
       await ceoService.toggleUserActive(user.id)
       await dashboardQuery.refetch()
       showToast({
-        title: 'Active status updated',
-        description: `Active/inactive status changed for ${user.email}.`,
+        title: `User set to ${nextStatusLabel}`,
+        description: `${user.email} is now marked as ${nextStatusLabel}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Toggle failed',
+        title: 'Status update failed',
         description: error instanceof Error ? error.message : 'Error changing active status.',
         tone: 'error',
       })
@@ -483,9 +486,9 @@ export function CeoUsersPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.26em] text-blue-500">CEO / Day 5</p>
-          <h1 className="mt-3 text-4xl font-bold text-white tracking-tight">Users & Permissions</h1>
-          <p className="mt-4 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
+          <p className="text-sm font-semibold uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 5</p>
+          <h1 className="mt-3 text-3xl font-semibold text-white tracking-tight">Users & Permissions</h1>
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--muted)]">
             Manage user creation, edits, deletion, active status, permission details, and system overview.
           </p>
         </div>
@@ -504,7 +507,7 @@ export function CeoUsersPage() {
         <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} />
       </div>
 
-      <Card className="p-6 bg-white/5">
+      <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
             eyebrow="Users list"
@@ -565,23 +568,32 @@ export function CeoUsersPage() {
                 key: 'actions',
                 header: 'Actions',
                 render: (row) => (
-                  <div className="flex flex-wrap gap-2">
-                    <Button className="min-h-9 px-3 text-xs" variant="secondary" onClick={() => openEditUserModal(row)}>
-                      Edit
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => void handleToggleUser(row)}>
-                      Toggle
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => openPermissionModal(row)}>
-                      Permissions
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => openMessageModal(row)}>
-                      Message
-                    </Button>
-                    <Button className="min-h-9 px-3 text-xs" variant="ghost" onClick={() => void handleDeleteUser(row)}>
-                      Delete
-                    </Button>
-                  </div>
+                  <ActionsMenu
+                    label={`Open actions for ${row.email}`}
+                    items={[
+                      {
+                        label: 'Edit',
+                        onSelect: () => openEditUserModal(row),
+                      },
+                      {
+                        label: row.is_active ? 'Deactivate' : 'Activate',
+                        onSelect: () => void handleToggleUser(row),
+                      },
+                      {
+                        label: 'Permissions',
+                        onSelect: () => openPermissionModal(row),
+                      },
+                      {
+                        label: 'Message',
+                        onSelect: () => openMessageModal(row),
+                      },
+                      {
+                        label: 'Delete',
+                        onSelect: () => void handleDeleteUser(row),
+                        tone: 'danger',
+                      },
+                    ]}
+                  />
                 ),
               },
             ]}
@@ -589,7 +601,7 @@ export function CeoUsersPage() {
         </div>
       </Card>
 
-      <Card className="p-6 bg-white/5">
+      <Card className="p-6">
         <SectionTitle
           eyebrow="Permissions overview"
           title="User permissions summary"

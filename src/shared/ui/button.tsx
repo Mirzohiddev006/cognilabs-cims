@@ -19,19 +19,23 @@ type SharedButtonProps = {
 type ButtonProps = SharedButtonProps & ButtonHTMLAttributes<HTMLButtonElement>
 
 const variants = {
-  primary: 'border border-transparent bg-[var(--accent)] text-white shadow-lg shadow-blue-700/40 hover:bg-[var(--accent-strong)] hover:scale-[1.02] active:scale-[0.98]',
-  secondary: 'border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-sm hover:bg-[var(--accent-soft)] hover:scale-[1.02] active:scale-[0.98]',
-  ghost: 'border border-transparent bg-transparent text-[var(--muted-strong)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] active:scale-[0.98]',
-  danger: 'border border-transparent bg-[var(--danger)] text-white shadow-lg shadow-red-900/40 hover:bg-[#b91c1c] active:scale-[0.98]',
+  primary:
+    'border border-white/5 bg-white text-black shadow-[0_10px_30px_rgba(255,255,255,0.06)] hover:bg-zinc-100',
+  secondary:
+    'border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-white/15 hover:bg-[var(--accent-soft)]',
+  ghost:
+    'border border-transparent bg-transparent text-[var(--muted-strong)] hover:border-white/10 hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+  danger:
+    'border border-red-500/20 bg-[var(--danger)] text-white shadow-[0_10px_24px_rgba(239,68,68,0.22)] hover:bg-red-500',
 }
 
 const sizes = {
-  md: 'min-h-10 px-6 text-sm',
-  lg: 'min-h-12 px-8 text-base',
+  md: 'min-h-9 px-3.5 py-2 text-[13px]',
+  lg: 'min-h-10 px-5 py-2 text-sm',
 }
 
 const baseClassName =
-  'inline-flex items-center justify-center gap-2 rounded-full font-bold transition-all duration-300 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-black'
+  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-[color,box-shadow,background-color,border-color,transform] active:translate-y-px disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]'
 
 export function Button({
   variant = 'primary',

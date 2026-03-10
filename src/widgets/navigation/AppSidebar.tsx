@@ -45,7 +45,7 @@ export function AppSidebar() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Cognilabs</p>
             <div className="mt-2 flex items-center gap-2">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
-                <NavGlyph name="overview" />
+                <NavGlyph name="default" />
               </div>
               <div>
                 <h2 className="text-base font-bold text-white tracking-tight">{env.appName}</h2>
@@ -64,7 +64,6 @@ export function AppSidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/overview'}
                 className={({ isActive }) =>
                   cn(
                     'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-300',

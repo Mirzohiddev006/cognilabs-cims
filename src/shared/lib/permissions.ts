@@ -34,7 +34,7 @@ export function getDefaultDashboardPath(user: CurrentUser | null) {
     (item) => item.defaultRedirect && hasPermission(user, item.permissionKey),
   )
 
-  return candidate?.to ?? '/overview'
+  return candidate?.to ?? '/crm'
 }
 
 export function isKnownProtectedPath(pathname: string) {

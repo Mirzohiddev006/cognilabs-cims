@@ -9,40 +9,40 @@ export const updateTrackingService = {
   },
 
   myProfile() {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/my-profile',
     })
   },
 
   monthlyReport(month?: number, year?: number) {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/my-monthly-report',
       query: { month, year },
     })
   },
 
   calendar(month?: number, year?: number) {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/my-daily-calendar',
       query: { month, year },
     })
   },
 
   trends() {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/my-trends',
     })
   },
 
   recent(limit = 20, userId?: number) {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/recent',
       query: { limit, user_id: userId },
     })
   },
 
   missing(date?: string) {
-    return request<string>({
+    return request<unknown>({
       path: '/update-tracking/missing',
       query: { date_check: date },
     })

@@ -1,19 +1,33 @@
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, ReactNode } from 'react'
+import { cn } from '../../../shared/lib/cn'
 import { Input } from '../../../shared/ui/input'
 
 type AuthFieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string
   error?: string
   hint?: string
+  leadingIcon?: ReactNode
 }
 
-export function AuthField({ label, error, hint, id, ...props }: AuthFieldProps) {
+export function AuthField({ label, error, hint, id, className, leadingIcon, ...props }: AuthFieldProps) {
   const inputId = id ?? props.name
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
       <span className="text-sm font-bold text-white tracking-tight">{label}</span>
-      <Input id={inputId} {...props} />
+      <div className="relative">
+        {leadingIcon ? (
+          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
+            {leadingIcon}
+          </span>
+        ) : null}
+
+        <Input
+          id={inputId}
+          className={cn(leadingIcon ? 'pl-10' : null, className)}
+          {...props}
+        />
+      </div>
       {error ? <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
       {!error && hint ? <span className="text-xs font-medium text-zinc-500">{hint}</span> : null}
     </label>

@@ -76,9 +76,9 @@ export function CustomerDetailPage() {
     <section className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">CRM / Detail</p>
-          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">{customer.full_name}</h1>
-          <p className="mt-3 text-sm font-medium text-zinc-500">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">CRM / Detail</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white tracking-tight">{customer.full_name}</h1>
+          <p className="mt-3 text-sm text-zinc-500">
             {customer.platform} | {customer.phone_number}
           </p>
         </div>
@@ -97,29 +97,29 @@ export function CustomerDetailPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Status</p>
+        <Card className="flex min-h-[140px] flex-col justify-between p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Status</p>
           <div className="mt-3">
             <Badge className="bg-white/10 text-white border-white/20">{customer.status}</Badge>
           </div>
         </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Assistant</p>
-          <p className="mt-3 text-lg font-bold text-white tracking-tight">{customer.assistant_name || '-'}</p>
+        <Card className="flex min-h-[140px] flex-col justify-between p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Assistant</p>
+          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{customer.assistant_name || '-'}</p>
         </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Language</p>
-          <p className="mt-3 text-lg font-bold text-white tracking-tight">{customer.conversation_language || '-'}</p>
+        <Card className="flex min-h-[140px] flex-col justify-between p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Language</p>
+          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{customer.conversation_language || '-'}</p>
         </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">Created</p>
-          <p className="mt-3 text-lg font-bold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
+        <Card className="flex min-h-[140px] flex-col justify-between p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Created</p>
+          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
         </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="p-6 bg-white/5 border-white/10">
-          <h2 className="text-xl font-bold text-white tracking-tight">Profile</h2>
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-white tracking-tight">Profile</h2>
           <div className="mt-5 grid gap-4">
             {[
               ['Username', customer.username || '-'],
@@ -128,27 +128,27 @@ export function CustomerDetailPage() {
               ['Audio file ID', customer.audio_file_id || '-'],
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-black/40 px-5 py-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">{label}</p>
-                <p className="mt-2 text-sm font-medium text-white">{value}</p>
+              <div key={label} className="rounded-[18px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">{label}</p>
+                <p className="mt-3 text-sm text-white">{value}</p>
               </div>
             ))}
           </div>
         </Card>
 
         <div className="grid gap-6">
-          <Card className="p-6 bg-white/5 border-white/10">
-            <h2 className="text-xl font-bold text-white tracking-tight">Notes</h2>
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-white tracking-tight">Notes</h2>
             {customer.notes ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed font-medium text-zinc-400">{customer.notes}</p>
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-400">{customer.notes}</p>
             ) : (
               <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
             )}
           </Card>
-          <Card className="p-6 bg-white/5 border-white/10">
-            <h2 className="text-xl font-bold text-white tracking-tight">AI Summary</h2>
+          <Card className="p-6">
+            <h2 className="text-lg font-semibold text-white tracking-tight">AI Summary</h2>
             {customer.aisummary ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed font-medium text-zinc-400">
+              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-400">
                 {customer.aisummary}
               </p>
             ) : (

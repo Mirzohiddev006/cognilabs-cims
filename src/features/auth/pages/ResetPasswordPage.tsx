@@ -1,5 +1,5 @@
 import { startTransition, useMemo, useState, type FormEvent } from 'react'
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -75,15 +75,24 @@ export function ResetPasswordPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Auth / Reset"
-      title="Set new password"
-      description="Confirm your email and code to establish a new access password."
-      footerLinks={[
-        { label: 'Forgot password', to: '/auth/forgot-password' },
-        { label: 'Login', to: '/auth/login' },
-      ]}
+      eyebrow="Account Recovery"
+      title="Reset your password"
+      description="Enter the verification code from your email and set a new password."
+      footerLinks={[{ label: 'Back to login', to: '/auth/login' }]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
+          <Link
+            to="/auth/forgot-password"
+            className="rounded-md px-3 py-2 text-center text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
+          >
+            Forgot Password
+          </Link>
+          <span className="rounded-md bg-[var(--card)] px-3 py-2 text-center text-sm font-medium text-white">
+            Reset Password
+          </span>
+        </div>
+
         <AuthFeedback tone="info" message={statusMessage} />
         <AuthFeedback tone="error" message={submitError} />
 
@@ -127,7 +136,7 @@ export function ResetPasswordPage() {
           />
         </div>
 
-        <Button size="lg" type="submit" disabled={isSubmitting}>
+        <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Updating...' : 'Reset password'}
         </Button>
       </form>

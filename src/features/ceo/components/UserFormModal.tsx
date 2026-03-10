@@ -1,6 +1,7 @@
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
 import { Button } from '../../../shared/ui/button'
+import { SelectField } from '../../../shared/ui/select-field'
 import type { UserPayload } from '../../../shared/api/services/ceo.service'
 
 export type UserFormValues = UserPayload & {
@@ -97,17 +98,12 @@ export function UserFormModal({
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-bold text-white tracking-tight">Role</span>
-          <select
+          <SelectField
             value={values.role}
-            onChange={(event) => onChange('role', event.target.value)}
-            className="min-h-12 rounded-xl border border-[var(--border)] bg-white/5 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
-          >
-            {roleOptions.map((role) => (
-              <option key={role} value={role} className="bg-black">
-                {role}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => onChange('role', value)}
+            options={roleOptions.map((role) => ({ value: role, label: role }))}
+            className="min-h-12 rounded-xl px-4"
+          />
         </label>
       </div>
 

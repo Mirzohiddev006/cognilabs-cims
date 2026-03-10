@@ -102,7 +102,7 @@ export const crmService = {
 
   summaryStats() {
     return request<CustomerStatsResponse>({
-      path: '/crm/customers/stats/summary',
+      path: '/crm/stats',
     })
   },
 

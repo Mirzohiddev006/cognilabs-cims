@@ -11,7 +11,7 @@ export function NotFoundPage() {
           The requested route is not available. Please check the URL or navigate back to the dashboard.
         </p>
         <Button asChild className="mt-10">
-          <Link to="/">Back to Overview</Link>
+          <Link to="/">Back to Dashboard</Link>
         </Button>
       </div>
     </div>

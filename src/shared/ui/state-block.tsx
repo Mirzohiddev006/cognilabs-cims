@@ -13,8 +13,8 @@ type StateBlockProps = {
 }
 
 const toneStyles = {
-  loading: 'bg-white/5 border-white/10',
-  empty: 'bg-white/5 border-white/10',
+  loading: 'bg-[var(--card)] border-white/10',
+  empty: 'bg-[var(--card)] border-white/10',
   error: 'bg-rose-500/5 border-rose-500/20',
 }
 
@@ -28,10 +28,10 @@ export function StateBlock({
   children,
 }: StateBlockProps) {
   return (
-    <Card className={`p-10 text-center flex flex-col items-center backdrop-blur-sm ${toneStyles[tone]}`}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-blue-500">{eyebrow}</p>
-      <h3 className="mt-4 text-3xl font-bold text-white tracking-tight">{title}</h3>
-      <p className="mt-4 max-w-md text-sm font-medium leading-relaxed text-zinc-500">{description}</p>
+    <Card className={`flex flex-col items-center p-10 text-center ${toneStyles[tone]}`}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--accent)]">{eyebrow}</p>
+      <h3 className="mt-4 text-2xl font-semibold text-white tracking-tight">{title}</h3>
+      <p className="mt-4 max-w-md text-sm leading-6 text-[var(--muted)]">{description}</p>
       {children ? <div className="mt-5">{children}</div> : null}
       {actionLabel && onAction ? (
         <div className="mt-6">

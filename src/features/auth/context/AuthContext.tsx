@@ -7,7 +7,11 @@ import {
 } from 'react'
 import { authService } from '../../../shared/api/services/auth.service'
 import type { CurrentUser, TokenResponse } from '../../../shared/api/types'
-import { getDefaultDashboardPath, hasPermission as canAccess } from '../../../shared/lib/permissions'
+import {
+  getDefaultDashboardPath,
+  hasPermission as canAccess,
+  isKnownProtectedPath,
+} from '../../../shared/lib/permissions'
 import {
   clearSession,
   getAccessToken,
@@ -35,6 +39,20 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const legacyRedirectMap: Record<string, string> = {
+  '/ceo': '/ceo/dashboard',
+  '/overview': '/crm',
+  '/finance': '/crm',
+}
+
+function stripTrailingSlash(pathname: string) {
+  if (pathname.length > 1 && pathname.endsWith('/')) {
+    return pathname.slice(0, -1)
+  }
+
+  return pathname
+}
+
 function normalizeRedirectPath(redirectUrl: string | null | undefined) {
   if (!redirectUrl?.trim()) {
     return null
@@ -45,9 +63,35 @@ function normalizeRedirectPath(redirectUrl: string | null | undefined) {
       ? new URL(redirectUrl)
       : new URL(redirectUrl, 'http://cims.local')
 
-    return `${normalized.pathname}${normalized.search}${normalized.hash}`
+    const pathname = stripTrailingSlash(normalized.pathname)
+    const mappedPathname = legacyRedirectMap[pathname] ?? pathname
+
+    if (
+      mappedPathname !== '/' &&
+      !mappedPathname.startsWith('/auth/') &&
+      !isKnownProtectedPath(mappedPathname)
+    ) {
+      return null
+    }
+
+    return `${mappedPathname}${normalized.search}${normalized.hash}`
   } catch {
-    return redirectUrl.startsWith('/') ? redirectUrl : null
+    if (!redirectUrl.startsWith('/')) {
+      return null
+    }
+
+    const pathname = stripTrailingSlash(redirectUrl)
+    const mappedPathname = legacyRedirectMap[pathname] ?? pathname
+
+    if (
+      mappedPathname !== '/' &&
+      !mappedPathname.startsWith('/auth/') &&
+      !isKnownProtectedPath(mappedPathname)
+    ) {
+      return null
+    }
+
+    return mappedPathname
   }
 }
 

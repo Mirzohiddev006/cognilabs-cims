@@ -1,17 +1,18 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
-import { formatCompactNumber, formatShortDate } from '../../../shared/lib/format'
+import { formatCompactNumber } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
+import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
-import { SectionTitle } from '../../../shared/ui/section-title'
+import { SelectField } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
@@ -107,7 +108,85 @@ function buildCustomerFormData(
   return formData
 }
 
-function StatusPill({
+function getInitials(name: string) {
+  return (
+    name
+      .split(' ')
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || '?'
+  )
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return '-'
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return '-'
+  }
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(parsed)
+}
+
+function normalizeDateValue(value?: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  return parsed
+}
+
+function normalizeStatusKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+function getStatusCount(statusDict: Record<string, number> | undefined, ...keys: string[]) {
+  if (!statusDict) {
+    return 0
+  }
+
+  const normalizedCandidates = keys.map(normalizeStatusKey)
+
+  for (const [key, count] of Object.entries(statusDict)) {
+    if (normalizedCandidates.includes(normalizeStatusKey(key))) {
+      return count
+    }
+  }
+
+  return 0
+}
+
+function resolveMetricValue(primary: number | undefined, fallback: number) {
+  if (typeof primary === 'number' && primary > 0) {
+    return primary
+  }
+
+  if (fallback > 0) {
+    return fallback
+  }
+
+  return primary ?? fallback
+}
+
+function StatusBadge({
   status,
   statusMetaMap,
 }: {
@@ -118,15 +197,37 @@ function StatusPill({
 
   return (
     <span
-      className="inline-flex w-fit items-center rounded-md border px-2 py-0.5 text-xs font-medium"
+      className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize"
       style={{
         borderColor: meta?.color ?? 'var(--border)',
         color: meta?.color ?? 'var(--foreground)',
-        background: meta?.color ? `${meta.color}14` : 'var(--accent-soft)',
+        backgroundColor: meta?.color ? `${meta.color}18` : 'var(--muted-surface)',
       }}
     >
       {meta?.label ?? status}
     </span>
+  )
+}
+
+function MetricCard({
+  label,
+  value,
+  description,
+}: {
+  label: string
+  value: number
+  description: string
+}) {
+  return (
+    <Card className="flex min-h-[140px] flex-col justify-between p-5">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
+        <p className="mt-5 text-[2.125rem] leading-none font-semibold text-white tracking-tight">
+          {formatCompactNumber(value)}
+        </p>
+      </div>
+      <p className="text-sm leading-6 text-[var(--muted)]">{description}</p>
+    </Card>
   )
 }
 
@@ -137,11 +238,12 @@ export function CrmDashboardPage() {
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
+  const [phoneFilter, setPhoneFilter] = useState('')
+  const deferredPhoneFilter = useDeferredValue(phoneFilter)
   const [statusFilter, setStatusFilter] = useState('')
   const [platformFilter, setPlatformFilter] = useState('')
-  const [showAll, setShowAll] = useState(false)
-  const [salesCustomerType, setSalesCustomerType] = useState('')
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState<number[]>([])
+  const [dateStart, setDateStart] = useState('')
+  const [dateEnd, setDateEnd] = useState('')
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
@@ -150,22 +252,9 @@ export function CrmDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
-  const dashboardQuery = useAsyncData(
-    () =>
-      crmService.dashboard({
-        search: deferredSearch || undefined,
-        status_filter: statusFilter || undefined,
-        show_all: showAll,
-      }),
-    [deferredSearch, statusFilter, showAll],
-  )
+  const dashboardQuery = useAsyncData(() => crmService.dashboard(), [])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
   const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
-  const salesStatsQuery = useAsyncData(
-    () => crmService.salesStats(salesCustomerType || undefined),
-    [salesCustomerType],
-  )
-  const conversionQuery = useAsyncData(() => crmService.conversionRate(), [])
 
   const customers = dashboardQuery.data?.customers ?? emptyCustomers
   const statusOptions = statusesQuery.data ?? emptyStatuses
@@ -173,32 +262,50 @@ export function CrmDashboardPage() {
   const statusMetaMap = useMemo(() => new Map(statusOptions.map((item) => [item.value, item])), [statusOptions])
 
   const availablePlatforms = useMemo(() => {
-    return Array.from(new Set(customers.map((item) => item.platform).filter(Boolean))).sort()
+    return Array.from(new Set(customers.map((item) => item.platform).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b),
+    )
   }, [customers])
 
   const displayedCustomers = useMemo(() => {
-    if (!platformFilter) {
-      return customers
-    }
+    const normalizedSearch = deferredSearch.trim().toLowerCase()
+    const normalizedPhone = deferredPhoneFilter.trim().toLowerCase()
+    const startDate = dateStart ? new Date(`${dateStart}T00:00:00`) : null
+    const endDate = dateEnd ? new Date(`${dateEnd}T23:59:59.999`) : null
 
-    return customers.filter((customer) => customer.platform === platformFilter)
-  }, [customers, platformFilter])
+    return customers.filter((customer) => {
+      const matchesSearch = normalizedSearch
+        ? [customer.full_name, customer.username, customer.notes]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(normalizedSearch))
+        : true
 
-  useEffect(() => {
-    setSelectedCustomerIds((current) => current.filter((id) => displayedCustomers.some((customer) => customer.id === id)))
-  }, [displayedCustomers])
+      const matchesPhone = normalizedPhone
+        ? customer.phone_number.toLowerCase().includes(normalizedPhone)
+        : true
 
-  const areAllDisplayedSelected =
-    displayedCustomers.length > 0 && displayedCustomers.every((customer) => selectedCustomerIds.includes(customer.id))
+      const matchesStatus = statusFilter ? customer.status === statusFilter : true
+      const matchesPlatform = platformFilter ? customer.platform === platformFilter : true
+
+      const createdAt = normalizeDateValue(customer.created_at)
+      const matchesStart = startDate && createdAt ? createdAt >= startDate : !startDate
+      const matchesEnd = endDate && createdAt ? createdAt <= endDate : !endDate
+
+      return matchesSearch && matchesPhone && matchesStatus && matchesPlatform && matchesStart && matchesEnd
+    })
+  }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter])
 
   async function refreshAll() {
-    await Promise.all([
-      dashboardQuery.refetch(),
-      statusesQuery.refetch(),
-      summaryQuery.refetch(),
-      salesStatsQuery.refetch(),
-      conversionQuery.refetch(),
-    ])
+    await Promise.all([dashboardQuery.refetch(), statusesQuery.refetch(), summaryQuery.refetch()])
+  }
+
+  function resetFilters() {
+    setSearch('')
+    setPhoneFilter('')
+    setStatusFilter('')
+    setPlatformFilter('')
+    setDateStart('')
+    setDateEnd('')
   }
 
   function openCreateModal() {
@@ -217,25 +324,6 @@ export function CrmDashboardPage() {
     setIsFormOpen(true)
   }
 
-  function toggleCustomerSelection(customerId: number, checked: boolean) {
-    setSelectedCustomerIds((current) =>
-      checked ? Array.from(new Set([...current, customerId])) : current.filter((id) => id !== customerId),
-    )
-  }
-
-  function toggleAllDisplayed(checked: boolean) {
-    if (!checked) {
-      setSelectedCustomerIds((current) =>
-        current.filter((id) => !displayedCustomers.some((customer) => customer.id === id)),
-      )
-      return
-    }
-
-    setSelectedCustomerIds((current) =>
-      Array.from(new Set([...current, ...displayedCustomers.map((customer) => customer.id)])),
-    )
-  }
-
   async function handleDeleteCustomer(customer: CustomerSummary) {
     const approved = await confirm({
       title: `Delete ${customer.full_name}?`,
@@ -251,7 +339,7 @@ export function CrmDashboardPage() {
 
     try {
       await crmService.deleteCustomer(customer.id)
-      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch(), conversionQuery.refetch()])
+      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
         title: 'Customer deleted',
         description: `${customer.full_name} has been removed from the CRM list.`,
@@ -260,46 +348,6 @@ export function CrmDashboardPage() {
     } catch (error) {
       showToast({
         title: 'Delete failed',
-        description: getApiErrorMessage(error),
-        tone: 'error',
-      })
-    }
-  }
-
-  async function handleBulkDelete() {
-    if (selectedCustomerIds.length === 0) {
-      showToast({
-        title: 'No customers selected',
-        description: 'Please select at least one customer for bulk deletion.',
-        tone: 'info',
-      })
-      return
-    }
-
-    const approved = await confirm({
-      title: `Delete ${selectedCustomerIds.length} customers?`,
-      description: 'Selected customers will be permanently removed from the system.',
-      confirmLabel: 'Delete selected',
-      cancelLabel: 'Cancel',
-      tone: 'danger',
-    })
-
-    if (!approved) {
-      return
-    }
-
-    try {
-      await crmService.bulkDelete(selectedCustomerIds)
-      setSelectedCustomerIds([])
-      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch(), conversionQuery.refetch()])
-      showToast({
-        title: 'Bulk delete complete',
-        description: 'Selected customers have been successfully removed.',
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: 'Bulk delete failed',
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -334,15 +382,10 @@ export function CrmDashboardPage() {
 
       setIsFormOpen(false)
       setAudioFile(null)
-      await Promise.all([
-        dashboardQuery.refetch(),
-        summaryQuery.refetch(),
-        salesStatsQuery.refetch(),
-        conversionQuery.refetch(),
-      ])
+      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
         title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
-        description: 'The CRM dashboard list has been refreshed.',
+        description: 'The CRM list has been refreshed.',
         tone: 'success',
       })
     } catch (error) {
@@ -359,9 +402,9 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM / Leads"
+        eyebrow="CRM"
         title="CRM dashboard loading"
-        description="Retrieving customers, status statistics, and sales data."
+        description="Retrieving customers and summary statistics."
       />
     )
   }
@@ -369,7 +412,7 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM / Leads"
+        eyebrow="CRM"
         title="CRM dashboard failed to load"
         description="Could not retrieve CRM data. Please retry."
         actionLabel="Retry"
@@ -380,284 +423,253 @@ export function CrmDashboardPage() {
     )
   }
 
+  const stats = summaryQuery.data
+  const fallbackStatusDict = dashboardQuery.data?.status_dict ?? dashboardQuery.data?.status_stats
+  const statusFilterOptions = [
+    { value: '', label: 'All statuses' },
+    ...(dashboardQuery.data?.status_choices ?? statusOptions).map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  ]
+  const platformFilterOptions = [
+    { value: '', label: 'All platforms' },
+    ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
+  ]
+
   return (
-    <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-[0.22em] text-blue-500">CRM / Leads</p>
-          <h1 className="mt-2 text-4xl font-bold text-white tracking-tight">Customer & Sales Analytics</h1>
-          <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-[var(--muted)]">
-            Manage leads with advanced search, status filtering, and comprehensive sales tracking.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => void refreshAll()}>
-            Refresh
-          </Button>
-          <Button variant="ghost" onClick={() => void handleBulkDelete()}>
-            Delete selected
-          </Button>
-          <Button onClick={openCreateModal}>Add customer</Button>
-        </div>
-      </div>
-
+    <section className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Visible customers</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(displayedCustomers.length)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Based on active filters.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Today leads</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(salesStatsQuery.data?.today ?? 0)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Incoming today.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">This week</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {formatCompactNumber(salesStatsQuery.data?.this_week ?? 0)}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">Weekly performance.</p>
-        </Card>
-        <Card className="p-6 bg-white/5 border-white/10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Conversion</p>
-          <p className="mt-3 text-3xl font-bold text-white">
-            {`${Math.round(conversionQuery.data?.conversion_rate ?? 0)}%`}
-          </p>
-          <p className="mt-2 text-xs font-medium text-[var(--muted)]">
-            {conversionQuery.data?.project_started_count ?? 0} projects / {conversionQuery.data?.total_customers ?? 0} leads.
-          </p>
-        </Card>
+        <MetricCard
+          label="Total Customers"
+          value={stats?.total_customers ?? customers.length}
+          description="Total clients in CRM"
+        />
+        <MetricCard
+          label="Need to Call"
+          value={resolveMetricValue(stats?.need_to_call, getStatusCount(fallbackStatusDict, 'need_to_call', 'need to call'))}
+          description="Leads to be contacted"
+        />
+        <MetricCard
+          label="Contacted"
+          value={resolveMetricValue(stats?.contacted, getStatusCount(fallbackStatusDict, 'contacted'))}
+          description="Initial contact made"
+        />
+        <MetricCard
+          label="Project Started"
+          value={resolveMetricValue(stats?.project_started, getStatusCount(fallbackStatusDict, 'project_started', 'project started'))}
+          description="Projects in kickoff phase"
+        />
+        <MetricCard
+          label="Continuing"
+          value={resolveMetricValue(stats?.continuing, getStatusCount(fallbackStatusDict, 'continuing'))}
+          description="Ongoing projects"
+        />
+        <MetricCard
+          label="Finished"
+          value={resolveMetricValue(stats?.finished, getStatusCount(fallbackStatusDict, 'finished'))}
+          description="Projects successfully completed"
+        />
+        <MetricCard
+          label="Rejected"
+          value={resolveMetricValue(stats?.rejected, getStatusCount(fallbackStatusDict, 'rejected'))}
+          description="Deals not closed"
+        />
       </div>
 
-      <Card className="p-6 bg-white/5 border-white/10">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="min-w-[220px] flex-1">
+      <Card className="overflow-hidden">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-6">
+          <div>
+            <h2 className="text-2xl font-semibold text-white">Clients</h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              Manage your clients ({formatCompactNumber(displayedCustomers.length)} total)
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => void refreshAll()}>
+              Refresh
+            </Button>
+            <Button onClick={openCreateModal}>+ Add Client</Button>
+          </div>
+        </div>
+
+        <div className="border-b border-[var(--border)] px-6 py-5">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold text-white">Filters</h3>
+            <Button variant="ghost" onClick={resetFilters}>
+              Clear
+            </Button>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
             <label className="grid gap-2">
-              <span className="text-sm font-bold text-white tracking-tight">Search</span>
+              <span className="text-sm font-medium text-white">Search</span>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by name, phone, or notes..."
+                placeholder="Name or username"
               />
             </label>
-          </div>
-          <div className="min-w-[180px]">
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-white tracking-tight">Status</span>
-              <select
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value)}
-                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
-              >
-                <option value="">All statuses</option>
-                {(dashboardQuery.data?.status_choices ?? statusOptions).map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="min-w-[180px]">
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-white tracking-tight">Platform</span>
-              <select
-                value={platformFilter}
-                onChange={(event) => setPlatformFilter(event.target.value)}
-                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
-              >
-                <option value="" className="bg-black">All platforms</option>
-                {availablePlatforms.map((platform) => (
-                  <option key={platform} value={platform} className="bg-black">
-                    {platform}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="min-w-[180px]">
-            <label className="grid gap-2">
-              <span className="text-sm font-bold text-white tracking-tight">Sales type</span>
-              <select
-                value={salesCustomerType}
-                onChange={(event) => setSalesCustomerType(event.target.value)}
-                className="min-h-10 rounded-xl border border-[var(--border)] bg-black/40 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
-              >
-                <option value="" className="bg-black">All leads</option>
-                <option value="local" className="bg-black">Local</option>
-                <option value="international" className="bg-black">International</option>
-              </select>
-            </label>
-          </div>
-          <label className="flex min-h-10 items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 cursor-pointer transition hover:bg-white/10">
-            <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-black/40 text-blue-500 focus:ring-blue-500/50" checked={showAll} onChange={(event) => setShowAll(event.target.checked)} />
-            <span className="text-sm font-bold text-white tracking-tight">Show all</span>
-          </label>
-        </div>
-      </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="p-6 bg-white/5 border-white/10">
-          <SectionTitle
-            eyebrow="Customers"
-            title="CRM dashboard table"
-            description="Advanced table with status indicators and quick actions."
-          />
-          <div className="mt-6">
-            <DataTable
-              caption="CRM customers table"
-              rows={displayedCustomers}
-              getRowKey={(row) => String(row.id)}
-              emptyState={
-                <EmptyStateBlock
-                  eyebrow="CRM"
-                  title="No customers found"
-                  description="Current filters yielded no results or the database is empty."
-                />
-              }
-              columns={[
-                {
-                  key: 'select',
-                  header: (
-                    <input
-                      type="checkbox"
-                      checked={areAllDisplayedSelected}
-                      onChange={(event) => toggleAllDisplayed(event.target.checked)}
-                      aria-label="Select all customers"
-                    />
-                  ),
-                  render: (row) => (
-                    <input
-                      type="checkbox"
-                      checked={selectedCustomerIds.includes(row.id)}
-                      onChange={(event) => toggleCustomerSelection(row.id, event.target.checked)}
-                      aria-label={`Select ${row.full_name}`}
-                    />
-                  ),
-                },
-                {
-                  key: 'customer',
-                  header: 'Customer',
-                  render: (row) => (
-                    <div>
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white">Status</span>
+              <SelectField
+                value={statusFilter}
+                options={statusFilterOptions}
+                onValueChange={setStatusFilter}
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white">Platform</span>
+              <SelectField
+                value={platformFilter}
+                options={platformFilterOptions}
+                onValueChange={setPlatformFilter}
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white">Phone</span>
+              <Input
+                value={phoneFilter}
+                onChange={(event) => setPhoneFilter(event.target.value)}
+                placeholder="Search by phone"
+              />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white">Start date</span>
+              <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} />
+            </label>
+
+            <label className="grid gap-2">
+              <span className="text-sm font-medium text-white">End date</span>
+              <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} />
+            </label>
+          </div>
+        </div>
+
+        <div className="px-6 py-5">
+          <DataTable
+            caption="CRM customers table"
+            rows={displayedCustomers}
+            getRowKey={(row) => String(row.id)}
+            emptyState={
+              <EmptyStateBlock
+                eyebrow="CRM"
+                title="No clients found"
+                description="The current filters returned no client records."
+              />
+            }
+            columns={[
+              {
+                key: 'client',
+                header: 'Client',
+                render: (row) => (
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--muted-surface)] text-sm font-semibold text-white">
+                      {getInitials(row.full_name)}
+                    </div>
+                    <div className="min-w-0">
                       <button
                         type="button"
                         onClick={() => navigate(`/crm/customers/${row.id}`)}
-                        className="text-left font-bold text-white tracking-tight transition hover:text-blue-400"
+                        className="block truncate text-left font-semibold text-white transition hover:text-zinc-300"
                       >
                         {row.full_name}
                       </button>
-                      <p className="text-xs font-medium text-zinc-500">{row.username || row.phone_number}</p>
+                      <span className="block truncate text-xs text-[var(--muted)]">{row.username || 'none'}</span>
                     </div>
-                  ),
-                },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  render: (row) => <StatusPill status={row.status} statusMetaMap={statusMetaMap} />,
-                },
-                {
-                  key: 'platform',
-                  header: 'Platform',
-                  render: (row) => row.platform,
-                },
-                {
-                  key: 'assistant',
-                  header: 'Assistant',
-                  render: (row) => row.assistant_name || '-',
-                },
-                {
-                  key: 'created_at',
-                  header: 'Created',
-                  render: (row) => formatShortDate(row.created_at),
-                },
-                {
-                  key: 'actions',
-                  header: 'Actions',
-                  render: (row) => (
-                    <div className="flex flex-wrap gap-2">
-                      <Button className="px-3 text-xs" variant="secondary" onClick={() => navigate(`/crm/customers/${row.id}`)}>
-                        View
-                      </Button>
-                      <Button className="px-3 text-xs" variant="ghost" onClick={() => openEditModal(row)}>
-                        Edit
-                      </Button>
-                      <Button className="px-3 text-xs" variant="danger" onClick={() => void handleDeleteCustomer(row)}>
-                        Delete
-                      </Button>
-                    </div>
-                  ),
-                },
-              ]}
-            />
-          </div>
-        </Card>
-
-        <div className="grid gap-6">
-          <Card className="p-6 bg-white/5 border-white/10">
-            <SectionTitle
-              eyebrow="Status summary"
-              title="Breakdown"
-              description="Real-time status distribution percentage."
-            />
-            <div className="mt-5 grid gap-3">
-              {Object.entries(summaryQuery.data?.status_percentages ?? {}).length > 0 ? (
-                Object.entries(summaryQuery.data?.status_percentages ?? {}).map(([statusKey, value]) => (
-                  <div key={statusKey} className="rounded-xl border border-white/10 bg-black/40 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <StatusPill status={statusKey} statusMetaMap={statusMetaMap} />
-                      <span className="text-sm font-bold text-white">{Math.round(value)}%</span>
-                    </div>
-                    <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                      Volume: {dashboardQuery.data?.status_stats?.[statusKey] ?? summaryQuery.data?.status_dict?.[statusKey] ?? 0}
-                    </p>
                   </div>
-                ))
-              ) : (
-                <EmptyStateBlock
-                  eyebrow="Status"
-                  title="No statistics"
-                  description="Status summary data unavailable."
-                />
-              )}
-            </div>
-          </Card>
-
-          <Card className="p-6 bg-white/5 border-white/10">
-            <SectionTitle
-              eyebrow="Sales"
-              title="Analytics"
-              description="Lead flow and project conversion rates."
-            />
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[
-                ['Today', salesStatsQuery.data?.today ?? 0],
-                ['Yesterday', salesStatsQuery.data?.yesterday ?? 0],
-                ['This week', salesStatsQuery.data?.this_week ?? 0],
-                ['Last week', salesStatsQuery.data?.last_week ?? 0],
-              ].map(([label, value]) => (
-                <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-blue-500">{label}</p>
-                  <p className="mt-2 text-2xl font-bold text-white tracking-tight">{formatCompactNumber(Number(value))}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4">
-              <p className="text-xs font-bold text-white tracking-tight">Conversion period</p>
-              <p className="mt-2 text-xs font-medium text-zinc-500">
-                {conversionQuery.data?.period ?? 'Last 100 leads'} | Projects:{' '}
-                {conversionQuery.data?.project_started_count ?? 0} | Total:{' '}
-                {conversionQuery.data?.total_customers ?? 0}
-              </p>
-            </div>
-          </Card>
+                ),
+              },
+              {
+                key: 'platform',
+                header: 'Platform',
+                render: (row) => row.platform || '-',
+              },
+              {
+                key: 'phone',
+                header: 'Phone',
+                render: (row) => row.phone_number,
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (row) => <StatusBadge status={row.status} statusMetaMap={statusMetaMap} />,
+              },
+              {
+                key: 'language',
+                header: 'Language',
+                render: (row) => row.conversation_language || '-',
+              },
+              {
+                key: 'assistant',
+                header: 'Assistant',
+                render: (row) => row.assistant_name || '-',
+              },
+              {
+                key: 'audio',
+                header: 'Audio',
+                render: (row) =>
+                  row.audio_url ? (
+                    <a
+                      href={row.audio_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm text-white underline underline-offset-4"
+                    >
+                      Open
+                    </a>
+                  ) : (
+                    '-'
+                  ),
+              },
+              {
+                key: 'notes',
+                header: 'Notes',
+                render: (row) => (
+                  <span className="block max-w-[260px] truncate text-[var(--muted-strong)]">
+                    {row.notes || '-'}
+                  </span>
+                ),
+              },
+              {
+                key: 'recall',
+                header: 'Recall Time',
+                render: (row) => formatDateTime(row.recall_time),
+              },
+              {
+                key: 'created',
+                header: 'Created',
+                render: (row) => formatDateTime(row.created_at),
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                render: (row) => (
+                  <ActionsMenu
+                    label={`Open actions for ${row.full_name}`}
+                    items={[
+                      {
+                        label: 'Edit',
+                        onSelect: () => openEditModal(row),
+                      },
+                      {
+                        label: 'Delete',
+                        onSelect: () => void handleDeleteCustomer(row),
+                        tone: 'danger',
+                      },
+                    ]}
+                  />
+                ),
+              },
+            ]}
+          />
         </div>
-      </div>
+      </Card>
 
       <CustomerFormModal
         open={isFormOpen}

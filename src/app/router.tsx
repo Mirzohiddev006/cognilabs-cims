@@ -6,7 +6,6 @@ import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
 import { DashboardRedirectPage } from '../features/auth/pages/DashboardRedirectPage'
 import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '../features/auth/pages/LoginPage'
-import { RegisterPage } from '../features/auth/pages/RegisterPage'
 import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
 import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
@@ -14,8 +13,6 @@ import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
 import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
 import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
 import { NotFoundPage } from '../features/errors/pages/NotFoundPage'
-import { FinanceDashboardPage } from '../features/finance/pages/FinanceDashboardPage'
-import { ProjectOverviewPage } from '../features/overview/pages/ProjectOverviewPage'
 import { UpdateTrackingPage } from '../features/updateTracking/pages/UpdateTrackingPage'
 import { RouterAuthBoundary } from './providers/RouterAuthBoundary'
 
@@ -35,10 +32,6 @@ export const router = createBrowserRouter([
                 element: <DashboardRedirectPage />,
               },
               {
-                path: 'overview',
-                element: <ProjectOverviewPage />,
-              },
-              {
                 path: 'dashboard-redirect',
                 element: <DashboardRedirectPage />,
               },
@@ -47,6 +40,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <CeoDashboardPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <Navigate to="/ceo/dashboard" replace />
                   </ProtectedRoute>
                 ),
               },
@@ -71,14 +72,6 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="crm">
                     <CustomerDetailPage />
-                  </ProtectedRoute>
-                ),
-              },
-              {
-                path: 'finance',
-                element: (
-                  <ProtectedRoute permissionKey="finance_list">
-                    <FinanceDashboardPage />
                   </ProtectedRoute>
                 ),
               },
@@ -111,7 +104,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'register',
-                element: <RegisterPage />,
+                element: <Navigate to="/auth/login" replace />,
               },
               {
                 path: 'verify-email',

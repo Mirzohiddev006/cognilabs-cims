@@ -1,6 +1,7 @@
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
+import { SelectField } from '../../../shared/ui/select-field'
 import { Textarea } from '../../../shared/ui/textarea'
 
 export type CustomerFormValues = {
@@ -34,9 +35,6 @@ type CustomerFormModalProps = {
   onSubmit: () => void
   isSubmitting: boolean
 }
-
-const selectClassName =
-  'min-h-10 w-full rounded-md border border-[var(--border)] bg-white px-3 text-sm text-[var(--foreground)] shadow-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(15,23,42,0.08)]'
 
 const conversationLanguages = [
   { value: 'uz', label: 'Uzbek' },
@@ -95,18 +93,11 @@ export function CustomerFormModal({
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Status</span>
-          <select
+          <SelectField
             value={values.status}
-            onChange={(event) => onChange('status', event.target.value)}
-            className={selectClassName}
-          >
-            <option value="">Status tanlang</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => onChange('status', value)}
+            options={[{ value: '', label: 'Status tanlang' }, ...statusOptions]}
+          />
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Username</span>
@@ -126,38 +117,26 @@ export function CustomerFormModal({
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Customer type</span>
-          <select
+          <SelectField
             value={values.customer_type}
-            onChange={(event) => onChange('customer_type', event.target.value)}
-            className={selectClassName}
-          >
-            {customerTypes.map((option) => (
-              <option key={option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => onChange('customer_type', value)}
+            options={customerTypes}
+          />
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Conversation language</span>
-          <select
+          <SelectField
             value={values.conversation_language}
-            onChange={(event) => onChange('conversation_language', event.target.value)}
-            className={selectClassName}
-          >
-            {conversationLanguages.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onValueChange={(value) => onChange('conversation_language', value)}
+            options={conversationLanguages}
+          />
         </label>
         <label className="grid gap-2">
           <span className="text-sm font-medium text-[var(--foreground)]">Audio file</span>
           <input
             type="file"
             accept="audio/*"
-            className="block min-h-10 w-full rounded-md border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--muted-strong)] shadow-sm"
+            className="block min-h-10 w-full rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-sm text-[var(--muted-strong)] shadow-sm"
             onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
           />
           {audioFileName ? <span className="text-xs text-[var(--muted)]">Current: {audioFileName}</span> : null}

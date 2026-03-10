@@ -54,12 +54,12 @@ export function Dialog({
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-[rgba(15,23,42,0.36)] backdrop-blur-sm"
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
       <div
         className={cn(
-          'relative z-10 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-6 py-6 shadow-[0_20px_40px_rgba(15,23,42,0.18)] sm:px-7 sm:py-7',
+          'relative z-10 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-6 py-6 shadow-[var(--shadow)] sm:px-7 sm:py-7',
           sizeClasses[size],
         )}
       >
@@ -73,7 +73,7 @@ export function Dialog({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted-strong)] shadow-sm"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-sm transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
             aria-label="Close dialog panel"
           >
             x

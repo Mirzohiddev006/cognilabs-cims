@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { RegisterPayload } from '../../../shared/api/services/auth.service'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
+import { SelectField } from '../../../shared/ui/select-field'
 import { AuthFeedback } from '../components/AuthFeedback'
 import { AuthField } from '../components/AuthField'
 import { AuthFormShell } from '../components/AuthFormShell'
@@ -141,18 +142,12 @@ export function RegisterPage() {
 
           <label className="grid gap-2">
             <span className="text-sm font-bold text-white tracking-tight">Role</span>
-            <select
-              name="role"
+            <SelectField
               value={values.role}
-              onChange={(event) => setValues((current) => ({ ...current, role: event.target.value }))}
-              className="min-h-12 rounded-xl border border-[var(--border)] bg-white/5 px-4 text-sm text-white outline-none transition focus:border-blue-500/50"
-            >
-              {roleOptions.map((role) => (
-                <option key={role} value={role} className="bg-black">
-                  {role}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setValues((current) => ({ ...current, role: value }))}
+              options={roleOptions.map((role) => ({ value: role, label: role }))}
+              className="min-h-12 rounded-xl px-4"
+            />
           </label>
         </div>
 

@@ -1,14 +1,5 @@
 export const navigationItems = [
   {
-    to: '/overview',
-    label: 'Overview',
-    description: 'Project status, arxitektura va modul xaritasi.',
-    group: 'Core',
-    sidebar: true,
-    permissionKey: undefined,
-    defaultRedirect: false,
-  },
-  {
     to: '/auth/login',
     label: 'Auth',
     description: 'Login, register va recovery flow tayyor.',
@@ -41,15 +32,6 @@ export const navigationItems = [
     description: 'Customers, filters, statuses va sales stats.',
     group: 'Sales',
     permissionKey: 'crm',
-    sidebar: true,
-    defaultRedirect: true,
-  },
-  {
-    to: '/finance',
-    label: 'Finance',
-    description: 'Finance dashboard, list, balances va exchange rate.',
-    group: 'Finance',
-    permissionKey: 'finance_list',
     sidebar: true,
     defaultRedirect: true,
   },

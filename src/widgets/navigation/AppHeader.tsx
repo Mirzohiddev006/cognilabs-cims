@@ -2,7 +2,6 @@ import { startTransition, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
 import { useAuth } from '../../features/auth/hooks/useAuth'
-import { useConfirm } from '../../shared/confirm/useConfirm'
 import { env } from '../../shared/config/env'
 import { navigationItems } from '../../shared/config/navigation'
 import { useToast } from '../../shared/toast/useToast'
@@ -16,9 +15,8 @@ export function AppHeader() {
   const location = useLocation()
   const { toggleSidebar } = useAppShell()
   const { logout, user } = useAuth()
-  const { confirm } = useConfirm()
   const { showToast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState<'current' | 'all' | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const currentItem =
     [...navigationItems]
@@ -27,46 +25,26 @@ export function AppHeader() {
         location.pathname === item.to || location.pathname.startsWith(`${item.to}/`),
       ) ?? null
 
-  async function handleLogout(scope: 'current' | 'all') {
-    if (scope === 'all') {
-      const approved = await confirm({
-        title: 'Logout from all devices?',
-        description: 'All refresh tokens will be revoked and you will be logged out from all active sessions.',
-        confirmLabel: 'Logout all',
-        cancelLabel: 'Cancel',
-        tone: 'danger',
-      })
-
-      if (!approved) {
-        return
-      }
-    }
-
-    setIsSubmitting(scope)
+  async function handleLogout() {
+    setIsSubmitting(true)
 
     try {
-      await logout(scope)
+      await logout()
       showToast({
-        title: scope === 'all' ? 'Logged out from all sessions' : 'Logged out',
-        description:
-          scope === 'all'
-            ? 'All refresh tokens have been successfully revoked.'
-            : 'Your current session has been closed.',
+        title: 'Logged out',
+        description: 'Your current session has been closed.',
         tone: 'success',
       })
       startTransition(() =>
         navigate('/auth/login', {
           replace: true,
           state: {
-            statusMessage:
-              scope === 'all'
-                ? 'Successfully logged out from all devices.'
-                : 'Session closed. You can log in again.',
+            statusMessage: 'Session closed. You can log in again.',
           },
         }),
       )
     } finally {
-      setIsSubmitting(null)
+      setIsSubmitting(false)
     }
   }
 
@@ -113,23 +91,14 @@ export function AppHeader() {
           <div className="rounded-full border border-[var(--border)] bg-white/5 px-4 py-1.5 text-xs font-bold text-[var(--muted)] shadow-sm">
             <span className="opacity-50 font-medium">API:</span> {env.apiBaseUrl}
           </div>
-          <div className="flex items-center gap-2 ml-2">
+          <div className="ml-2 flex items-center gap-2">
             <Button
               variant="secondary"
               size="md"
-              disabled={isSubmitting !== null}
-              onClick={() => handleLogout('current')}
+              disabled={isSubmitting}
+              onClick={() => void handleLogout()}
             >
-              {isSubmitting === 'current' ? 'Logging out...' : 'Logout'}
-            </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              className="text-red-400 hover:bg-red-500/10 hover:text-red-300"
-              disabled={isSubmitting !== null}
-              onClick={() => handleLogout('all')}
-            >
-              {isSubmitting === 'all' ? 'Closing...' : 'Logout all'}
+              {isSubmitting ? 'Logging out...' : 'Logout'}
             </Button>
           </div>
         </div>

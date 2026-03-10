@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, ReactNode } from 'react'
 import { useState } from 'react'
 import { cn } from '../../../shared/lib/cn'
 import { Input } from '../../../shared/ui/input'
@@ -7,31 +7,51 @@ type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & 
   label: string
   error?: string
   hint?: string
+  leadingIcon?: ReactNode
 }
 
-export function PasswordField({ label, error, hint, id, ...props }: PasswordFieldProps) {
+export function PasswordField({ label, error, hint, id, className, leadingIcon, ...props }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false)
   const inputId = id ?? props.name
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      <span className="text-sm font-bold text-white tracking-tight">{label}</span>
+      {label ? <span className="text-sm font-bold text-white tracking-tight">{label}</span> : null}
       <div className="relative group">
+        {leadingIcon ? (
+          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
+            {leadingIcon}
+          </span>
+        ) : null}
         <Input
           id={inputId}
           type={visible ? 'text' : 'password'}
-          className="pr-24"
+          className={cn('pr-14', leadingIcon ? 'pl-10' : null, className)}
           {...props}
         />
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-pressed={visible}
           className={cn(
-            'absolute right-3 top-1/2 -translate-y-1/2 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-500 transition-all',
+            'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 transition-all',
             'hover:bg-white/10 hover:text-white',
           )}
         >
-          {visible ? 'Hide' : 'Show'}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4.5 w-4.5"
+          >
+            <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
+            <circle cx="12" cy="12" r="2.75" />
+          </svg>
         </button>
       </div>
       {error ? <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
