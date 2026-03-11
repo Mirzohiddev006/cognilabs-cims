@@ -7,8 +7,12 @@ import { navigationItems } from '../../shared/config/navigation'
 import { useToast } from '../../shared/toast/useToast'
 import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
+import { cn } from '../../shared/lib/cn'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
+
+const headerMetaChipClassName =
+  'min-h-10 rounded-xl px-3.5 text-[12px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
 
 export function AppHeader() {
   const navigate = useNavigate()
@@ -85,16 +89,20 @@ export function AppHeader() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge className="bg-blue-600/10 text-blue-400 border-blue-500/20">{env.appEnv}</Badge>
-          {user ? <Badge className="bg-white/5 text-white border-white/10">{user.role}</Badge> : null}
-          <div className="rounded-full border border-[var(--border)] bg-white/5 px-4 py-1.5 text-xs font-bold text-[var(--muted)] shadow-sm">
-            <span className="opacity-50 font-medium">API:</span> {env.apiBaseUrl}
-          </div>
-          <div className="ml-2 flex items-center gap-2">
+        <div className="flex w-full md:w-auto md:justify-end">
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-white/8 bg-white/[0.03] p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
+            <Badge className={cn(headerMetaChipClassName, 'border-blue-500/20 bg-blue-600/10 text-blue-200')}>
+              {env.appEnv}
+            </Badge>
+            {user ? (
+              <Badge className={cn(headerMetaChipClassName, 'border-white/10 bg-white/[0.05] text-white')}>
+                {user.role}
+              </Badge>
+            ) : null}
             <Button
               variant="secondary"
               size="md"
+              className="min-h-10 rounded-xl border-white/10 bg-black/40 px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
               disabled={isSubmitting}
               onClick={() => void handleLogout()}
             >

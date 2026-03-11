@@ -473,7 +473,7 @@ export function CeoDashboardPage() {
                   key: 'status',
                   header: 'Status',
                   render: (row) => (
-                    <span className={row.payment ? 'text-emerald-700' : 'text-amber-700'}>
+                    <span className={row.payment ? 'font-semibold text-emerald-400' : 'font-semibold text-amber-300'}>
                       {row.payment ? 'Paid' : 'Pending'}
                     </span>
                   ),

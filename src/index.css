@@ -96,8 +96,9 @@ select:-webkit-autofill:focus {
 .app-shell-grid {
   display: grid;
   min-height: 100vh;
-  grid-template-columns: 272px minmax(0, 1fr);
+  grid-template-columns: var(--app-shell-sidebar-width, 272px) minmax(0, 1fr);
   align-items: start;
+  transition: grid-template-columns 240ms ease;
 }
 
 .glass-panel {
@@ -419,6 +420,10 @@ select:-webkit-autofill:focus {
     grid-template-columns: 1fr;
   }
 
+  .app-shell-collapse-toggle {
+    display: none;
+  }
+
   .app-shell-main {
     padding-top: 1rem;
   }
@@ -429,6 +434,12 @@ select:-webkit-autofill:focus {
 
   .auth-visual-panel {
     min-height: 320px;
+  }
+}
+
+@media (min-width: 961px) {
+  .app-shell-collapse-toggle {
+    display: inline-flex;
   }
 }
 
