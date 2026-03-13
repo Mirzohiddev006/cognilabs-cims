@@ -26,9 +26,9 @@ export function AuthFormShell({
     <Card className="auth-login-shell overflow-hidden border-[var(--border)] bg-[var(--card)] p-0 shadow-sm">
       <div className="border-b border-[var(--border)] px-6 py-6 sm:px-7">
         <div className="space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">{eyebrow}</p>
-          <h2 className="text-2xl font-semibold text-white tracking-tight">{title}</h2>
-          <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">{description}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">{eyebrow}</p>
+          <h2 className="text-xl font-semibold text-white tracking-tight">{title}</h2>
+          <p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{description}</p>
         </div>
       </div>
 

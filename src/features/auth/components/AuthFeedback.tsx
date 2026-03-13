@@ -17,7 +17,7 @@ export function AuthFeedback({ tone = 'info', message }: AuthFeedbackProps) {
   }
 
   return (
-    <div className={cn('rounded-md border px-4 py-3 text-sm', toneClasses[tone])}>
+    <div className={cn('rounded-md border px-3 py-2.5 text-xs', toneClasses[tone])}>
       {message}
     </div>
   )

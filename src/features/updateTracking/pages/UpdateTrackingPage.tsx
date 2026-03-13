@@ -467,12 +467,12 @@ function MetricCard({
   description: string
 }) {
   return (
-    <Card className="flex min-h-[140px] flex-col justify-between p-5">
+    <Card className="flex min-h-[120px] flex-col justify-between p-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
-        <p className="mt-5 text-[2.125rem] leading-none font-semibold text-white tracking-tight">{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
+        <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">{value}</p>
       </div>
-      <p className="text-sm leading-6 text-[var(--muted)]">{description}</p>
+      <p className="text-xs leading-5 text-[var(--muted)]">{description}</p>
     </Card>
   )
 }
@@ -537,8 +537,8 @@ function CalendarPayloadCard({
       <div className="space-y-5 px-6 py-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-white">{monthLabel}</p>
-            <p className="text-xs text-[var(--muted)]">Submission status for each day of the selected month.</p>
+            <p className="text-xs font-semibold text-white">{monthLabel}</p>
+            <p className="text-[11px] text-[var(--muted)]">Submission status for each day of the selected month.</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -638,7 +638,7 @@ function StructuredPayloadCard({
                 key={key}
                 className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
               >
-                <span className="text-sm text-[var(--muted)]">{humanizeKey(key)}</span>
+                <span className="text-xs text-[var(--muted)]">{humanizeKey(key)}</span>
                 <span className="max-w-[60%] truncate text-right text-sm font-semibold text-white" title={formatCellValue(value)}>
                   {formatCellValue(value)}
                 </span>
@@ -728,9 +728,9 @@ export function UpdateTrackingPage() {
     <section className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">Updates / Tracking</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Update List</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">Updates / Tracking</p>
+          <h1 className="mt-2 text-xl font-semibold text-white">Update List</h1>
+          <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--muted)]">
             Team submissions, compliance metrics, recent updates va missing entries bitta sahifada yig'ildi.
           </p>
         </div>
@@ -773,7 +773,7 @@ export function UpdateTrackingPage() {
         <div className="grid gap-4 px-6 py-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Month</span>
+              <span className="text-xs font-medium text-white">Month</span>
               <Input
                 type="number"
                 min="1"
@@ -785,7 +785,7 @@ export function UpdateTrackingPage() {
           </div>
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Year</span>
+              <span className="text-xs font-medium text-white">Year</span>
               <Input
                 type="number"
                 min="2020"
@@ -797,13 +797,13 @@ export function UpdateTrackingPage() {
           </div>
           <div className="min-w-[180px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Missing date</span>
+              <span className="text-xs font-medium text-white">Missing date</span>
               <Input type="date" value={dateCheck} onChange={(event) => setDateCheck(event.target.value)} />
             </label>
           </div>
           <div className="min-w-[140px]">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Recent limit</span>
+              <span className="text-xs font-medium text-white">Recent limit</span>
               <Input
                 type="number"
                 min="1"
@@ -860,28 +860,28 @@ export function UpdateTrackingPage() {
           </div>
           <div className="grid gap-3 px-6 py-5">
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">User</span>
+              <span className="text-xs text-[var(--muted)]">User</span>
               <Badge>{myStatsQuery.data?.user_name ?? '-'}</Badge>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">Total updates</span>
-              <span className="text-lg font-semibold text-white">{myStatsQuery.data?.total_updates ?? 0}</span>
+              <span className="text-xs text-[var(--muted)]">Total updates</span>
+              <span className="text-base font-semibold text-white">{myStatsQuery.data?.total_updates ?? 0}</span>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">This week</span>
-              <span className="text-lg font-semibold text-white">{myStatsQuery.data?.updates_this_week ?? 0}</span>
+              <span className="text-xs text-[var(--muted)]">This week</span>
+              <span className="text-base font-semibold text-white">{myStatsQuery.data?.updates_this_week ?? 0}</span>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">This month</span>
-              <span className="text-lg font-semibold text-white">{myStatsQuery.data?.updates_this_month ?? 0}</span>
+              <span className="text-xs text-[var(--muted)]">This month</span>
+              <span className="text-base font-semibold text-white">{myStatsQuery.data?.updates_this_month ?? 0}</span>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">Expected / week</span>
-              <span className="text-lg font-semibold text-white">{myStatsQuery.data?.expected_updates_per_week ?? 0}</span>
+              <span className="text-xs text-[var(--muted)]">Expected / week</span>
+              <span className="text-base font-semibold text-white">{myStatsQuery.data?.expected_updates_per_week ?? 0}</span>
             </div>
             <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-sm text-[var(--muted)]">This month completion</span>
-              <span className="text-lg font-semibold text-white">{monthlyCompletion}%</span>
+              <span className="text-xs text-[var(--muted)]">This month completion</span>
+              <span className="text-base font-semibold text-white">{monthlyCompletion}%</span>
             </div>
           </div>
         </Card>
@@ -971,26 +971,26 @@ export function UpdateTrackingPage() {
         </div>
         <div className="grid gap-3 px-6 py-5 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-sm text-[var(--muted)]">Weekly average</p>
-            <p className="mt-2 text-xl font-semibold text-white">
+            <p className="text-xs text-[var(--muted)]">Weekly average</p>
+            <p className="mt-1.5 text-base font-semibold text-white">
               {Math.round(companyStatsQuery.data?.avg_percentage_this_week ?? 0)}%
             </p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-sm text-[var(--muted)]">Last week average</p>
-            <p className="mt-2 text-xl font-semibold text-white">
+            <p className="text-xs text-[var(--muted)]">Last week average</p>
+            <p className="mt-1.5 text-base font-semibold text-white">
               {Math.round(companyStatsQuery.data?.avg_percentage_last_week ?? 0)}%
             </p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-sm text-[var(--muted)]">Monthly average</p>
-            <p className="mt-2 text-xl font-semibold text-white">
+            <p className="text-xs text-[var(--muted)]">Monthly average</p>
+            <p className="mt-1.5 text-base font-semibold text-white">
               {Math.round(companyStatsQuery.data?.avg_percentage_this_month ?? 0)}%
             </p>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-sm text-[var(--muted)]">Last 3 months</p>
-            <p className="mt-2 text-xl font-semibold text-white">
+            <p className="text-xs text-[var(--muted)]">Last 3 months</p>
+            <p className="mt-1.5 text-base font-semibold text-white">
               {Math.round(companyStatsQuery.data?.avg_percentage_last_3_months ?? 0)}%
             </p>
           </div>

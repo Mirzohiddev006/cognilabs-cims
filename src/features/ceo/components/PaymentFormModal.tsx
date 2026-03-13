@@ -47,16 +47,16 @@ export function PaymentFormModal({
     >
       <div className="grid gap-4">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Project</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Project</span>
           <Input value={values.project} onChange={(event) => onChange('project', event.target.value)} />
         </label>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-[var(--foreground)]">Date</span>
+            <span className="text-xs font-medium text-[var(--foreground)]">Date</span>
             <Input type="date" value={values.date} onChange={(event) => onChange('date', event.target.value)} />
           </label>
           <label className="grid gap-2">
-            <span className="text-sm font-medium text-[var(--foreground)]">Amount</span>
+            <span className="text-xs font-medium text-[var(--foreground)]">Amount</span>
             <Input
               type="number"
               min="0"
@@ -65,13 +65,13 @@ export function PaymentFormModal({
             />
           </label>
         </div>
-        <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/70 px-4 py-3">
+        <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-2.5">
           <input
             type="checkbox"
             checked={values.payment}
             onChange={(event) => onChange('payment', event.target.checked)}
           />
-          <span className="text-sm text-[var(--muted-strong)]">Already paid</span>
+          <span className="text-xs text-[var(--muted-strong)]">Already paid</span>
         </label>
       </div>
     </Modal>

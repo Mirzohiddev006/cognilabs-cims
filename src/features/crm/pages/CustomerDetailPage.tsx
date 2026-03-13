@@ -76,9 +76,9 @@ export function CustomerDetailPage() {
     <section className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">CRM / Detail</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white tracking-tight">{customer.full_name}</h1>
-          <p className="mt-3 text-sm text-zinc-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">CRM / Detail</p>
+          <h1 className="mt-2 text-xl font-semibold text-white tracking-tight">{customer.full_name}</h1>
+          <p className="mt-2 text-xs text-zinc-500">
             {customer.platform} | {customer.phone_number}
           </p>
         </div>
@@ -97,29 +97,29 @@ export function CustomerDetailPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="flex min-h-[140px] flex-col justify-between p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Status</p>
+        <Card className="flex min-h-[120px] flex-col justify-between p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Status</p>
           <div className="mt-3">
             <Badge className="bg-white/10 text-white border-white/20">{customer.status}</Badge>
           </div>
         </Card>
-        <Card className="flex min-h-[140px] flex-col justify-between p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Assistant</p>
-          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{customer.assistant_name || '-'}</p>
+        <Card className="flex min-h-[120px] flex-col justify-between p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Assistant</p>
+          <p className="mt-3 text-xl font-semibold text-white tracking-tight">{customer.assistant_name || '-'}</p>
         </Card>
-        <Card className="flex min-h-[140px] flex-col justify-between p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Language</p>
-          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{customer.conversation_language || '-'}</p>
+        <Card className="flex min-h-[120px] flex-col justify-between p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Language</p>
+          <p className="mt-3 text-xl font-semibold text-white tracking-tight">{customer.conversation_language || '-'}</p>
         </Card>
-        <Card className="flex min-h-[140px] flex-col justify-between p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Created</p>
-          <p className="mt-5 text-[1.5rem] font-semibold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
+        <Card className="flex min-h-[120px] flex-col justify-between p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Created</p>
+          <p className="mt-3 text-xl font-semibold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
         </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-white tracking-tight">Profile</h2>
+          <h2 className="text-base font-semibold text-white tracking-tight">Profile</h2>
           <div className="mt-5 grid gap-4">
             {[
               ['Username', customer.username || '-'],
@@ -129,8 +129,8 @@ export function CustomerDetailPage() {
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[18px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">{label}</p>
-                <p className="mt-3 text-sm text-white">{value}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">{label}</p>
+                <p className="mt-2 text-xs text-white">{value}</p>
               </div>
             ))}
           </div>
@@ -138,17 +138,17 @@ export function CustomerDetailPage() {
 
         <div className="grid gap-6">
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-white tracking-tight">Notes</h2>
+            <h2 className="text-base font-semibold text-white tracking-tight">Notes</h2>
             {customer.notes ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-400">{customer.notes}</p>
+              <p className="mt-4 whitespace-pre-wrap text-xs leading-5 text-zinc-400">{customer.notes}</p>
             ) : (
               <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
             )}
           </Card>
           <Card className="p-6">
-            <h2 className="text-lg font-semibold text-white tracking-tight">AI Summary</h2>
+            <h2 className="text-base font-semibold text-white tracking-tight">AI Summary</h2>
             {customer.aisummary ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-zinc-400">
+              <p className="mt-4 whitespace-pre-wrap text-xs leading-5 text-zinc-400">
                 {customer.aisummary}
               </p>
             ) : (

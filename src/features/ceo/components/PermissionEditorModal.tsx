@@ -80,8 +80,8 @@ export function PermissionEditorModal({
                   onChange={(event) => onToggle(permissionKey, event.target.checked)}
                 />
                 <div>
-                  <p className="text-sm font-bold text-white tracking-tight">{meta.label}</p>
-                  <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{meta.description}</p>
+                  <p className="text-xs font-bold text-white tracking-tight">{meta.label}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">{meta.description}</p>
                   <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-blue-500 opacity-70">{permissionKey}</p>
                 </div>
               </label>
@@ -104,7 +104,7 @@ export function PermissionEditorModal({
                 </button>
               ))
             ) : (
-              <p className="text-sm font-medium text-[var(--muted)]">No active permissions assigned.</p>
+              <p className="text-xs font-medium text-[var(--muted)]">No active permissions assigned.</p>
             )}
           </div>
         </div>

@@ -49,11 +49,11 @@ export function UserFormModal({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Email</span>
+          <span className="text-xs font-bold text-white tracking-tight">Email</span>
           <Input value={values.email} placeholder="user@example.com" onChange={(event) => onChange('email', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Company code</span>
+          <span className="text-xs font-bold text-white tracking-tight">Company code</span>
           <Input
             value={values.company_code}
             placeholder="e.g. oddiy"
@@ -61,15 +61,15 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Name</span>
+          <span className="text-xs font-bold text-white tracking-tight">Name</span>
           <Input value={values.name} placeholder="First name" onChange={(event) => onChange('name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Surname</span>
+          <span className="text-xs font-bold text-white tracking-tight">Surname</span>
           <Input value={values.surname} placeholder="Last name" onChange={(event) => onChange('surname', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">
+          <span className="text-xs font-bold text-white tracking-tight">
             Password {mode === 'edit' ? '(optional)' : ''}
           </span>
           <Input
@@ -80,7 +80,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Telegram ID</span>
+          <span className="text-xs font-bold text-white tracking-tight">Telegram ID</span>
           <Input
             value={values.telegram_id ?? ''}
             placeholder="@username or ID"
@@ -88,7 +88,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Default salary</span>
+          <span className="text-xs font-bold text-white tracking-tight">Default salary</span>
           <Input
             type="number"
             min="0"
@@ -97,7 +97,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-bold text-white tracking-tight">Role</span>
+          <span className="text-xs font-bold text-white tracking-tight">Role</span>
           <SelectField
             value={values.role}
             onValueChange={(value) => onChange('role', value)}
@@ -113,7 +113,7 @@ export function UserFormModal({
           checked={values.is_active}
           onChange={(event) => onChange('is_active', event.target.checked)}
         />
-        <span className="text-sm font-bold text-white">Active user</span>
+        <span className="text-xs font-bold text-white">Active user</span>
       </label>
     </Modal>
   )

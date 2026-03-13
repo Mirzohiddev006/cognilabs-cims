@@ -30,8 +30,8 @@ const variants = {
 }
 
 const sizes = {
-  md: 'min-h-9 px-3.5 py-2 text-[13px]',
-  lg: 'min-h-10 px-5 py-2 text-sm',
+  md: 'min-h-8 px-3 py-1.5 text-xs',
+  lg: 'min-h-9 px-4 py-1.5 text-[13px]',
 }
 
 const baseClassName =

@@ -16,7 +16,7 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      {label ? <span className="text-sm font-bold text-white tracking-tight">{label}</span> : null}
+      {label ? <span className="text-xs font-bold text-white tracking-tight">{label}</span> : null}
       <div className="relative group">
         {leadingIcon ? (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
@@ -54,8 +54,8 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
           </svg>
         </button>
       </div>
-      {error ? <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
-      {!error && hint ? <span className="text-xs font-medium text-zinc-500">{hint}</span> : null}
+      {error ? <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
+      {!error && hint ? <span className="text-[11px] font-medium text-zinc-500">{hint}</span> : null}
     </label>
   )
 }

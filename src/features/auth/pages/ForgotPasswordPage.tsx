@@ -55,12 +55,12 @@ export function ForgotPasswordPage() {
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
-          <span className="rounded-md bg-[var(--card)] px-3 py-2 text-center text-sm font-medium text-white">
+          <span className="rounded-md bg-[var(--card)] px-3 py-1.5 text-center text-xs font-medium text-white">
             Forgot Password
           </span>
           <Link
             to="/auth/reset-password"
-            className="rounded-md px-3 py-2 text-center text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
+            className="rounded-md px-3 py-1.5 text-center text-xs font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
           >
             Reset Password
           </Link>

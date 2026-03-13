@@ -80,19 +80,19 @@ export function CustomerFormModal({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Full name</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Full name</span>
           <Input value={values.full_name} onChange={(event) => onChange('full_name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Platform</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Platform</span>
           <Input value={values.platform} onChange={(event) => onChange('platform', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Phone number</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Phone number</span>
           <Input value={values.phone_number} onChange={(event) => onChange('phone_number', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Status</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Status</span>
           <SelectField
             value={values.status}
             onValueChange={(value) => onChange('status', value)}
@@ -100,15 +100,15 @@ export function CustomerFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Username</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Username</span>
           <Input value={values.username} onChange={(event) => onChange('username', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Assistant</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Assistant</span>
           <Input value={values.assistant_name} onChange={(event) => onChange('assistant_name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Recall time</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Recall time</span>
           <Input
             type="datetime-local"
             value={values.recall_time}
@@ -116,7 +116,7 @@ export function CustomerFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Customer type</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Customer type</span>
           <SelectField
             value={values.customer_type}
             onValueChange={(value) => onChange('customer_type', value)}
@@ -124,7 +124,7 @@ export function CustomerFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Conversation language</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Conversation language</span>
           <SelectField
             value={values.conversation_language}
             onValueChange={(value) => onChange('conversation_language', value)}
@@ -132,11 +132,11 @@ export function CustomerFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">Audio file</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">Audio file</span>
           <input
             type="file"
             accept="audio/*"
-            className="block min-h-10 w-full rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-sm text-[var(--muted-strong)] shadow-sm"
+            className="block min-h-9 w-full rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-1.5 text-xs text-[var(--muted-strong)] shadow-sm"
             onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
           />
           {audioFileName ? <span className="text-xs text-[var(--muted)]">Current: {audioFileName}</span> : null}
@@ -144,7 +144,7 @@ export function CustomerFormModal({
       </div>
 
       <label className="mt-4 grid gap-2">
-        <span className="text-sm font-medium text-[var(--foreground)]">Notes</span>
+        <span className="text-xs font-medium text-[var(--foreground)]">Notes</span>
         <Textarea value={values.notes} onChange={(event) => onChange('notes', event.target.value)} />
       </label>
 
@@ -154,7 +154,7 @@ export function CustomerFormModal({
           checked={values.clear_recall_time}
           onChange={(event) => onChange('clear_recall_time', event.target.checked)}
         />
-        <span className="text-sm text-[var(--muted-strong)]">Recall time ni tozalash</span>
+        <span className="text-xs text-[var(--muted-strong)]">Recall time ni tozalash</span>
       </label>
     </Modal>
   )

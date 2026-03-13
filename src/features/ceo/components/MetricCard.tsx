@@ -8,12 +8,12 @@ type MetricCardProps = {
 
 export function MetricCard({ label, value, caption }: MetricCardProps) {
   return (
-    <Card className="flex min-h-[140px] flex-col justify-between p-5">
+    <Card className="flex min-h-[120px] flex-col justify-between p-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
-        <p className="mt-5 text-[2.125rem] leading-none font-semibold text-white tracking-tight">{value}</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
+        <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">{value}</p>
       </div>
-      {caption ? <p className="text-sm leading-6 text-[var(--muted)]">{caption}</p> : <div />}
+      {caption ? <p className="text-xs leading-5 text-[var(--muted)]">{caption}</p> : <div />}
     </Card>
   )
 }

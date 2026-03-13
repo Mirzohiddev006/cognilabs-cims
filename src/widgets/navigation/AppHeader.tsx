@@ -12,7 +12,7 @@ import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
 const headerMetaChipClassName =
-  'min-h-10 rounded-xl px-3.5 text-[12px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
+  'min-h-9 rounded-xl px-3 text-[11px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
 
 export function AppHeader() {
   const navigate = useNavigate()
@@ -73,16 +73,16 @@ export function AppHeader() {
                 <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xl font-bold text-white tracking-tight">
+                <p className="truncate text-base font-bold text-white tracking-tight">
                   {currentItem?.label ?? env.appName}
                 </p>
-                <p className="truncate text-xs font-medium uppercase tracking-widest text-[var(--muted)]">
+                <p className="truncate text-[10px] font-medium uppercase tracking-widest text-[var(--muted)]">
                   {currentItem?.description ?? 'CIMS workspace'}
                 </p>
               </div>
             </div>
             {user ? (
-              <p className="mt-2 text-xs font-semibold text-[var(--muted)]">
+              <p className="mt-1.5 text-[11px] font-semibold text-[var(--muted)]">
                 {user.name} {user.surname} <span className="mx-1 opacity-30">|</span> {user.email}
               </p>
             ) : null}

@@ -8,9 +8,9 @@ type ToastItem = ToastInput & {
 }
 
 const toneClasses = {
-  success: 'border-emerald-200 bg-white text-emerald-700',
-  error: 'border-red-200 bg-white text-red-700',
-  info: 'border-[var(--border)] bg-white text-[var(--foreground)]',
+  success: 'border-emerald-500/20 bg-emerald-950/80 text-emerald-200',
+  error: 'border-red-500/20 bg-red-950/80 text-red-200',
+  info: 'border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]',
 }
 
 export function ToastProvider({ children }: PropsWithChildren) {
@@ -37,13 +37,13 @@ export function ToastProvider({ children }: PropsWithChildren) {
           {toasts.map((toast) => (
             <div
               key={toast.id}
-              className={`pointer-events-auto rounded-xl border px-4 py-4 shadow-[0_14px_32px_rgba(15,23,42,0.12)] ${toneClasses[toast.tone ?? 'info']}`}
+              className={`pointer-events-auto rounded-xl border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.4)] backdrop-blur-lg ${toneClasses[toast.tone ?? 'info']}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold">{toast.title}</p>
+                  <p className="text-xs font-semibold">{toast.title}</p>
                   {toast.description ? (
-                    <p className="mt-2 text-sm leading-6 opacity-85">{toast.description}</p>
+                    <p className="mt-1 text-[11px] leading-4 opacity-85">{toast.description}</p>
                   ) : null}
                 </div>
                 <Button

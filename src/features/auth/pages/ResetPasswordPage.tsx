@@ -84,11 +84,11 @@ export function ResetPasswordPage() {
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
           <Link
             to="/auth/forgot-password"
-            className="rounded-md px-3 py-2 text-center text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
+            className="rounded-md px-3 py-1.5 text-center text-xs font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-white"
           >
             Forgot Password
           </Link>
-          <span className="rounded-md bg-[var(--card)] px-3 py-2 text-center text-sm font-medium text-white">
+          <span className="rounded-md bg-[var(--card)] px-3 py-1.5 text-center text-xs font-medium text-white">
             Reset Password
           </span>
         </div>

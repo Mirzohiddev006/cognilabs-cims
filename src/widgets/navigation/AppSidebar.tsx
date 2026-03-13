@@ -103,14 +103,14 @@ export function AppSidebar() {
                 >
                   <SidebarCollapseGlyph collapsed={false} />
                 </button>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Cognilabs</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Cognilabs</p>
                 <div className="mt-2 flex items-center gap-2 pr-12">
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                     <NavGlyph name="default" />
                   </div>
                   <div className="min-w-0 overflow-hidden transition-[max-width,opacity] duration-160 ease-out delay-75 max-w-[180px] opacity-100">
-                    <h2 className="text-base font-bold text-white tracking-tight whitespace-nowrap">{env.appName}</h2>
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">Management System</p>
+                    <h2 className="text-sm font-bold text-white tracking-tight whitespace-nowrap">{env.appName}</h2>
+                    <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">Management System</p>
                   </div>
                 </div>
               </div>
@@ -120,7 +120,7 @@ export function AppSidebar() {
           <div className={cn('mt-6 flex items-center justify-between', isSidebarCollapsed ? 'mt-4 justify-center px-0' : 'px-2')}>
             {!isSidebarCollapsed ? (
               <>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Menu</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Menu</p>
                 <Badge>{visibleNavigation.length} modules</Badge>
               </>
             ) : null}
@@ -165,8 +165,8 @@ export function AppSidebar() {
                   )}
                   aria-hidden={isSidebarCollapsed}
                 >
-                  <p className="truncate font-semibold">{item.label}</p>
-                  <p className="truncate text-[10px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
+                  <p className="truncate text-[13px] font-semibold">{item.label}</p>
+                  <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
                 </div>
               </NavLink>
             ))}
@@ -189,13 +189,13 @@ export function AppSidebar() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p
-                    className="text-sm font-bold leading-5 text-white [overflow-wrap:anywhere]"
+                    className="text-xs font-bold leading-4 text-white [overflow-wrap:anywhere]"
                     title={user ? `${user.name} ${user.surname}` : 'Authenticated user'}
                   >
                     {user ? `${user.name} ${user.surname}` : 'Authenticated user'}
                   </p>
                   <p
-                    className="mt-1 truncate text-xs text-[var(--muted)]"
+                    className="mt-1 truncate text-[10px] text-[var(--muted)]"
                     title={user?.email ?? user?.role ?? 'User'}
                   >
                     {user?.email ?? user?.role ?? 'User'}

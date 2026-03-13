@@ -21,11 +21,11 @@ export function AuthPreviewPage() {
   return (
     <div className="flex h-full flex-col justify-between gap-8">
       <div>
-        <p className="text-sm font-medium uppercase tracking-[0.28em] text-[var(--muted)]">Day 2 prep</p>
-        <h2 className="mt-4 max-w-lg text-4xl font-semibold text-[var(--foreground)]">
+        <p className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">Day 2 prep</p>
+        <h2 className="mt-3 max-w-lg text-2xl font-semibold text-[var(--foreground)]">
           Auth moduli uchun route va layout tayyor.
         </h2>
-        <p className="mt-4 max-w-xl text-base text-[var(--muted-strong)]">
+        <p className="mt-3 max-w-xl text-sm text-[var(--muted-strong)]">
           Bugun router, service layer va reusable componentlar tayyorlandi. Ertaga form validation va endpoint
           integratsiyasi shu asosda qo'shiladi.
         </p>

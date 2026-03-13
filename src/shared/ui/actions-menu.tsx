@@ -104,7 +104,7 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
                       item.onSelect()
                     }}
                     className={cn(
-                      'flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium transition',
+                      'flex w-full items-center rounded-lg px-3 py-1.5 text-xs font-medium transition',
                       item.tone === 'danger'
                         ? 'text-red-300 hover:bg-red-500/10 hover:text-red-200'
                         : 'text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-white',

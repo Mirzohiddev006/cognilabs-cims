@@ -283,9 +283,9 @@ export function CeoDashboardPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 6</p>
-          <h1 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">Dashboard, messages va payments</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--muted-strong)]">
+          <p className="text-xs font-medium uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 6</p>
+          <h1 className="mt-2 text-xl font-semibold text-[var(--foreground)]">Dashboard, messages va payments</h1>
+          <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--muted-strong)]">
             CEO statistik kartalari, today metrics, broadcast message, messages list va payments CRUD bitta sahifaga
             yig`ildi.
           </p>
@@ -362,16 +362,16 @@ export function CeoDashboardPage() {
           />
           <div className="mt-6 grid gap-3">
             <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Messages sent</p>
-              <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">{messages.length}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Messages sent</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{messages.length}</p>
             </div>
             <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Payments rows</p>
-              <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">{payments.length}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Payments rows</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{payments.length}</p>
             </div>
             <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Planned amount</p>
-              <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">{formatCurrency(totalPlannedPayments)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Planned amount</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatCurrency(totalPlannedPayments)}</p>
             </div>
           </div>
         </Card>

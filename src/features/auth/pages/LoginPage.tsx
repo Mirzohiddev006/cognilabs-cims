@@ -89,8 +89,8 @@ export function LoginPage() {
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-bold text-white tracking-tight">Password</span>
-            <Link className="text-sm text-[var(--muted)] transition hover:text-white" to="/auth/forgot-password">
+            <span className="text-xs font-bold text-white tracking-tight">Password</span>
+            <Link className="text-xs text-[var(--muted)] transition hover:text-white" to="/auth/forgot-password">
               Forgot password?
             </Link>
           </div>
@@ -116,7 +116,7 @@ export function LoginPage() {
           {isSubmitting ? 'Signing in...' : 'Login'}
         </Button>
 
-        <div className="text-center text-sm text-[var(--muted)]">
+        <div className="text-center text-xs text-[var(--muted)]">
           Email not verified?{' '}
           <Link className="underline underline-offset-4 transition hover:text-white" to="/auth/verify-email">
             Verify email

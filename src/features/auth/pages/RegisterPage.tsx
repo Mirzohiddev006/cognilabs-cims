@@ -141,7 +141,7 @@ export function RegisterPage() {
           />
 
           <label className="grid gap-2">
-            <span className="text-sm font-bold text-white tracking-tight">Role</span>
+            <span className="text-xs font-bold text-white tracking-tight">Role</span>
             <SelectField
               value={values.role}
               onValueChange={(value) => setValues((current) => ({ ...current, role: value }))}

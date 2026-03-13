@@ -109,7 +109,7 @@ export function VerifyEmailPage() {
         <AuthFeedback tone="success" message={statusMessage} />
         <AuthFeedback tone="error" message={submitError} />
 
-        <div className="flex items-center justify-center gap-2 text-sm text-[var(--muted)]">
+        <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)]">
           <span>Code expires in</span>
           <span className="rounded-md border border-[var(--border)] bg-[var(--muted-surface)] px-2.5 py-1 font-mono text-[var(--muted-strong)]">
             {isExpired ? 'Expired' : `${minutes}:${seconds}`}

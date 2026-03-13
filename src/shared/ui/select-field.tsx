@@ -96,7 +96,7 @@ export function SelectField({
           }
         }}
         className={cn(
-          'flex min-h-10 w-full items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-sm text-[var(--foreground)] shadow-sm outline-none transition-[color,box-shadow,border-color] focus-visible:border-white/15 focus-visible:ring-2 focus-visible:ring-white/10 disabled:cursor-not-allowed disabled:opacity-60',
+          'flex min-h-9 w-full items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-1.5 text-xs text-[var(--foreground)] shadow-sm outline-none transition-[color,box-shadow,border-color] focus-visible:border-white/15 focus-visible:ring-2 focus-visible:ring-white/10 disabled:cursor-not-allowed disabled:opacity-60',
           className,
         )}
       >
@@ -131,7 +131,7 @@ export function SelectField({
                         onValueChange(option.value)
                       }}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition',
+                        'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-1.5 text-xs transition',
                         isSelected
                           ? 'bg-[var(--accent-soft)] text-white'
                           : 'text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-white',

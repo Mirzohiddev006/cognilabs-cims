@@ -486,9 +486,9 @@ export function CeoUsersPage() {
     <section className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 5</p>
-          <h1 className="mt-3 text-3xl font-semibold text-white tracking-tight">Users & Permissions</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 5</p>
+          <h1 className="mt-2 text-xl font-semibold text-white tracking-tight">Users & Permissions</h1>
+          <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--muted)]">
             Manage user creation, edits, deletion, active status, permission details, and system overview.
           </p>
         </div>

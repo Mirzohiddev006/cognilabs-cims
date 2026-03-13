@@ -83,7 +83,7 @@ export function DataTable<T>({
                 <th
                   key={column.key}
                   className={cn(
-                    'h-10 border-b border-[var(--border)] px-4 py-2 text-sm font-semibold text-[var(--muted)] whitespace-nowrap',
+                    'h-9 border-b border-[var(--border)] px-4 py-2 text-xs font-semibold text-[var(--muted)] whitespace-nowrap',
                     alignClassName[column.align ?? 'left'],
                   )}
                 >
@@ -102,7 +102,7 @@ export function DataTable<T>({
                   <td
                     key={column.key}
                     className={cn(
-                      'border-b border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--foreground)] align-middle',
+                      'border-b border-[var(--border)] px-4 py-2.5 text-xs font-medium text-[var(--foreground)] align-middle',
                       alignClassName[column.align ?? 'left'],
                     )}
                   >
@@ -117,7 +117,7 @@ export function DataTable<T>({
 
       {totalPages > 1 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[var(--muted)]">
+          <p className="text-[11px] text-[var(--muted)]">
             Showing {startIndex + 1}-{endIndex} of {rows.length}
           </p>
 

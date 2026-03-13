@@ -28,10 +28,10 @@ export function StateBlock({
   children,
 }: StateBlockProps) {
   return (
-    <Card className={`flex flex-col items-center p-10 text-center ${toneStyles[tone]}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--accent)]">{eyebrow}</p>
-      <h3 className="mt-4 text-2xl font-semibold text-white tracking-tight">{title}</h3>
-      <p className="mt-4 max-w-md text-sm leading-6 text-[var(--muted)]">{description}</p>
+    <Card className={`flex flex-col items-center p-8 text-center ${toneStyles[tone]}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--accent)]">{eyebrow}</p>
+      <h3 className="mt-3 text-lg font-semibold text-white tracking-tight">{title}</h3>
+      <p className="mt-3 max-w-md text-xs leading-5 text-[var(--muted)]">{description}</p>
       {children ? <div className="mt-5">{children}</div> : null}
       {actionLabel && onAction ? (
         <div className="mt-6">

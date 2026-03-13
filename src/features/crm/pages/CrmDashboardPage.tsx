@@ -219,14 +219,14 @@ function MetricCard({
   description: string
 }) {
   return (
-    <Card className="flex min-h-[140px] flex-col justify-between p-5">
+    <Card className="flex min-h-[120px] flex-col justify-between p-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
-        <p className="mt-5 text-[2.125rem] leading-none font-semibold text-white tracking-tight">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
+        <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">
           {formatCompactNumber(value)}
         </p>
       </div>
-      <p className="text-sm leading-6 text-[var(--muted)]">{description}</p>
+      <p className="text-xs leading-5 text-[var(--muted)]">{description}</p>
     </Card>
   )
 }
@@ -480,8 +480,8 @@ export function CrmDashboardPage() {
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-6">
           <div>
-            <h2 className="text-2xl font-semibold text-white">Clients</h2>
-            <p className="mt-2 text-sm text-[var(--muted)]">
+            <h2 className="text-lg font-semibold text-white">Clients</h2>
+            <p className="mt-1.5 text-xs text-[var(--muted)]">
               Manage your clients ({formatCompactNumber(displayedCustomers.length)} total)
             </p>
           </div>
@@ -496,7 +496,7 @@ export function CrmDashboardPage() {
 
         <div className="border-b border-[var(--border)] px-6 py-5">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold text-white">Filters</h3>
+            <h3 className="text-base font-semibold text-white">Filters</h3>
             <Button variant="ghost" onClick={resetFilters}>
               Clear
             </Button>
@@ -504,7 +504,7 @@ export function CrmDashboardPage() {
 
           <div className="grid gap-4 md:grid-cols-3">
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Search</span>
+              <span className="text-xs font-medium text-white">Search</span>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -513,7 +513,7 @@ export function CrmDashboardPage() {
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Status</span>
+              <span className="text-xs font-medium text-white">Status</span>
               <SelectField
                 value={statusFilter}
                 options={statusFilterOptions}
@@ -522,7 +522,7 @@ export function CrmDashboardPage() {
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Platform</span>
+              <span className="text-xs font-medium text-white">Platform</span>
               <SelectField
                 value={platformFilter}
                 options={platformFilterOptions}
@@ -531,7 +531,7 @@ export function CrmDashboardPage() {
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Phone</span>
+              <span className="text-xs font-medium text-white">Phone</span>
               <Input
                 value={phoneFilter}
                 onChange={(event) => setPhoneFilter(event.target.value)}
@@ -540,12 +540,12 @@ export function CrmDashboardPage() {
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">Start date</span>
+              <span className="text-xs font-medium text-white">Start date</span>
               <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} />
             </label>
 
             <label className="grid gap-2">
-              <span className="text-sm font-medium text-white">End date</span>
+              <span className="text-xs font-medium text-white">End date</span>
               <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} />
             </label>
           </div>

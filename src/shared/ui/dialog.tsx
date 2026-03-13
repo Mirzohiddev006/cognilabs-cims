@@ -65,9 +65,9 @@ export function Dialog({
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">{title}</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">{title}</h2>
             {description ? (
-              <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">{description}</p>
+              <p className="mt-1.5 text-xs leading-5 text-[var(--muted-strong)]">{description}</p>
             ) : null}
           </div>
           <button
