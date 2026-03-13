@@ -21,6 +21,7 @@ export function AppHeader() {
   const { logout, user } = useAuth()
   const { showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const hideRouteContext = location.pathname.startsWith('/crm')
 
   const currentItem =
     [...navigationItems]
@@ -60,29 +61,28 @@ export function AppHeader() {
             <button
               type="button"
               onClick={toggleSidebar}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white/5 text-white shadow-lg md:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white/5 text-white shadow-lg min-[961px]:hidden"
               aria-label="Toggle navigation"
             >
               <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
             </button>
-            <div className="hidden h-10 w-px bg-[var(--border)] md:block" />
+            <div className={cn('hidden h-10 w-px bg-[var(--border)] min-[961px]:block', hideRouteContext && 'md:hidden')} />
           </div>
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="grid h-10 w-10 place-items-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-blue-500 shadow-sm">
-                <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
+            {!hideRouteContext ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="grid h-10 w-10 place-items-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-blue-500 shadow-sm">
+                  <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-base font-bold text-white tracking-tight">
+                    {currentItem?.label ?? env.appName}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-base font-bold text-white tracking-tight">
-                  {currentItem?.label ?? env.appName}
-                </p>
-                <p className="truncate text-[10px] font-medium uppercase tracking-widest text-[var(--muted)]">
-                  {currentItem?.description ?? 'CIMS workspace'}
-                </p>
-              </div>
-            </div>
+            ) : null}
             {user ? (
-              <p className="mt-1.5 text-[11px] font-semibold text-[var(--muted)]">
+              <p className={cn('text-[11px] font-semibold text-[var(--muted)]', !hideRouteContext && 'mt-1.5')}>
                 {user.name} {user.surname} <span className="mx-1 opacity-30">|</span> {user.email}
               </p>
             ) : null}

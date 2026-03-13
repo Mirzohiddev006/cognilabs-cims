@@ -75,14 +75,14 @@ export function PermissionEditorModal({
               >
                 <input
                   type="checkbox"
-                  className="mt-1"
+                  className="mt-0.5 h-4 w-4 accent-blue-500"
                   checked={Boolean(permissions[permissionKey])}
                   onChange={(event) => onToggle(permissionKey, event.target.checked)}
                 />
                 <div>
-                  <p className="text-xs font-bold text-white tracking-tight">{meta.label}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">{meta.description}</p>
-                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-blue-500 opacity-70">{permissionKey}</p>
+                  <p className="text-[15px] font-semibold text-white">{meta.label}</p>
+                  <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{meta.description}</p>
+                  <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-blue-500 opacity-70">{permissionKey}</p>
                 </div>
               </label>
             )
@@ -90,7 +90,7 @@ export function PermissionEditorModal({
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-white/5 p-6 h-fit sticky top-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Active now</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Active now</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {activePermissionKeys.length > 0 ? (
               activePermissionKeys.map((permissionKey) => (
@@ -98,13 +98,13 @@ export function PermissionEditorModal({
                   key={permissionKey}
                   type="button"
                   onClick={() => onRemovePermission(permissionKey)}
-                  className="rounded-full border border-blue-500/30 bg-blue-600/10 px-3 py-1.5 text-[11px] font-bold text-blue-400 transition-all hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
+                  className="rounded-full border border-blue-500/30 bg-blue-600/10 px-3 py-1.5 text-[13px] font-semibold text-blue-400 transition-all hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30"
                 >
                   {getPermissionMeta(permissionKey).label} <span className="ml-1 opacity-50">×</span>
                 </button>
               ))
             ) : (
-              <p className="text-xs font-medium text-[var(--muted)]">No active permissions assigned.</p>
+              <p className="text-sm text-(--muted)">No active permissions assigned.</p>
             )}
           </div>
         </div>

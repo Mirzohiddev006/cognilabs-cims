@@ -5,14 +5,19 @@ import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/t
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { cn } from '../../../shared/lib/cn'
+import { formatUsernameHandle, getCustomerDisplayName } from '../../../shared/lib/customer-display'
 import { formatCompactNumber } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
+import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
+import { PageHeader } from '../../../shared/ui/page-header'
 import { SelectField } from '../../../shared/ui/select-field'
+import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
@@ -113,6 +118,8 @@ function getInitials(name: string) {
     name
       .split(' ')
       .filter(Boolean)
+      .map((part) => part.replace(/^[@+]+/, ''))
+      .filter(Boolean)
       .map((part) => part[0])
       .join('')
       .slice(0, 2)
@@ -197,7 +204,7 @@ function StatusBadge({
 
   return (
     <span
-      className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize"
+      className="inline-flex items-center rounded-md border px-2.5 py-1 text-[13px] font-medium capitalize"
       style={{
         borderColor: meta?.color ?? 'var(--border)',
         color: meta?.color ?? 'var(--foreground)',
@@ -213,23 +220,41 @@ function MetricCard({
   label,
   value,
   description,
+  tone = 'blue',
 }: {
   label: string
   value: number
   description: string
+  tone?: 'blue' | 'success' | 'warning' | 'violet' | 'danger'
 }) {
+  const toneClassNames = {
+    blue: 'border-blue-500/15 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.10),0_0_20px_rgba(59,130,246,0.06)]',
+    success: 'border-emerald-500/15 shadow-[inset_0_0_0_1px_rgba(34,197,94,0.10),0_0_20px_rgba(34,197,94,0.05)]',
+    warning: 'border-amber-500/15 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.10),0_0_20px_rgba(245,158,11,0.05)]',
+    violet: 'border-violet-500/15 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.10),0_0_20px_rgba(139,92,246,0.05)]',
+    danger: 'border-rose-500/15 shadow-[inset_0_0_0_1px_rgba(244,63,94,0.10),0_0_20px_rgba(244,63,94,0.05)]',
+  }
+  const toneLabelClassNames = {
+    blue: 'text-blue-300/80',
+    success: 'text-emerald-300/80',
+    warning: 'text-amber-300/80',
+    violet: 'text-violet-300/80',
+    danger: 'text-rose-300/80',
+  }
+
   return (
-    <Card className="flex min-h-[120px] flex-col justify-between p-4">
+    <Card variant="metric" className={cn('flex min-h-30 flex-col justify-between p-4', toneClassNames[tone])}>
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
+        <p className={cn('text-[10px] font-semibold uppercase tracking-[0.28em]', toneLabelClassNames[tone])}>{label}</p>
         <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">
           {formatCompactNumber(value)}
         </p>
       </div>
-      <p className="text-xs leading-5 text-[var(--muted)]">{description}</p>
+      <p className="text-xs leading-5 text-(--muted)">{description}</p>
     </Card>
   )
 }
+
 
 export function CrmDashboardPage() {
   const navigate = useNavigate()
@@ -275,7 +300,12 @@ export function CrmDashboardPage() {
 
     return customers.filter((customer) => {
       const matchesSearch = normalizedSearch
-        ? [customer.full_name, customer.username, customer.notes]
+        ? [
+            getCustomerDisplayName(customer),
+            formatUsernameHandle(customer.username),
+            customer.phone_number,
+            customer.notes,
+          ]
             .filter(Boolean)
             .some((value) => String(value).toLowerCase().includes(normalizedSearch))
         : true
@@ -296,7 +326,11 @@ export function CrmDashboardPage() {
   }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter])
 
   async function refreshAll() {
-    await Promise.all([dashboardQuery.refetch(), statusesQuery.refetch(), summaryQuery.refetch()])
+    await Promise.all([
+      dashboardQuery.refetch(),
+      statusesQuery.refetch(),
+      summaryQuery.refetch(),
+    ])
   }
 
   function resetFilters() {
@@ -325,8 +359,9 @@ export function CrmDashboardPage() {
   }
 
   async function handleDeleteCustomer(customer: CustomerSummary) {
+    const customerName = getCustomerDisplayName(customer)
     const approved = await confirm({
-      title: `Delete ${customer.full_name}?`,
+      title: `Delete ${customerName}?`,
       description: 'The customer record will be permanently removed and cannot be undone.',
       confirmLabel: 'Delete customer',
       cancelLabel: 'Cancel',
@@ -342,7 +377,7 @@ export function CrmDashboardPage() {
       await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
         title: 'Customer deleted',
-        description: `${customer.full_name} has been removed from the CRM list.`,
+        description: `${customerName} has been removed from the CRM list.`,
         tone: 'success',
       })
     } catch (error) {
@@ -436,118 +471,150 @@ export function CrmDashboardPage() {
     { value: '', label: 'All platforms' },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
   ]
+  const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
+  const needToCallCount = resolveMetricValue(stats?.need_to_call, getStatusCount(fallbackStatusDict, 'need_to_call', 'need to call'))
+  const contactedCount = resolveMetricValue(stats?.contacted, getStatusCount(fallbackStatusDict, 'contacted'))
+  const projectStartedCount = resolveMetricValue(stats?.project_started, getStatusCount(fallbackStatusDict, 'project_started', 'project started'))
+  const continuingCount = resolveMetricValue(stats?.continuing, getStatusCount(fallbackStatusDict, 'continuing'))
+  const finishedCount = resolveMetricValue(stats?.finished, getStatusCount(fallbackStatusDict, 'finished'))
+  const rejectedCount = resolveMetricValue(stats?.rejected, getStatusCount(fallbackStatusDict, 'rejected'))
 
   return (
     <section className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <PageHeader
+        eyebrow="CRM workspace"
+        title="Client operations dashboard"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => void refreshAll()}>
+              Refresh
+            </Button>
+            <Button onClick={openCreateModal}>Add client</Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard
           label="Total Customers"
           value={stats?.total_customers ?? customers.length}
           description="Total clients in CRM"
+          tone="blue"
         />
         <MetricCard
           label="Need to Call"
-          value={resolveMetricValue(stats?.need_to_call, getStatusCount(fallbackStatusDict, 'need_to_call', 'need to call'))}
+          value={needToCallCount}
           description="Leads to be contacted"
+          tone="warning"
         />
         <MetricCard
           label="Contacted"
-          value={resolveMetricValue(stats?.contacted, getStatusCount(fallbackStatusDict, 'contacted'))}
+          value={contactedCount}
           description="Initial contact made"
+          tone="blue"
         />
         <MetricCard
           label="Project Started"
-          value={resolveMetricValue(stats?.project_started, getStatusCount(fallbackStatusDict, 'project_started', 'project started'))}
+          value={projectStartedCount}
           description="Projects in kickoff phase"
+          tone="violet"
         />
         <MetricCard
           label="Continuing"
-          value={resolveMetricValue(stats?.continuing, getStatusCount(fallbackStatusDict, 'continuing'))}
+          value={continuingCount}
           description="Ongoing projects"
+          tone="success"
         />
         <MetricCard
           label="Finished"
-          value={resolveMetricValue(stats?.finished, getStatusCount(fallbackStatusDict, 'finished'))}
+          value={finishedCount}
           description="Projects successfully completed"
+          tone="success"
         />
         <MetricCard
           label="Rejected"
-          value={resolveMetricValue(stats?.rejected, getStatusCount(fallbackStatusDict, 'rejected'))}
+          value={rejectedCount}
           description="Deals not closed"
+          tone="danger"
         />
       </div>
 
       <Card className="overflow-hidden">
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[var(--border)] px-6 py-6">
+        {/* ── Card header ─────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--border) px-6 py-5">
           <div>
             <h2 className="text-lg font-semibold text-white">Clients</h2>
-            <p className="mt-1.5 text-xs text-[var(--muted)]">
-              Manage your clients ({formatCompactNumber(displayedCustomers.length)} total)
+            <p className="mt-0.5 text-[13px] text-(--muted)">
+              Manage your clients ({formatCompactNumber(displayedCustomers.length)} visible records)
             </p>
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={() => void refreshAll()}>
-              Refresh
-            </Button>
-            <Button onClick={openCreateModal}>+ Add Client</Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="blue" dot>{displayedCustomers.length} visible</Badge>
+            <Badge variant={activeFilterCount > 0 ? 'warning' : 'outline'} dot={activeFilterCount > 0}>
+              {activeFilterCount} filters
+            </Badge>
           </div>
         </div>
 
-        <div className="border-b border-[var(--border)] px-6 py-5">
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <h3 className="text-base font-semibold text-white">Filters</h3>
-            <Button variant="ghost" onClick={resetFilters}>
-              Clear
-            </Button>
+        {/* ── Filters ─────────────────────────────── */}
+        <div className="border-b border-(--border) bg-(--muted-surface)/40 px-6 py-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-(--muted)">Filters</p>
+            {activeFilterCount > 0 && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2 text-xs">
+                Clear
+              </Button>
+            )}
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Search</span>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Search</label>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Name or username"
+                className="h-9"
               />
-            </label>
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Status</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Status</label>
               <SelectField
                 value={statusFilter}
                 options={statusFilterOptions}
                 onValueChange={setStatusFilter}
               />
-            </label>
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Platform</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Platform</label>
               <SelectField
                 value={platformFilter}
                 options={platformFilterOptions}
                 onValueChange={setPlatformFilter}
               />
-            </label>
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Phone</span>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Phone</label>
               <Input
                 value={phoneFilter}
                 onChange={(event) => setPhoneFilter(event.target.value)}
                 placeholder="Search by phone"
+                className="h-9"
               />
-            </label>
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Start date</span>
-              <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} />
-            </label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Start date</label>
+              <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} className="h-9" />
+            </div>
 
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">End date</span>
-              <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} />
-            </label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">End date</label>
+              <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} className="h-9" />
+            </div>
           </div>
         </div>
 
@@ -556,6 +623,7 @@ export function CrmDashboardPage() {
             caption="CRM customers table"
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
+            zebra
             emptyState={
               <EmptyStateBlock
                 eyebrow="CRM"
@@ -567,23 +635,28 @@ export function CrmDashboardPage() {
               {
                 key: 'client',
                 header: 'Client',
-                render: (row) => (
-                  <div className="flex items-center gap-3">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--muted-surface)] text-sm font-semibold text-white">
-                      {getInitials(row.full_name)}
+                render: (row) => {
+                  const displayName = getCustomerDisplayName(row)
+                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? 'none'
+
+                  return (
+                    <div className="flex items-center gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-(--muted-surface) text-sm font-semibold text-white">
+                        {getInitials(displayName)}
+                      </div>
+                      <div className="min-w-0">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/crm/customers/${row.id}`)}
+                          className="block truncate text-left text-sm font-semibold text-white transition hover:text-zinc-300 sm:text-[15px]"
+                        >
+                          {displayName}
+                        </button>
+                        <span className="block truncate text-[13px] text-(--muted)">{secondaryLine}</span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/crm/customers/${row.id}`)}
-                        className="block truncate text-left font-semibold text-white transition hover:text-zinc-300"
-                      >
-                        {row.full_name}
-                      </button>
-                      <span className="block truncate text-xs text-[var(--muted)]">{row.username || 'none'}</span>
-                    </div>
-                  </div>
-                ),
+                  )
+                },
               },
               {
                 key: 'platform',
@@ -619,7 +692,7 @@ export function CrmDashboardPage() {
                       href={row.audio_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm text-white underline underline-offset-4"
+                      className="text-sm text-white underline underline-offset-4 sm:text-[15px]"
                     >
                       Open
                     </a>
@@ -631,7 +704,7 @@ export function CrmDashboardPage() {
                 key: 'notes',
                 header: 'Notes',
                 render: (row) => (
-                  <span className="block max-w-[260px] truncate text-[var(--muted-strong)]">
+                  <span className="block max-w-65 truncate text-sm text-(--muted-strong) sm:text-[15px]">
                     {row.notes || '-'}
                   </span>
                 ),
@@ -651,7 +724,7 @@ export function CrmDashboardPage() {
                 header: 'Actions',
                 render: (row) => (
                   <ActionsMenu
-                    label={`Open actions for ${row.full_name}`}
+                    label={`Open actions for ${getCustomerDisplayName(row)}`}
                     items={[
                       {
                         label: 'Edit',

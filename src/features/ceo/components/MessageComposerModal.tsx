@@ -1,6 +1,7 @@
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
+import { Textarea } from '../../../shared/ui/textarea'
 
 export type MessageComposerValues = {
   receiver_id?: number
@@ -50,23 +51,26 @@ export function MessageComposerModal({
       }
     >
       {!isBroadcast ? (
-        <div className="rounded-xl border border-[var(--border)] bg-white/5 px-4 py-2.5 text-xs text-[var(--muted)]">
-          Receiver: <span className="font-bold text-white ml-2">{values.receiver_label}</span>
+        <div className="rounded-[20px] border border-blue-500/15 bg-blue-600/10 px-4 py-3 text-xs text-[var(--muted)]">
+          Receiver: <span className="ml-2 font-bold text-white">{values.receiver_label}</span>
         </div>
       ) : null}
       <div className="mt-4 grid gap-4">
         <label className="grid gap-2">
           <span className="text-xs font-bold text-white tracking-tight">Subject</span>
-          <Input value={values.subject} placeholder="Enter message subject" onChange={(event) => onChange('subject', event.target.value)} />
+          <Input
+            value={values.subject}
+            placeholder="Enter message subject"
+            onChange={(event) => onChange('subject', event.target.value)}
+          />
         </label>
         <label className="grid gap-2">
           <span className="text-xs font-bold text-white tracking-tight">Body</span>
-          <textarea
+          <Textarea
             rows={7}
             value={values.body}
             placeholder="Enter message body"
             onChange={(event) => onChange('body', event.target.value)}
-            className="w-full rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-2.5 text-xs text-white outline-none transition focus:border-blue-500/50"
           />
         </label>
       </div>

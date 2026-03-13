@@ -15,8 +15,10 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
+import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { SectionTitle } from '../../../shared/ui/section-title'
+import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { PermissionEditorModal } from '../components/PermissionEditorModal'
 import {
@@ -47,6 +49,14 @@ const initialMessageForm: MessageComposerValues = {
 }
 
 const emptyUsers: CeoUserRecord[] = []
+
+function formatSalary(value?: number | null) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return '-'
+  }
+
+  return new Intl.NumberFormat('en-US').format(value)
+}
 
 function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
   if (!user) {
@@ -97,6 +107,7 @@ export function CeoUsersPage() {
   const [userFormValues, setUserFormValues] = useState<UserFormValues>(initialUserForm)
   const [isUserModalOpen, setIsUserModalOpen] = useState(false)
   const [isUserSubmitting, setIsUserSubmitting] = useState(false)
+  const [profileUser, setProfileUser] = useState<CeoUserRecord | null>(null)
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
@@ -217,6 +228,10 @@ export function CeoUsersPage() {
     setUserModalMode('edit')
     setUserFormValues(toUserFormValues(user))
     setIsUserModalOpen(true)
+  }
+
+  function openProfileDialog(user: CeoUserRecord) {
+    setProfileUser(user)
   }
 
   async function handleSubmitUser() {
@@ -484,30 +499,27 @@ export function CeoUsersPage() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 5</p>
-          <h1 className="mt-2 text-xl font-semibold text-white tracking-tight">Users & Permissions</h1>
-          <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--muted)]">
-            Manage user creation, edits, deletion, active status, permission details, and system overview.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={() => void refreshAll()}>
-            Refresh
-          </Button>
-          <Button onClick={openCreateUserModal}>Create user</Button>
-        </div>
+      <PageHeader
+        eyebrow="CEO / Users"
+        title="Users & Permissions"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => void refreshAll()}>
+              Refresh
+            </Button>
+            <Button onClick={openCreateUserModal}>Create user</Button>
+          </>
+        }
+      />
+
+      <div className="grid gap-4 md:grid-cols-4 stagger-children">
+        <MetricCard label="Users" value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
+        <MetricCard label="Active" value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
+        <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} accent="warning" sparkBars={[3,2,3,2,2,2]} />
+        <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard label="Users" value={formatCompactNumber(statistics?.user_count ?? users.length)} />
-        <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} />
-        <MetricCard label="Active" value={formatCompactNumber(statistics?.active_user_count ?? 0)} />
-        <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} />
-      </div>
-
-      <Card className="p-6">
+<Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
             eyebrow="Users list"
@@ -548,7 +560,18 @@ export function CeoUsersPage() {
               {
                 key: 'role',
                 header: 'Role',
-                render: (row) => <Badge className="bg-white/5 text-white border-white/10">{String(row.role)}</Badge>,
+                render: (row) => (
+                  <button
+                    type="button"
+                    onClick={() => openProfileDialog(row)}
+                    className="transition hover:opacity-90"
+                    aria-label={`Open details for ${row.name} ${row.surname}`}
+                  >
+                    <Badge className="bg-white/5 text-white border-white/10">
+                      {String(row.role)}
+                    </Badge>
+                  </button>
+                ),
               },
               {
                 key: 'company',
@@ -716,6 +739,49 @@ export function CeoUsersPage() {
         }
         onSubmit={() => void handleSendSingleMessage()}
       />
+
+      <Dialog
+        open={Boolean(profileUser)}
+        onClose={() => setProfileUser(null)}
+        title={profileUser ? `${profileUser.name} ${profileUser.surname}` : 'User details'}
+        description={profileUser?.email ?? 'Selected user details'}
+        size="lg"
+        footer={
+          <Button variant="secondary" onClick={() => setProfileUser(null)}>
+            Close
+          </Button>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Role</p>
+            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.role ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company</p>
+            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.company_code ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>
+            <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.email ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Status</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className={cn('status-dot', profileUser?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
+              <p className="text-base font-semibold text-white">{profileUser?.is_active ? 'Active' : 'Inactive'}</p>
+            </div>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Telegram ID</p>
+            <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.telegram_id ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Default salary</p>
+            <p className="mt-2 text-base font-semibold text-white">{formatSalary(profileUser?.default_salary)}</p>
+          </div>
+        </div>
+      </Dialog>
     </section>
   )
 }

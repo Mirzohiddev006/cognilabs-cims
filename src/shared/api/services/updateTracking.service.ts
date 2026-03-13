@@ -53,4 +53,11 @@ export const updateTrackingService = {
       path: '/update-tracking/company-stats',
     })
   },
+
+  teamMonthly(month?: number, year?: number) {
+    return request<unknown>({
+      path: '/update-tracking/all-users-updates',
+      query: { month, year },
+    })
+  },
 }

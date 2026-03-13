@@ -27,6 +27,15 @@ export const navigationItems = [
     defaultRedirect: false,
   },
   {
+    to: '/ceo/team-updates',
+    label: 'Team Monthly Updates',
+    description: 'Monitor employee update activity by month.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/crm',
     label: 'CRM',
     description: 'Customers, filters, statuses va sales stats.',

@@ -136,7 +136,7 @@ export function CustomerFormModal({
           <input
             type="file"
             accept="audio/*"
-            className="block min-h-9 w-full rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-1.5 text-xs text-[var(--muted-strong)] shadow-sm"
+            className="block min-h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-xs text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]"
             onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
           />
           {audioFileName ? <span className="text-xs text-[var(--muted)]">Current: {audioFileName}</span> : null}
@@ -148,11 +148,12 @@ export function CustomerFormModal({
         <Textarea value={values.notes} onChange={(event) => onChange('notes', event.target.value)} />
       </label>
 
-      <label className="mt-4 flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--accent-soft)]/55 px-4 py-3">
+      <label className="mt-4 flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
         <input
           type="checkbox"
           checked={values.clear_recall_time}
           onChange={(event) => onChange('clear_recall_time', event.target.checked)}
+          className="h-4 w-4 rounded border border-white/10 accent-blue-500"
         />
         <span className="text-xs text-[var(--muted-strong)]">Recall time ni tozalash</span>
       </label>

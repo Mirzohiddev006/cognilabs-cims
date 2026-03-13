@@ -65,11 +65,12 @@ export function PaymentFormModal({
             />
           </label>
         </div>
-        <label className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-2.5">
+        <label className="flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
           <input
             type="checkbox"
             checked={values.payment}
             onChange={(event) => onChange('payment', event.target.checked)}
+            className="h-4 w-4 rounded border border-white/10 accent-blue-500"
           />
           <span className="text-xs text-[var(--muted-strong)]">Already paid</span>
         </label>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
 import { useAuth } from '../../features/auth/hooks/useAuth'
@@ -6,11 +6,21 @@ import { env } from '../../shared/config/env'
 import { cn } from '../../shared/lib/cn'
 import { getAccessibleNavigation } from '../../shared/lib/permissions'
 import { Badge } from '../../shared/ui/badge'
+import { Button } from '../../shared/ui/button'
+import { Dialog } from '../../shared/ui/dialog'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
 function getInitials(name?: string, surname?: string) {
   return `${name?.charAt(0) ?? ''}${surname?.charAt(0) ?? ''}`.toUpperCase() || 'CI'
+}
+
+function humanizePermissionKey(value: string) {
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 function SidebarCollapseGlyph({ collapsed }: { collapsed: boolean }) {
@@ -36,6 +46,14 @@ export function AppSidebar() {
   const { user } = useAuth()
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
   const [showExpandedProfile, setShowExpandedProfile] = useState(() => !isSidebarCollapsed)
+  const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
+  const activePermissions = useMemo(
+    () =>
+      Object.entries(user?.permissions ?? {})
+        .filter(([, isEnabled]) => isEnabled)
+        .map(([key]) => humanizePermissionKey(key)),
+    [user?.permissions],
+  )
 
   useEffect(() => {
     closeSidebar()
@@ -56,6 +74,14 @@ export function AppSidebar() {
     }
   }, [isSidebarCollapsed])
 
+  function openMemberDialog() {
+    if (!user) {
+      return
+    }
+
+    setIsMemberDialogOpen(true)
+  }
+
   return (
     <>
       <button
@@ -63,14 +89,14 @@ export function AppSidebar() {
         aria-label="Close navigation overlay"
         onClick={closeSidebar}
         className={cn(
-          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] backdrop-blur-sm transition-opacity md:hidden',
+          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] backdrop-blur-sm transition-opacity min-[961px]:hidden',
           isSidebarOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
       />
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 transition-transform duration-300 md:sticky md:top-0 md:h-screen md:self-start md:w-auto md:p-4 md:pr-0',
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-[110%] md:translate-x-0',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 transition-transform duration-300 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:p-4 min-[961px]:pr-0',
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-[110%] min-[961px]:translate-x-0',
         )}
       >
         <div className={cn('glass-panel flex h-full flex-col overflow-hidden rounded-xl py-3', isSidebarCollapsed ? 'px-2.5' : 'px-3 sm:px-4')}>
@@ -135,14 +161,14 @@ export function AppSidebar() {
                 title={isSidebarCollapsed ? `${item.label} (${item.group})` : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'overflow-hidden transition-all duration-300',
+                    'relative overflow-hidden transition-all duration-300',
                     isSidebarCollapsed
                       ? 'flex h-12 w-12 items-center justify-center rounded-xl border'
                       : 'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm',
                     isActive
                       ? isSidebarCollapsed
                         ? 'border-blue-500/30 bg-blue-600/12 text-white shadow-sm'
-                        : 'border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+                        : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
                       : isSidebarCollapsed
                         ? 'border-white/10 bg-white/[0.03] text-[var(--muted)] hover:bg-white/5 hover:text-white'
                         : 'border-transparent text-[var(--muted)] hover:bg-white/5 hover:text-white',
@@ -174,15 +200,25 @@ export function AppSidebar() {
 
           {isSidebarCollapsed || !showExpandedProfile ? (
             <div className="mt-4 flex justify-center">
-              <div
-                className="grid h-12 w-12 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30"
+              <button
+                type="button"
+                onClick={openMemberDialog}
+                disabled={!user}
+                className="grid h-12 w-12 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30 transition hover:scale-[1.02] disabled:cursor-default disabled:opacity-70"
                 title={user ? `${user.name} ${user.surname}` : 'Authenticated user'}
+                aria-label="Open member details"
               >
                 {getInitials(user?.name, user?.surname)}
-              </div>
+              </button>
             </div>
           ) : (
-            <div className="mt-4 rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-4 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
+            <button
+              type="button"
+              onClick={openMemberDialog}
+              disabled={!user}
+              className="mt-4 w-full rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition hover:border-white/15 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] disabled:cursor-default disabled:opacity-80"
+              aria-label="Open member details"
+            >
               <div className="flex items-start gap-3">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30">
                   {getInitials(user?.name, user?.surname)}
@@ -210,10 +246,72 @@ export function AppSidebar() {
                   {env.appEnv}
                 </Badge>
               </div>
-            </div>
+            </button>
           )}
         </div>
       </aside>
+
+      <Dialog
+        open={isMemberDialogOpen}
+        onClose={() => setIsMemberDialogOpen(false)}
+        title={user ? `${user.name} ${user.surname}` : 'Member details'}
+        description={user?.email ?? 'Current authenticated user'}
+        size="lg"
+        footer={
+          <Button variant="secondary" onClick={() => setIsMemberDialogOpen(false)}>
+            Close
+          </Button>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Role</p>
+            <p className="mt-2 text-lg font-semibold text-white">{user?.role ?? 'User'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company code</p>
+            <p className="mt-2 text-lg font-semibold text-white">{user?.company_code ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>
+            <p className="mt-2 text-base font-semibold text-white break-all">{user?.email ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Status</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
+              <p className="text-base font-semibold text-white">{user?.is_active ? 'Active' : 'Inactive'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Permissions</p>
+              <p className="mt-2 text-lg font-semibold text-white">{activePermissions.length} enabled</p>
+            </div>
+            <Badge className="rounded-full border-white/15 bg-white/8 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white">
+              {env.appEnv}
+            </Badge>
+          </div>
+
+          {activePermissions.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {activePermissions.map((permission) => (
+                <Badge
+                  key={permission}
+                  className="rounded-full border-blue-500/20 bg-blue-600/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-blue-100"
+                >
+                  {permission}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-[var(--muted)]">No active permissions available.</p>
+          )}
+        </div>
+      </Dialog>
     </>
   )
 }

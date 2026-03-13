@@ -172,3 +172,32 @@ export type CompanyStatsResponse = {
   avg_percentage_this_month: number
   avg_percentage_last_3_months: number
 }
+
+export type DayStatus = 'submitted' | 'missing' | 'sunday' | 'future' | 'neutral'
+
+export type EmployeeDayStatus = {
+  day: number
+  status: DayStatus
+}
+
+export type EmployeeMonthlyStats = {
+  user_id: number
+  user_name: string
+  telegram_username?: string | null
+  submitted_count: number
+  missing_count: number
+  completion_percentage: number
+  last_update_date: string | null
+  daily_statuses?: EmployeeDayStatus[] | null
+}
+
+export type TeamMonthlyResponse = {
+  month: number
+  year: number
+  total_employees: number
+  total_submitted: number
+  total_missing: number
+  avg_completion_percentage: number
+  top_performer: EmployeeMonthlyStats | null
+  employees: EmployeeMonthlyStats[]
+}

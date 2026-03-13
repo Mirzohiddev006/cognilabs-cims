@@ -96,14 +96,27 @@ export function SelectField({
           }
         }}
         className={cn(
-          'flex min-h-9 w-full items-center justify-between gap-3 rounded-md border border-[var(--border)] bg-[var(--input-surface)] px-3 py-1.5 text-xs text-[var(--foreground)] shadow-sm outline-none transition-[color,box-shadow,border-color] focus-visible:border-white/15 focus-visible:ring-2 focus-visible:ring-white/10 disabled:cursor-not-allowed disabled:opacity-60',
+          'flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] sm:text-[15px]',
+          'shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none',
+          'transition-[border-color,box-shadow,background-color,transform] duration-150',
+          'hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
+          'focus-visible:border-[var(--border-focus)] focus-visible:bg-[var(--input-surface-hover)]',
+          'focus-visible:ring-0 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)]',
+          'disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
       >
         <span className={cn('truncate text-left', selectedOption ? 'text-[var(--foreground)]' : 'text-[var(--muted)]')}>
           {selectedOption?.label ?? placeholder}
         </span>
-        <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 fill-current text-[var(--muted)]" aria-hidden="true">
+        <svg
+          viewBox="0 0 16 16"
+          className={cn(
+            'h-4 w-4 shrink-0 fill-current text-[var(--muted)] transition-transform duration-200',
+            isOpen && 'rotate-180 text-white',
+          )}
+          aria-hidden="true"
+        >
           <path d="M4.22 5.97a.75.75 0 0 1 1.06 0L8 8.69l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.03a.75.75 0 0 1 0-1.06Z" />
         </svg>
       </button>
@@ -113,7 +126,7 @@ export function SelectField({
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
-                className="fixed z-50 max-h-72 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--card)] p-1 shadow-2xl"
+                className="fixed z-50 max-h-72 overflow-y-auto rounded-2xl border border-white/10 bg-[rgba(16,16,20,0.98)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
                 role="listbox"
               >
@@ -131,13 +144,21 @@ export function SelectField({
                         onValueChange(option.value)
                       }}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-lg px-3 py-1.5 text-xs transition',
+                        'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                         isSelected
-                          ? 'bg-[var(--accent-soft)] text-white'
-                          : 'text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-white',
+                          ? 'border border-blue-500/20 bg-blue-600/10 text-white'
+                          : 'border border-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-white',
                       )}
                     >
-                      <span className="truncate">{option.label}</span>
+                      <span className="flex items-center gap-2 truncate">
+                        <span
+                          className={cn(
+                            'inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-white/15',
+                            isSelected && 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.55)]',
+                          )}
+                        />
+                        <span className="truncate">{option.label}</span>
+                      </span>
                       {isSelected ? (
                         <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 fill-current text-[#3b82f6]" aria-hidden="true">
                           <path d="M6.6 11.2 3.4 8a.75.75 0 1 0-1.06 1.06l3.73 3.73a.75.75 0 0 0 1.06 0l6.53-6.53A.75.75 0 1 0 12.64 5.2L6.6 11.2Z" />

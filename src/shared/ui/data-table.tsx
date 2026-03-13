@@ -1,3 +1,5 @@
+/* eslint-disable prefer-const */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
 import { Button } from './button'
@@ -6,6 +8,7 @@ type Column<T> = {
   key: string
   header: ReactNode
   align?: 'left' | 'center' | 'right'
+  width?: string
   render: (row: T) => ReactNode
 }
 
@@ -16,25 +19,42 @@ type DataTableProps<T> = {
   getRowKey: (row: T) => string
   emptyState?: ReactNode
   pageSize?: number
+  zebra?: boolean
+  compact?: boolean
+  onRowClick?: (row: T) => void
 }
 
 const alignClassName = {
-  left: 'text-left',
+  left:   'text-left',
   center: 'text-center',
-  right: 'text-right',
+  right:  'text-right',
 }
 
 function getVisiblePageNumbers(currentPage: number, totalPages: number) {
   const maxVisiblePages = 5
   const halfWindow = Math.floor(maxVisiblePages / 2)
   let start = Math.max(1, currentPage - halfWindow)
-  let end = Math.min(totalPages, start + maxVisiblePages - 1)
-
+  let end   = Math.min(totalPages, start + maxVisiblePages - 1)
   if (end - start + 1 < maxVisiblePages) {
     start = Math.max(1, end - maxVisiblePages + 1)
   }
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+}
 
-  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+function ChevronLeft() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M10 4L6 8l4 4" />
+    </svg>
+  )
+}
+
+function ChevronRight() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 4l4 4-4 4" />
+    </svg>
+  )
 }
 
 export function DataTable<T>({
@@ -44,25 +64,22 @@ export function DataTable<T>({
   getRowKey,
   emptyState,
   pageSize = 10,
+  zebra = false,
+  compact = false,
+  onRowClick,
 }: DataTableProps<T>) {
   const effectivePageSize = Math.max(1, pageSize > 0 ? pageSize : rows.length)
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = Math.max(1, Math.ceil(rows.length / effectivePageSize))
 
+  useEffect(() => { setCurrentPage(1) }, [rows.length, effectivePageSize])
   useEffect(() => {
-    setCurrentPage(1)
-  }, [rows.length, effectivePageSize])
-
-  useEffect(() => {
-    setCurrentPage((current) => Math.min(current, totalPages))
+    setCurrentPage((c) => Math.min(c, totalPages))
   }, [totalPages])
 
-  const startIndex = (currentPage - 1) * effectivePageSize
-  const endIndex = Math.min(startIndex + effectivePageSize, rows.length)
-  const visibleRows = useMemo(
-    () => rows.slice(startIndex, endIndex),
-    [endIndex, rows, startIndex],
-  )
+  const startIndex  = (currentPage - 1) * effectivePageSize
+  const endIndex    = Math.min(startIndex + effectivePageSize, rows.length)
+  const visibleRows = useMemo(() => rows.slice(startIndex, endIndex), [endIndex, rows, startIndex])
   const visiblePageNumbers = useMemo(
     () => getVisiblePageNumbers(currentPage, totalPages),
     [currentPage, totalPages],
@@ -72,72 +89,97 @@ export function DataTable<T>({
     return <>{emptyState ?? null}</>
   }
 
+  const rowPadding = compact ? 'py-2.5 px-4' : 'py-3.5 px-4'
+  const headPadding = compact ? 'py-2.5 px-4' : 'py-3 px-4'
+
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
+
           <thead>
             <tr className="bg-[var(--muted-surface)]">
-              {columns.map((column) => (
+              {columns.map((col) => (
                 <th
-                  key={column.key}
+                  key={col.key}
+                  style={col.width ? { width: col.width } : undefined}
                   className={cn(
-                    'h-9 border-b border-[var(--border)] px-4 py-2 text-xs font-semibold text-[var(--muted)] whitespace-nowrap',
-                    alignClassName[column.align ?? 'left'],
+                    headPadding,
+                    'border-b border-[var(--border)] text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--caption)] whitespace-nowrap',
+                    alignClassName[col.align ?? 'left'],
                   )}
                 >
-                  {column.header}
+                  {col.header}
                 </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
-            {visibleRows.map((row) => (
-              <tr
-                key={getRowKey(row)}
-                className="group transition-colors hover:bg-[var(--accent-soft)]"
-              >
-                {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={cn(
-                      'border-b border-[var(--border)] px-4 py-2.5 text-xs font-medium text-[var(--foreground)] align-middle',
-                      alignClassName[column.align ?? 'left'],
-                    )}
-                  >
-                    {column.render(row)}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {visibleRows.map((row, rowIndex) => {
+              const isEven = rowIndex % 2 === 0
+
+              return (
+                <tr
+                  key={getRowKey(row)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={cn(
+                    'table-row-hover group border-b border-[var(--border)] last:border-b-0',
+                    zebra && isEven && 'bg-white/[0.012]',
+                    onRowClick && 'cursor-pointer',
+                  )}
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={cn(
+                        rowPadding,
+                        'text-sm font-medium text-[var(--foreground)] align-middle',
+                        alignClassName[col.align ?? 'left'],
+                        'group-hover:text-[var(--foreground)]',
+                      )}
+                    >
+                      {col.render(row)}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
 
+      {/* ── Pagination ──────────────────────────── */}
       {totalPages > 1 ? (
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[11px] text-[var(--muted)]">
-            Showing {startIndex + 1}-{endIndex} of {rows.length}
+        <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[var(--caption)] sm:text-[13px]">
+            {startIndex + 1}–{endIndex}{' '}
+            <span className="text-[var(--muted)]">of</span>{' '}
+            {rows.length} results
           </p>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1">
             <Button
-              type="button"
               variant="ghost"
-              className="min-h-8 px-3 text-xs"
+              size="md"
+              className="px-2"
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
+              onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
+              aria-label="Previous page"
             >
-              Prev
+              <ChevronLeft />
             </Button>
 
             {visiblePageNumbers.map((pageNumber) => (
               <Button
                 key={pageNumber}
-                type="button"
                 variant={pageNumber === currentPage ? 'secondary' : 'ghost'}
-                className="min-h-8 min-w-8 px-2 text-xs"
+                size="md"
+                className={cn(
+                  'min-w-[28px] px-1.5',
+                  pageNumber === currentPage && 'border-[var(--border-hover)] font-semibold text-white',
+                )}
                 onClick={() => setCurrentPage(pageNumber)}
               >
                 {pageNumber}
@@ -145,13 +187,14 @@ export function DataTable<T>({
             ))}
 
             <Button
-              type="button"
               variant="ghost"
-              className="min-h-8 px-3 text-xs"
+              size="md"
+              className="px-2"
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
+              onClick={() => setCurrentPage((c) => Math.min(totalPages, c + 1))}
+              aria-label="Next page"
             >
-              Next
+              <ChevronRight />
             </Button>
           </div>
         </div>

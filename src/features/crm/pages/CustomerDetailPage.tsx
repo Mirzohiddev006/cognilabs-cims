@@ -3,10 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { formatUsernameHandle, getCustomerDisplayName } from '../../../shared/lib/customer-display'
 import { formatShortDate } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
+import { PageHeader } from '../../../shared/ui/page-header'
+import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 
 function resolveAudioUrl(audioFileId?: string | null, audioUrl?: string | null) {
@@ -71,89 +74,93 @@ export function CustomerDetailPage() {
   }
 
   const customer = detailQuery.data
+  const customerName = getCustomerDisplayName(customer)
 
   return (
     <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">CRM / Detail</p>
-          <h1 className="mt-2 text-xl font-semibold text-white tracking-tight">{customer.full_name}</h1>
-          <p className="mt-2 text-xs text-zinc-500">
-            {customer.platform} | {customer.phone_number}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => navigate('/crm')}>
-            Back to CRM
-          </Button>
-          {audioSource ? (
-            <Button asChild>
-              <a href={audioSource} target="_blank" rel="noreferrer">
-                Open audio
-              </a>
+      <PageHeader
+        eyebrow="CRM / Detail"
+        title={customerName}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate('/crm')}>
+              Back to CRM
             </Button>
-          ) : null}
-        </div>
-      </div>
+            {audioSource ? (
+              <Button asChild>
+                <a href={audioSource} target="_blank" rel="noreferrer">
+                  Open audio
+                </a>
+              </Button>
+            ) : null}
+          </>
+        }
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card className="flex min-h-[120px] flex-col justify-between p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Status</p>
-          <div className="mt-3">
-            <Badge className="bg-white/10 text-white border-white/20">{customer.status}</Badge>
-          </div>
+        <Card variant="metric" className="flex min-h-30 flex-col justify-between border-blue-500/15 p-4 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.10),0_0_20px_rgba(59,130,246,0.06)]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-blue-400/75">Status</p>
+          <Badge className="mt-3 self-start bg-white/10 text-white border-white/20">{customer.status}</Badge>
         </Card>
-        <Card className="flex min-h-[120px] flex-col justify-between p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Assistant</p>
+        <Card variant="metric" className="flex min-h-30 flex-col justify-between border-violet-500/15 p-4 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.10),0_0_20px_rgba(139,92,246,0.05)]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-400/75">Assistant</p>
           <p className="mt-3 text-xl font-semibold text-white tracking-tight">{customer.assistant_name || '-'}</p>
         </Card>
-        <Card className="flex min-h-[120px] flex-col justify-between p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Language</p>
+        <Card variant="metric" className="flex min-h-30 flex-col justify-between border-emerald-500/15 p-4 shadow-[inset_0_0_0_1px_rgba(34,197,94,0.10),0_0_20px_rgba(34,197,94,0.05)]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-emerald-400/75">Language</p>
           <p className="mt-3 text-xl font-semibold text-white tracking-tight">{customer.conversation_language || '-'}</p>
         </Card>
-        <Card className="flex min-h-[120px] flex-col justify-between p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">Created</p>
+        <Card variant="metric" className="flex min-h-30 flex-col justify-between border-amber-500/15 p-4 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.10),0_0_20px_rgba(245,158,11,0.05)]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-400/75">Created</p>
           <p className="mt-3 text-xl font-semibold text-white tracking-tight">{formatShortDate(customer.created_at)}</p>
         </Card>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card className="p-6">
-          <h2 className="text-base font-semibold text-white tracking-tight">Profile</h2>
-          <div className="mt-5 grid gap-4">
+        <Card className="overflow-hidden">
+          <div className="border-b border-(--border) px-6 py-6">
+            <SectionTitle title="Profile" />
+          </div>
+          <div className="grid gap-3 px-6 py-5">
             {[
-              ['Username', customer.username || '-'],
+              ['Username', formatUsernameHandle(customer.username) || '-'],
               ['Phone', customer.phone_number],
               ['Platform', customer.platform],
               ['Audio file ID', customer.audio_file_id || '-'],
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-[18px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">{label}</p>
-                <p className="mt-2 text-xs text-white">{value}</p>
+              <div key={label} className="flex items-center justify-between gap-4 rounded-xl border border-(--border) bg-(--surface) px-4 py-3">
+                <span className="text-sm text-(--muted-strong)">{label}</span>
+                <span className="text-sm font-semibold text-white text-right">{value}</span>
               </div>
             ))}
           </div>
         </Card>
 
         <div className="grid gap-6">
-          <Card className="p-6">
-            <h2 className="text-base font-semibold text-white tracking-tight">Notes</h2>
-            {customer.notes ? (
-              <p className="mt-4 whitespace-pre-wrap text-xs leading-5 text-zinc-400">{customer.notes}</p>
-            ) : (
-              <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
-            )}
+          <Card className="overflow-hidden">
+            <div className="border-b border-(--border) px-6 py-6">
+              <SectionTitle title="Notes" />
+            </div>
+            <div className="px-6 py-5">
+              {customer.notes ? (
+                <p className="whitespace-pre-wrap text-sm leading-6 text-(--muted-strong)">{customer.notes}</p>
+              ) : (
+                <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
+              )}
+            </div>
           </Card>
-          <Card className="p-6">
-            <h2 className="text-base font-semibold text-white tracking-tight">AI Summary</h2>
-            {customer.aisummary ? (
-              <p className="mt-4 whitespace-pre-wrap text-xs leading-5 text-zinc-400">
-                {customer.aisummary}
-              </p>
-            ) : (
-              <EmptyStateBlock eyebrow="AI" title="No AI summary" description="AI summary is not available for this record." />
-            )}
+          <Card className="overflow-hidden">
+            <div className="border-b border-(--border) px-6 py-6">
+              <SectionTitle title="AI Summary" />
+            </div>
+            <div className="px-6 py-5">
+              {customer.aisummary ? (
+                <p className="whitespace-pre-wrap text-sm leading-6 text-(--muted-strong)">{customer.aisummary}</p>
+              ) : (
+                <EmptyStateBlock eyebrow="AI" title="No AI summary" description="AI summary is not available for this record." />
+              )}
+            </div>
           </Card>
         </div>
       </div>

@@ -3,12 +3,15 @@ import { ceoService, type CeoMessageRecord } from '../../../shared/api/services/
 import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
+import { getCustomerDisplayMeta, getCustomerDisplayName } from '../../../shared/lib/customer-display'
 import { formatCompactNumber, formatCurrency, formatShortDate } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
+import { Badge, StatusBadge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
+import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
@@ -281,58 +284,92 @@ export function CeoDashboardPage() {
 
   return (
     <section className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.26em] text-[var(--accent)]">CEO / Day 6</p>
-          <h1 className="mt-2 text-xl font-semibold text-[var(--foreground)]">Dashboard, messages va payments</h1>
-          <p className="mt-3 max-w-3xl text-xs leading-5 text-[var(--muted-strong)]">
-            CEO statistik kartalari, today metrics, broadcast message, messages list va payments CRUD bitta sahifaga
-            yig`ildi.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="secondary" onClick={() => void refreshAll()}>
-            Refresh
-          </Button>
-          <Button variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
-            Send message all
-          </Button>
-          <Button onClick={openCreatePaymentModal}>Create payment</Button>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="CEO / Day 6"
+        title="Dashboard, messages va payments"
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => void refreshAll()}>
+              Refresh
+            </Button>
+            <Button variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
+              Send message all
+            </Button>
+            <Button onClick={openCreatePaymentModal}>Create payment</Button>
+          </>
+        }
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Users" value={formatCompactNumber(statistics?.user_count ?? 0)} />
-        <MetricCard label="Need to call" value={formatCompactNumber(metrics?.need_to_call_count ?? 0)} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
+        <MetricCard
+          label="Users"
+          value={formatCompactNumber(statistics?.user_count ?? 0)}
+          caption="Platformadagi jami foydalanuvchilar"
+          delta={`${messages.length} sent`}
+          deltaLabel="message activity"
+          trend="up"
+          accent="blue"
+          sparkBars={[6, 8, 9, 11, 10, 12]}
+        />
+        <MetricCard
+          label="Need to call"
+          value={formatCompactNumber(metrics?.need_to_call_count ?? 0)}
+          caption="Operativ follow-up navbati"
+          delta={`${metrics?.today_customers?.length ?? 0} new`}
+          deltaLabel="today customers"
+          trend="flat"
+          accent="violet"
+          sparkBars={[4, 5, 7, 6, 8, 7]}
+        />
         <MetricCard
           label="Due today"
           value={formatCompactNumber(metrics?.due_payments_today ?? 0)}
           caption="Unpaid payment rows for today"
+          delta={`${payments.filter((item) => !item.payment).length} pending`}
+          deltaLabel="overall queue"
+          trend={(metrics?.due_payments_today ?? 0) > 0 ? 'down' : 'flat'}
+          accent="warning"
+          sparkBars={[5, 4, 6, 3, 4, Math.max(metrics?.due_payments_today ?? 0, 1)]}
         />
         <MetricCard
           label="Total balance"
           value={metrics?.total_balance_formatted ?? formatCurrency(metrics?.total_balance_uzs ?? 0)}
           caption="Latest DB exchange rate bilan"
+          delta={formatCurrency(totalPlannedPayments)}
+          deltaLabel="planned pipeline"
+          trend="up"
+          accent="success"
+          sparkBars={[2, 3, 4, 5, 5, 6]}
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="p-6">
-          <SectionTitle
-            eyebrow="Today metrics"
-            title="Bugungi customerlar"
-            description="Today metrics endpointdan kelgan customerlar ro`yxati va operativ ko`rsatkichlar."
-          />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <SectionTitle
+              eyebrow="Today metrics"
+              title="Bugungi customerlar"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="blue" dot>
+                {metrics?.today_customers?.length ?? 0} customers
+              </Badge>
+              <Badge variant="warning" dot pulse={(metrics?.due_payments_today ?? 0) > 0}>
+                {metrics?.due_payments_today ?? 0} due
+              </Badge>
+            </div>
+          </div>
           <div className="mt-6">
             <DataTable
               caption="Today customers"
               rows={metrics?.today_customers ?? []}
               getRowKey={(row) => String(row.id)}
+              zebra
               emptyState={
                 <EmptyStateBlock
                   eyebrow="Today customers"
-                  title="Bugungi customer yo`q"
-                  description="Today metrics endpoint bo`sh ro`yxat qaytardi."
+                  title="Bugungi customer yo'q"
+                  description="Today metrics endpoint bo'sh ro'yxat qaytardi."
                 />
               }
               columns={[
@@ -341,12 +378,16 @@ export function CeoDashboardPage() {
                   header: 'Customer',
                   render: (row) => (
                     <div>
-                      <p className="font-semibold text-[var(--foreground)]">{row.full_name}</p>
-                      <p className="text-xs text-[var(--muted)]">{row.platform}</p>
+                      <p className="font-semibold text-(--foreground)">{getCustomerDisplayName(row)}</p>
+                      <p className="text-xs text-(--muted)">{getCustomerDisplayMeta(row)}</p>
                     </div>
                   ),
                 },
-                { key: 'status', header: 'Status', render: (row) => row.status },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  render: (row) => <StatusBadge status={row.status} />,
+                },
                 { key: 'assistant', header: 'Assistant', render: (row) => row.assistant_name || '-' },
                 { key: 'created_at', header: 'Created', render: (row) => formatShortDate(row.created_at) },
               ]}
@@ -354,24 +395,47 @@ export function CeoDashboardPage() {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <SectionTitle
-            eyebrow="Summary"
-            title="CEO quick snapshot"
-            description="Users, messages va payments bo`yicha tezkor jamlama."
-          />
-          <div className="mt-6 grid gap-3">
-            <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Messages sent</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{messages.length}</p>
+        <Card variant="glass" className="overflow-hidden p-0">
+          <div className="border-b border-white/10 px-6 py-6">
+            <SectionTitle
+              eyebrow="Summary"
+              title="CEO quick snapshot"
+            />
+          </div>
+          <div className="grid gap-3 px-6 py-5">
+            <div className="rounded-[20px] border border-blue-500/20 bg-blue-600/10 px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-200/80">Messages sent</p>
+              <p className="mt-2 text-xl font-semibold text-white">{messages.length}</p>
             </div>
-            <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Payments rows</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{payments.length}</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[18px] border border-white/10 bg-(--card) px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Payments rows</p>
+                <p className="mt-2 text-lg font-semibold text-(--foreground)">{payments.length}</p>
+                <p className="mt-1 text-[11px] text-(--muted)">CRUD bilan boshqariladi</p>
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-(--card) px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/85">Paid ratio</p>
+                <p className="mt-2 text-lg font-semibold text-(--foreground)">
+                  {payments.length > 0
+                    ? `${Math.round((payments.filter((item) => item.payment).length / payments.length) * 100)}%`
+                    : '0%'}
+                </p>
+                <p className="mt-1 text-[11px] text-(--muted)">To'langan yozuvlar ulushi</p>
+              </div>
             </div>
-            <div className="rounded-[18px] border border-white/10 bg-[var(--card)] px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Planned amount</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatCurrency(totalPlannedPayments)}</p>
+            <div className="rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/80">Planned amount</p>
+                  <p className="mt-2 text-xl font-semibold text-white">{formatCurrency(totalPlannedPayments)}</p>
+                </div>
+                <Badge variant="success" dot>
+                  {payments.filter((item) => item.payment).length} paid
+                </Badge>
+              </div>
+              <p className="mt-3 text-[11px] leading-5 text-(--muted)">
+                Payment pipeline va balance ko'rsatkichlari bir xil kartada saqlanib, qaror qabul qilish tezlashadi.
+              </p>
             </div>
           </div>
         </Card>
@@ -379,20 +443,26 @@ export function CeoDashboardPage() {
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="p-6">
-          <SectionTitle
-            eyebrow="Messages"
-            title="CEO sent messages"
-            description="Broadcast va userga yuborilgan xabarlar shu listdan delete qilinadi."
-          />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <SectionTitle
+              eyebrow="Messages"
+              title="CEO sent messages"
+              description="Broadcast va userga yuborilgan xabarlar shu listdan delete qilinadi."
+            />
+            <Badge variant="violet" dot>
+              {messages.length} entries
+            </Badge>
+          </div>
           <div className="mt-6">
             <DataTable
               caption="CEO messages list"
               rows={messages}
               getRowKey={(row) => String(row.id)}
+              zebra
               emptyState={
                 <EmptyStateBlock
                   eyebrow="Messages"
-                  title="Xabarlar yo`q"
+                  title="Xabarlar yo'q"
                   description="Hozircha CEO tomonidan yuborilgan message topilmadi."
                 />
               }
@@ -402,12 +472,20 @@ export function CeoDashboardPage() {
                   header: 'Receiver',
                   render: (row) => (
                     <div>
-                      <p className="font-semibold text-[var(--foreground)]">{row.receiver_name}</p>
-                      <p className="text-xs text-[var(--muted)]">{row.receiver_email}</p>
+                      <p className="font-semibold text-(--foreground)">{row.receiver_name}</p>
+                      <p className="text-xs text-(--muted)">{row.receiver_email}</p>
                     </div>
                   ),
                 },
-                { key: 'subject', header: 'Subject', render: (row) => row.subject },
+                {
+                  key: 'subject',
+                  header: 'Subject',
+                  render: (row) => (
+                    <div className="max-w-[260px]">
+                      <p className="truncate font-medium text-white">{row.subject}</p>
+                    </div>
+                  ),
+                },
                 {
                   key: 'sent_at',
                   header: 'Sent at',
@@ -435,21 +513,32 @@ export function CeoDashboardPage() {
         </Card>
 
         <Card className="p-6">
-          <SectionTitle
-            eyebrow="Payments"
-            title="CEO payments list"
-            description="Create, edit, toggle va delete amallari payments table ichida ulandi."
-          />
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <SectionTitle
+              eyebrow="Payments"
+              title="CEO payments list"
+              description="Create, edit, toggle va delete amallari payments table ichida ulandi."
+            />
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="success" dot>
+                {payments.filter((row) => row.payment).length} paid
+              </Badge>
+              <Badge variant="warning" dot pulse={payments.some((row) => !row.payment)}>
+                {payments.filter((row) => !row.payment).length} pending
+              </Badge>
+            </div>
+          </div>
           <div className="mt-6">
             <DataTable
               caption="CEO payments list"
               rows={payments}
               getRowKey={(row) => String(row.id)}
+              zebra
               emptyState={
                 <EmptyStateBlock
                   eyebrow="Payments"
-                  title="To`lovlar yo`q"
-                  description="Hozircha CEO payments endpoint bo`sh ro`yxat qaytardi."
+                  title="To'lovlar yo'q"
+                  description="Hozircha CEO payments endpoint bo'sh ro'yxat qaytardi."
                 />
               }
               columns={[
@@ -473,9 +562,9 @@ export function CeoDashboardPage() {
                   key: 'status',
                   header: 'Status',
                   render: (row) => (
-                    <span className={row.payment ? 'font-semibold text-emerald-400' : 'font-semibold text-amber-300'}>
+                    <Badge variant={row.payment ? 'success' : 'warning'} dot pulse={!row.payment}>
                       {row.payment ? 'Paid' : 'Pending'}
-                    </span>
+                    </Badge>
                   ),
                 },
                 {

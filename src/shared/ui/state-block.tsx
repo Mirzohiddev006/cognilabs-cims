@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Button } from './button'
-import { Card } from './card'
 
 type StateBlockProps = {
   eyebrow: string
@@ -12,10 +11,56 @@ type StateBlockProps = {
   children?: ReactNode
 }
 
-const toneStyles = {
-  loading: 'bg-[var(--card)] border-white/10',
-  empty: 'bg-[var(--card)] border-white/10',
-  error: 'bg-rose-500/5 border-rose-500/20',
+function LoadingDots() {
+  return (
+    <div className="flex items-center gap-1.5" aria-hidden="true">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500/60 animate-bounce"
+          style={{ animationDelay: `${i * 120}ms`, animationDuration: '900ms' }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function EmptyIllustration() {
+  return (
+    <svg
+      className="h-12 w-12 text-[var(--border)]"
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="8" y="10" width="32" height="28" rx="4" />
+      <path d="M16 20h16M16 26h10" />
+      <path d="M34 34l6 6" strokeWidth="2" />
+      <circle cx="34" cy="34" r="5" />
+    </svg>
+  )
+}
+
+function ErrorIllustration() {
+  return (
+    <svg
+      className="h-12 w-12 text-red-500/40"
+      viewBox="0 0 48 48"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="24" cy="24" r="16" />
+      <path d="M24 16v9M24 30v2" strokeWidth="2" />
+    </svg>
+  )
 }
 
 export function StateBlock({
@@ -27,20 +72,57 @@ export function StateBlock({
   tone = 'empty',
   children,
 }: StateBlockProps) {
+  const isLoading = tone === 'loading'
+  const isError   = tone === 'error'
+
   return (
-    <Card className={`flex flex-col items-center p-8 text-center ${toneStyles[tone]}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--accent)]">{eyebrow}</p>
-      <h3 className="mt-3 text-lg font-semibold text-white tracking-tight">{title}</h3>
-      <p className="mt-3 max-w-md text-xs leading-5 text-[var(--muted)]">{description}</p>
-      {children ? <div className="mt-5">{children}</div> : null}
+    <div
+      className={
+        isError
+          ? 'flex flex-col items-center gap-3 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-dim)] px-6 py-10 text-center'
+          : 'flex flex-col items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-6 py-10 text-center'
+      }
+    >
+      {/* Illustration */}
+      <div className="mb-1">
+        {isLoading ? (
+          <LoadingDots />
+        ) : isError ? (
+          <ErrorIllustration />
+        ) : (
+          <EmptyIllustration />
+        )}
+      </div>
+
+      {/* Text */}
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[var(--caption)]">
+          {eyebrow}
+        </p>
+        <h3
+          className={
+            isError
+              ? 'mt-2 text-base font-semibold text-[var(--danger-text)]'
+              : 'mt-2 text-base font-semibold text-white'
+          }
+        >
+          {title}
+        </h3>
+        <p className="mt-2 max-w-sm text-xs leading-5 text-[var(--muted)]">
+          {description}
+        </p>
+      </div>
+
+      {/* Children */}
+      {children ? <div className="mt-2">{children}</div> : null}
+
+      {/* Action */}
       {actionLabel && onAction ? (
-        <div className="mt-6">
-          <Button variant="secondary" onClick={onAction}>
-            {actionLabel}
-          </Button>
-        </div>
+        <Button variant="secondary" size="md" className="mt-2" onClick={onAction}>
+          {actionLabel}
+        </Button>
       ) : null}
-    </Card>
+    </div>
   )
 }
 

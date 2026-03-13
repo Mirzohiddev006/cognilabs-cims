@@ -107,11 +107,12 @@ export function UserFormModal({
         </label>
       </div>
 
-      <label className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white/5 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
+      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
         <input
           type="checkbox"
           checked={values.is_active}
           onChange={(event) => onChange('is_active', event.target.checked)}
+          className="h-4 w-4 rounded border border-white/10 accent-blue-500"
         />
         <span className="text-xs font-bold text-white">Active user</span>
       </label>

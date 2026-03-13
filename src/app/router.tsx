@@ -9,6 +9,7 @@ import { LoginPage } from '../features/auth/pages/LoginPage'
 import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
 import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
+import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
 import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
 import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
@@ -56,6 +57,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <CeoUsersPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/team-updates',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <CeoTeamUpdatesPage />
                   </ProtectedRoute>
                 ),
               },

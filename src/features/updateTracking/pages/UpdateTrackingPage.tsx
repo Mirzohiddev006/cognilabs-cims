@@ -1,1002 +1,475 @@
-import { useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
+import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { cn } from '../../../shared/lib/cn'
-import { formatCompactNumber } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
-import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { SectionTitle } from '../../../shared/ui/section-title'
-import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 
 const now = new Date()
-const tableCollectionKeys = ['updates', 'items', 'results', 'records', 'employees', 'missing', 'data', 'rows']
-const calendarCollectionKeys = ['calendar', 'days', 'entries', 'items', 'data', 'results']
-const recentPreferredColumns = ['id', 'user_id', 'user_name', 'telegram_username', 'update_date']
-const missingPreferredColumns = ['id', 'user_id', 'user_name', 'telegram_username', 'date']
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-type DisplayValue = string | number | boolean | null
-type TableRow = Record<string, DisplayValue>
-type CalendarStatus = 'submitted' | 'missing' | 'sunday' | 'future' | 'neutral'
+/* ─── Types ─────────────────────────────────────────────── */
 type CalendarDay = {
   day: number
-  dateKey: string
-  status: CalendarStatus
-  label: string
-  updatesCount?: number | null
-  note?: string | null
+  date?: string
+  status: DayStatus
+  updates_count?: number | null
 }
 
-function parsePayload(payload: unknown) {
-  if (typeof payload !== 'string') {
-    return payload
-  }
-
-  const trimmed = payload.trim()
-
-  if (!trimmed) {
-    return ''
-  }
-
-  try {
-    return JSON.parse(trimmed) as unknown
-  } catch {
-    return trimmed
-  }
+type CalendarData = {
+  month: number
+  year: number
+  days: CalendarDay[]
 }
 
-function toDisplayValue(value: unknown): DisplayValue {
-  if (value === null || value === undefined || value === '') {
-    return null
-  }
-
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return value
-  }
-
-  if (Array.isArray(value)) {
-    if (value.length === 0) {
-      return null
-    }
-
-    return value
-      .map((item) => {
-        if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
-          return String(item)
-        }
-
-        try {
-          return JSON.stringify(item)
-        } catch {
-          return String(item)
-        }
-      })
-      .join(', ')
-  }
-
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return String(value)
-  }
+type RecentUpdate = {
+  id?: number | string
+  update_date?: string
+  date?: string
+  message?: string
+  text?: string
+  update_text?: string
+  [key: string]: unknown
 }
 
-function toTableRow(value: unknown): TableRow | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return null
-  }
-
-  const entries = Object.entries(value).map(([key, entryValue]) => [key, toDisplayValue(entryValue)] as const)
-
-  if (entries.length === 0) {
-    return null
-  }
-
-  return Object.fromEntries(entries)
+type TrendMonth = {
+  month: number
+  year: number
+  month_name?: string
+  submitted_count?: number
+  missing_count?: number
+  completion_percentage?: number
 }
 
-function normalizeRows(payload: unknown) {
-  const parsed = parsePayload(payload)
+/* ─── Parsers ────────────────────────────────────────────── */
+function parseCalendar(data: unknown): CalendarData | null {
+  if (!data || typeof data !== 'object') return null
+  const obj = data as Record<string, unknown>
+  const month = typeof obj.month === 'number' ? obj.month : now.getMonth() + 1
+  const year  = typeof obj.year  === 'number' ? obj.year  : now.getFullYear()
+  const raw = Array.isArray(obj.calendar) ? obj.calendar
+    : Array.isArray(obj.days) ? obj.days
+    : Array.isArray(obj.data) ? obj.data : null
+  if (!raw) return null
+  const days: CalendarDay[] = (raw as Record<string, unknown>[])
+    .filter((d) => typeof d === 'object' && d !== null)
+    .map((d) => ({
+      day: typeof d.day === 'number' ? d.day : 0,
+      date: typeof d.date === 'string' ? d.date : typeof d.full_date === 'string' ? d.full_date : undefined,
+      status: (typeof d.status === 'string' ? d.status : 'neutral') as DayStatus,
+      updates_count: typeof d.updates_count === 'number' ? d.updates_count : null,
+    }))
+    .filter((d) => d.day > 0)
+  return { month, year, days }
+}
 
-  if (Array.isArray(parsed)) {
-    return parsed.map(toTableRow).filter((row): row is TableRow => Boolean(row))
-  }
-
-  if (!parsed || typeof parsed !== 'object') {
-    return [] as TableRow[]
-  }
-
-  const source = parsed as Record<string, unknown>
-
-  for (const key of tableCollectionKeys) {
-    if (Array.isArray(source[key])) {
-      return source[key].map(toTableRow).filter((row): row is TableRow => Boolean(row))
+function parseRecent(data: unknown): RecentUpdate[] {
+  if (!data) return []
+  if (Array.isArray(data)) return data as RecentUpdate[]
+  if (typeof data === 'object' && data !== null) {
+    const obj = data as Record<string, unknown>
+    for (const key of ['updates', 'items', 'results', 'data', 'recent']) {
+      if (Array.isArray(obj[key])) return obj[key] as RecentUpdate[]
     }
   }
-
-  const firstArray = Object.values(source).find((value) => Array.isArray(value))
-
-  if (Array.isArray(firstArray)) {
-    return firstArray.map(toTableRow).filter((row): row is TableRow => Boolean(row))
-  }
-
   return []
 }
 
-function normalizeRecord(payload: unknown) {
-  const parsed = parsePayload(payload)
-
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return null
-  }
-
-  return toTableRow(parsed)
-}
-
-function normalizeText(payload: unknown) {
-  const parsed = parsePayload(payload)
-  return typeof parsed === 'string' ? parsed : ''
-}
-
-function formatLocalDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
-function isDateKey(value: string) {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value)
-}
-
-function calendarStatusLabel(status: CalendarStatus) {
-  switch (status) {
-    case 'submitted':
-      return 'Submitted'
-    case 'missing':
-      return 'Missing'
-    case 'sunday':
-      return 'Sunday'
-    case 'future':
-      return 'Upcoming'
-    default:
-      return 'No data'
-  }
-}
-
-function normalizeCalendarStatus(value: unknown, date: Date): CalendarStatus {
-  const fallback = date.getDay() === 0 ? 'sunday' : 'neutral'
-
-  if (typeof value === 'boolean') {
-    return value ? 'submitted' : 'missing'
-  }
-
-  if (typeof value === 'string') {
-    const normalized = value.trim().toLowerCase()
-
-    if (!normalized) {
-      return fallback
-    }
-
-    if (
-      normalized.includes('submitted') ||
-      normalized.includes('complete') ||
-      normalized.includes('done') ||
-      normalized.includes('present') ||
-      normalized.includes('sent')
-    ) {
-      return 'submitted'
-    }
-
-    if (
-      normalized.includes('missing') ||
-      normalized.includes('absent') ||
-      normalized.includes('not submitted') ||
-      normalized.includes('missed')
-    ) {
-      return 'missing'
-    }
-
-    if (normalized.includes('sunday') || normalized.includes('weekend')) {
-      return 'sunday'
-    }
-
-    if (normalized.includes('future') || normalized.includes('upcoming')) {
-      return 'future'
+function parseTrends(data: unknown): TrendMonth[] {
+  if (!data) return []
+  if (Array.isArray(data)) return data as TrendMonth[]
+  if (typeof data === 'object' && data !== null) {
+    const obj = data as Record<string, unknown>
+    for (const key of ['trends', 'months', 'data', 'results']) {
+      if (Array.isArray(obj[key])) return obj[key] as TrendMonth[]
     }
   }
-
-  if (value && typeof value === 'object' && !Array.isArray(value)) {
-    const source = value as Record<string, unknown>
-
-    if (typeof source.is_sunday === 'boolean' && source.is_sunday) {
-      return 'sunday'
-    }
-
-    if (typeof source.is_missing === 'boolean') {
-      return source.is_missing ? 'missing' : 'submitted'
-    }
-
-    if (typeof source.missing === 'boolean') {
-      return source.missing ? 'missing' : 'submitted'
-    }
-
-    if (typeof source.is_submitted === 'boolean') {
-      return source.is_submitted ? 'submitted' : 'missing'
-    }
-
-    if (typeof source.submitted === 'boolean') {
-      return source.submitted ? 'submitted' : 'missing'
-    }
-
-    const candidate =
-      source.status ??
-      source.day_status ??
-      source.submission_status ??
-      source.type ??
-      source.value ??
-      source.result
-
-    return normalizeCalendarStatus(candidate, date)
-  }
-
-  return fallback
+  return []
 }
 
-function extractCalendarSource(payload: unknown) {
-  const parsed = parsePayload(payload)
+/* ─── Month helpers ──────────────────────────────────────── */
+function getMonthName(month: number): string {
+  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+}
+const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
 
-  if (Array.isArray(parsed)) {
-    return {
-      entries: parsed,
-      month: undefined as number | undefined,
-      year: undefined as number | undefined,
-    }
-  }
-
-  if (!parsed || typeof parsed !== 'object') {
-    return {
-      entries: [] as unknown[],
-      month: undefined as number | undefined,
-      year: undefined as number | undefined,
-    }
-  }
-
-  const source = parsed as Record<string, unknown>
-  const month = typeof source.month === 'number' ? source.month : undefined
-  const year = typeof source.year === 'number' ? source.year : undefined
-
-  for (const key of calendarCollectionKeys) {
-    if (Array.isArray(source[key])) {
-      return {
-        entries: source[key],
-        month,
-        year,
-      }
-    }
-  }
-
-  const mappedEntries = Object.entries(source)
-    .filter(([key]) => isDateKey(key) || /^\d{1,2}$/.test(key))
-    .map(([key, value]) => {
-      if (isDateKey(key)) {
-        return { date: key, status: value }
-      }
-
-      return { day: Number(key), status: value }
-    })
-
-  return {
-    entries: mappedEntries,
-    month,
-    year,
-  }
+/* ─── Calendar day styles ────────────────────────────────── */
+const dayStyle: Record<DayStatus, string> = {
+  submitted: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200',
+  missing:   'bg-rose-500/15 border-rose-500/30 text-rose-300',
+  sunday:    'bg-amber-400/10 border-amber-400/20 text-amber-300/70',
+  future:    'bg-white/[0.03] border-white/8 text-(--muted)',
+  neutral:   'bg-white/[0.03] border-white/8 text-(--muted)',
 }
 
-function toCalendarDay(entry: unknown, selectedMonth: number, selectedYear: number): CalendarDay | null {
-  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-    return null
-  }
+/* ─── Summary card ───────────────────────────────────────── */
+type AccentKey = 'default' | 'success' | 'warning' | 'blue' | 'violet'
 
-  const source = entry as Record<string, unknown>
-  const dateValue =
-    typeof source.date === 'string'
-      ? source.date
-      : typeof source.full_date === 'string'
-        ? source.full_date
-        : typeof source.calendar_date === 'string'
-          ? source.calendar_date
-          : typeof source.day_date === 'string'
-            ? source.day_date
-            : null
-  const numericDay =
-    typeof source.day === 'number'
-      ? source.day
-      : typeof source.day === 'string' && /^\d{1,2}$/.test(source.day)
-        ? Number(source.day)
-        : null
-
-  const date = dateValue
-    ? new Date(dateValue)
-    : numericDay
-      ? new Date(selectedYear, selectedMonth - 1, numericDay)
-      : null
-
-  if (!date || Number.isNaN(date.getTime())) {
-    return null
-  }
-
-  if (date.getMonth() + 1 !== selectedMonth || date.getFullYear() !== selectedYear) {
-    return null
-  }
-
-  const status = normalizeCalendarStatus(
-    source.status ??
-      source.day_status ??
-      source.submission_status ??
-      source.type ??
-      source.is_submitted ??
-      source.submitted ??
-      source.is_missing ??
-      source.missing ??
-      source.is_sunday ??
-      source.sunday ??
-      source.value,
-    date,
-  )
-  const updatesCount =
-    typeof source.updates_count === 'number'
-      ? source.updates_count
-      : typeof source.count === 'number'
-        ? source.count
-        : typeof source.total_updates === 'number'
-          ? source.total_updates
-          : null
-  const noteCandidates = [source.note, source.message, source.summary, source.label]
-  const note = noteCandidates.find((item): item is string => typeof item === 'string' && item.trim().length > 0) ?? null
-
-  return {
-    day: date.getDate(),
-    dateKey: formatLocalDateKey(date),
-    status,
-    label: calendarStatusLabel(status),
-    updatesCount,
-    note,
-  }
+const cardBorder: Record<AccentKey, string> = {
+  default: 'border-white/8',
+  success: 'border-emerald-500/20',
+  warning: 'border-amber-500/20',
+  blue:    'border-blue-500/20',
+  violet:  'border-violet-500/20',
 }
 
-function buildCalendarDays(payload: unknown, selectedMonth: number, selectedYear: number) {
-  const { entries, month: payloadMonth, year: payloadYear } = extractCalendarSource(payload)
-  const resolvedMonth = payloadMonth ?? selectedMonth
-  const resolvedYear = payloadYear ?? selectedYear
-  const parsedEntries = entries
-    .map((entry) => toCalendarDay(entry, resolvedMonth, resolvedYear))
-    .filter((entry): entry is CalendarDay => Boolean(entry))
-
-  if (parsedEntries.length === 0) {
-    return null
-  }
-
-  const daysInMonth = new Date(resolvedYear, resolvedMonth, 0).getDate()
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const entryMap = new Map(parsedEntries.map((entry) => [entry.day, entry]))
-
-  const days = Array.from({ length: daysInMonth }, (_, index) => {
-    const day = index + 1
-    const currentDate = new Date(resolvedYear, resolvedMonth - 1, day)
-    const fallbackStatus: CalendarStatus =
-      currentDate > today ? 'future' : currentDate.getDay() === 0 ? 'sunday' : 'neutral'
-
-    return (
-      entryMap.get(day) ?? {
-        day,
-        dateKey: formatLocalDateKey(currentDate),
-        status: fallbackStatus,
-        label: calendarStatusLabel(fallbackStatus),
-      }
-    )
-  })
-
-  return {
-    month: resolvedMonth,
-    year: resolvedYear,
-    days,
-  }
+const cardIcon: Record<AccentKey, string> = {
+  default: 'border-white/10 bg-white/6 text-(--muted-strong)',
+  success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
+  warning: 'border-amber-500/20 bg-amber-400/10 text-amber-300',
+  blue:    'border-blue-500/20 bg-blue-600/10 text-blue-300',
+  violet:  'border-violet-500/20 bg-violet-500/10 text-violet-300',
 }
 
-function humanizeKey(key: string) {
-  return key
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (letter) => letter.toUpperCase())
-}
-
-function formatCellValue(value: DisplayValue) {
-  if (value === null || value === undefined || value === '') {
-    return '-'
-  }
-
-  if (typeof value === 'boolean') {
-    return value ? 'Yes' : 'No'
-  }
-
-  return String(value)
-}
-
-function getColumnKeys(rows: TableRow[], preferredKeys: string[] = [], limit = 5) {
-  if (rows.length === 0) {
-    return [] as string[]
-  }
-
-  const allKeys = Array.from(new Set(rows.flatMap((row) => Object.keys(row))))
-  const preferred = preferredKeys.filter((key) => allKeys.includes(key))
-  const remaining = allKeys.filter((key) => !preferred.includes(key)).slice(0, Math.max(limit - preferred.length, 0))
-
-  return [...preferred, ...remaining]
-}
-
-function getTableRowKey(row: TableRow) {
-  return String(row.id ?? row.user_id ?? row.user_name ?? row.email ?? JSON.stringify(row))
-}
-
-function buildTableColumns(columnKeys: string[]) {
-  return columnKeys.map((column) => ({
-    key: column,
-    header: humanizeKey(column),
-    render: (row: TableRow) => (
-      <span className="block max-w-[260px] truncate" title={formatCellValue(row[column])}>
-        {formatCellValue(row[column])}
-      </span>
-    ),
-  }))
-}
-
-function MetricCard({
-  label,
-  value,
-  description,
-}: {
+function SummaryCard({ icon, label, value, accent = 'default' }: {
+  icon: ReactNode
   label: string
   value: ReactNode
-  description: string
+  accent?: AccentKey
 }) {
   return (
-    <Card className="flex min-h-[120px] flex-col justify-between p-4">
-      <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#3b82f6]">{label}</p>
-        <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">{value}</p>
+    <div className={cn('card-base flex items-center gap-4 px-5 py-4', cardBorder[accent])}>
+      <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', cardIcon[accent])}>
+        {icon}
       </div>
-      <p className="text-xs leading-5 text-[var(--muted)]">{description}</p>
-    </Card>
+      <div className="min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{label}</p>
+        <p className="mt-1 truncate text-xl font-semibold leading-none text-white">{value}</p>
+      </div>
+    </div>
   )
 }
 
-function CalendarPayloadCard({
-  eyebrow,
-  title,
-  description,
-  payload,
-  month,
-  year,
-  emptyTitle,
-  emptyDescription,
-}: {
-  eyebrow: string
-  title: string
-  description: string
-  payload: unknown
-  month: number
-  year: number
-  emptyTitle: string
-  emptyDescription: string
-}) {
-  const calendar = buildCalendarDays(payload, month, year)
-
-  if (!calendar) {
-    return (
-      <StructuredPayloadCard
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-        payload={payload}
-        emptyTitle={emptyTitle}
-        emptyDescription={emptyDescription}
-      />
-    )
-  }
-
-  const monthLabel = new Intl.DateTimeFormat('en-US', {
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(calendar.year, calendar.month - 1, 1))
-  const firstDayOffset = (new Date(calendar.year, calendar.month - 1, 1).getDay() + 6) % 7
-  const cells = [...Array.from({ length: firstDayOffset }, () => null), ...calendar.days]
-  const submittedCount = calendar.days.filter((day) => day.status === 'submitted').length
-  const missingCount = calendar.days.filter((day) => day.status === 'missing').length
-  const sundayCount = calendar.days.filter((day) => day.status === 'sunday').length
-  const statusStyles: Record<CalendarStatus, string> = {
-    submitted: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-100',
-    missing: 'border-rose-500/20 bg-rose-500/10 text-rose-100',
-    sunday: 'border-amber-500/20 bg-amber-500/10 text-amber-100',
-    future: 'border-white/10 bg-[var(--surface)] text-[var(--muted)] opacity-70',
-    neutral: 'border-[var(--border)] bg-[var(--surface)] text-white',
-  }
-
+function CompletionBar({ pct }: { pct: number }) {
+  const color = pct >= 90 ? 'bg-emerald-500' : pct >= 75 ? 'bg-amber-400' : 'bg-rose-500'
   return (
-    <Card className="overflow-hidden">
-      <div className="border-b border-[var(--border)] px-6 py-6">
-        <SectionTitle eyebrow={eyebrow} title={title} description={description} />
-      </div>
-
-      <div className="space-y-5 px-6 py-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold text-white">{monthLabel}</p>
-            <p className="text-[11px] text-[var(--muted)]">Submission status for each day of the selected month.</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-200">{`${submittedCount} submitted`}</Badge>
-            <Badge className="border-rose-500/20 bg-rose-500/10 text-rose-200">{`${missingCount} missing`}</Badge>
-            <Badge className="border-amber-500/20 bg-amber-500/10 text-amber-200">{`${sundayCount} sundays`}</Badge>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-7 gap-2">
-          {weekdayLabels.map((weekday) => (
-            <div
-              key={weekday}
-              className="rounded-md border border-[var(--border)] bg-[var(--muted-surface)] px-2 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]"
-            >
-              {weekday}
-            </div>
-          ))}
-
-          {cells.map((cell, index) =>
-            cell ? (
-              <div
-                key={cell.dateKey}
-                title={cell.note ? `${cell.label} - ${cell.note}` : cell.label}
-                className={cn(
-                  'flex min-h-[92px] flex-col justify-between rounded-xl border px-3 py-3 transition hover:translate-y-[-1px]',
-                  statusStyles[cell.status],
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-semibold">{cell.day}</span>
-                  {typeof cell.updatesCount === 'number' && cell.updatesCount > 0 ? (
-                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-semibold">
-                      {cell.updatesCount}
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em]">{cell.label}</p>
-                  {cell.note ? <p className="line-clamp-2 text-[11px] leading-4 opacity-80">{cell.note}</p> : null}
-                </div>
-              </div>
-            ) : (
-              <div
-                key={`blank-${index}`}
-                className="min-h-[92px] rounded-xl border border-dashed border-white/6 bg-transparent"
-              />
-            ),
-          )}
-        </div>
-      </div>
-    </Card>
+    <div className="h-1.5 w-full rounded-full bg-white/8">
+      <div className={cn('h-full rounded-full transition-all duration-500', color)} style={{ width: `${Math.min(pct, 100)}%` }} />
+    </div>
   )
 }
 
-function StructuredPayloadCard({
-  eyebrow,
-  title,
-  description,
-  payload,
-  preferredColumns = [],
-  emptyTitle,
-  emptyDescription,
-}: {
-  eyebrow: string
-  title: string
-  description: string
-  payload: unknown
-  preferredColumns?: string[]
-  emptyTitle: string
-  emptyDescription: string
-}) {
-  const rows = normalizeRows(payload)
-  const columnKeys = getColumnKeys(rows, preferredColumns)
-  const record = rows.length === 0 ? normalizeRecord(payload) : null
-  const text = rows.length === 0 && !record ? normalizeText(payload) : ''
-
-  return (
-    <Card className="overflow-hidden">
-      <div className="border-b border-[var(--border)] px-6 py-6">
-        <SectionTitle eyebrow={eyebrow} title={title} description={description} />
-      </div>
-
-      <div className="px-6 py-5">
-        {rows.length > 0 ? (
-          <DataTable<TableRow>
-            caption={title}
-            rows={rows}
-            getRowKey={getTableRowKey}
-            columns={buildTableColumns(columnKeys)}
-          />
-        ) : record ? (
-          <div className="grid gap-3 md:grid-cols-2">
-            {Object.entries(record).map(([key, value]) => (
-              <div
-                key={key}
-                className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3"
-              >
-                <span className="text-xs text-[var(--muted)]">{humanizeKey(key)}</span>
-                <span className="max-w-[60%] truncate text-right text-sm font-semibold text-white" title={formatCellValue(value)}>
-                  {formatCellValue(value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : text ? (
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4 text-sm leading-6 text-[var(--muted-strong)] whitespace-pre-wrap">
-            {text}
-          </div>
-        ) : (
-          <EmptyStateBlock eyebrow={eyebrow} title={emptyTitle} description={emptyDescription} />
-        )}
-      </div>
-    </Card>
-  )
-}
-
+/* ─── Page ───────────────────────────────────────────────── */
 export function UpdateTrackingPage() {
+  const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const [year, setYear] = useState(now.getFullYear())
-  const [dateCheck, setDateCheck] = useState(now.toISOString().slice(0, 10))
-  const [recentLimit, setRecentLimit] = useState(20)
+  const [year, setYear]   = useState(now.getFullYear())
 
-  const myStatsQuery = useAsyncData(() => updateTrackingService.myStats(), [])
-  const companyStatsQuery = useAsyncData(() => updateTrackingService.companyStats(), [])
-  const myProfileQuery = useAsyncData(() => updateTrackingService.myProfile(), [])
-  const monthlyReportQuery = useAsyncData(() => updateTrackingService.monthlyReport(month, year), [month, year])
+  const statsQuery    = useAsyncData(() => updateTrackingService.myStats(), [])
   const calendarQuery = useAsyncData(() => updateTrackingService.calendar(month, year), [month, year])
-  const trendsQuery = useAsyncData(() => updateTrackingService.trends(), [])
-  const recentQuery = useAsyncData(() => updateTrackingService.recent(recentLimit), [recentLimit])
-  const missingQuery = useAsyncData(() => updateTrackingService.missing(dateCheck), [dateCheck])
+  const trendsQuery   = useAsyncData(() => updateTrackingService.trends(), [])
+  const recentQuery   = useAsyncData(
+    () => updateTrackingService.recent(20, currentUser?.id),
+    [currentUser?.id],
+  )
 
-  const monthlyCompletion = useMemo(() => {
-    return Math.round(myStatsQuery.data?.percentage_this_month ?? 0)
-  }, [myStatsQuery.data?.percentage_this_month])
+  const stats    = statsQuery.data
+  const calendar = useMemo(() => parseCalendar(calendarQuery.data), [calendarQuery.data])
+  const trends   = useMemo(() => parseTrends(trendsQuery.data), [trendsQuery.data])
+  const recent   = useMemo(() => parseRecent(recentQuery.data), [recentQuery.data])
 
-  const recentRows = useMemo(() => normalizeRows(recentQuery.data), [recentQuery.data])
-  const recentColumns = useMemo(() => getColumnKeys(recentRows, recentPreferredColumns), [recentRows])
-  const missingRows = useMemo(() => normalizeRows(missingQuery.data), [missingQuery.data])
-  const missingColumns = useMemo(() => getColumnKeys(missingRows, missingPreferredColumns), [missingRows])
-
-  async function refreshAll() {
+  async function handleRefresh() {
     await Promise.all([
-      myStatsQuery.refetch(),
-      companyStatsQuery.refetch(),
-      myProfileQuery.refetch(),
-      monthlyReportQuery.refetch(),
+      statsQuery.refetch(),
       calendarQuery.refetch(),
       trendsQuery.refetch(),
       recentQuery.refetch(),
-      missingQuery.refetch(),
     ])
-    showToast({
-      title: 'Tracking data updated',
-      description: 'All update-tracking blocks have been reloaded.',
-      tone: 'success',
-    })
+    showToast({ title: 'Refreshed', description: 'Your update data has been reloaded.', tone: 'success' })
   }
 
-  if (myStatsQuery.isLoading && !myStatsQuery.data) {
+  if (statsQuery.isLoading && !stats) {
     return (
       <LoadingStateBlock
-        eyebrow="Updates / Tracking"
-        title="Tracking data loading"
-        description="Fetching statistics, company metrics, and report data."
+        eyebrow="Updates"
+        title="Loading your updates"
+        description="Fetching your personal update statistics."
       />
     )
   }
 
-  if (myStatsQuery.isError && !myStatsQuery.data) {
+  if (statsQuery.isError && !stats) {
     return (
       <ErrorStateBlock
-        eyebrow="Updates / Tracking"
-        title="Tracking data unavailable"
-        description="Could not retrieve core update-tracking statistics."
+        eyebrow="Updates"
+        title="Updates unavailable"
+        description="Could not load your update statistics."
         actionLabel="Retry"
-        onAction={() => {
-          void refreshAll()
-        }}
+        onAction={() => void statsQuery.refetch()}
       />
     )
   }
 
+  const monthlyPct        = stats?.percentage_this_month ?? 0
+  const weeklyPct         = stats?.percentage_this_week  ?? 0
+  const selectedMonthName = getMonthName(month)
+
+  const firstDayOffset = calendar
+    ? (new Date(calendar.year, calendar.month - 1, 1).getDay() + 6) % 7
+    : 0
+  const calendarCells = calendar
+    ? [...Array.from<null>({ length: firstDayOffset }).fill(null), ...calendar.days]
+    : []
+
   return (
-    <section className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--accent)]">Updates / Tracking</p>
-          <h1 className="mt-2 text-xl font-semibold text-white">Update List</h1>
-          <p className="mt-2 max-w-3xl text-xs leading-5 text-[var(--muted)]">
-            Team submissions, compliance metrics, recent updates va missing entries bitta sahifada yig'ildi.
-          </p>
-        </div>
-        <Button variant="secondary" onClick={() => void refreshAll()}>
-          Refresh
-        </Button>
-      </div>
+    <section className="space-y-6 page-enter">
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Total Employees"
-          value={formatCompactNumber(companyStatsQuery.data?.total_employees ?? 0)}
-          description="Active employees in system"
-        />
-        <MetricCard
-          label="Updates Today"
-          value={formatCompactNumber(companyStatsQuery.data?.total_updates_today ?? 0)}
-          description="Submitted entries today"
-        />
-        <MetricCard
-          label="This Week"
-          value={formatCompactNumber(companyStatsQuery.data?.total_updates_this_week ?? 0)}
-          description="Company updates this week"
-        />
-        <MetricCard
-          label="My Weekly Completion"
-          value={`${Math.round(myStatsQuery.data?.percentage_this_week ?? 0)}%`}
-          description="Current weekly completion"
-        />
-      </div>
+      {/* ── Header ─────────────────────────────────── */}
+      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
+        <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.15),transparent_70%)]" />
+          <div className="pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-violet-400/8 blur-3xl" />
 
-      <Card className="overflow-hidden">
-        <div className="border-b border-[var(--border)] px-6 py-6">
-          <SectionTitle
-            eyebrow="Filters"
-            title="Tracking controls"
-            description="Monthly report, calendar, recent limit va missing date uchun filterlar."
-          />
-        </div>
-        <div className="grid gap-4 px-6 py-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="min-w-[140px]">
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Month</span>
-              <Input
-                type="number"
-                min="1"
-                max="12"
-                value={month}
-                onChange={(event) => setMonth(Number(event.target.value) || now.getMonth() + 1)}
-              />
-            </label>
-          </div>
-          <div className="min-w-[140px]">
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Year</span>
-              <Input
-                type="number"
-                min="2020"
-                max="2035"
-                value={year}
-                onChange={(event) => setYear(Number(event.target.value) || now.getFullYear())}
-              />
-            </label>
-          </div>
-          <div className="min-w-[180px]">
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Missing date</span>
-              <Input type="date" value={dateCheck} onChange={(event) => setDateCheck(event.target.value)} />
-            </label>
-          </div>
-          <div className="min-w-[140px]">
-            <label className="grid gap-2">
-              <span className="text-xs font-medium text-white">Recent limit</span>
-              <Input
-                type="number"
-                min="1"
-                max="100"
-                value={recentLimit}
-                onChange={(event) => setRecentLimit(Number(event.target.value) || 20)}
-              />
-            </label>
+          <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-400/80">
+                Personal
+              </p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
+                My Updates
+              </h1>
+              <p className="mt-1.5 text-[13px] text-(--muted)">
+                Track your daily update submissions and performance.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
+                <Input
+                  type="number"
+                  min="2020"
+                  max="2035"
+                  value={year}
+                  onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
+                  className="h-7 w-18 border-white/10 bg-transparent px-2 text-sm text-white"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(Number(e.target.value))}
+                  className="h-7 rounded-lg border border-white/10 bg-(--surface) px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+                >
+                  {ALL_MONTHS.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => void handleRefresh()}
+                className="min-h-9 gap-1.5 rounded-xl"
+              >
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M1.5 8a6.5 6.5 0 1 1 1.2 3.8" />
+                  <path d="M1.5 12.5V8.5h4" />
+                </svg>
+                Refresh
+              </Button>
+            </div>
           </div>
         </div>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
-        <Card className="overflow-hidden">
-          <div className="border-b border-[var(--border)] px-6 py-6">
-            <SectionTitle
-              eyebrow="Recent"
-              title="Recent updates"
-              description="Latest submitted update entries returned by the API."
-            />
+      {/* ── Stats ──────────────────────────────────── */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 stagger-children">
+        <SummaryCard
+          accent="violet"
+          label="Monthly Completion"
+          value={`${monthlyPct.toFixed(1)}%`}
+          icon={
+            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 10a8 8 0 1 1 16 0" />
+              <path d="M10 10V4" /><path d="M10 10l4 2.5" />
+            </svg>
+          }
+        />
+        <SummaryCard
+          accent={weeklyPct >= 80 ? 'success' : weeklyPct >= 50 ? 'warning' : 'default'}
+          label="Weekly Completion"
+          value={`${weeklyPct.toFixed(1)}%`}
+          icon={
+            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="16" height="14" rx="2" />
+              <path d="M7 3v14M13 3v14M2 9h16M2 13h16" />
+            </svg>
+          }
+        />
+        <SummaryCard
+          accent="blue"
+          label="Updates This Month"
+          value={stats?.updates_this_month ?? 0}
+          icon={
+            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="10" cy="10" r="8" />
+              <path d="m6.5 10 2.5 2.5 4.5-4.5" />
+            </svg>
+          }
+        />
+        <SummaryCard
+          accent="default"
+          label="Updates This Week"
+          value={stats?.updates_this_week ?? 0}
+          icon={
+            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="2 15 7 8 11 12 15 6 18 9" />
+            </svg>
+          }
+        />
+      </div>
+
+      {/* ── Calendar + Side panel ──────────────────── */}
+      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+
+        {/* Calendar */}
+        <Card variant="glass" className="overflow-hidden p-0">
+          <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
+            <SectionTitle title={`${selectedMonthName} ${year} Calendar`} />
+            {calendar && (
+              <div className="flex gap-3 text-[11px] text-(--muted)">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  {calendar.days.filter((d) => d.status === 'submitted').length} submitted
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-rose-500/80" />
+                  {calendar.days.filter((d) => d.status === 'missing').length} missing
+                </span>
+              </div>
+            )}
           </div>
-          <div className="px-6 py-5">
-            {recentRows.length > 0 ? (
-              <DataTable<TableRow>
-                caption="Recent updates table"
-                rows={recentRows}
-                getRowKey={getTableRowKey}
-                columns={buildTableColumns(recentColumns)}
-                emptyState={
-                  <EmptyStateBlock
-                    eyebrow="Recent"
-                    title="No recent updates"
-                    description="The API did not return recent update rows."
-                  />
-                }
-              />
+          <div className="px-5 py-4">
+            {calendarQuery.isLoading ? (
+              <div className="py-10 text-center text-sm text-(--muted)">Loading calendar…</div>
+            ) : !calendar ? (
+              <div className="py-10 text-center text-sm text-(--muted)">No calendar data for this period.</div>
             ) : (
-              <EmptyStateBlock
-                eyebrow="Recent"
-                title="No recent updates"
-                description="The API did not return recent update rows."
-              />
+              <>
+                <div className="mb-2 grid grid-cols-7 gap-1">
+                  {weekdayLabels.map((d) => (
+                    <div key={d} className="text-center text-[10px] font-bold uppercase tracking-wider text-(--muted)">
+                      {d}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarCells.map((day, idx) => (
+                    <div
+                      key={day ? day.day : `empty-${idx}`}
+                      className={cn(
+                        'aspect-square rounded-lg border flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium',
+                        day ? dayStyle[day.status] : 'border-transparent',
+                      )}
+                      title={day ? `Day ${day.day}: ${day.status}` : undefined}
+                    >
+                      {day && (
+                        <>
+                          <span>{day.day}</span>
+                          {day.status === 'submitted' && (
+                            <span className="text-[8px] text-emerald-400 leading-none">✓</span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-(--muted)">
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-sm bg-emerald-500/25 border border-emerald-500/35" />
+                    Submitted
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-sm bg-rose-500/20 border border-rose-500/30" />
+                    Missing
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-sm bg-amber-400/15 border border-amber-400/20" />
+                    Sunday
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-sm bg-white/4 border border-white/10" />
+                    Upcoming
+                  </span>
+                </div>
+              </>
             )}
           </div>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="border-b border-[var(--border)] px-6 py-6">
-            <SectionTitle
-              eyebrow="My stats"
-              title="My tracking stats"
-              description="Current authenticated user performance snapshot."
-            />
-          </div>
-          <div className="grid gap-3 px-6 py-5">
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">User</span>
-              <Badge>{myStatsQuery.data?.user_name ?? '-'}</Badge>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">Total updates</span>
-              <span className="text-base font-semibold text-white">{myStatsQuery.data?.total_updates ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">This week</span>
-              <span className="text-base font-semibold text-white">{myStatsQuery.data?.updates_this_week ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">This month</span>
-              <span className="text-base font-semibold text-white">{myStatsQuery.data?.updates_this_month ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">Expected / week</span>
-              <span className="text-base font-semibold text-white">{myStatsQuery.data?.expected_updates_per_week ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <span className="text-xs text-[var(--muted)]">This month completion</span>
-              <span className="text-base font-semibold text-white">{monthlyCompletion}%</span>
-            </div>
-          </div>
-        </Card>
-      </div>
+        {/* Right panel: Trends + Recent */}
+        <div className="flex flex-col gap-6">
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="overflow-hidden">
-          <div className="border-b border-[var(--border)] px-6 py-6">
-            <SectionTitle
-              eyebrow="Missing"
-              title="Missing submissions"
-              description="Employees or rows missing updates for the selected date."
-            />
-          </div>
-          <div className="px-6 py-5">
-            {missingRows.length > 0 ? (
-              <DataTable<TableRow>
-                caption="Missing submissions table"
-                rows={missingRows}
-                getRowKey={getTableRowKey}
-                columns={buildTableColumns(missingColumns)}
-                emptyState={
-                  <EmptyStateBlock
-                    eyebrow="Missing"
-                    title="No missing rows"
-                    description="Everyone appears to have submitted updates for this date."
-                  />
-                }
-              />
-            ) : (
-              <EmptyStateBlock
-                eyebrow="Missing"
-                title="No missing rows"
-                description="Everyone appears to have submitted updates for this date."
-              />
-            )}
-          </div>
-        </Card>
+          {/* Trends */}
+          {trends.length > 0 && (
+            <Card variant="glass" className="overflow-hidden p-0">
+              <div className="border-b border-(--border) px-5 py-4">
+                <SectionTitle title="Performance Trends" />
+              </div>
+              <div className="space-y-3 px-5 py-4">
+                {trends.slice(-6).map((t) => {
+                  const pct   = t.completion_percentage ?? 0
+                  const label = t.month_name ?? `${getMonthName(t.month)} ${t.year}`
+                  return (
+                    <div key={`${t.year}-${t.month}`} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-(--muted-strong)">{label}</span>
+                        <span className={cn('font-bold tabular-nums', pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-rose-400')}>
+                          {pct.toFixed(1)}%
+                        </span>
+                      </div>
+                      <CompletionBar pct={pct} />
+                    </div>
+                  )
+                })}
+              </div>
+            </Card>
+          )}
 
-        <StructuredPayloadCard
-          eyebrow="Profile"
-          title="My profile"
-          description="Authenticated user metadata from update tracking service."
-          payload={myProfileQuery.data}
-          emptyTitle="Profile unavailable"
-          emptyDescription="The service returned no profile data for the current user."
-        />
-      </div>
+          {/* Recent updates */}
+          <Card variant="glass" className="overflow-hidden p-0 flex-1">
+            <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
+              <SectionTitle title="Recent Updates" />
+              <Badge variant="blue">{recent.length}</Badge>
+            </div>
+            <div className="divide-y divide-(--border)">
+              {recent.length === 0 ? (
+                <div className="py-10 text-center text-sm text-(--muted)">No recent updates.</div>
+              ) : (
+                recent.slice(0, 10).map((item, idx) => {
+                  const dateStr = item.update_date ?? item.date ?? ''
+                  const text    = item.update_text ?? item.message ?? item.text ?? ''
+                  return (
+                    <div key={String(item.id ?? idx)} className="px-5 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="line-clamp-2 text-[13px] text-white/80">{text || '—'}</p>
+                        {dateStr && (
+                          <span className="shrink-0 text-[11px] tabular-nums text-(--muted)">
+                            {new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <StructuredPayloadCard
-          eyebrow="Monthly"
-          title="Monthly report"
-          description="Generated monthly report for the selected period."
-          payload={monthlyReportQuery.data}
-          emptyTitle="Monthly report unavailable"
-          emptyDescription="No monthly report data was returned for the selected month."
-        />
-        <StructuredPayloadCard
-          eyebrow="Trends"
-          title="Performance trends"
-          description="Trend summary returned by the update tracking API."
-          payload={trendsQuery.data}
-          emptyTitle="Trend data unavailable"
-          emptyDescription="No performance trend data was returned by the service."
-        />
-      </div>
-
-      <CalendarPayloadCard
-        eyebrow="Calendar"
-        title="Daily calendar"
-        description="Calendar-style daily submission data for the selected month."
-        payload={calendarQuery.data}
-        month={month}
-        year={year}
-        emptyTitle="Calendar data unavailable"
-        emptyDescription="The service returned no daily calendar rows for this month."
-      />
-
-      <Card className="overflow-hidden">
-        <div className="border-b border-[var(--border)] px-6 py-6">
-          <SectionTitle
-            eyebrow="Company"
-            title="Company completion snapshot"
-            description="Weekly and monthly completion averages across the team."
-          />
         </div>
-        <div className="grid gap-3 px-6 py-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-xs text-[var(--muted)]">Weekly average</p>
-            <p className="mt-1.5 text-base font-semibold text-white">
-              {Math.round(companyStatsQuery.data?.avg_percentage_this_week ?? 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-xs text-[var(--muted)]">Last week average</p>
-            <p className="mt-1.5 text-base font-semibold text-white">
-              {Math.round(companyStatsQuery.data?.avg_percentage_last_week ?? 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-xs text-[var(--muted)]">Monthly average</p>
-            <p className="mt-1.5 text-base font-semibold text-white">
-              {Math.round(companyStatsQuery.data?.avg_percentage_this_month ?? 0)}%
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-            <p className="text-xs text-[var(--muted)]">Last 3 months</p>
-            <p className="mt-1.5 text-base font-semibold text-white">
-              {Math.round(companyStatsQuery.data?.avg_percentage_last_3_months ?? 0)}%
-            </p>
-          </div>
-        </div>
-      </Card>
-      
+      </div>
     </section>
   )
 }
