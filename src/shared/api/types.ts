@@ -55,10 +55,24 @@ export type TokenResponse = {
 
 export type CustomerSummary = {
   id: number
-  full_name: string
-  platform: string
+  full_name?: string | null
+  name?: string | null
+  surname?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  firstName?: string | null
+  lastName?: string | null
+  platform?: string | null
+  platform_name?: string | null
+  source_platform?: string | null
+  social_platform?: string | null
+  source?: string | null
+  lead_source?: string | null
+  channel?: string | null
+  platforms?: Array<string | null> | null
   username?: string | null
-  phone_number: string
+  phone_number?: string | null
+  phone?: string | null
   status: string
   assistant_name?: string | null
   notes?: string | null
@@ -97,16 +111,7 @@ export type FinanceItem = {
 }
 
 export type DailyMetrics = {
-  today_customers: Array<{
-    id: number
-    full_name: string
-    platform: string
-    username: string
-    phone_number: string
-    status: string
-    assistant_name: string
-    created_at: string
-  }>
+  today_customers: CustomerSummary[]
   need_to_call_count: number
   total_balance_uzs: number
   total_balance_formatted: string

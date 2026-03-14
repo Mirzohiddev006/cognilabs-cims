@@ -25,6 +25,14 @@ function glyphPath(name: GlyphName) {
           <circle cx="8.5" cy="8.5" r="1" />
         </>
       )
+    case 'faults':
+      return (
+        <>
+          <path d="M12 4.75 4.75 18h14.5L12 4.75Z" />
+          <path d="M12 9v4.25" />
+          <circle cx="12" cy="15.75" r=".75" fill="currentColor" stroke="none" />
+        </>
+      )
     case 'payment':
       return (
         <>

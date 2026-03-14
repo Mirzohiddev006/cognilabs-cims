@@ -9,12 +9,17 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
+import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 
 const now = new Date()
+const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
 const COMPLETION_ON_TRACK = 80
+const recentTextKeys = ['update_content', 'update_text', 'message', 'text', 'summary', 'description', 'content', 'body', 'note', 'comment', 'remarks', 'title']
+
+type UnknownRecord = Record<string, unknown>
 
 /* ─── Month name helper ───────────────────────────────────── */
 function getMonthName(month: number): string {
@@ -22,6 +27,7 @@ function getMonthName(month: number): string {
 }
 
 const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
+const MONTH_OPTIONS = ALL_MONTHS.map(({ value, label }) => ({ value: String(value), label }))
 
 /* ─── Dot activity strip ──────────────────────────────────── */
 const dotStatusStyle = {
@@ -123,15 +129,227 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
 }
 
 /* ─── Parse all-users-updates response ───────────────────── */
+function isRecord(value: unknown): value is UnknownRecord {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim()
+
+    if (!normalized) {
+      return null
+    }
+
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
+}
+
+function toBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') {
+    return value
+  }
+
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const normalized = value.trim().toLowerCase()
+
+  if (['true', '1', 'yes', 'y'].includes(normalized)) {
+    return true
+  }
+
+  if (['false', '0', 'no', 'n'].includes(normalized)) {
+    return false
+  }
+
+  return null
+}
+
+function findFirstString(source: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    if (typeof source[key] === 'string' && source[key].trim()) {
+      return source[key] as string
+    }
+  }
+
+  return undefined
+}
+
+function isDateKey(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function parseDateValue(value: string) {
+  if (isDateKey(value)) {
+    const [year, month, day] = value.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  }
+
+  return new Date(value)
+}
+
+function getFallbackDayStatus(date: Date | null): DayStatus {
+  if (!date) {
+    return 'neutral'
+  }
+
+  if (date > todayStart) {
+    return 'future'
+  }
+
+  if (date.getDay() === 0) {
+    return 'sunday'
+  }
+
+  return 'missing'
+}
+
+function normalizeDayStatus(value: unknown, date: Date | null): DayStatus {
+  const fallback = getFallbackDayStatus(date)
+  const booleanValue = toBoolean(value)
+
+  if (booleanValue !== null) {
+    return booleanValue ? 'submitted' : fallback
+  }
+
+  if (typeof value === 'number') {
+    return value > 0 ? 'submitted' : fallback
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+
+    if (!normalized) {
+      return fallback
+    }
+
+    if (
+      normalized.includes('submitted') ||
+      normalized.includes('complete') ||
+      normalized.includes('done') ||
+      normalized.includes('present') ||
+      normalized.includes('sent') ||
+      normalized.includes('logged')
+    ) {
+      return 'submitted'
+    }
+
+    if (
+      normalized.includes('missing') ||
+      normalized.includes('absent') ||
+      normalized.includes('not submitted') ||
+      normalized.includes('missed')
+    ) {
+      return 'missing'
+    }
+
+    if (
+      normalized.includes('sunday') ||
+      normalized.includes('weekend') ||
+      normalized.includes('off')
+    ) {
+      return 'sunday'
+    }
+
+    if (
+      normalized.includes('future') ||
+      normalized.includes('upcoming')
+    ) {
+      return 'future'
+    }
+
+    if (
+      normalized.includes('neutral') ||
+      normalized.includes('open') ||
+      normalized.includes('pending')
+    ) {
+      return 'neutral'
+    }
+  }
+
+  return fallback
+}
+
+function normalizeDayStatusEntry(raw: unknown): EmployeeDayStatus | null {
+  if (!isRecord(raw)) {
+    return null
+  }
+
+  const dateValue = findFirstString(raw, ['date', 'full_date', 'calendar_date', 'day_date'])
+  const numericDay = toNumber(raw.day ?? raw.day_of_month ?? raw.day_number)
+  const date = dateValue
+    ? parseDateValue(dateValue)
+    : numericDay
+      ? new Date(now.getFullYear(), now.getMonth(), numericDay)
+      : null
+
+  if (date && Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  const explicitHasUpdate = toBoolean(raw.has_update ?? raw.has_updates ?? raw.is_submitted ?? raw.submitted)
+  const updatesCount = toNumber(raw.updates_count ?? raw.count ?? raw.total_updates ?? raw.submitted_count)
+  const updateContent = findFirstString(raw, recentTextKeys)
+  const normalizedStatus = normalizeDayStatus(
+    raw.status ??
+      raw.day_status ??
+      raw.submission_status ??
+      raw.type ??
+      raw.is_submitted ??
+      raw.submitted ??
+      raw.is_missing ??
+      raw.missing ??
+      raw.is_sunday ??
+      raw.sunday ??
+      raw.value,
+    date,
+  )
+  const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0) || Boolean(updateContent)
+  const status = hasUpdate && normalizedStatus !== 'sunday' ? 'submitted' : normalizedStatus
+  const resolvedDay = numericDay ?? (date ? date.getDate() : null)
+
+  if (!resolvedDay || resolvedDay < 1) {
+    return null
+  }
+
+  return {
+    day: resolvedDay,
+    status,
+  }
+}
+
 function parseDayStatuses(raw: unknown): EmployeeDayStatus[] | null {
-  if (!Array.isArray(raw)) return null
-  return (raw as Record<string, unknown>[])
-    .filter((d) => typeof d === 'object' && d !== null)
-    .map((d) => ({
-      day: typeof d.day === 'number' ? d.day : 0,
-      status: (typeof d.status === 'string' ? d.status : 'neutral') as DayStatus,
-    }))
-    .filter((d) => d.day > 0)
+  const entries = Array.isArray(raw)
+    ? raw
+    : isRecord(raw)
+      ? Object.entries(raw)
+        .filter(([key]) => isDateKey(key) || /^\d{1,2}$/.test(key))
+        .map(([key, value]) => (isDateKey(key) ? { date: key, status: value } : { day: Number(key), status: value }))
+      : []
+
+  const parsed = entries
+    .map(normalizeDayStatusEntry)
+    .filter((entry): entry is EmployeeDayStatus => Boolean(entry))
+    .sort((left, right) => left.day - right.day)
+
+  return parsed.length > 0 ? parsed : null
 }
 
 function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
@@ -140,22 +358,38 @@ function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
     typeof raw.name      === 'string' ? raw.name :
     typeof raw.full_name === 'string' ? raw.full_name : 'Unknown'
 
+  const dayStatuses = parseDayStatuses(
+    raw.daily_statuses ??
+    raw.day_statuses ??
+    raw.daily_updates ??
+    raw.statuses ??
+    raw.days ??
+    raw.calendar ??
+    raw.entries ??
+    raw.monthly_activity ??
+    raw.activity,
+  )
+
   const submitted =
-    typeof raw.submitted_count  === 'number' ? raw.submitted_count :
-    typeof raw.updates_count    === 'number' ? raw.updates_count :
-    Array.isArray(raw.updates)               ? (raw.updates as unknown[]).length : 0
+    toNumber(raw.submitted_count ?? raw.updates_count ?? raw.total_submitted ?? raw.logged_count ?? raw.submitted) ??
+    (Array.isArray(raw.updates) ? raw.updates.length : null) ??
+    (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'submitted').length : 0)
 
   const missing =
-    typeof raw.missing_count === 'number' ? raw.missing_count : 0
+    toNumber(raw.missing_count ?? raw.total_missing ?? raw.missing_days ?? raw.missed_count ?? raw.absent_count ?? raw.missing) ??
+    (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'missing').length : 0)
 
+  const rawCompletion =
+    toNumber(raw.completion_percentage ?? raw.completion_rate ?? raw.percentage ?? raw.percent ?? raw.avg_percentage)
   const completion =
-    typeof raw.completion_percentage === 'number' ? raw.completion_percentage :
-    typeof raw.completion_rate       === 'number' ? raw.completion_rate * 100 :
-    submitted > 0                                 ? Math.round((submitted / (submitted + missing)) * 100) : 0
+    rawCompletion !== null
+      ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
+      : submitted + missing > 0
+        ? Math.round((submitted / (submitted + missing)) * 100)
+        : 0
 
   const lastDate =
-    typeof raw.last_update_date === 'string' ? raw.last_update_date :
-    typeof raw.last_update      === 'string' ? raw.last_update : null
+    findFirstString(raw, ['last_update_date', 'last_update', 'updated_at', 'submitted_at']) ?? null
 
   return {
     user_id: typeof raw.user_id === 'number' ? raw.user_id : 0,
@@ -165,7 +399,7 @@ function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
     missing_count: missing,
     completion_percentage: completion,
     last_update_date: lastDate,
-    daily_statuses: parseDayStatuses(raw.daily_statuses),
+    daily_statuses: dayStatuses,
   }
 }
 
@@ -176,7 +410,7 @@ function parseAllUsersUpdates(data: unknown): EmployeeMonthlyStats[] {
     ? data as Record<string, unknown>[]
     : (() => {
         const obj = data as Record<string, unknown>
-        for (const key of ['employees', 'users', 'data', 'results', 'items']) {
+        for (const key of ['employees', 'users', 'data', 'results', 'items', 'team', 'members', 'team_updates', 'all_users', 'monthly_updates']) {
           if (Array.isArray(obj[key])) return obj[key] as Record<string, unknown>[]
         }
         return []
@@ -187,9 +421,93 @@ function parseAllUsersUpdates(data: unknown): EmployeeMonthlyStats[] {
     .map(normalizeEmployee)
 }
 
+function parseEmployeeMonthlyUpdateSummary(
+  data: unknown,
+  fallbackEmployee: EmployeeMonthlyStats,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats {
+  if (!isRecord(data)) {
+    return fallbackEmployee
+  }
+
+  const employee = isRecord(data.employee) ? data.employee : null
+  const updates = Array.isArray(data.updates) ? data.updates.filter(isRecord) : []
+  const submittedDates = new Set<string>()
+
+  for (const update of updates) {
+    const dateValue = findFirstString(update, ['update_date', 'date', 'created_at', 'submitted_at'])
+
+    if (!dateValue) {
+      continue
+    }
+
+    const parsedDate = parseDateValue(dateValue)
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      continue
+    }
+
+    if (parsedDate.getFullYear() !== year || parsedDate.getMonth() + 1 !== month) {
+      continue
+    }
+
+    submittedDates.add(formatDateKey(parsedDate))
+  }
+
+  const daysInMonth = new Date(year, month, 0).getDate()
+  const dailyStatuses: EmployeeDayStatus[] = Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1
+    const currentDate = new Date(year, month - 1, day)
+    const dateKey = formatDateKey(currentDate)
+
+    return {
+      day,
+      status: submittedDates.has(dateKey) ? 'submitted' : getFallbackDayStatus(currentDate),
+    }
+  })
+
+  const submittedCount = dailyStatuses.filter((entry) => entry.status === 'submitted').length
+  const missingCount = dailyStatuses.filter((entry) => entry.status === 'missing').length
+  const rawCompletion = toNumber(data.percentage ?? data.completion_percentage ?? data.completion_rate)
+  const completion =
+    rawCompletion !== null
+      ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
+      : submittedCount + missingCount > 0
+        ? (submittedCount / (submittedCount + missingCount)) * 100
+        : 0
+  const lastUpdateDate =
+    [...submittedDates].sort((left, right) => left.localeCompare(right)).slice(-1)[0] ??
+    fallbackEmployee.last_update_date
+
+  return {
+    user_id: toNumber(employee?.id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
+    user_name: findFirstString(employee ?? {}, ['full_name', 'name']) ?? fallbackEmployee.user_name,
+    telegram_username: fallbackEmployee.telegram_username,
+    submitted_count: submittedCount,
+    missing_count: missingCount,
+    completion_percentage: completion,
+    last_update_date: lastUpdateDate,
+    daily_statuses: dailyStatuses,
+  }
+}
+
 /* ─── Sort & Filter ───────────────────────────────────────── */
 type SortKey = 'submitted' | 'missing' | 'completion' | 'name'
 type StatusFilter = 'all' | 'on_track' | 'needs_attention'
+
+const SORT_OPTIONS = [
+  { value: 'submitted', label: 'Most updates' },
+  { value: 'missing', label: 'Most missing' },
+  { value: 'completion', label: 'Completion rate' },
+  { value: 'name', label: 'Name A-Z' },
+] as const
+
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'on_track', label: 'On Track' },
+  { value: 'needs_attention', label: 'Needs Attention' },
+] as const
 
 function filterAndSort(
   employees: EmployeeMonthlyStats[],
@@ -235,21 +553,62 @@ export function CeoTeamUpdatesPage() {
   )
   const companyQuery = useAsyncData(() => updateTrackingService.companyStats(), [])
 
-  async function handleRefresh() {
-    await Promise.all([teamQuery.refetch(), companyQuery.refetch()])
-    showToast({ title: 'Refreshed', description: 'Team monthly data reloaded.', tone: 'success' })
-  }
-
   const rawEmployees = useMemo(
     () => parseAllUsersUpdates(teamQuery.data),
     [teamQuery.data],
   )
-  const employees = useMemo(
-    () => filterAndSort(rawEmployees, search, sortKey, statusFilter),
-    [rawEmployees, search, sortKey, statusFilter],
+  const employeeDetailsQuery = useAsyncData(
+    async () => {
+      const employeesWithIds = rawEmployees.filter((employee) => employee.user_id > 0)
+
+      if (employeesWithIds.length === 0) {
+        return rawEmployees
+      }
+
+      const uniqueEmployees = Array.from(
+        new Map(employeesWithIds.map((employee) => [employee.user_id, employee])).values(),
+      )
+
+      const detailedEmployees = await Promise.all(
+        uniqueEmployees.map(async (employee) => {
+          try {
+            const response = await updateTrackingService.employeeMonthlyUpdates(year, month, employee.user_id)
+            return parseEmployeeMonthlyUpdateSummary(response, employee, month, year)
+          } catch {
+            return employee
+          }
+        }),
+      )
+
+      const detailedById = new Map(detailedEmployees.map((employee) => [employee.user_id, employee]))
+
+      return rawEmployees.map((employee) => {
+        if (employee.user_id <= 0) {
+          return employee
+        }
+
+        return detailedById.get(employee.user_id) ?? employee
+      })
+    },
+    [teamQuery.data, month, year],
+    { enabled: rawEmployees.length > 0 },
   )
 
-  if (teamQuery.isLoading && !teamQuery.data) {
+  async function handleRefresh() {
+    await Promise.all([teamQuery.refetch(), companyQuery.refetch()])
+    if (rawEmployees.length > 0) {
+      await employeeDetailsQuery.refetch()
+    }
+    showToast({ title: 'Refreshed', description: 'Team monthly data reloaded.', tone: 'success' })
+  }
+
+  const sourceEmployees = employeeDetailsQuery.data?.length ? employeeDetailsQuery.data : rawEmployees
+  const employees = useMemo(
+    () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
+    [sourceEmployees, search, sortKey, statusFilter],
+  )
+
+  if ((teamQuery.isLoading && !teamQuery.data) || (employeeDetailsQuery.isLoading && rawEmployees.length > 0 && !employeeDetailsQuery.data)) {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Team Updates"
@@ -271,14 +630,14 @@ export function CeoTeamUpdatesPage() {
     )
   }
 
-  const totalEmployees = rawEmployees.length || (companyQuery.data?.total_employees ?? 0)
-  const totalSubmitted = rawEmployees.reduce((s, e) => s + e.submitted_count, 0)
-  const totalMissing   = rawEmployees.reduce((s, e) => s + e.missing_count, 0)
-  const avgCompletion  = rawEmployees.length
-    ? rawEmployees.reduce((s, e) => s + e.completion_percentage, 0) / rawEmployees.length
+  const totalEmployees = sourceEmployees.length || (companyQuery.data?.total_employees ?? 0)
+  const totalSubmitted = sourceEmployees.reduce((s, e) => s + e.submitted_count, 0)
+  const totalMissing   = sourceEmployees.reduce((s, e) => s + e.missing_count, 0)
+  const avgCompletion  = sourceEmployees.length
+    ? sourceEmployees.reduce((s, e) => s + e.completion_percentage, 0) / sourceEmployees.length
     : (companyQuery.data?.avg_percentage_this_month ?? 0)
-  const topPerformer   = rawEmployees.length
-    ? rawEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, rawEmployees[0])
+  const topPerformer   = sourceEmployees.length
+    ? sourceEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, sourceEmployees[0])
     : null
   const selectedMonthName = getMonthName(month)
 
@@ -304,7 +663,7 @@ export function CeoTeamUpdatesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
                 <Input
                   type="number"
@@ -312,21 +671,18 @@ export function CeoTeamUpdatesPage() {
                   max="2035"
                   value={year}
                   onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-                  className="h-7 w-18 border-white/10 bg-transparent px-2 text-sm text-white"
+                  className="min-h-0 h-6 w-18 border-white/10 bg-transparent px-2.5 text-sm text-white"
                 />
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
-                <select
-                  value={month}
-                  onChange={(e) => setMonth(Number(e.target.value))}
-                  className="h-7 rounded-lg border border-white/10 bg-(--surface) px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
-                >
-                  {ALL_MONTHS.map(({ value, label }) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </select>
+                <SelectField
+                  value={String(month)}
+                  options={MONTH_OPTIONS}
+                  onValueChange={(value) => setMonth(Number(value))}
+                  className="min-h-0 h-9 min-w-28 border-white/10 bg-(--surface) text-sm text-white hover:border-white/15 hover:bg-white/6 focus-visible:border-white/20 focus-visible:bg-white/6 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(255,255,255,0.06)]"
+                />
               </div>
 
               <Button
@@ -416,7 +772,7 @@ export function CeoTeamUpdatesPage() {
         <div className="mb-3 flex items-center justify-between gap-3">
           <SectionTitle title="Filters and Comparison Controls" />
           <Badge variant="blue">
-            Showing {employees.length} of {rawEmployees.length} employees
+            Showing {employees.length} of {sourceEmployees.length} employees
           </Badge>
         </div>
 
@@ -443,31 +799,33 @@ export function CeoTeamUpdatesPage() {
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
               Sort by
             </label>
-            <select
+            <SelectField
               value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
-              className="h-9 w-full rounded-xl border-(--border) bg-(--surface) px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+              options={[...SORT_OPTIONS]}
+              onValueChange={(value) => setSortKey(value as SortKey)}
+              className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
             >
               <option value="submitted">Most updates</option>
               <option value="missing">Most missing</option>
               <option value="completion">Completion rate</option>
               <option value="name">Name A–Z</option>
-            </select>
+            </SelectField>
           </div>
 
           <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
               Status
             </label>
-            <select
+            <SelectField
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-              className="h-9 w-full rounded-xl border-(--border) bg-(--surface) px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+              options={[...STATUS_OPTIONS]}
+              onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+              className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
             >
               <option value="all">All</option>
               <option value="on_track">On Track</option>
               <option value="needs_attention">Needs Attention</option>
-            </select>
+            </SelectField>
           </div>
         </div>
       </Card>

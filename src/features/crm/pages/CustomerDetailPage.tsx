@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { formatUsernameHandle, getCustomerDisplayName } from '../../../shared/lib/customer-display'
+import { formatUsernameHandle, getCustomerDisplayName, getCustomerDisplayPlatform } from '../../../shared/lib/customer-display'
 import { formatShortDate } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -78,14 +78,25 @@ export function CustomerDetailPage() {
 
   return (
     <section className="space-y-6">
+      <div className="flex items-center">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/crm')}
+          className="min-h-8 rounded-xl border border-white/8 bg-white/[0.03] px-3 text-[11px] text-white/78 hover:border-white/12 hover:bg-white/[0.05] hover:text-white"
+        >
+          <svg viewBox="0 0 16 16" className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M10 3.5 5.5 8 10 12.5" />
+          </svg>
+          Back to CRM
+        </Button>
+      </div>
+
       <PageHeader
         eyebrow="CRM / Detail"
         title={customerName}
         actions={
           <>
-            <Button variant="secondary" onClick={() => navigate('/crm')}>
-              Back to CRM
-            </Button>
             {audioSource ? (
               <Button asChild>
                 <a href={audioSource} target="_blank" rel="noreferrer">
@@ -124,8 +135,8 @@ export function CustomerDetailPage() {
           <div className="grid gap-3 px-6 py-5">
             {[
               ['Username', formatUsernameHandle(customer.username) || '-'],
-              ['Phone', customer.phone_number],
-              ['Platform', customer.platform],
+              ['Phone', customer.phone_number ?? customer.phone ?? '-'],
+              ['Platform', getCustomerDisplayPlatform(customer) || '-'],
               ['Audio file ID', customer.audio_file_id || '-'],
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (

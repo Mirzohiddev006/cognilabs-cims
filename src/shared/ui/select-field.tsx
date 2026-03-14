@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 
@@ -14,6 +14,7 @@ type SelectFieldProps = {
   placeholder?: string
   className?: string
   disabled?: boolean
+  children?: ReactNode
 }
 
 type MenuPosition = {
@@ -44,6 +45,7 @@ export function SelectField({
   placeholder = 'Select option',
   className,
   disabled = false,
+  children: _children,
 }: SelectFieldProps) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)

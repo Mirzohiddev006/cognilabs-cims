@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ceoService, type CeoMessageRecord } from '../../../shared/api/services/ceo.service'
-import type { PaymentItem } from '../../../shared/api/types'
+import { crmService } from '../../../shared/api/services/crm.service'
+import type { CustomerSummary, PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { getCustomerDisplayMeta, getCustomerDisplayName } from '../../../shared/lib/customer-display'
@@ -32,6 +33,36 @@ const initialPaymentForm: PaymentFormValues = {
 
 const emptyPayments: PaymentItem[] = []
 const emptyMessages: CeoMessageRecord[] = []
+const emptyCustomers: CustomerSummary[] = []
+
+function mergeCustomerSummary(base: CustomerSummary, detail?: CustomerSummary | null): CustomerSummary {
+  if (!detail) {
+    return base
+  }
+
+  return {
+    ...detail,
+    ...base,
+    full_name: detail.full_name ?? base.full_name,
+    name: detail.name ?? base.name,
+    surname: detail.surname ?? base.surname,
+    first_name: detail.first_name ?? base.first_name,
+    last_name: detail.last_name ?? base.last_name,
+    firstName: detail.firstName ?? base.firstName,
+    lastName: detail.lastName ?? base.lastName,
+    username: detail.username ?? base.username,
+    phone_number: detail.phone_number ?? base.phone_number,
+    phone: detail.phone ?? base.phone,
+    platform: detail.platform ?? base.platform,
+    platform_name: detail.platform_name ?? base.platform_name,
+    source_platform: detail.source_platform ?? base.source_platform,
+    social_platform: detail.social_platform ?? base.social_platform,
+    source: detail.source ?? base.source,
+    lead_source: detail.lead_source ?? base.lead_source,
+    channel: detail.channel ?? base.channel,
+    platforms: detail.platforms ?? base.platforms,
+  }
+}
 
 function toPaymentFormValues(payment?: PaymentItem | null): PaymentFormValues {
   if (!payment) {
@@ -52,6 +83,36 @@ export function CeoDashboardPage() {
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
   const todayMetricsQuery = useAsyncData(() => ceoService.getTodayMetrics(), [])
+  const todayCustomerDetailsQuery = useAsyncData(
+    async () => {
+      const rows = todayMetricsQuery.data?.today_customers ?? emptyCustomers
+
+      if (rows.length === 0) {
+        return rows
+      }
+
+      const uniqueIds = Array.from(new Set(rows.map((row) => row.id).filter((id) => Number.isFinite(id) && id > 0)))
+
+      const detailResults = await Promise.all(
+        uniqueIds.map(async (customerId) => {
+          try {
+            const detail = await crmService.detail(customerId)
+            return [customerId, detail] as const
+          } catch {
+            return null
+          }
+        }),
+      )
+
+      const detailMap = new Map(
+        detailResults.filter((entry): entry is readonly [number, CustomerSummary] => Boolean(entry)),
+      )
+
+      return rows.map((row) => mergeCustomerSummary(row, detailMap.get(row.id)))
+    },
+    [todayMetricsQuery.data],
+    { enabled: Boolean(todayMetricsQuery.data?.today_customers?.length) },
+  )
   const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
 
@@ -67,6 +128,7 @@ export function CeoDashboardPage() {
 
   const statistics = dashboardQuery.data?.statistics
   const metrics = todayMetricsQuery.data
+  const todayCustomers = todayCustomerDetailsQuery.data?.length ? todayCustomerDetailsQuery.data : (metrics?.today_customers ?? emptyCustomers)
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
 
@@ -362,7 +424,7 @@ export function CeoDashboardPage() {
           <div className="mt-6">
             <DataTable
               caption="Today customers"
-              rows={metrics?.today_customers ?? []}
+              rows={todayCustomers}
               getRowKey={(row) => String(row.id)}
               zebra
               emptyState={

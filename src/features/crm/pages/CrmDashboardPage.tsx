@@ -1,12 +1,18 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
-import { formatUsernameHandle, getCustomerDisplayName } from '../../../shared/lib/customer-display'
+import {
+  formatUsernameHandle,
+  getCustomerDisplayName,
+  getCustomerDisplayPlatform,
+  getCustomerPlatforms,
+} from '../../../shared/lib/customer-display'
 import { formatCompactNumber } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -17,7 +23,6 @@ import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SelectField } from '../../../shared/ui/select-field'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
@@ -53,6 +58,30 @@ function toDateTimeLocalValue(value?: string | null) {
   return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16)
 }
 
+function toApiDateTimeWithOffset(value: string) {
+  const [datePart, timePart] = value.split('T')
+
+  if (!datePart || !timePart) {
+    return value
+  }
+
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hours, minutes] = timePart.split(':').map(Number)
+  const date = new Date(year, month - 1, day, hours, minutes, 0)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  const offsetMinutes = -date.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const absoluteOffset = Math.abs(offsetMinutes)
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, '0')
+  const offsetMins = String(absoluteOffset % 60).padStart(2, '0')
+
+  return `${datePart}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00${sign}${offsetHours}:${offsetMins}`
+}
+
 function toFormValues(customer?: CustomerSummary | null): CustomerFormValues {
   if (!customer) {
     return initialFormValues
@@ -60,8 +89,8 @@ function toFormValues(customer?: CustomerSummary | null): CustomerFormValues {
 
   return {
     full_name: customer.full_name ?? '',
-    platform: customer.platform ?? '',
-    phone_number: customer.phone_number ?? '',
+    platform: getCustomerDisplayPlatform(customer) ?? '',
+    phone_number: customer.phone_number ?? customer.phone ?? '',
     status: customer.status ?? '',
     username: customer.username ?? '',
     assistant_name: customer.assistant_name ?? '',
@@ -99,7 +128,7 @@ function buildCustomerFormData(
   })
 
   if (values.recall_time) {
-    formData.append('recall_time', new Date(values.recall_time).toISOString())
+    formData.append('recall_time', toApiDateTimeWithOffset(values.recall_time))
   }
 
   if (mode === 'edit' && values.clear_recall_time) {
@@ -163,6 +192,14 @@ function normalizeDateValue(value?: string | null) {
 
 function normalizeStatusKey(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
+function normalizeFilterValue(value?: string | null) {
+  return (value ?? '').trim().toLowerCase()
+}
+
+function normalizePhoneValue(value?: string | null) {
+  return (value ?? '').replace(/\D/g, '')
 }
 
 function getStatusCount(statusDict: Record<string, number> | undefined, ...keys: string[]) {
@@ -257,6 +294,7 @@ function MetricCard({
 
 
 export function CrmDashboardPage() {
+  const { isSidebarCollapsed } = useAppShell()
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
@@ -277,7 +315,7 @@ export function CrmDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
-  const dashboardQuery = useAsyncData(() => crmService.dashboard(), [])
+  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
   const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
 
@@ -287,35 +325,51 @@ export function CrmDashboardPage() {
   const statusMetaMap = useMemo(() => new Map(statusOptions.map((item) => [item.value, item])), [statusOptions])
 
   const availablePlatforms = useMemo(() => {
-    return Array.from(new Set(customers.map((item) => item.platform).filter(Boolean))).sort((a, b) =>
-      a.localeCompare(b),
-    )
+    return Array.from(
+      new Set(
+        customers
+          .flatMap((item) => getCustomerPlatforms(item))
+          .filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b))
   }, [customers])
 
   const displayedCustomers = useMemo(() => {
-    const normalizedSearch = deferredSearch.trim().toLowerCase()
-    const normalizedPhone = deferredPhoneFilter.trim().toLowerCase()
+    const normalizedSearch = normalizeFilterValue(deferredSearch)
+    const normalizedPhone = normalizePhoneValue(deferredPhoneFilter)
+    const normalizedStatusFilter = normalizeStatusKey(statusFilter)
+    const normalizedPlatformFilter = normalizeFilterValue(platformFilter)
     const startDate = dateStart ? new Date(`${dateStart}T00:00:00`) : null
     const endDate = dateEnd ? new Date(`${dateEnd}T23:59:59.999`) : null
 
     return customers.filter((customer) => {
+      const customerPlatforms = getCustomerPlatforms(customer)
       const matchesSearch = normalizedSearch
         ? [
             getCustomerDisplayName(customer),
             formatUsernameHandle(customer.username),
             customer.phone_number,
+            customer.phone,
             customer.notes,
+            getCustomerDisplayPlatform(customer),
+            customer.status,
+            customer.assistant_name,
+            customer.conversation_language,
           ]
             .filter(Boolean)
-            .some((value) => String(value).toLowerCase().includes(normalizedSearch))
+            .some((value) => normalizeFilterValue(String(value)).includes(normalizedSearch))
         : true
 
       const matchesPhone = normalizedPhone
-        ? customer.phone_number.toLowerCase().includes(normalizedPhone)
+        ? normalizePhoneValue(customer.phone_number ?? customer.phone).includes(normalizedPhone)
         : true
 
-      const matchesStatus = statusFilter ? customer.status === statusFilter : true
-      const matchesPlatform = platformFilter ? customer.platform === platformFilter : true
+      const matchesStatus = normalizedStatusFilter
+        ? normalizeStatusKey(customer.status) === normalizedStatusFilter
+        : true
+      const matchesPlatform = normalizedPlatformFilter
+        ? customerPlatforms.some((platform) => normalizeFilterValue(platform) === normalizedPlatformFilter)
+        : true
 
       const createdAt = normalizeDateValue(customer.created_at)
       const matchesStart = startDate && createdAt ? createdAt >= startDate : !startDate
@@ -472,6 +526,7 @@ export function CrmDashboardPage() {
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
   ]
   const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
+  const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
   const needToCallCount = resolveMetricValue(stats?.need_to_call, getStatusCount(fallbackStatusDict, 'need_to_call', 'need to call'))
   const contactedCount = resolveMetricValue(stats?.contacted, getStatusCount(fallbackStatusDict, 'contacted'))
   const projectStartedCount = resolveMetricValue(stats?.project_started, getStatusCount(fallbackStatusDict, 'project_started', 'project started'))
@@ -541,11 +596,16 @@ export function CrmDashboardPage() {
 
       <Card className="overflow-hidden">
         {/* ── Card header ─────────────────────────── */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-(--border) px-6 py-5">
+        <div
+          className={cn(
+            'flex flex-wrap items-center justify-between gap-3 border-b border-(--border) py-5',
+            isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
+          )}
+        >
           <div>
             <h2 className="text-lg font-semibold text-white">Clients</h2>
             <p className="mt-0.5 text-[13px] text-(--muted)">
-              Manage your clients ({formatCompactNumber(displayedCustomers.length)} visible records)
+              Manage your clients ({formatCompactNumber(displayedCustomers.length)} of {formatCompactNumber(totalCustomerCount)} records)
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -557,7 +617,12 @@ export function CrmDashboardPage() {
         </div>
 
         {/* ── Filters ─────────────────────────────── */}
-        <div className="border-b border-(--border) bg-(--muted-surface)/40 px-6 py-4">
+        <div
+          className={cn(
+            'border-b border-(--border) bg-(--muted-surface)/40 py-4',
+            isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
+          )}
+        >
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-(--muted)">Filters</p>
             {activeFilterCount > 0 && (
@@ -618,7 +683,12 @@ export function CrmDashboardPage() {
           </div>
         </div>
 
-        <div className="px-6 py-5">
+        <div
+          className={cn(
+            'py-5',
+            isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
+          )}
+        >
           <DataTable
             caption="CRM customers table"
             rows={displayedCustomers}
@@ -637,7 +707,7 @@ export function CrmDashboardPage() {
                 header: 'Client',
                 render: (row) => {
                   const displayName = getCustomerDisplayName(row)
-                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? 'none'
+                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? 'none'
 
                   return (
                     <div className="flex items-center gap-3">
@@ -661,12 +731,12 @@ export function CrmDashboardPage() {
               {
                 key: 'platform',
                 header: 'Platform',
-                render: (row) => row.platform || '-',
+                render: (row) => getCustomerDisplayPlatform(row) || '-',
               },
               {
                 key: 'phone',
                 header: 'Phone',
-                render: (row) => row.phone_number,
+                render: (row) => row.phone_number ?? row.phone ?? '-',
               },
               {
                 key: 'status',

@@ -45,6 +45,15 @@ export const navigationItems = [
     defaultRedirect: true,
   },
   {
+    to: '/faults',
+    label: 'Faults',
+    description: 'System faults, incidents va API holati.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/updates',
     label: 'Updates',
     description: 'Update tracking, recent, missing va company stats.',

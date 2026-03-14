@@ -60,4 +60,11 @@ export const updateTrackingService = {
       query: { month, year },
     })
   },
+
+  employeeMonthlyUpdates(year: number, month: number, employeeId?: number) {
+    return request<unknown>({
+      path: '/update-tracking/employee-monthly-updates',
+      query: { year, month, employee_id: employeeId },
+    })
+  },
 }
