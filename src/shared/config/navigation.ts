@@ -46,8 +46,8 @@ export const navigationItems = [
   },
   {
     to: '/faults',
-    label: 'Faults',
-    description: 'System faults, incidents va API holati.',
+    label: 'Salary Estimates',
+    description: 'Employee salary estimates, penalties and bonuses by month.',
     group: 'CEO',
     permissionKey: 'ceo',
     sidebar: true,

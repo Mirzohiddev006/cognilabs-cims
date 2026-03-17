@@ -18,7 +18,7 @@ type UserFormModalProps = {
   isSubmitting: boolean
 }
 
-const roleOptions = ['Customer', 'SalesManager', 'Finance', 'CEO']
+const roleOptions = ['Customer', 'SalesManager', 'Finance', 'CEO', 'Admin']
 
 export function UserFormModal({
   open,
@@ -29,6 +29,10 @@ export function UserFormModal({
   onSubmit,
   isSubmitting,
 }: UserFormModalProps) {
+  const availableRoleOptions = Array.from(
+    new Set([...roleOptions, values.role].filter((role): role is string => Boolean(role?.trim()))),
+  )
+
   return (
     <Modal
       open={open}
@@ -101,7 +105,7 @@ export function UserFormModal({
           <SelectField
             value={values.role}
             onValueChange={(value) => onChange('role', value)}
-            options={roleOptions.map((role) => ({ value: role, label: role }))}
+            options={availableRoleOptions.map((role) => ({ value: role, label: role }))}
             className="min-h-12 rounded-xl px-4"
           />
         </label>

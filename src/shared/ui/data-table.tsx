@@ -22,6 +22,8 @@ type DataTableProps<T> = {
   zebra?: boolean
   compact?: boolean
   onRowClick?: (row: T) => void
+  className?: string
+  fillHeight?: boolean
 }
 
 const alignClassName = {
@@ -67,6 +69,8 @@ export function DataTable<T>({
   zebra = false,
   compact = false,
   onRowClick,
+  className,
+  fillHeight = false,
 }: DataTableProps<T>) {
   const effectivePageSize = Math.max(1, pageSize > 0 ? pageSize : rows.length)
   const [currentPage, setCurrentPage] = useState(1)
@@ -93,8 +97,14 @@ export function DataTable<T>({
   const headPadding = compact ? 'py-2.5 px-4' : 'py-3 px-4'
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
-      <div className="overflow-x-auto">
+    <div
+      className={cn(
+        'overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]',
+        fillHeight && 'flex h-full min-h-0 flex-col',
+        className,
+      )}
+    >
+      <div className={cn('overflow-x-auto', fillHeight && 'flex-1')}>
         <table className="min-w-full border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
 

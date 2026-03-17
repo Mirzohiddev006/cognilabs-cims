@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -540,6 +541,7 @@ function filterAndSort(
 
 /* ─── Page ────────────────────────────────────────────────── */
 export function CeoTeamUpdatesPage() {
+  const navigate = useNavigate()
   const { showToast } = useToast()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear]   = useState(now.getFullYear())
@@ -600,6 +602,19 @@ export function CeoTeamUpdatesPage() {
       await employeeDetailsQuery.refetch()
     }
     showToast({ title: 'Refreshed', description: 'Team monthly data reloaded.', tone: 'success' })
+  }
+
+  function openMemberDetail(employee: EmployeeMonthlyStats) {
+    if (!Number.isFinite(employee.user_id) || employee.user_id <= 0) {
+      showToast({
+        title: 'Member detail unavailable',
+        description: 'This employee row does not include a valid member ID.',
+        tone: 'error',
+      })
+      return
+    }
+
+    navigate(`/faults/members/${employee.user_id}?year=${year}&month=${month}`)
   }
 
   const sourceEmployees = employeeDetailsQuery.data?.length ? employeeDetailsQuery.data : rawEmployees
@@ -891,7 +906,13 @@ export function CeoTeamUpdatesPage() {
                       <TrackBadge pct={emp.completion_percentage} />
                     </td>
                     <td className="px-4 py-3.5">
-                      <Button variant="secondary" size="sm" className="whitespace-nowrap rounded-lg">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="whitespace-nowrap rounded-lg"
+                        onClick={() => openMemberDetail(emp)}
+                        disabled={!Number.isFinite(emp.user_id) || emp.user_id <= 0}
+                      >
                         View Details
                       </Button>
                     </td>

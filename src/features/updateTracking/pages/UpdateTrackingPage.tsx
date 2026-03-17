@@ -209,12 +209,12 @@ const ALL_MONTHS = Array.from({ length: 12 }, (_, index) => ({
 }))
 
 function getFallbackDayStatus(date: Date): DayStatus {
-  if (date > todayStart) {
-    return 'future'
-  }
-
   if (date.getDay() === 0) {
     return 'sunday'
+  }
+
+  if (date > todayStart) {
+    return 'future'
   }
 
   if (date < todayStart) {
@@ -225,6 +225,10 @@ function getFallbackDayStatus(date: Date): DayStatus {
 }
 
 function normalizeDayStatus(value: unknown, date: Date): DayStatus {
+  if (date.getDay() === 0) {
+    return 'sunday'
+  }
+
   const fallback = getFallbackDayStatus(date)
   const booleanValue = toBoolean(value)
 
@@ -826,7 +830,7 @@ function shiftCalendarMonth(month: number, year: number, delta: number) {
 const dayStyle: Record<DayStatus, string> = {
   submitted: 'border-emerald-400/30 bg-[linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96))] text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
   missing: 'border-rose-400/34 bg-[linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96))] text-rose-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
-  sunday: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  sunday: 'border-amber-300/24 bg-[linear-gradient(180deg,rgba(67,52,26,0.96),rgba(47,35,17,0.94))] text-amber-50/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.12)]',
   future: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
   neutral: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
 }
@@ -858,7 +862,7 @@ const dayDotStyle: Record<DayStatus, string> = {
 const dayStatusTextStyle: Record<DayStatus, string> = {
   submitted: 'text-emerald-100/88',
   missing: 'text-rose-100/88',
-  sunday: 'text-amber-100/75',
+  sunday: 'text-amber-50/82',
   future: 'text-white/46',
   neutral: 'text-white/46',
 }
@@ -1157,8 +1161,9 @@ export function UpdateTrackingPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]">
-        <Card variant="glass" className="overflow-hidden p-0">
+      <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]">
+        <div className="flex min-h-full flex-col gap-6">
+          <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-(--border) px-5 py-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <SectionTitle
@@ -1419,17 +1424,48 @@ export function UpdateTrackingPage() {
               </>
             )}
           </div>
-        </Card>
+          </Card>
 
-        <div className="flex flex-col gap-6">
           <Card variant="glass" className="overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
+              <SectionTitle title="Recent Updates" />
+              <Badge variant="blue">{recent.length}</Badge>
+            </div>
+            <div className="divide-y divide-(--border)">
+              {recent.length === 0 ? (
+                <div className="py-10 text-center text-sm text-(--muted)">No recent updates.</div>
+              ) : (
+                recent.slice(0, 10).map((item, index) => {
+                  const dateLabel = formatRecentDate(item.update_date ?? item.date)
+                  const text = item.update_text ?? item.message ?? item.text ?? ''
+
+                  return (
+                    <div key={String(item.id ?? index)} className="px-5 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="line-clamp-2 text-[13px] text-white/80">{text || 'No description returned by API.'}</p>
+                        {dateLabel && (
+                          <span className="shrink-0 text-[11px] tabular-nums text-(--muted)">
+                            {dateLabel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex h-full min-h-full flex-col gap-6">
+          <Card variant="glass" className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
             <div className="border-b border-(--border) px-5 py-4">
               <SectionTitle
                 title="Focus Day"
                 description="Selected-date inspector with status, validation, and returned content."
               />
             </div>
-            <div className="space-y-4 px-5 py-4">
+            <div className="flex flex-1 flex-col space-y-4 px-5 py-4">
               <div className="flex items-start gap-4">
                 <div className={cn(
                   'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
@@ -1498,7 +1534,7 @@ export function UpdateTrackingPage() {
                 </div>
               </div>
 
-              <div className="rounded-[20px] border border-white/8 bg-black/15 p-4">
+              <div className="flex flex-1 flex-col rounded-[20px] border border-white/8 bg-black/15 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
@@ -1513,7 +1549,7 @@ export function UpdateTrackingPage() {
                   ) : null}
                 </div>
 
-                <div className="mt-4 max-h-[280px] overflow-y-auto rounded-[18px] border border-white/8 bg-black/20 p-4">
+                <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-white/8 bg-black/20 p-4">
                   <p className="whitespace-pre-wrap text-[13px] leading-6 text-white/85">
                     {getCalendarDetailText(selectedCalendarDay)}
                   </p>
@@ -1528,14 +1564,14 @@ export function UpdateTrackingPage() {
             </div>
           </Card>
 
-          <Card variant="glass" className="overflow-hidden p-0">
+          <Card variant="glass" className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
             <div className="border-b border-(--border) px-5 py-4">
               <SectionTitle
                 title="Action Queue"
                 description="Recent misses, today, and the next upcoming dates stay one click away."
               />
             </div>
-            <div className="space-y-2.5 px-5 py-4">
+            <div className="flex-1 space-y-2.5 overflow-y-auto px-5 py-4">
               {calendarAgendaDays.length > 0 ? calendarAgendaDays.map((day) => (
                 <button
                   key={`agenda-${day.date ?? day.day}`}
@@ -1574,63 +1610,34 @@ export function UpdateTrackingPage() {
             </div>
           </Card>
 
-          {trends.length > 0 && (
-            <Card variant="glass" className="overflow-hidden p-0">
-              <div className="border-b border-(--border) px-5 py-4">
-                <SectionTitle title="Performance Trends" />
-              </div>
-              <div className="space-y-3 px-5 py-4">
-                {trends.slice(-6).map((trend) => {
-                  const pct = trend.completion_percentage ?? 0
-                  const label = trend.month_name ?? `${getMonthName(trend.month)} ${trend.year}`
-
-                  return (
-                    <div key={`${trend.year}-${trend.month}`} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-(--muted-strong)">{label}</span>
-                        <span className={cn('font-bold tabular-nums', pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-rose-400')}>
-                          {pct.toFixed(1)}%
-                        </span>
-                      </div>
-                      <CompletionBar pct={pct} />
-                    </div>
-                  )
-                })}
-              </div>
-            </Card>
-          )}
-
-          <Card variant="glass" className="flex-1 overflow-hidden p-0">
-            <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
-              <SectionTitle title="Recent Updates" />
-              <Badge variant="blue">{recent.length}</Badge>
-            </div>
-            <div className="divide-y divide-(--border)">
-              {recent.length === 0 ? (
-                <div className="py-10 text-center text-sm text-(--muted)">No recent updates.</div>
-              ) : (
-                recent.slice(0, 10).map((item, index) => {
-                  const dateLabel = formatRecentDate(item.update_date ?? item.date)
-                  const text = item.update_text ?? item.message ?? item.text ?? ''
-
-                  return (
-                    <div key={String(item.id ?? index)} className="px-5 py-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="line-clamp-2 text-[13px] text-white/80">{text || 'No description returned by API.'}</p>
-                        {dateLabel && (
-                          <span className="shrink-0 text-[11px] tabular-nums text-(--muted)">
-                            {dateLabel}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </Card>
         </div>
       </div>
+
+      {trends.length > 0 && (
+        <Card variant="glass" className="overflow-hidden p-0">
+          <div className="border-b border-(--border) px-5 py-4">
+            <SectionTitle title="Performance Trends" />
+          </div>
+          <div className="space-y-3 px-5 py-4">
+            {trends.slice(-6).map((trend) => {
+              const pct = trend.completion_percentage ?? 0
+              const label = trend.month_name ?? `${getMonthName(trend.month)} ${trend.year}`
+
+              return (
+                <div key={`${trend.year}-${trend.month}`} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-(--muted-strong)">{label}</span>
+                    <span className={cn('font-bold tabular-nums', pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-rose-400')}>
+                      {pct.toFixed(1)}%
+                    </span>
+                  </div>
+                  <CompletionBar pct={pct} />
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
     </section>
   )
 }

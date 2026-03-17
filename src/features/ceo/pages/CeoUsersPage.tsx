@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import {
   ceoService,
@@ -49,6 +50,8 @@ const initialMessageForm: MessageComposerValues = {
 }
 
 const emptyUsers: CeoUserRecord[] = []
+const now = new Date()
+const supportedUserRoles = ['Customer', 'SalesManager', 'Finance', 'CEO', 'Admin'] as const
 
 function formatSalary(value?: number | null) {
   if (typeof value !== 'number' || Number.isNaN(value)) {
@@ -56,6 +59,21 @@ function formatSalary(value?: number | null) {
   }
 
   return new Intl.NumberFormat('en-US').format(value)
+}
+
+function normalizeUserRole(value?: string | null) {
+  const normalizedValue = String(value ?? '').trim().toLowerCase()
+  const matchedRole = supportedUserRoles.find((role) => role.toLowerCase() === normalizedValue)
+
+  if (matchedRole) {
+    return matchedRole
+  }
+
+  return String(value ?? initialUserForm.role).trim() || initialUserForm.role
+}
+
+function isCeoUser(user: CeoUserRecord) {
+  return normalizeUserRole(String(user.role ?? '')) === 'CEO'
 }
 
 function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
@@ -71,7 +89,7 @@ function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
     company_code: user.company_code ?? 'oddiy',
     telegram_id: user.telegram_id ?? '',
     default_salary: typeof user.default_salary === 'number' ? user.default_salary : 0,
-    role: user.role ?? 'Customer',
+    role: normalizeUserRole(String(user.role ?? 'Customer')),
     is_active: Boolean(user.is_active),
   }
 }
@@ -96,6 +114,7 @@ function toUserPayload(values: UserFormValues, mode: 'create' | 'edit'): UserPay
 }
 
 export function CeoUsersPage() {
+  const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
 
@@ -234,6 +253,10 @@ export function CeoUsersPage() {
     setProfileUser(user)
   }
 
+  function openSalaryDetail(user: CeoUserRecord) {
+    navigate(`/faults/members/${user.id}?year=${now.getFullYear()}&month=${now.getMonth() + 1}`)
+  }
+
   async function handleSubmitUser() {
     if (!userFormValues.email.trim() || !userFormValues.name.trim() || !userFormValues.surname.trim()) {
       showToast({
@@ -251,6 +274,26 @@ export function CeoUsersPage() {
         tone: 'error',
       })
       return
+    }
+
+    if (
+      userModalMode === 'edit' &&
+      selectedUser &&
+      selectedUser.is_active &&
+      !userFormValues.is_active &&
+      isCeoUser(selectedUser)
+    ) {
+      const approved = await confirm({
+        title: `Deactivate CEO ${selectedUser.name} ${selectedUser.surname}?`,
+        description: 'Saving this form will deactivate a CEO account.',
+        confirmLabel: 'Deactivate CEO',
+        cancelLabel: 'Cancel',
+        tone: 'danger',
+      })
+
+      if (!approved) {
+        return
+      }
     }
 
     setIsUserSubmitting(true)
@@ -283,10 +326,13 @@ export function CeoUsersPage() {
   }
 
   async function handleDeleteUser(user: CeoUserRecord) {
+    const isDeletingCeo = isCeoUser(user)
     const approved = await confirm({
-      title: `Delete ${user.name} ${user.surname}?`,
-      description: 'This user will be permanently removed from the system.',
-      confirmLabel: 'Delete user',
+      title: isDeletingCeo ? `Delete CEO ${user.name} ${user.surname}?` : `Delete ${user.name} ${user.surname}?`,
+      description: isDeletingCeo
+        ? 'This CEO account will be permanently removed from the system. Please confirm this destructive action.'
+        : 'This user will be permanently removed from the system.',
+      confirmLabel: isDeletingCeo ? 'Delete CEO' : 'Delete user',
       cancelLabel: 'Cancel',
       tone: 'danger',
     })
@@ -314,6 +360,21 @@ export function CeoUsersPage() {
 
   async function handleToggleUser(user: CeoUserRecord) {
     const nextStatusLabel = user.is_active ? 'inactive' : 'active'
+    const isDeactivatingCeo = user.is_active && isCeoUser(user)
+
+    if (isDeactivatingCeo) {
+      const approved = await confirm({
+        title: `Deactivate CEO ${user.name} ${user.surname}?`,
+        description: 'This will disable a CEO account until it is activated again.',
+        confirmLabel: 'Deactivate CEO',
+        cancelLabel: 'Cancel',
+        tone: 'danger',
+      })
+
+      if (!approved) {
+        return
+      }
+    }
 
     try {
       await ceoService.toggleUserActive(user.id)
@@ -563,9 +624,9 @@ export function CeoUsersPage() {
                 render: (row) => (
                   <button
                     type="button"
-                    onClick={() => openProfileDialog(row)}
+                    onClick={() => openSalaryDetail(row)}
                     className="transition hover:opacity-90"
-                    aria-label={`Open details for ${row.name} ${row.surname}`}
+                    aria-label={`Open salary detail for ${row.name} ${row.surname}`}
                   >
                     <Badge className="bg-white/5 text-white border-white/10">
                       {String(row.role)}
@@ -595,12 +656,16 @@ export function CeoUsersPage() {
                     label={`Open actions for ${row.email}`}
                     items={[
                       {
-                        label: 'Edit',
-                        onSelect: () => openEditUserModal(row),
+                        label: 'Profile',
+                        onSelect: () => openProfileDialog(row),
                       },
                       {
-                        label: row.is_active ? 'Deactivate' : 'Activate',
-                        onSelect: () => void handleToggleUser(row),
+                        label: 'Salary detail',
+                        onSelect: () => openSalaryDetail(row),
+                      },
+                      {
+                        label: 'Edit',
+                        onSelect: () => openEditUserModal(row),
                       },
                       {
                         label: 'Permissions',
@@ -609,6 +674,10 @@ export function CeoUsersPage() {
                       {
                         label: 'Message',
                         onSelect: () => openMessageModal(row),
+                      },
+                      {
+                        label: row.is_active ? 'Deactivate' : 'Activate',
+                        onSelect: () => void handleToggleUser(row),
                       },
                       {
                         label: 'Delete',
@@ -747,9 +816,16 @@ export function CeoUsersPage() {
         description={profileUser?.email ?? 'Selected user details'}
         size="lg"
         footer={
-          <Button variant="secondary" onClick={() => setProfileUser(null)}>
-            Close
-          </Button>
+          <>
+            {profileUser ? (
+              <Button onClick={() => openSalaryDetail(profileUser)}>
+                Open salary detail
+              </Button>
+            ) : null}
+            <Button variant="secondary" onClick={() => setProfileUser(null)}>
+              Close
+            </Button>
+          </>
         }
       >
         <div className="grid gap-4 md:grid-cols-2">

@@ -176,6 +176,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function resolveDashboardPath() {
     const fallbackPath = getDefaultPath()
 
+    if (fallbackPath === '/updates') {
+      return fallbackPath
+    }
+
     try {
       const response = await authService.dashboardRedirect()
       const normalizedPath = normalizeRedirectPath(response.redirect_url)

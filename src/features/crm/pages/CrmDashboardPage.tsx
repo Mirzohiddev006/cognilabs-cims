@@ -2,6 +2,7 @@ import { useDeferredValue, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
+import { env } from '../../../shared/config/env'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -22,7 +23,7 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { PageHeader } from '../../../shared/ui/page-header'
-import { SelectField } from '../../../shared/ui/select-field'
+import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
@@ -176,6 +177,18 @@ function formatDateTime(value?: string | null) {
   }).format(parsed)
 }
 
+function resolveAudioUrl(customer: CustomerSummary) {
+  if (customer.audio_url) {
+    return customer.audio_url
+  }
+
+  if (!customer.audio_file_id) {
+    return null
+  }
+
+  return new URL(`/crm/customers/audio/${customer.audio_file_id}`, env.apiBaseUrl).toString()
+}
+
 function normalizeDateValue(value?: string | null) {
   if (!value) {
     return null
@@ -230,6 +243,82 @@ function resolveMetricValue(primary: number | undefined, fallback: number) {
   return primary ?? fallback
 }
 
+function buildNormalizedStatusMetaMap(statusOptions: DynamicStatusOption[]) {
+  const map = new Map<string, DynamicStatusOption>()
+
+  for (const option of statusOptions) {
+    const normalizedValue = normalizeStatusKey(option.value)
+    const normalizedLabel = normalizeStatusKey(option.label)
+
+    if (normalizedValue) {
+      map.set(normalizedValue, option)
+    }
+
+    if (normalizedLabel) {
+      map.set(normalizedLabel, option)
+    }
+  }
+
+  return map
+}
+
+function buildStatusFilterOptions(
+  statusChoices: Array<{ value?: string | null; label?: string | null }>,
+  statusOptions: DynamicStatusOption[],
+  customers: CustomerSummary[],
+) {
+  const optionsByKey = new Map<string, SelectFieldOption>()
+
+  const registerOption = (rawValue?: string | null, rawLabel?: string | null) => {
+    const label = (rawLabel ?? rawValue ?? '').trim()
+    const normalizedValue = normalizeStatusKey(rawValue ?? rawLabel ?? '')
+
+    if (!label || !normalizedValue || optionsByKey.has(normalizedValue)) {
+      return
+    }
+
+    optionsByKey.set(normalizedValue, {
+      value: normalizedValue,
+      label,
+    })
+  }
+
+  statusChoices.forEach((option) => registerOption(option.value, option.label))
+  statusOptions.forEach((option) => registerOption(option.value, option.label))
+  customers.forEach((customer) => registerOption(customer.status, customer.status))
+
+  return [
+    { value: '', label: 'All statuses' },
+    ...Array.from(optionsByKey.values()).sort((left, right) => left.label.localeCompare(right.label)),
+  ]
+}
+
+function getCustomerStatusKeys(customer: CustomerSummary, statusMetaMap: Map<string, DynamicStatusOption>) {
+  const keys = new Set<string>()
+  const rawStatusKey = normalizeStatusKey(customer.status)
+
+  if (rawStatusKey) {
+    keys.add(rawStatusKey)
+  }
+
+  const meta = statusMetaMap.get(rawStatusKey)
+
+  if (meta) {
+    const metaValueKey = normalizeStatusKey(meta.value)
+    const metaLabelKey = normalizeStatusKey(meta.label)
+
+    if (metaValueKey) {
+      keys.add(metaValueKey)
+    }
+
+    if (metaLabelKey) {
+      keys.add(metaLabelKey)
+    }
+  }
+
+  return keys
+}
+
 function StatusBadge({
   status,
   statusMetaMap,
@@ -237,7 +326,7 @@ function StatusBadge({
   status: string
   statusMetaMap: Map<string, DynamicStatusOption>
 }) {
-  const meta = statusMetaMap.get(status)
+  const meta = statusMetaMap.get(normalizeStatusKey(status))
 
   return (
     <span
@@ -322,7 +411,11 @@ export function CrmDashboardPage() {
   const customers = dashboardQuery.data?.customers ?? emptyCustomers
   const statusOptions = statusesQuery.data ?? emptyStatuses
 
-  const statusMetaMap = useMemo(() => new Map(statusOptions.map((item) => [item.value, item])), [statusOptions])
+  const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
+  const statusFilterOptions = useMemo(
+    () => buildStatusFilterOptions(dashboardQuery.data?.status_choices ?? [], statusOptions, customers),
+    [customers, dashboardQuery.data?.status_choices, statusOptions],
+  )
 
   const availablePlatforms = useMemo(() => {
     return Array.from(
@@ -365,7 +458,7 @@ export function CrmDashboardPage() {
         : true
 
       const matchesStatus = normalizedStatusFilter
-        ? normalizeStatusKey(customer.status) === normalizedStatusFilter
+        ? getCustomerStatusKeys(customer, statusMetaMap).has(normalizedStatusFilter)
         : true
       const matchesPlatform = normalizedPlatformFilter
         ? customerPlatforms.some((platform) => normalizeFilterValue(platform) === normalizedPlatformFilter)
@@ -514,13 +607,6 @@ export function CrmDashboardPage() {
 
   const stats = summaryQuery.data
   const fallbackStatusDict = dashboardQuery.data?.status_dict ?? dashboardQuery.data?.status_stats
-  const statusFilterOptions = [
-    { value: '', label: 'All statuses' },
-    ...(dashboardQuery.data?.status_choices ?? statusOptions).map((option) => ({
-      value: option.value,
-      label: option.label,
-    })),
-  ]
   const platformFilterOptions = [
     { value: '', label: 'All platforms' },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
@@ -535,7 +621,7 @@ export function CrmDashboardPage() {
   const rejectedCount = resolveMetricValue(stats?.rejected, getStatusCount(fallbackStatusDict, 'rejected'))
 
   return (
-    <section className="space-y-6">
+    <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
       <PageHeader
         eyebrow="CRM workspace"
         title="Client operations dashboard"
@@ -594,7 +680,7 @@ export function CrmDashboardPage() {
         />
       </div>
 
-      <Card className="overflow-hidden">
+      <Card className="flex flex-1 flex-col overflow-hidden">
         {/* ── Card header ─────────────────────────── */}
         <div
           className={cn(
@@ -685,7 +771,7 @@ export function CrmDashboardPage() {
 
         <div
           className={cn(
-            'py-5',
+            'flex min-h-0 flex-1 flex-col py-5',
             isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
           )}
         >
@@ -694,6 +780,7 @@ export function CrmDashboardPage() {
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
             zebra
+            fillHeight
             emptyState={
               <EmptyStateBlock
                 eyebrow="CRM"
@@ -756,19 +843,37 @@ export function CrmDashboardPage() {
               {
                 key: 'audio',
                 header: 'Audio',
-                render: (row) =>
-                  row.audio_url ? (
-                    <a
-                      href={row.audio_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-white underline underline-offset-4 sm:text-[15px]"
+                render: (row) => {
+                  const audioSource = resolveAudioUrl(row)
+
+                  if (!audioSource) {
+                    return '-'
+                  }
+
+                  return (
+                    <div
+                      className="flex min-w-[220px] max-w-[260px] flex-col gap-2"
+                      onClick={(event) => event.stopPropagation()}
                     >
-                      Open
-                    </a>
-                  ) : (
-                    '-'
-                  ),
+                      <audio
+                        controls
+                        preload="none"
+                        src={audioSource}
+                        className="h-10 w-full"
+                      >
+                        Your browser does not support audio playback.
+                      </audio>
+                      <a
+                        href={audioSource}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[var(--muted-strong)] underline underline-offset-4 hover:text-white"
+                      >
+                        Open in new tab
+                      </a>
+                    </div>
+                  )
+                },
               },
               {
                 key: 'notes',

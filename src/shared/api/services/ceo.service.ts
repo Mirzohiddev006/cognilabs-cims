@@ -16,6 +16,7 @@ export type CeoUserRecord = {
   company_code?: string
   telegram_id?: string | null
   default_salary?: number | null
+  job_title?: string | null
   role: UserRole
   is_active: boolean
 } & Record<string, unknown>

@@ -32,6 +32,10 @@ type CrmDashboardParams = {
   page_size?: number
 }
 
+function normalizeStatusToken(value?: string | null) {
+  return String(value ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 function createEmptyDashboardResponse(customers: CustomerSummary[]): CrmDashboardResponse {
   return {
     customers,
@@ -59,6 +63,24 @@ function dedupeCustomers(customers: CustomerSummary[]) {
   return Array.from(seen.values())
 }
 
+function collectRejectedStatusCandidates(response?: Pick<CrmDashboardResponse, 'status_choices'> | null) {
+  const candidates = new Set<string>(['rejected'])
+
+  for (const option of response?.status_choices ?? []) {
+    if (normalizeStatusToken(option.value) === 'rejected' || normalizeStatusToken(option.label) === 'rejected') {
+      if (option.value?.trim()) {
+        candidates.add(option.value.trim())
+      }
+
+      if (option.label?.trim()) {
+        candidates.add(option.label.trim())
+      }
+    }
+  }
+
+  return Array.from(candidates)
+}
+
 export const crmService = {
   latest(limit = 50) {
     return request<CustomerSummary[]>({
@@ -74,29 +96,46 @@ export const crmService = {
     })
   },
 
+  async fetchRejectedCustomers(response?: Pick<CrmDashboardResponse, 'status_choices'> | null) {
+    const candidates = collectRejectedStatusCandidates(response)
+    const results = await Promise.allSettled(
+      candidates.map((status) => this.filterByStatus(status)),
+    )
+
+    return dedupeCustomers(
+      results.flatMap((result) => (result.status === 'fulfilled' ? result.value : [])),
+    )
+  },
+
   async dashboardWithAllCustomers(pageSize = 50) {
     try {
-      const firstPage = await this.dashboard({ page: 1, page_size: pageSize })
+      const firstPage = await this.dashboard({ page: 1, page_size: pageSize, show_all: true })
       const totalPages = Math.max(firstPage.total_pages ?? 1, 1)
 
       if (totalPages <= 1) {
+        const rejectedCustomers = await this.fetchRejectedCustomers(firstPage)
+        const customers = dedupeCustomers([...firstPage.customers, ...rejectedCustomers])
+
         return {
           ...firstPage,
-          customers: dedupeCustomers(firstPage.customers),
-          total_items: firstPage.total_items ?? firstPage.customers.length,
+          customers,
+          page_size: customers.length,
+          total_items: customers.length,
           total_pages: 1,
         }
       }
 
       const remainingPages = await Promise.all(
         Array.from({ length: totalPages - 1 }, (_, index) =>
-          this.dashboard({ page: index + 2, page_size: pageSize }),
+          this.dashboard({ page: index + 2, page_size: pageSize, show_all: true }),
         ),
       )
 
+      const rejectedCustomers = await this.fetchRejectedCustomers(firstPage)
       const customers = dedupeCustomers([
         ...firstPage.customers,
         ...remainingPages.flatMap((page) => page.customers),
+        ...rejectedCustomers,
       ])
 
       return {
@@ -104,12 +143,20 @@ export const crmService = {
         customers,
         page: 1,
         page_size: customers.length,
-        total_items: firstPage.total_items ?? customers.length,
+        total_items: customers.length,
         total_pages: totalPages,
       }
     } catch {
-      const customers = await this.latest(500)
-      return createEmptyDashboardResponse(dedupeCustomers(customers))
+      const [latestCustomers, rejectedCustomers] = await Promise.allSettled([
+        this.latest(500),
+        this.fetchRejectedCustomers(),
+      ])
+      const customers = dedupeCustomers([
+        ...(latestCustomers.status === 'fulfilled' ? latestCustomers.value : []),
+        ...(rejectedCustomers.status === 'fulfilled' ? rejectedCustomers.value : []),
+      ])
+
+      return createEmptyDashboardResponse(customers)
     }
   },
 

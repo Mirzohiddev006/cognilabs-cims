@@ -13,6 +13,7 @@ import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
 import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
 import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
+import { FaultsMemberDetailPage } from '../features/faults/pages/FaultsMemberDetailPage'
 import { FaultsPage } from '../features/faults/pages/FaultsPage'
 import { NotFoundPage } from '../features/errors/pages/NotFoundPage'
 import { UpdateTrackingPage } from '../features/updateTracking/pages/UpdateTrackingPage'
@@ -90,6 +91,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <FaultsPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'faults/members/:memberId',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <FaultsMemberDetailPage />
                   </ProtectedRoute>
                 ),
               },

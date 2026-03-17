@@ -23,6 +23,10 @@ type MenuPosition = {
   width: number
 }
 
+function normalizeOptionValue(value: string) {
+  return value.trim().toLowerCase()
+}
+
 function getMenuPosition(trigger: HTMLButtonElement, optionCount: number): MenuPosition {
   const rect = trigger.getBoundingClientRect()
   const menuHeight = Math.min(optionCount, 6) * 40 + 12
@@ -51,7 +55,10 @@ export function SelectField({
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0, width: 0 })
 
-  const selectedOption = options.find((option) => option.value === value)
+  const normalizedValue = normalizeOptionValue(value)
+  const selectedOption =
+    options.find((option) => option.value === value) ??
+    options.find((option) => normalizeOptionValue(option.value) === normalizedValue)
 
   useEffect(() => {
     if (!isOpen || !triggerRef.current) {
@@ -126,14 +133,16 @@ export function SelectField({
       {isOpen && typeof document !== 'undefined'
         ? createPortal(
             <>
-              <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
+              <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
-                className="fixed z-50 max-h-72 overflow-y-auto rounded-2xl border border-white/10 bg-[rgba(16,16,20,0.98)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                className="fixed z-[100] max-h-72 overflow-y-auto rounded-2xl border border-white/10 bg-[rgba(16,16,20,0.98)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
                 role="listbox"
               >
                 {options.map((option) => {
-                  const isSelected = option.value === value
+                  const isSelected =
+                    option.value === value ||
+                    normalizeOptionValue(option.value) === normalizedValue
 
                   return (
                     <button
