@@ -67,7 +67,7 @@ export function AppSidebar() {
 
     const timeoutId = window.setTimeout(() => {
       setShowExpandedProfile(true)
-    }, 180)
+    }, 80)
 
     return () => {
       window.clearTimeout(timeoutId)
@@ -89,13 +89,13 @@ export function AppSidebar() {
         aria-label="Close navigation overlay"
         onClick={closeSidebar}
         className={cn(
-          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] backdrop-blur-sm transition-opacity min-[961px]:hidden',
+          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] backdrop-blur-sm transition-opacity duration-150 min-[961px]:hidden',
           isSidebarOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0',
         )}
       />
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 transition-transform duration-300 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:p-4 min-[961px]:pr-0',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 transition-transform duration-180 ease-[cubic-bezier(0.22,1,0.36,1)] min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:p-4 min-[961px]:pr-0',
           isSidebarOpen ? 'translate-x-0' : '-translate-x-[110%] min-[961px]:translate-x-0',
         )}
       >
@@ -134,7 +134,7 @@ export function AppSidebar() {
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                     <NavGlyph name="default" />
                   </div>
-                  <div className="min-w-0 overflow-hidden transition-[max-width,opacity] duration-160 ease-out delay-75 max-w-[180px] opacity-100">
+                  <div className="min-w-0 overflow-hidden transition-[max-width,opacity] duration-100 ease-out max-w-45 opacity-100">
                     <h2 className="text-sm font-bold text-white tracking-tight whitespace-nowrap">{env.appName}</h2>
                     <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">Management System</p>
                   </div>
@@ -152,7 +152,7 @@ export function AppSidebar() {
             ) : null}
           </div>
 
-          <nav className={cn('mt-3 flex flex-1 flex-col overflow-y-auto transition-all duration-300', isSidebarCollapsed ? 'items-center gap-2' : 'gap-1 pr-1')}>
+          <nav className={cn('mt-3 flex flex-1 flex-col overflow-y-auto transition-all duration-150', isSidebarCollapsed ? 'items-center gap-2' : 'gap-1 pr-1')}>
             {visibleNavigation.map((item) => (
               <NavLink
                 key={item.to}
@@ -161,7 +161,7 @@ export function AppSidebar() {
                 title={isSidebarCollapsed ? `${item.label} (${item.group})` : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'relative overflow-hidden transition-all duration-300',
+                    'relative overflow-hidden transition-all duration-150',
                     isSidebarCollapsed
                       ? 'flex h-12 w-12 items-center justify-center rounded-xl border'
                       : 'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm',
@@ -176,7 +176,7 @@ export function AppSidebar() {
                 }
               >
                 <div className={cn(
-                  'grid place-items-center border text-[var(--muted-strong)] transition-all duration-300',
+                  'grid place-items-center border text-[var(--muted-strong)] transition-all duration-150',
                   isSidebarCollapsed
                     ? 'h-9 w-9 rounded-xl border-white/10 bg-black/30'
                     : 'h-8 w-8 rounded-lg border-[var(--border)] bg-[#1a1a1a]',
@@ -186,8 +186,8 @@ export function AppSidebar() {
 
                 <div
                   className={cn(
-                    'min-w-0 overflow-hidden transition-[max-width,opacity] duration-160 ease-out',
-                    isSidebarCollapsed ? 'max-w-0 opacity-0 delay-0' : 'max-w-[170px] opacity-100 delay-75',
+                    'min-w-0 overflow-hidden transition-[max-width,opacity] duration-100 ease-out',
+                    isSidebarCollapsed ? 'max-w-0 opacity-0' : 'max-w-42.5 opacity-100',
                   )}
                   aria-hidden={isSidebarCollapsed}
                 >
