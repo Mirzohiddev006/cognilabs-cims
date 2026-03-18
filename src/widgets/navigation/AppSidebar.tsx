@@ -108,7 +108,7 @@ export function AppSidebar() {
                   aria-label="Expand sidebar"
                   title="Expand sidebar"
                   onClick={toggleSidebarCollapsed}
-                  className="app-shell-collapse-toggle flex h-10 w-10 items-center justify-center rounded-xl border border-white/30 bg-black/70 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/45 hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10"
+                  className="app-shell-collapse-toggle flex h-10 w-10 items-center justify-center rounded-xl border border-(--shell-collapse-btn-border) bg-(--shell-collapse-btn-bg) text-(--shell-collapse-btn-text) shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-(--shell-collapse-btn-hover-border) hover:bg-(--shell-collapse-btn-hover-bg) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10"
                 >
                   <SidebarCollapseGlyph collapsed />
                 </button>
@@ -125,17 +125,17 @@ export function AppSidebar() {
                   aria-label="Collapse sidebar"
                   title="Collapse sidebar"
                   onClick={toggleSidebarCollapsed}
-                  className="app-shell-collapse-toggle absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-xl border border-white/30 bg-black/70 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-white/45 hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10"
+                  className="app-shell-collapse-toggle absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-xl border border-(--shell-collapse-btn-border) bg-(--shell-collapse-btn-bg) text-(--shell-collapse-btn-text) shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors hover:border-(--shell-collapse-btn-hover-border) hover:bg-(--shell-collapse-btn-hover-bg) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/10"
                 >
                   <SidebarCollapseGlyph collapsed={false} />
                 </button>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-500">Cognilabs</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
                 <div className="mt-2 flex items-center gap-2 pr-12">
                   <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                     <NavGlyph name="default" />
                   </div>
                   <div className="min-w-0 overflow-hidden transition-[max-width,opacity] duration-100 ease-out max-w-45 opacity-100">
-                    <h2 className="text-sm font-bold text-white tracking-tight whitespace-nowrap">{env.appName}</h2>
+                    <h2 className="text-sm font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
                     <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">Management System</p>
                   </div>
                 </div>
@@ -170,16 +170,16 @@ export function AppSidebar() {
                         ? 'border-blue-500/30 bg-blue-600/12 text-white shadow-sm'
                         : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
                       : isSidebarCollapsed
-                        ? 'border-white/10 bg-white/[0.03] text-[var(--muted)] hover:bg-white/5 hover:text-white'
-                        : 'border-transparent text-[var(--muted)] hover:bg-white/5 hover:text-white',
+                        ? 'border-(--shell-nav-inactive-border) bg-(--shell-nav-inactive-bg) text-(--muted) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)'
+                        : 'border-transparent text-(--muted) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
                   )
                 }
               >
                 <div className={cn(
-                  'grid place-items-center border text-[var(--muted-strong)] transition-all duration-150',
+                  'grid place-items-center border text-(--muted-strong) transition-all duration-150',
                   isSidebarCollapsed
-                    ? 'h-9 w-9 rounded-xl border-white/10 bg-black/30'
-                    : 'h-8 w-8 rounded-lg border-[var(--border)] bg-[#1a1a1a]',
+                    ? 'h-9 w-9 rounded-xl border-(--shell-nav-inactive-border) bg-(--shell-icon-bg)'
+                    : 'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg)',
                 )}>
                   <NavGlyph name={getNavigationGlyphName(item.to)} />
                 </div>
@@ -216,7 +216,7 @@ export function AppSidebar() {
               type="button"
               onClick={openMemberDialog}
               disabled={!user}
-              className="mt-4 w-full rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition hover:border-white/15 hover:bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] disabled:cursor-default disabled:opacity-80"
+              className="mt-4 w-full rounded-[22px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
               aria-label="Open member details"
             >
               <div className="flex items-start gap-3">
@@ -225,7 +225,7 @@ export function AppSidebar() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p
-                    className="text-xs font-bold leading-4 text-white [overflow-wrap:anywhere]"
+                    className="text-xs font-bold leading-4 text-(--shell-text-primary) wrap-anywhere"
                     title={user ? `${user.name} ${user.surname}` : 'Authenticated user'}
                   >
                     {user ? `${user.name} ${user.surname}` : 'Authenticated user'}
@@ -247,7 +247,7 @@ export function AppSidebar() {
                 <Badge className="rounded-full border-blue-500/20 bg-blue-600/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-blue-100">
                   {user?.role ?? 'Session'}
                 </Badge>
-                <Badge className="rounded-full border-white/15 bg-white/8 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white">
+                <Badge className="rounded-full border-(--shell-profile-border) bg-(--shell-nav-inactive-bg) px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-(--shell-text-primary)">
                   {env.appEnv}
                 </Badge>
               </div>
