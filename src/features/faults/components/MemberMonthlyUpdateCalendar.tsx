@@ -12,61 +12,51 @@ const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const boardWeekdayLabels = ['YAK', 'DUS', 'SES', 'CHO', 'PAY', 'JUM', 'SHA']
 
 const dayStyle: Record<DayStatus, string> = {
-  submitted:
-    'border-emerald-400/30 bg-[linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96))] text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
-  missing:
-    'border-rose-400/34 bg-[linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96))] text-rose-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
-  sunday:
-    'border-amber-300/24 bg-[linear-gradient(180deg,rgba(67,52,26,0.96),rgba(47,35,17,0.94))] text-amber-50/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.12)]',
-  future:
-    'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  neutral:
-    'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  submitted: 'cal-day-submitted',
+  missing:   'cal-day-missing',
+  sunday:    'cal-day-sunday',
+  future:    'cal-day-future',
+  neutral:   'cal-day-neutral',
 }
 
 const dayAccentStyle: Record<DayStatus, string> = {
-  submitted: 'bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.55)]',
-  missing: 'bg-rose-300 shadow-[0_0_16px_rgba(253,164,175,0.35)]',
-  sunday: 'bg-amber-300/70',
-  future: 'bg-white/14',
-  neutral: 'bg-white/14',
+  submitted: 'cal-accent-submitted',
+  missing:   'cal-accent-missing',
+  sunday:    'cal-accent-sunday',
+  future:    'cal-accent-future',
+  neutral:   'cal-accent-neutral',
 }
 
 const dayPillStyle: Record<DayStatus, string> = {
-  submitted: 'border-emerald-400/22 bg-emerald-400/10 text-emerald-100',
-  missing: 'border-rose-400/22 bg-rose-400/10 text-rose-100',
-  sunday: 'border-amber-300/18 bg-amber-300/10 text-amber-100/85',
-  future: 'border-white/10 bg-white/[0.04] text-white/60',
-  neutral: 'border-white/10 bg-white/[0.04] text-white/60',
+  submitted: 'cal-pill-submitted',
+  missing:   'cal-pill-missing',
+  sunday:    'cal-pill-sunday',
+  future:    'cal-pill-future',
+  neutral:   'cal-pill-neutral',
 }
 
 const dayDotStyle: Record<DayStatus, string> = {
-  submitted: 'bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.55)]',
-  missing: 'bg-rose-300 shadow-[0_0_10px_rgba(253,164,175,0.38)]',
-  sunday: 'bg-amber-300/80',
-  future: 'bg-white/24',
-  neutral: 'bg-white/24',
+  submitted: 'cal-dot-submitted',
+  missing:   'cal-dot-missing',
+  sunday:    'cal-dot-sunday',
+  future:    'cal-dot-future',
+  neutral:   'cal-dot-neutral',
 }
 
 const dayStatusTextStyle: Record<DayStatus, string> = {
-  submitted: 'text-emerald-100/88',
-  missing: 'text-rose-100/88',
-  sunday: 'text-amber-50/82',
-  future: 'text-white/46',
-  neutral: 'text-white/46',
+  submitted: 'cal-text-submitted',
+  missing:   'cal-text-missing',
+  sunday:    'cal-text-sunday',
+  future:    'cal-text-future',
+  neutral:   'cal-text-neutral',
 }
 
 const dayFocusStyle: Record<DayStatus, string> = {
-  submitted:
-    'border-emerald-400/30 bg-[linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  missing:
-    'border-rose-400/32 bg-[linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  sunday:
-    'border-amber-300/20 bg-[linear-gradient(180deg,rgba(58,45,23,0.92),rgba(45,33,17,0.92))] text-amber-50/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  future:
-    'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  neutral:
-    'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  submitted: 'cal-focus-submitted',
+  missing:   'cal-focus-missing',
+  sunday:    'cal-focus-sunday',
+  future:    'cal-focus-future',
+  neutral:   'cal-focus-neutral',
 }
 
 function getMonthName(month: number): string {
@@ -349,8 +339,8 @@ export function MemberMonthlyUpdateCalendarBoard({
 
   return (
     <div className={cn('grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]', className)}>
-      <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(23,24,31,0.96),rgba(17,18,24,0.98))]">
-        <div className="border-b border-white/8 px-5 py-4">
+      <div className="cal-inner overflow-hidden rounded-[28px] border">
+        <div className="border-b border-(--border) px-5 py-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
@@ -371,8 +361,8 @@ export function MemberMonthlyUpdateCalendarBoard({
         </div>
 
         <div className="px-5 py-4">
-          <div className="rounded-[28px] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.10),transparent_24%),linear-gradient(180deg,rgba(22,23,31,0.98),rgba(14,15,20,0.98))] p-3 sm:p-4">
-            <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(24,25,33,0.98),rgba(17,18,24,0.98))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
+          <div className="cal-container rounded-[28px] border p-3 sm:p-4">
+            <div className="cal-inner overflow-hidden rounded-[28px] border p-4 sm:p-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div className="max-w-xl">
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
@@ -478,7 +468,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                   {weekdayLabels.map((label) => (
                     <div
                       key={label}
-                      className="rounded-full border border-white/8 bg-[linear-gradient(180deg,rgba(34,35,43,0.96),rgba(24,25,32,0.98))] px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] text-white/42 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                      className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                     >
                       {label}
                     </div>
@@ -488,9 +478,9 @@ export function MemberMonthlyUpdateCalendarBoard({
                 <div className="mt-2.5 space-y-2.5">
                   {calendarWeeks.map((week, weekIndex) => (
                     <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
-                      <div className="flex min-h-[114px] flex-col items-center justify-center rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(32,33,41,0.98),rgba(22,23,30,0.98))] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                        <span className="text-[9px] font-bold uppercase tracking-[0.26em] text-white/34">Week</span>
-                        <span className="mt-2 text-base font-semibold tabular-nums text-white/82">{weekIndex + 1}</span>
+                      <div className="cal-day-neutral flex min-h-28.5 flex-col items-center justify-center rounded-[20px] border px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                        <span className="cal-text-neutral text-[9px] font-bold uppercase tracking-[0.26em] opacity-50">Week</span>
+                        <span className="mt-2 text-base font-semibold tabular-nums opacity-80">{weekIndex + 1}</span>
                       </div>
 
                       {week.map((day, dayIndex) => {
@@ -498,7 +488,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                           return (
                             <div
                               key={`empty-${weekIndex}-${dayIndex}`}
-                              className="min-h-[114px] rounded-[20px] border border-dashed border-white/6 bg-[linear-gradient(180deg,rgba(20,21,27,0.82),rgba(15,16,21,0.78))]"
+                              className="cal-day-neutral min-h-28.5 rounded-[20px] border border-dashed opacity-40"
                               aria-hidden="true"
                             />
                           )
@@ -606,9 +596,9 @@ export function MemberMonthlyUpdateCalendarBoard({
       </div>
 
       <div className="flex flex-col gap-6">
-        <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(23,24,31,0.96),rgba(17,18,24,0.98))]">
-          <div className="border-b border-white/8 px-5 py-4">
-            <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
+        <div className="cal-inner overflow-hidden rounded-[28px] border">
+          <div className="border-b border-(--border) px-5 py-4">
+            <h3 className="cal-heading text-[1.55rem] font-semibold tracking-tight">
               Focus Day
             </h3>
             <p className="mt-1.5 text-[13px] text-[var(--muted)]">
@@ -717,9 +707,9 @@ export function MemberMonthlyUpdateCalendarBoard({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(23,24,31,0.96),rgba(17,18,24,0.98))]">
-          <div className="border-b border-white/8 px-5 py-4">
-            <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
+        <div className="cal-inner overflow-hidden rounded-[28px] border">
+          <div className="border-b border-(--border) px-5 py-4">
+            <h3 className="cal-heading text-[1.55rem] font-semibold tracking-tight">
               Action Queue
             </h3>
             <p className="mt-1.5 text-[13px] text-[var(--muted)]">
@@ -759,7 +749,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 </div>
               </button>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-white/8 bg-black/10 px-4 py-5 text-sm text-[var(--muted)]">
+              <div className="rounded-[18px] border border-dashed border-(--border) bg-(--card) px-4 py-5 text-sm text-(--muted)">
                 No highlighted days in this range.
               </div>
             )}

@@ -730,6 +730,230 @@ html.light .auth-login-shell {
   100% { opacity:1; transform:translate3d(0,0,0)  scale(1);     filter:blur(0); }
 }
 
+/* ─── CALENDAR DAY STATES ─────────────────────────────────────── */
+.cal-day-submitted {
+  border-color: rgba(52,211,153,0.30);
+  background: linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96));
+  color: #ecfdf5;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 20px 36px rgba(0,0,0,0.16);
+}
+.cal-day-missing {
+  border-color: rgba(251,113,133,0.34);
+  background: linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96));
+  color: #fff1f2;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 20px 36px rgba(0,0,0,0.16);
+}
+.cal-day-sunday {
+  border-color: rgba(252,211,77,0.24);
+  background: linear-gradient(180deg,rgba(67,52,26,0.96),rgba(47,35,17,0.94));
+  color: rgba(255,251,235,0.92);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 20px 36px rgba(0,0,0,0.12);
+}
+.cal-day-future,.cal-day-neutral {
+  border-color: rgba(255,255,255,0.10);
+  background: linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98));
+  color: rgba(255,255,255,0.72);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+html.light .cal-day-submitted {
+  border-color: rgba(16,185,129,0.28);
+  background: linear-gradient(180deg,rgba(236,253,245,0.99),rgba(209,250,229,0.96));
+  color: #065f46;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.08);
+}
+html.light .cal-day-missing {
+  border-color: rgba(244,63,94,0.24);
+  background: linear-gradient(180deg,rgba(255,241,242,0.99),rgba(254,226,226,0.96));
+  color: #9f1239;
+  box-shadow: 0 2px 8px rgba(244,63,94,0.08);
+}
+html.light .cal-day-sunday {
+  border-color: rgba(251,191,36,0.28);
+  background: linear-gradient(180deg,rgba(255,251,235,0.99),rgba(254,243,199,0.96));
+  color: #78350f;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.08);
+}
+html.light .cal-day-future,
+html.light .cal-day-neutral {
+  border-color: rgba(0,0,0,0.07);
+  background: linear-gradient(180deg,rgba(248,249,252,0.99),rgba(240,242,248,0.99));
+  color: rgba(15,23,42,0.58);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.80);
+}
+
+.cal-focus-submitted {
+  border-color: rgba(52,211,153,0.30);
+  background: linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96));
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.cal-focus-missing {
+  border-color: rgba(251,113,133,0.32);
+  background: linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96));
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.cal-focus-sunday {
+  border-color: rgba(252,211,77,0.20);
+  background: linear-gradient(180deg,rgba(58,45,23,0.92),rgba(45,33,17,0.92));
+  color: rgba(255,251,235,0.90);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.cal-focus-future,.cal-focus-neutral {
+  border-color: rgba(255,255,255,0.10);
+  background: linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98));
+  color: rgba(255,255,255,0.80);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+html.light .cal-focus-submitted {
+  border-color: rgba(16,185,129,0.30);
+  background: linear-gradient(180deg,rgba(209,250,229,0.99),rgba(167,243,208,0.96));
+  color: #065f46;
+}
+html.light .cal-focus-missing {
+  border-color: rgba(244,63,94,0.25);
+  background: linear-gradient(180deg,rgba(254,226,226,0.99),rgba(254,202,202,0.96));
+  color: #9f1239;
+}
+html.light .cal-focus-sunday {
+  border-color: rgba(251,191,36,0.30);
+  background: linear-gradient(180deg,rgba(254,243,199,0.99),rgba(253,230,138,0.93));
+  color: #78350f;
+}
+html.light .cal-focus-future,
+html.light .cal-focus-neutral {
+  border-color: rgba(0,0,0,0.09);
+  background: linear-gradient(180deg,rgba(240,242,248,0.99),rgba(229,232,240,0.99));
+  color: rgba(15,23,42,0.65);
+}
+
+.cal-pill-submitted { border-color:rgba(52,211,153,0.22);background:rgba(52,211,153,0.10);color:#a7f3d0; }
+.cal-pill-missing   { border-color:rgba(251,113,133,0.22);background:rgba(251,113,133,0.10);color:#fecdd3; }
+.cal-pill-sunday    { border-color:rgba(252,211,77,0.18);background:rgba(252,211,77,0.10);color:rgba(255,251,235,0.85); }
+.cal-pill-future,.cal-pill-neutral { border-color:rgba(255,255,255,0.10);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.60); }
+html.light .cal-pill-submitted { border-color:rgba(16,185,129,0.28);background:rgba(16,185,129,0.08);color:#065f46; }
+html.light .cal-pill-missing   { border-color:rgba(244,63,94,0.22);background:rgba(244,63,94,0.07);color:#9f1239; }
+html.light .cal-pill-sunday    { border-color:rgba(245,158,11,0.24);background:rgba(245,158,11,0.07);color:#78350f; }
+html.light .cal-pill-future,
+html.light .cal-pill-neutral   { border-color:rgba(0,0,0,0.09);background:rgba(0,0,0,0.04);color:rgba(15,23,42,0.50); }
+
+.cal-dot-submitted { background:#6ee7b7;box-shadow:0 0 10px rgba(110,231,183,0.55); }
+.cal-dot-missing   { background:#fda4af;box-shadow:0 0 10px rgba(253,164,175,0.38); }
+.cal-dot-sunday    { background:rgba(252,211,77,0.80); }
+.cal-dot-future,.cal-dot-neutral { background:rgba(255,255,255,0.24); }
+html.light .cal-dot-submitted { background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.40); }
+html.light .cal-dot-missing   { background:#f43f5e;box-shadow:0 0 8px rgba(244,63,94,0.40); }
+html.light .cal-dot-sunday    { background:rgba(245,158,11,0.80); }
+html.light .cal-dot-future,
+html.light .cal-dot-neutral   { background:rgba(0,0,0,0.18); }
+
+.cal-accent-submitted { background:#6ee7b7;box-shadow:0 0 16px rgba(52,211,153,0.55); }
+.cal-accent-missing   { background:#fda4af;box-shadow:0 0 16px rgba(253,164,175,0.35); }
+.cal-accent-sunday    { background:rgba(252,211,77,0.70); }
+.cal-accent-future,.cal-accent-neutral { background:rgba(255,255,255,0.14); }
+html.light .cal-accent-submitted { background:#34d399;box-shadow:0 0 12px rgba(52,211,153,0.28); }
+html.light .cal-accent-missing   { background:#fb7185;box-shadow:0 0 12px rgba(251,113,133,0.28); }
+html.light .cal-accent-sunday    { background:rgba(251,191,36,0.70); }
+html.light .cal-accent-future,
+html.light .cal-accent-neutral   { background:rgba(0,0,0,0.10); }
+
+.cal-text-submitted { color:rgba(167,243,208,0.88); }
+.cal-text-missing   { color:rgba(254,205,211,0.88); }
+.cal-text-sunday    { color:rgba(255,251,235,0.82); }
+.cal-text-future,.cal-text-neutral { color:rgba(255,255,255,0.46); }
+html.light .cal-text-submitted { color:#059669; }
+html.light .cal-text-missing   { color:#e11d48; }
+html.light .cal-text-sunday    { color:#d97706; }
+html.light .cal-text-future,
+html.light .cal-text-neutral   { color:rgba(15,23,42,0.45); }
+
+/* ─── CALENDAR CONTAINER ──────────────────────────────────────── */
+.cal-container {
+  border-color: rgba(255,255,255,0.08);
+  background:
+    radial-gradient(circle at top left,rgba(16,185,129,0.10),transparent 28%),
+    radial-gradient(circle at bottom right,rgba(139,92,246,0.10),transparent 24%),
+    linear-gradient(180deg,rgba(22,23,31,0.98),rgba(14,15,20,0.98));
+}
+html.light .cal-container {
+  border-color: rgba(0,0,0,0.06);
+  background:
+    radial-gradient(circle at top left,rgba(16,185,129,0.05),transparent 28%),
+    radial-gradient(circle at bottom right,rgba(139,92,246,0.05),transparent 24%),
+    linear-gradient(180deg,#f4f6fb,#eceef5);
+}
+.cal-inner {
+  border-color: rgba(255,255,255,0.08);
+  background: linear-gradient(180deg,rgba(24,25,33,0.98),rgba(17,18,24,0.98));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+html.light .cal-inner {
+  border-color: rgba(0,0,0,0.06);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.cal-heading { color: #ffffff; }
+html.light .cal-heading { color: #0f172a; }
+.cal-control {
+  border-color: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+}
+html.light .cal-control {
+  border-color: rgba(0,0,0,0.09);
+  background: rgba(0,0,0,0.03);
+}
+.cal-weekday-header {
+  border-color: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.45);
+}
+html.light .cal-weekday-header {
+  border-color: rgba(0,0,0,0.07);
+  background: rgba(0,0,0,0.02);
+  color: rgba(15,23,42,0.45);
+}
+
+/* ─── DIALOG OVERRIDES ────────────────────────────────────────── */
+.dialog-content {
+  background: linear-gradient(160deg,rgba(17,17,22,0.98),rgba(13,13,18,0.94));
+  border-color: rgba(255,255,255,0.10);
+}
+html.light .dialog-content {
+  background: linear-gradient(160deg,rgba(255,255,255,0.99),rgba(248,249,252,0.97));
+  border-color: rgba(0,0,0,0.09);
+}
+.dialog-divider { border-color: rgba(255,255,255,0.10); }
+html.light .dialog-divider { border-color: rgba(0,0,0,0.09); }
+
+/* ─── PAGE HEADER OVERRIDES ───────────────────────────────────── */
+.page-header-card {
+  border-color: rgba(255,255,255,0.10);
+  background: linear-gradient(145deg,rgba(8,12,18,0.94),rgba(10,10,14,0.80));
+}
+html.light .page-header-card {
+  border-color: rgba(0,0,0,0.08);
+  background: linear-gradient(145deg,rgba(255,255,255,0.97),rgba(248,250,252,0.90));
+}
+.page-header-title { color: #ffffff; }
+html.light .page-header-title { color: #0f172a; }
+.page-header-label { color: rgba(255,255,255,0.55); }
+html.light .page-header-label { color: rgba(15,23,42,0.50); }
+.page-header-hint { color: rgba(255,255,255,0.60); }
+html.light .page-header-hint { color: rgba(15,23,42,0.55); }
+.meta-neutral { border-color:rgba(255,255,255,0.10);background:rgba(0,0,0,0.20);color:#ffffff; }
+html.light .meta-neutral { border-color:rgba(0,0,0,0.09);background:rgba(0,0,0,0.04);color:#0f172a; }
+
+/* ─── CARD GLASS/INSET OVERRIDES ─────────────────────────────── */
+html.light .card-glass-variant {
+  background: rgba(255,255,255,0.80);
+  border-color: rgba(0,0,0,0.08);
+}
+html.light .card-inset-variant {
+  border-color: rgba(0,0,0,0.08);
+  background: rgba(0,0,0,0.02);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
 /* ─── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 960px) {
   .app-shell-grid { grid-template-columns: 1fr; }

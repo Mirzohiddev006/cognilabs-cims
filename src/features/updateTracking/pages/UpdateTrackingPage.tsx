@@ -828,51 +828,51 @@ function shiftCalendarMonth(month: number, year: number, delta: number) {
 }
 
 const dayStyle: Record<DayStatus, string> = {
-  submitted: 'border-emerald-400/30 bg-[linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96))] text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
-  missing: 'border-rose-400/34 bg-[linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96))] text-rose-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.16)]',
-  sunday: 'border-amber-300/24 bg-[linear-gradient(180deg,rgba(67,52,26,0.96),rgba(47,35,17,0.94))] text-amber-50/92 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_20px_36px_rgba(0,0,0,0.12)]',
-  future: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  neutral: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/72 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  submitted: 'cal-day-submitted',
+  missing:   'cal-day-missing',
+  sunday:    'cal-day-sunday',
+  future:    'cal-day-future',
+  neutral:   'cal-day-neutral',
 }
 
 const dayAccentStyle: Record<DayStatus, string> = {
-  submitted: 'bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,0.55)]',
-  missing: 'bg-rose-300 shadow-[0_0_16px_rgba(253,164,175,0.35)]',
-  sunday: 'bg-amber-300/70',
-  future: 'bg-white/14',
-  neutral: 'bg-white/14',
+  submitted: 'cal-accent-submitted',
+  missing:   'cal-accent-missing',
+  sunday:    'cal-accent-sunday',
+  future:    'cal-accent-future',
+  neutral:   'cal-accent-neutral',
 }
 
 const dayPillStyle: Record<DayStatus, string> = {
-  submitted: 'border-emerald-400/22 bg-emerald-400/10 text-emerald-100',
-  missing: 'border-rose-400/22 bg-rose-400/10 text-rose-100',
-  sunday: 'border-amber-300/18 bg-amber-300/10 text-amber-100/85',
-  future: 'border-white/10 bg-white/[0.04] text-white/60',
-  neutral: 'border-white/10 bg-white/[0.04] text-white/60',
+  submitted: 'cal-pill-submitted',
+  missing:   'cal-pill-missing',
+  sunday:    'cal-pill-sunday',
+  future:    'cal-pill-future',
+  neutral:   'cal-pill-neutral',
 }
 
 const dayDotStyle: Record<DayStatus, string> = {
-  submitted: 'bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.55)]',
-  missing: 'bg-rose-300 shadow-[0_0_10px_rgba(253,164,175,0.38)]',
-  sunday: 'bg-amber-300/80',
-  future: 'bg-white/24',
-  neutral: 'bg-white/24',
+  submitted: 'cal-dot-submitted',
+  missing:   'cal-dot-missing',
+  sunday:    'cal-dot-sunday',
+  future:    'cal-dot-future',
+  neutral:   'cal-dot-neutral',
 }
 
 const dayStatusTextStyle: Record<DayStatus, string> = {
-  submitted: 'text-emerald-100/88',
-  missing: 'text-rose-100/88',
-  sunday: 'text-amber-50/82',
-  future: 'text-white/46',
-  neutral: 'text-white/46',
+  submitted: 'cal-text-submitted',
+  missing:   'cal-text-missing',
+  sunday:    'cal-text-sunday',
+  future:    'cal-text-future',
+  neutral:   'cal-text-neutral',
 }
 
 const dayFocusStyle: Record<DayStatus, string> = {
-  submitted: 'border-emerald-400/30 bg-[linear-gradient(180deg,rgba(15,53,45,0.98),rgba(11,39,33,0.96))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  missing: 'border-rose-400/32 bg-[linear-gradient(180deg,rgba(73,22,37,0.98),rgba(49,18,28,0.96))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  sunday: 'border-amber-300/20 bg-[linear-gradient(180deg,rgba(58,45,23,0.92),rgba(45,33,17,0.92))] text-amber-50/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  future: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-  neutral: 'border-white/10 bg-[linear-gradient(180deg,rgba(35,36,44,0.98),rgba(25,26,34,0.98))] text-white/80 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+  submitted: 'cal-focus-submitted',
+  missing:   'cal-focus-missing',
+  sunday:    'cal-focus-sunday',
+  future:    'cal-focus-future',
+  neutral:   'cal-focus-neutral',
 }
 
 type AccentKey = 'default' | 'success' | 'warning' | 'blue' | 'violet'
@@ -1051,7 +1051,7 @@ export function UpdateTrackingPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
+      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.15),transparent_70%)]" />
           <div className="pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-violet-400/8 blur-3xl" />
@@ -1061,7 +1061,7 @@ export function UpdateTrackingPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-400/80">
                 Personal
               </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
+              <h1 className="page-header-title mt-1 text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
                 My Updates
               </h1>
               <p className="mt-1.5 text-[13px] text-(--muted)">
@@ -1070,7 +1070,7 @@ export function UpdateTrackingPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+              <div className="cal-control flex items-center gap-2 rounded-xl border px-3 py-2">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
                 <Input
                   type="number"
@@ -1080,16 +1080,16 @@ export function UpdateTrackingPage() {
                   onChange={(event) => setYearInput(event.target.value)}
                   onBlur={applyYearInput}
                   onKeyDown={handleYearKeyDown}
-                  className="h-7 w-18 border-white/10 bg-transparent px-2 text-sm text-white"
+                  className="h-7 w-18 border-(--border) bg-transparent px-2 text-sm text-(--foreground)"
                 />
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-2">
+              <div className="cal-control flex items-center gap-2 rounded-xl border px-3 py-2">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
                 <select
                   value={month}
                   onChange={(event) => handleMonthChange(Number(event.target.value))}
-                  className="h-7 rounded-lg border border-white/10 bg-(--surface) px-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="h-7 rounded-lg border border-(--border) bg-(--surface) px-2 text-sm text-(--foreground) focus:outline-none focus:ring-1 focus:ring-blue-500/30"
                 >
                   {ALL_MONTHS.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
@@ -1192,15 +1192,15 @@ export function UpdateTrackingPage() {
               <div className="py-10 text-center text-sm text-(--muted)">No calendar data for this period.</div>
             ) : (
               <>
-                <div className="rounded-[28px] border border-white/8 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.10),transparent_24%),linear-gradient(180deg,rgba(22,23,31,0.98),rgba(14,15,20,0.98))] p-3 sm:p-4">
-                  <div className="overflow-hidden rounded-[28px] border border-white/8 bg-[linear-gradient(180deg,rgba(24,25,33,0.98),rgba(17,18,24,0.98))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-5">
+                <div className="cal-container rounded-[28px] border p-3 sm:p-4">
+                  <div className="cal-inner overflow-hidden rounded-[28px] border p-4 sm:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-xl">
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
                           Calendar System
                         </p>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
-                          <h3 className="text-[1.45rem] font-semibold tracking-tight text-white sm:text-[1.65rem]">
+                          <h3 className="cal-heading text-[1.45rem] font-semibold tracking-tight sm:text-[1.65rem]">
                             {selectedMonthName} {year}
                           </h3>
                           <Badge
@@ -1292,7 +1292,7 @@ export function UpdateTrackingPage() {
                         {weekdayLabels.map((label) => (
                           <div
                             key={label}
-                            className="rounded-full border border-white/8 bg-[linear-gradient(180deg,rgba(34,35,43,0.96),rgba(24,25,32,0.98))] px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] text-white/42 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                            className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           >
                             {label}
                           </div>
@@ -1302,9 +1302,9 @@ export function UpdateTrackingPage() {
                       <div className="mt-2.5 space-y-2.5">
                         {calendarWeeks.map((week, weekIndex) => (
                           <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
-                            <div className="flex min-h-[114px] flex-col items-center justify-center rounded-[20px] border border-white/8 bg-[linear-gradient(180deg,rgba(32,33,41,0.98),rgba(22,23,30,0.98))] px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                              <span className="text-[9px] font-bold uppercase tracking-[0.26em] text-white/34">Week</span>
-                              <span className="mt-2 text-base font-semibold tabular-nums text-white/82">{weekIndex + 1}</span>
+                            <div className="cal-day-neutral flex min-h-28.5 flex-col items-center justify-center rounded-[20px] border px-2 py-3 text-center">
+                              <span className="cal-text-neutral text-[9px] font-bold uppercase tracking-[0.26em] opacity-55">Week</span>
+                              <span className="mt-2 text-base font-semibold tabular-nums opacity-80">{weekIndex + 1}</span>
                             </div>
 
                             {week.map((day, dayIndex) => {
@@ -1312,7 +1312,7 @@ export function UpdateTrackingPage() {
                                 return (
                                   <div
                                     key={`empty-${weekIndex}-${dayIndex}`}
-                                    className="min-h-[114px] rounded-[20px] border border-dashed border-white/6 bg-[linear-gradient(180deg,rgba(20,21,27,0.82),rgba(15,16,21,0.78))]"
+                                    className="cal-day-neutral min-h-28.5 rounded-[20px] border border-dashed opacity-40"
                                     aria-hidden="true"
                                   />
                                 )
@@ -1333,7 +1333,7 @@ export function UpdateTrackingPage() {
                                     dayStyle[day.status],
                                     isSelected
                                       ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
-                                      : 'hover:-translate-y-[1px] hover:border-white/14',
+                                      : 'hover:-translate-y-[1px] hover:border-(--border-hover)',
                                     isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                                   )}
                                   title={`${isSelected ? 'Selected: ' : ''}${formatCalendarDayLabel(day) || `Day ${day.day}`}: ${getCalendarStatusLabel(day.status)}`}
@@ -1343,13 +1343,10 @@ export function UpdateTrackingPage() {
 
                                   <div className="relative flex items-start justify-between gap-3">
                                     <div>
-                                      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/34">
+                                      <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-40', dayStatusTextStyle[day.status])}>
                                         {getCalendarBoardWeekday(day)}
                                       </p>
-                                      <p className={cn(
-                                        'mt-1.5 text-[1.75rem] font-semibold leading-none tabular-nums tracking-tight',
-                                        day.status === 'submitted' || day.status === 'missing' ? 'text-white' : 'text-white/82',
-                                      )}>
+                                      <p className="mt-1.5 text-[1.75rem] font-semibold leading-none tabular-nums tracking-tight opacity-90">
                                         {day.day}
                                       </p>
                                     </div>
@@ -1603,7 +1600,7 @@ export function UpdateTrackingPage() {
                   </div>
                 </button>
               )) : (
-                <div className="rounded-[18px] border border-dashed border-white/8 bg-black/10 px-4 py-5 text-sm text-(--muted)">
+                <div className="rounded-[18px] border border-dashed border-(--border) bg-(--card) px-4 py-5 text-sm text-(--muted)">
                   No highlighted days in this range.
                 </div>
               )}

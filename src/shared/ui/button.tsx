@@ -29,10 +29,10 @@ const variants = {
     'active:bg-zinc-200',
 
   secondary:
-    'border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] ' +
+    'border border-(--border) bg-(--surface) text-(--foreground) ' +
     'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ' +
-    'hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] ' +
-    'hover:text-white active:bg-[var(--accent-hover)]',
+    'hover:border-(--border-hover) hover:bg-(--accent-soft) ' +
+    'hover:text-(--foreground) active:bg-(--accent-hover)',
 
   ghost:
     'border border-transparent bg-transparent text-[var(--muted-strong)] ' +

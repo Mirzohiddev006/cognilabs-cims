@@ -74,10 +74,8 @@ export function Dialog({
       />
       <div
         className={cn(
-          'relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border bg-[linear-gradient(160deg,rgba(17,17,22,0.98),rgba(13,13,18,0.94))] shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
-          tone === 'danger'
-            ? 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]'
-            : 'border-white/10',
+          'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
+          tone === 'danger' && 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]',
           sizeClasses[size],
         )}
       >
@@ -90,7 +88,7 @@ export function Dialog({
           )}
         />
 
-        <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-7">
+        <div className="dialog-divider relative z-10 flex items-start justify-between gap-4 border-b px-6 py-5 sm:px-7">
           <div className="max-w-2xl">
             {headerIcon ? (
               <div className="mb-3">
@@ -137,7 +135,7 @@ export function Dialog({
         ) : null}
 
         {footer ? (
-          <div className="relative z-10 flex flex-wrap justify-end gap-3 border-t border-white/10 px-6 py-5 sm:px-7">
+          <div className="dialog-divider relative z-10 flex flex-wrap justify-end gap-3 border-t px-6 py-5 sm:px-7">
             {footer}
           </div>
         ) : null}

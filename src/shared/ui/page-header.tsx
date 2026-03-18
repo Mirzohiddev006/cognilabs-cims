@@ -21,12 +21,12 @@ type PageHeaderProps = {
 }
 
 const metaToneClassNames: Record<PageHeaderTone, string> = {
-  neutral: 'border-white/10 bg-black/20 text-white',
-  blue: 'border-blue-500/20 bg-blue-600/10 text-blue-50',
+  neutral: 'meta-neutral',
+  blue:    'border-blue-500/20 bg-blue-600/10 text-blue-50',
   success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-50',
   warning: 'border-amber-500/20 bg-amber-500/10 text-amber-50',
-  danger: 'border-rose-500/20 bg-rose-500/10 text-rose-50',
-  violet: 'border-violet-500/20 bg-violet-500/10 text-violet-50',
+  danger:  'border-rose-500/20 bg-rose-500/10 text-rose-50',
+  violet:  'border-violet-500/20 bg-violet-500/10 text-violet-50',
 }
 
 export function PageHeader({
@@ -39,10 +39,7 @@ export function PageHeader({
     <Card
       variant="glass"
       noPadding
-      className={cn(
-        'page-enter overflow-hidden rounded-[28px] border-white/10 bg-[linear-gradient(145deg,rgba(8,12,18,0.94),rgba(10,10,14,0.8))]',
-        className,
-      )}
+      className={cn('page-header-card page-enter overflow-hidden rounded-[28px]', className)}
     >
       <div className="relative overflow-hidden px-5 py-6 sm:px-7 sm:py-7">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
@@ -52,13 +49,13 @@ export function PageHeader({
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
-              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-[2rem]">
+              <h1 className="page-header-title text-2xl font-semibold tracking-tight sm:text-[2rem]">
                 {title}
               </h1>
             </div>
 
             {actions ? (
-              <div className="flex flex-wrap items-center gap-2 xl:max-w-[420px] xl:justify-end">
+              <div className="flex flex-wrap items-center gap-2 xl:max-w-105 xl:justify-end">
                 {actions}
               </div>
             ) : null}
@@ -74,14 +71,14 @@ export function PageHeader({
                     metaToneClassNames[item.tone ?? 'neutral'],
                   )}
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/55">
+                  <p className="page-header-label text-[10px] font-semibold uppercase tracking-[0.22em]">
                     {item.label}
                   </p>
                   <p className="mt-2 text-base font-semibold tracking-tight text-current">
                     {item.value}
                   </p>
                   {item.hint ? (
-                    <p className="mt-1.5 text-[11px] leading-5 text-white/60">
+                    <p className="page-header-hint mt-1.5 text-[11px] leading-5">
                       {item.hint}
                     </p>
                   ) : null}
