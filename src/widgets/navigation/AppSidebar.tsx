@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
+import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { env } from '../../shared/config/env'
 import { cn } from '../../shared/lib/cn'
@@ -43,7 +44,9 @@ function SidebarCollapseGlyph({ collapsed }: { collapsed: boolean }) {
 export function AppSidebar() {
   const location = useLocation()
   const { closeSidebar, isSidebarCollapsed, isSidebarOpen, toggleSidebarCollapsed } = useAppShell()
+  const { theme } = useTheme()
   const { user } = useAuth()
+  const isLight = theme === 'light'
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
   const [showExpandedProfile, setShowExpandedProfile] = useState(() => !isSidebarCollapsed)
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
@@ -167,8 +170,12 @@ export function AppSidebar() {
                       : 'flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm',
                     isActive
                       ? isSidebarCollapsed
-                        ? 'border-blue-500/30 bg-blue-600/12 text-white shadow-sm'
-                        : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+                        ? isLight
+                          ? 'border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                          : 'border-blue-500/30 bg-blue-600/12 text-white shadow-sm'
+                        : isLight
+                          ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                          : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
                       : isSidebarCollapsed
                         ? 'border-(--shell-nav-inactive-border) bg-(--shell-nav-inactive-bg) text-(--muted) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)'
                         : 'border-transparent text-(--muted) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
@@ -237,14 +244,14 @@ export function AppSidebar() {
                     {user?.email ?? user?.role ?? 'User'}
                   </p>
                   {user?.job_title?.trim() ? (
-                    <p className="mt-1 truncate text-[10px] font-medium text-blue-100/75" title={user.job_title}>
+                    <p className={cn('mt-1 truncate text-[10px] font-medium', isLight ? 'text-blue-700/75' : 'text-blue-100/75')} title={user.job_title}>
                       {user.job_title}
                     </p>
                   ) : null}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <Badge className="rounded-full border-blue-500/20 bg-blue-600/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-blue-100">
+                <Badge className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]', isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-100')}>
                   {user?.role ?? 'Session'}
                 </Badge>
                 <Badge className="rounded-full border-(--shell-profile-border) bg-(--shell-nav-inactive-bg) px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-(--shell-text-primary)">
@@ -269,38 +276,38 @@ export function AppSidebar() {
         }
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Role</p>
-            <p className="mt-2 text-lg font-semibold text-white">{user?.role ?? 'User'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Role</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? 'User'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company code</p>
-            <p className="mt-2 text-lg font-semibold text-white">{user?.company_code ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Company code</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Job title</p>
-            <p className="mt-2 text-lg font-semibold text-white">{user?.job_title ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Job title</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>
-            <p className="mt-2 text-base font-semibold text-white break-all">{user?.email ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Email</p>
+            <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Status</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Status</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-white">{user?.is_active ? 'Active' : 'Inactive'}</p>
+              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? 'Active' : 'Inactive'}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-5">
+        <div className="mt-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Permissions</p>
-              <p className="mt-2 text-lg font-semibold text-white">{activePermissions.length} enabled</p>
+              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Permissions</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{activePermissions.length} enabled</p>
             </div>
-            <Badge className="rounded-full border-white/15 bg-white/8 px-2.5 py-1 text-[10px] uppercase tracking-[0.14em] text-white">
+            <Badge className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
               {env.appEnv}
             </Badge>
           </div>
@@ -310,7 +317,7 @@ export function AppSidebar() {
               {activePermissions.map((permission) => (
                 <Badge
                   key={permission}
-                  className="rounded-full border-blue-500/20 bg-blue-600/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] text-blue-100"
+                  className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.12em]', isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-100')}
                 >
                   {permission}
                 </Badge>

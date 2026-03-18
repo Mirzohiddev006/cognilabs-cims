@@ -16,7 +16,7 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      {label ? <span className="text-xs font-bold text-white tracking-tight">{label}</span> : null}
+      {label ? <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span> : null}
       <div className="relative group">
         {leadingIcon ? (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
@@ -36,7 +36,7 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
           aria-pressed={visible}
           className={cn(
             'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 transition-all',
-            'hover:bg-white/10 hover:text-white',
+            'hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
           )}
         >
           <svg

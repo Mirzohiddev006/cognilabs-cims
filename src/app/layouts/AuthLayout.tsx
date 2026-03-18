@@ -54,8 +54,8 @@ export function AuthLayout() {
           <div key={`visual-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--visual">
             <div className="relative z-10 max-w-xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80">{copy.eyebrow}</p>
-              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-white md:text-5xl">{copy.title}</h1>
-              <p className="mt-5 max-w-lg text-base leading-7 text-slate-300">{copy.description}</p>
+              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-[var(--foreground)] md:text-5xl">{copy.title}</h1>
+              <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">{copy.description}</p>
             </div>
 
             <div className="auth-preview-card">
@@ -65,7 +65,7 @@ export function AuthLayout() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/75">{copy.badge}</p>
-                    <h2 className="mt-3 max-w-sm text-2xl font-semibold leading-tight text-white md:text-3xl">
+                    <h2 className="mt-3 max-w-sm text-2xl font-semibold leading-tight text-[var(--foreground)] md:text-3xl">
                       Permissions, sessions, and recovery stay inside one motion-driven surface.
                     </h2>
                   </div>
@@ -77,8 +77,8 @@ export function AuthLayout() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {previewStats.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">{item.label}</p>
-                      <p className="mt-2 text-sm font-semibold text-white">{item.value}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{item.label}</p>
+                      <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -105,7 +105,7 @@ export function AuthLayout() {
                 {!isLoginRoute ? (
                   <Link
                     to="/auth/login"
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/10"
+                    className="rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] transition hover:bg-[var(--accent-soft)]"
                   >
                     Back to login
                   </Link>

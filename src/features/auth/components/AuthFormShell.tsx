@@ -27,7 +27,7 @@ export function AuthFormShell({
       <div className="border-b border-[var(--border)] px-6 py-6 sm:px-7">
         <div className="space-y-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">{eyebrow}</p>
-          <h2 className="text-xl font-semibold text-white tracking-tight">{title}</h2>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] tracking-tight">{title}</h2>
           <p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{description}</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export function AuthFormShell({
             <Link
               key={link.to}
               to={link.to}
-              className="text-xs font-medium text-[var(--muted)] transition hover:text-white"
+              className="text-xs font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
             >
               {link.label}
             </Link>

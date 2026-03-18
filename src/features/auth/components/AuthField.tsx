@@ -14,7 +14,7 @@ export function AuthField({ label, error, hint, id, className, leadingIcon, ...p
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      <span className="text-xs font-bold text-white tracking-tight">{label}</span>
+      <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
       <div className="relative">
         {leadingIcon ? (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
