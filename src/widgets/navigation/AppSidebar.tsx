@@ -71,9 +71,19 @@ export function AppSidebar() {
       >
         <div className="glass-panel flex h-full flex-col overflow-hidden rounded-xl px-3 py-3 sm:px-4">
           <div className="border-b border-[var(--border)] px-2 pb-4 pt-2">
-            <div>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={closeSidebar}
+                aria-label="Close navigation"
+                className="absolute right-0 top-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:hidden"
+              >
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
+                </svg>
+              </button>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-2 pr-12 min-[961px]:pr-0">
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                   <NavGlyph name="default" />
                 </div>

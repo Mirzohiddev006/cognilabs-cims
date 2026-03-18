@@ -35,7 +35,7 @@ const headerMetaChipClassName =
 export function AppHeader() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { toggleSidebar } = useAppShell()
+  const { openSidebar } = useAppShell()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -80,7 +80,7 @@ export function AppHeader() {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={toggleSidebar}
+              onClick={openSidebar}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--border) bg-(--accent-soft) text-(--foreground) shadow-lg min-[961px]:hidden"
               aria-label="Toggle navigation"
             >
