@@ -124,10 +124,10 @@ html.light {
   --card-hover:        #FAFAFA;
 
   /* Text scale */
-  --foreground:        #111111;
-  --muted:             #525252;
-  --muted-strong:      #262626;
-  --caption:           #737373;
+  --foreground:        #000000;
+  --muted:             #000000;
+  --muted-strong:      #000000;
+  --caption:           #000000;
 
   /* Border scale — solid hex, high contrast */
   --border:            #E5E7EB;
@@ -253,6 +253,48 @@ input:-webkit-autofill:focus {
 *::-webkit-scrollbar-track { background: transparent; }
 html.light *::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); background-clip: padding-box; }
 html.light *::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.22); background-clip: padding-box; }
+
+/* Light mode text override: keep every visible text truly black */
+html.light,
+html.light body,
+html.light input,
+html.light textarea,
+html.light select,
+html.light option {
+  color: #000000;
+}
+
+html.light ::placeholder {
+  color: #000000;
+  opacity: 1;
+}
+
+html.light :is(
+  [class*="text-white"],
+  [class*="text-blue-"],
+  [class*="text-cyan-"],
+  [class*="text-slate-"],
+  [class*="text-zinc-"],
+  [class*="text-red-"],
+  [class*="text-rose-"],
+  [class*="text-emerald-"],
+  [class*="text-amber-"],
+  [class*="text-yellow-"],
+  [class*="text-green-"],
+  [class*="text-violet-"],
+  [class*="text-indigo-"],
+  [class*="text-sky-"]
+) {
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
+
+html.light .text-gradient,
+html.light .text-gradient-blue {
+  background: none;
+  color: #000000 !important;
+  -webkit-text-fill-color: #000000 !important;
+}
 
 /* ─── APP SHELL ───────────────────────────────────────────────── */
 .app-shell-grid {
