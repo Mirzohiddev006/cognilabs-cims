@@ -1285,7 +1285,7 @@ export function UpdateTrackingPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 overflow-x-auto pb-1">
+                  <div className="calendar-board-scroll mt-4 pb-1">
                     <div className="min-w-[860px]">
                       <div className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
                         <div aria-hidden="true" />
