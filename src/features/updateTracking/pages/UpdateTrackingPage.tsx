@@ -1410,11 +1410,11 @@ export function UpdateTrackingPage() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-[22px] border border-white/8 bg-[linear-gradient(180deg,rgba(23,24,31,0.92),rgba(16,17,22,0.92))] px-4 py-3.5">
+                <div className="mt-4 rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3.5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
                     Right rail inspector
                   </p>
-                  <p className="mt-1 text-[12px] leading-5 text-white/75">
+                  <p className="mt-1 text-[12px] leading-5 text-(--muted)">
                     Pick any card in the board to inspect returned content, validation and queue priority without losing monthly context.
                   </p>
                 </div>
@@ -1439,7 +1439,7 @@ export function UpdateTrackingPage() {
                   return (
                     <div key={String(item.id ?? index)} className="px-5 py-3">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="line-clamp-2 text-[13px] text-white/80">{text || 'No description returned by API.'}</p>
+                        <p className="line-clamp-2 text-[13px] text-(--foreground)">{text || 'No description returned by API.'}</p>
                         {dateLabel && (
                           <span className="shrink-0 text-[11px] tabular-nums text-(--muted)">
                             {dateLabel}
@@ -1472,7 +1472,7 @@ export function UpdateTrackingPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="text-base font-semibold tracking-tight text-white">
+                  <h3 className="text-base font-semibold tracking-tight text-(--foreground)">
                     {selectedCalendarDayLabel || 'No date selected'}
                   </h3>
                   <p className="mt-1 text-[12px] leading-5 text-(--muted)">
@@ -1498,19 +1498,19 @@ export function UpdateTrackingPage() {
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-(--muted)">
+                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                   <p>Status</p>
-                  <p className="mt-1 font-medium text-white/85">
+                  <p className="mt-1 font-medium text-(--foreground)">
                     {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status) : 'N/A'}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-(--muted)">
+                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                   <p>Submission</p>
-                  <p className="mt-1 font-medium text-white/85">
+                  <p className="mt-1 font-medium text-(--foreground)">
                     {selectedCalendarDay?.hasUpdate ? 'Available' : 'None'}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-(--muted)">
+                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                   <p>Validation</p>
                   <p className={cn(
                     'mt-1 font-medium',
@@ -1518,26 +1518,26 @@ export function UpdateTrackingPage() {
                       ? 'text-amber-300'
                       : selectedCalendarDay?.isValid === true
                         ? 'text-emerald-300'
-                        : 'text-white/60',
+                        : 'text-(--foreground)',
                   )}>
                     {selectedCalendarDay?.isValid === false ? 'Needs review' : selectedCalendarDay?.isValid === true ? 'Valid' : 'N/A'}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-(--muted)">
+                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                   <p>Entries</p>
-                  <p className="mt-1 font-medium text-white/85">
+                  <p className="mt-1 font-medium text-(--foreground)">
                     {selectedCalendarDay ? getCalendarEntryCount(selectedCalendarDay) : 0}
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col rounded-[20px] border border-white/8 bg-black/15 p-4">
+              <div className="flex flex-1 flex-col rounded-[20px] border border-(--border) bg-(--surface) p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
                       {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Day Note'}
                     </p>
-                    <h3 className="mt-2 text-base font-semibold tracking-tight text-white">
+                    <h3 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
                       {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'No returned content for this date'}
                     </h3>
                   </div>
@@ -1546,8 +1546,8 @@ export function UpdateTrackingPage() {
                   ) : null}
                 </div>
 
-                <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-white/8 bg-black/20 p-4">
-                  <p className="whitespace-pre-wrap text-[13px] leading-6 text-white/85">
+                <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                  <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
                     {getCalendarDetailText(selectedCalendarDay)}
                   </p>
                 </div>
@@ -1586,7 +1586,7 @@ export function UpdateTrackingPage() {
                       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">
                         {getCalendarAgendaEyebrow(day, todayKey, selectedDate)}
                       </p>
-                      <p className="mt-1 text-sm font-semibold tracking-tight text-white">
+                      <p className="mt-1 text-sm font-semibold tracking-tight text-(--foreground)">
                         {formatCalendarDayLabel(day) || `Day ${day.day}`}
                       </p>
                       <p className={cn('mt-1 text-[11px] leading-5', dayStatusTextStyle[day.status])}>

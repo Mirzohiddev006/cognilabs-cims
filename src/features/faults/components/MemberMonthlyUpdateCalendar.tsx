@@ -618,7 +618,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               </div>
 
               <div className="min-w-0">
-                <h4 className="text-base font-semibold tracking-tight text-white">
+                <h4 className="text-base font-semibold tracking-tight text-(--foreground)">
                   {selectedLabel}
                 </h4>
                 <p className="mt-1 text-[12px] leading-5 text-[var(--muted)]">
@@ -644,19 +644,19 @@ export function MemberMonthlyUpdateCalendarBoard({
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-[var(--muted)]">
+              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
                 <p>Status</p>
-                <p className="mt-1 font-medium text-white/85">
+                <p className="mt-1 font-medium text-(--foreground)">
                   {selectedDay ? getStatusLabel(selectedDay.status) : 'N/A'}
                 </p>
               </div>
-              <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-[var(--muted)]">
+              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
                 <p>Submission</p>
-                <p className="mt-1 font-medium text-white/85">
+                <p className="mt-1 font-medium text-(--foreground)">
                   {selectedDay?.hasUpdate ? 'Available' : 'None'}
                 </p>
               </div>
-              <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-[var(--muted)]">
+              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
                 <p>Validation</p>
                 <p
                   className={cn(
@@ -665,35 +665,35 @@ export function MemberMonthlyUpdateCalendarBoard({
                       ? 'text-amber-300'
                       : selectedDay?.isValid === true
                         ? 'text-emerald-300'
-                        : 'text-white/60',
+                        : 'text-(--foreground)',
                   )}
                 >
                   {selectedDay?.isValid === false ? 'Needs review' : selectedDay?.isValid === true ? 'Valid' : 'N/A'}
                 </p>
               </div>
-              <div className="rounded-[18px] border border-white/8 bg-black/10 px-3 py-3 text-[12px] text-[var(--muted)]">
+              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
                 <p>Entries</p>
-                <p className="mt-1 font-medium text-white/85">
+                <p className="mt-1 font-medium text-(--foreground)">
                   {selectedDay ? getEntryCount(selectedDay) : 0}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-[20px] border border-white/8 bg-black/15 p-4">
+            <div className="rounded-[20px] border border-(--border) bg-(--surface) p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
                     {selectedDay?.hasUpdate ? 'Update Content' : 'Day Note'}
                   </p>
-                  <h4 className="mt-2 text-base font-semibold tracking-tight text-white">
+                  <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
                     {selectedDay?.hasUpdate ? 'Returned content for this date' : 'No returned content for this date'}
                   </h4>
                 </div>
                 {selectedDay?.hasUpdate ? <Badge variant="blue">API payload</Badge> : null}
               </div>
 
-              <div className="mt-4 max-h-[280px] overflow-y-auto rounded-[18px] border border-white/8 bg-black/20 p-4">
-                <p className="whitespace-pre-wrap text-[13px] leading-6 text-white/85">
+              <div className="mt-4 max-h-[280px] overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
                   {focusDetailText}
                 </p>
               </div>
@@ -735,7 +735,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
                       {getQueueEyebrow(day, todayKey, selectedKey)}
                     </p>
-                    <p className="mt-1 text-sm font-semibold tracking-tight text-white">
+                    <p className="mt-1 text-sm font-semibold tracking-tight text-(--foreground)">
                       {formatLongDate(day.date)}
                     </p>
                     <p className={cn('mt-1 text-[11px] leading-5', dayStatusTextStyle[day.status])}>
