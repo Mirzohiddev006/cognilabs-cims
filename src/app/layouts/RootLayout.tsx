@@ -1,16 +1,14 @@
 import type { CSSProperties } from 'react'
 import { Outlet } from 'react-router-dom'
-import { useAppShell } from '../hooks/useAppShell'
 import { useTheme } from '../hooks/useTheme'
 import { AppShellProvider } from '../providers/AppShellProvider'
 import { AppHeader } from '../../widgets/navigation/AppHeader'
 import { AppSidebar } from '../../widgets/navigation/AppSidebar'
 
 function RootLayoutFrame() {
-  const { isSidebarCollapsed } = useAppShell()
   const { theme } = useTheme()
   const shellStyle = {
-    '--app-shell-sidebar-width': isSidebarCollapsed ? '96px' : '272px',
+    '--app-shell-sidebar-width': '272px',
   } as CSSProperties
 
   const isDark = theme === 'dark'

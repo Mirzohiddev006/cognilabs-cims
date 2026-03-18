@@ -1,26 +1,9 @@
-import { useEffect, useState, type PropsWithChildren } from 'react'
+import { useState, type PropsWithChildren } from 'react'
 import { AppShellContext } from './AppShellContext'
 
 export function AppShellProvider({ children }: PropsWithChildren) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 960px)')
-
-    function syncSidebarMode(event?: MediaQueryList | MediaQueryListEvent) {
-      if ((event ?? mediaQuery).matches) {
-        setIsSidebarCollapsed(false)
-      }
-    }
-
-    syncSidebarMode()
-    mediaQuery.addEventListener('change', syncSidebarMode)
-
-    return () => {
-      mediaQuery.removeEventListener('change', syncSidebarMode)
-    }
-  }, [])
+  const isSidebarCollapsed = false
 
   function openSidebar() {
     setIsSidebarOpen(true)
@@ -35,7 +18,7 @@ export function AppShellProvider({ children }: PropsWithChildren) {
   }
 
   function toggleSidebarCollapsed() {
-    setIsSidebarCollapsed((current) => !current)
+    // Desktop sidebar collapse was intentionally removed in favor of a fixed rail.
   }
 
   return (

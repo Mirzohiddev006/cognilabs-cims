@@ -76,7 +76,7 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
         aria-expanded={isOpen}
         aria-haspopup="menu"
         onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
       >
         <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current" aria-hidden="true">
           <circle cx="3" cy="8" r="1.25" />
@@ -91,7 +91,7 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
               <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
                 role="menu"
-                className="fixed z-50 min-w-[196px] rounded-2xl border border-white/10 bg-[rgba(16,16,20,0.98)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                className="fixed z-50 min-w-[196px] rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
               >
                 {items.map((item) => (
@@ -106,14 +106,14 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
                     className={cn(
                       'flex w-full items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-xs font-medium transition-colors',
                       item.tone === 'danger'
-                        ? 'text-red-300 hover:border-red-500/15 hover:bg-red-500/10 hover:text-red-200'
-                        : 'text-[var(--foreground)] hover:border-white/8 hover:bg-[var(--accent-soft)] hover:text-white',
+                        ? 'text-red-500 hover:border-red-500/15 hover:bg-red-500/10 hover:text-red-600'
+                        : 'text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
                     )}
                   >
                     <span className="flex items-center gap-2">
                       <span
                         className={cn(
-                          'inline-block h-1.5 w-1.5 rounded-full bg-white/18',
+                          'inline-block h-1.5 w-1.5 rounded-full bg-[var(--muted)]/40',
                           item.tone === 'danger'
                             ? 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.45)]'
                             : 'bg-blue-400/80 shadow-[0_0_8px_rgba(96,165,250,0.38)]',
@@ -121,7 +121,7 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
                       />
                       <span>{item.label}</span>
                     </span>
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-white/25" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-[var(--muted)]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M6 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </button>

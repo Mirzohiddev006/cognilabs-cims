@@ -72,7 +72,6 @@ export function AppHeader() {
   }
 
   const { theme, toggleTheme } = useTheme()
-  const isLight = theme === 'light'
 
   return (
     <header className="relative z-10 border-b border-(--border) bg-(--shell-header-bg) px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
@@ -114,14 +113,6 @@ export function AppHeader() {
 
         <div className="flex w-full md:w-auto md:justify-end">
           <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-(--border) bg-(--accent-soft) p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
-            <Badge className={cn(headerMetaChipClassName, isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-200')}>
-              {env.appEnv}
-            </Badge>
-            {user ? (
-              <Badge className={cn(headerMetaChipClassName, 'border-(--border) bg-(--muted-surface) text-(--foreground)')}>
-                {user.role}
-              </Badge>
-            ) : null}
             {user?.job_title?.trim() ? (
               <Badge className={cn(headerMetaChipClassName, 'border-(--border) bg-(--muted-surface) text-(--muted-strong)')}>
                 {user.job_title}
