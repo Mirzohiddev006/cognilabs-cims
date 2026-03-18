@@ -82,6 +82,7 @@ function renderJobTitleTag(jobTitle: string, role?: string | null) {
 
   return (
     <span
+      data-keep-color="true"
       className={cn(
         'mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold',
         isCeo ? 'text-violet-400' : 'text-emerald-400',
@@ -665,7 +666,10 @@ export function CeoUsersPage() {
                 key: 'status',
                 header: 'Status',
                 render: (row) => (
-                  <span className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}>
+                  <span
+                    data-keep-color="true"
+                    className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}
+                  >
                     {row.is_active ? 'Active' : 'Inactive'}
                   </span>
                 ),
