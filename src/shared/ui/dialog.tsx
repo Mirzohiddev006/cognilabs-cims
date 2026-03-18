@@ -7,9 +7,12 @@ type DialogProps = {
   onClose: () => void
   title: string
   description?: string
+  eyebrow?: string
   children?: ReactNode
   footer?: ReactNode
   size?: 'md' | 'lg' | 'xl'
+  tone?: 'default' | 'danger'
+  headerIcon?: ReactNode
 }
 
 const sizeClasses = {
@@ -23,9 +26,12 @@ export function Dialog({
   onClose,
   title,
   description,
+  eyebrow,
   children,
   footer,
   size = 'md',
+  tone = 'default',
+  headerIcon,
 }: DialogProps) {
   useEffect(() => {
     if (!open) {
@@ -58,31 +64,64 @@ export function Dialog({
       <button
         type="button"
         aria-label="Close dialog"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),rgba(0,0,0,0.72)] backdrop-blur-md"
+        className={cn(
+          'absolute inset-0 backdrop-blur-md',
+          tone === 'danger'
+            ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.16),transparent_34%),rgba(0,0,0,0.76)]'
+            : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),rgba(0,0,0,0.72)]',
+        )}
         onClick={onClose}
       />
       <div
         className={cn(
-          'relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(160deg,rgba(17,17,22,0.98),rgba(13,13,18,0.94))] shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
+          'relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border bg-[linear-gradient(160deg,rgba(17,17,22,0.98),rgba(13,13,18,0.94))] shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
+          tone === 'danger'
+            ? 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]'
+            : 'border-white/10',
           sizeClasses[size],
         )}
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_72%)]" />
+        <div
+          className={cn(
+            'pointer-events-none absolute inset-x-0 top-0 h-28',
+            tone === 'danger'
+              ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.18),transparent_72%)]'
+              : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_72%)]',
+          )}
+        />
 
         <div className="relative z-10 flex items-start justify-between gap-4 border-b border-white/10 px-6 py-5 sm:px-7">
           <div className="max-w-2xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-300/70">
-              Workspace dialog
+            {headerIcon ? (
+              <div className="mb-3">
+                {headerIcon}
+              </div>
+            ) : null}
+            <p className={cn(
+              'text-[10px] font-semibold uppercase tracking-[0.24em]',
+              tone === 'danger' ? 'text-red-300/80' : 'text-blue-300/70',
+            )}>
+              {eyebrow ?? 'Workspace dialog'}
             </p>
             <h2 className="mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]">{title}</h2>
             {description ? (
-              <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">{description}</p>
+              <p className={cn(
+                'mt-2 text-xs leading-5',
+                tone === 'danger' ? 'text-zinc-300/80' : 'text-[var(--muted-strong)]',
+              )}>
+                {description}
+              </p>
             ) : null}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
+            className={cn(
+              'inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:text-[var(--foreground)]',
+              tone === 'danger'
+                ? 'border-red-500/15 hover:border-red-500/30 hover:bg-red-500/10'
+                : 'border-[var(--border)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
+            )}
             aria-label="Close dialog panel"
           >
             <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">

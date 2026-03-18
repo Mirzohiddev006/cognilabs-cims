@@ -38,6 +38,7 @@ const initialUserForm: UserFormValues = {
   company_code: 'oddiy',
   telegram_id: '',
   default_salary: 0,
+  job_title: '',
   role: 'Customer',
   is_active: true,
 }
@@ -76,6 +77,22 @@ function isCeoUser(user: CeoUserRecord) {
   return normalizeUserRole(String(user.role ?? '')) === 'CEO'
 }
 
+function renderJobTitleTag(jobTitle: string, role?: string | null) {
+  const isCeo = normalizeUserRole(String(role ?? '')) === 'CEO'
+
+  return (
+    <span
+      className={cn(
+        'mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold',
+        isCeo ? 'text-violet-400' : 'text-emerald-400',
+      )}
+      style={{ backgroundColor: '#1E1E1E' }}
+    >
+      {jobTitle}
+    </span>
+  )
+}
+
 function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
   if (!user) {
     return initialUserForm
@@ -89,6 +106,7 @@ function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
     company_code: user.company_code ?? 'oddiy',
     telegram_id: user.telegram_id ?? '',
     default_salary: typeof user.default_salary === 'number' ? user.default_salary : 0,
+    job_title: user.job_title ?? '',
     role: normalizeUserRole(String(user.role ?? 'Customer')),
     is_active: Boolean(user.is_active),
   }
@@ -102,6 +120,7 @@ function toUserPayload(values: UserFormValues, mode: 'create' | 'edit'): UserPay
     company_code: values.company_code.trim(),
     telegram_id: values.telegram_id?.trim() || undefined,
     default_salary: Number(values.default_salary ?? 0),
+    job_title: values.job_title?.trim() || undefined,
     role: values.role,
     is_active: values.is_active,
   }
@@ -155,7 +174,7 @@ export function CeoUsersPage() {
     }
 
     return users.filter((user) =>
-      [user.name, user.surname, user.email, user.role, user.company_code]
+      [user.name, user.surname, user.email, user.role, user.company_code, user.job_title]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
     )
@@ -170,9 +189,9 @@ export function CeoUsersPage() {
     }
 
     return allUsers.filter((user) =>
-      [user.name, user.email, user.role, ...user.permissions]
+      [user.name, user.email, user.role, user.job_title, ...user.permissions]
         .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(normalizedSearch)),
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
     )
   }, [deferredSearch, permissionsOverviewQuery.data?.users])
 
@@ -615,6 +634,9 @@ export function CeoUsersPage() {
                   <div>
                     <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
                     <p className="text-xs font-medium text-zinc-500">{row.email}</p>
+                    {row.job_title ? (
+                      renderJobTitleTag(row.job_title, row.role)
+                    ) : null}
                   </div>
                 ),
               },
@@ -726,6 +748,9 @@ export function CeoUsersPage() {
                   <div>
                     <p className="font-bold text-white tracking-tight">{row.name}</p>
                     <p className="text-xs font-medium text-zinc-500">{row.email}</p>
+                    {row.job_title ? (
+                      renderJobTitleTag(row.job_title, row.role)
+                    ) : null}
                   </div>
                 ),
               },
@@ -836,6 +861,10 @@ export function CeoUsersPage() {
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company</p>
             <p className="mt-2 text-lg font-semibold text-white">{profileUser?.company_code ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Job title</p>
+            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.job_title ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>

@@ -9,6 +9,7 @@ export type RegisterPayload = {
   company_code: string
   telegram_id?: string
   role: UserRole
+  job_title?: string
 }
 
 export type VerifyEmailPayload = {

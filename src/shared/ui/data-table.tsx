@@ -32,15 +32,12 @@ const alignClassName = {
   right:  'text-right',
 }
 
-function getVisiblePageNumbers(currentPage: number, totalPages: number) {
-  const maxVisiblePages = 5
-  const halfWindow = Math.floor(maxVisiblePages / 2)
-  let start = Math.max(1, currentPage - halfWindow)
-  let end   = Math.min(totalPages, start + maxVisiblePages - 1)
-  if (end - start + 1 < maxVisiblePages) {
-    start = Math.max(1, end - maxVisiblePages + 1)
+function getVisiblePageItems(totalPages: number) {
+  if (totalPages <= 6) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1)
   }
-  return Array.from({ length: end - start + 1 }, (_, i) => start + i)
+
+  return [1, 2, 3, 'ellipsis', totalPages - 1, totalPages] as const
 }
 
 function ChevronLeft() {
@@ -84,10 +81,7 @@ export function DataTable<T>({
   const startIndex  = (currentPage - 1) * effectivePageSize
   const endIndex    = Math.min(startIndex + effectivePageSize, rows.length)
   const visibleRows = useMemo(() => rows.slice(startIndex, endIndex), [endIndex, rows, startIndex])
-  const visiblePageNumbers = useMemo(
-    () => getVisiblePageNumbers(currentPage, totalPages),
-    [currentPage, totalPages],
-  )
+  const visiblePageItems = useMemo(() => getVisiblePageItems(totalPages), [totalPages])
 
   if (rows.length === 0) {
     return <>{emptyState ?? null}</>
@@ -181,20 +175,34 @@ export function DataTable<T>({
               <ChevronLeft />
             </Button>
 
-            {visiblePageNumbers.map((pageNumber) => (
-              <Button
-                key={pageNumber}
-                variant={pageNumber === currentPage ? 'secondary' : 'ghost'}
-                size="md"
-                className={cn(
-                  'min-w-[28px] px-1.5',
-                  pageNumber === currentPage && 'border-[var(--border-hover)] font-semibold text-white',
-                )}
-                onClick={() => setCurrentPage(pageNumber)}
-              >
-                {pageNumber}
-              </Button>
-            ))}
+            {visiblePageItems.map((item, index) => {
+              if (item === 'ellipsis') {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="inline-flex min-w-[28px] items-center justify-center px-1.5 text-sm text-[var(--caption)]"
+                    aria-hidden="true"
+                  >
+                    ...
+                  </span>
+                )
+              }
+
+              return (
+                <Button
+                  key={item}
+                  variant={item === currentPage ? 'secondary' : 'ghost'}
+                  size="md"
+                  className={cn(
+                    'min-w-[28px] px-1.5',
+                    item === currentPage && 'border-[var(--border-hover)] font-semibold text-white',
+                  )}
+                  onClick={() => setCurrentPage(item)}
+                >
+                  {item}
+                </Button>
+              )
+            })}
 
             <Button
               variant="ghost"

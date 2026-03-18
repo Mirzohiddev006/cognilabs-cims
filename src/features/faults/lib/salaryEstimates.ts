@@ -295,8 +295,8 @@ export function findFirstArray(source: UnknownRecord, keys: string[]) {
   return undefined
 }
 
-export function sumByKeys(items: unknown[], keys: string[]) {
-  return items.reduce((total, item) => {
+export function sumByKeys(items: unknown[], keys: string[]): number {
+  return items.reduce<number>((total, item) => {
     if (!isRecord(item)) {
       return total
     }

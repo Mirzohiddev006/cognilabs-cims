@@ -73,6 +73,14 @@ export function UserFormModal({
           <Input value={values.surname} placeholder="Last name" onChange={(event) => onChange('surname', event.target.value)} />
         </label>
         <label className="grid gap-2">
+          <span className="text-xs font-bold text-white tracking-tight">Job title</span>
+          <Input
+            value={values.job_title ?? ''}
+            placeholder="Sales Manager"
+            onChange={(event) => onChange('job_title', event.target.value)}
+          />
+        </label>
+        <label className="grid gap-2">
           <span className="text-xs font-bold text-white tracking-tight">
             Password {mode === 'edit' ? '(optional)' : ''}
           </span>

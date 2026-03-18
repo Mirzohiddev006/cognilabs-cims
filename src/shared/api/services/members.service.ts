@@ -22,6 +22,14 @@ export type AddMemberPenaltyPayload = {
   reason?: string
 }
 
+export type AddMemberBonusPayload = {
+  userId: number
+  year: number
+  month: number
+  bonusAmount: number
+  reason?: string
+}
+
 export const membersService = {
   salaryEstimate(userId: number, year: number, month: number) {
     return request<unknown>({
@@ -69,6 +77,20 @@ export const membersService = {
         year,
         month,
         penalty_points: penaltyPoints,
+        reason,
+      },
+    })
+  },
+
+  addBonus({ userId, year, month, bonusAmount, reason }: AddMemberBonusPayload) {
+    return request<unknown>({
+      path: '/members/member/bonuses/add',
+      method: 'POST',
+      query: {
+        user_id: userId,
+        year,
+        month,
+        bonus_amount: bonusAmount,
         reason,
       },
     })

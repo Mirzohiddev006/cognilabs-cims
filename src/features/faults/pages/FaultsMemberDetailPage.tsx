@@ -38,6 +38,10 @@ function clampNumber(value: number, min: number, max: number) {
 }
 
 function parsePeriodNumber(value: string | null, fallback: number, min: number, max: number) {
+  if (!value?.trim()) {
+    return fallback
+  }
+
   const parsed = Number(value)
 
   if (!Number.isFinite(parsed)) {
@@ -54,8 +58,12 @@ export function FaultsMemberDetailPage() {
   const { showToast } = useToast()
   const [penaltyPoints, setPenaltyPoints] = useState('10')
   const [penaltyReason, setPenaltyReason] = useState('')
+  const [bonusAmount, setBonusAmount] = useState('')
+  const [bonusReason, setBonusReason] = useState('')
   const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false)
+  const [isBonusDialogOpen, setIsBonusDialogOpen] = useState(false)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
+  const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
 
   const memberId = Number(params.memberId)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
@@ -157,6 +165,12 @@ export function FaultsMemberDetailPage() {
     setIsPenaltyDialogOpen(true)
   }
 
+  function openBonusDialog() {
+    setBonusAmount('')
+    setBonusReason('')
+    setIsBonusDialogOpen(true)
+  }
+
   async function handleSubmitPenalty() {
     if (!detail) {
       return
@@ -199,6 +213,51 @@ export function FaultsMemberDetailPage() {
       })
     } finally {
       setIsPenaltySubmitting(false)
+    }
+  }
+
+  async function handleSubmitBonus() {
+    if (!detail) {
+      return
+    }
+
+    const parsedAmount = Number(bonusAmount)
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      showToast({
+        title: 'Invalid bonus amount',
+        description: 'Bonus amount must be greater than 0.',
+        tone: 'error',
+      })
+      return
+    }
+
+    setIsBonusSubmitting(true)
+
+    try {
+      const response = await membersService.addBonus({
+        userId: detail.report.id,
+        year,
+        month,
+        bonusAmount: parsedAmount,
+        reason: bonusReason.trim() || undefined,
+      })
+
+      await detailQuery.refetch()
+      setIsBonusDialogOpen(false)
+      showToast({
+        title: 'Bonus added',
+        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: 'Bonus not added',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsBonusSubmitting(false)
     }
   }
 
@@ -302,6 +361,9 @@ export function FaultsMemberDetailPage() {
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                 <Button variant="ghost" size="sm" onClick={openPenaltyDialog} className="rounded-xl">
                   Add penalty
+                </Button>
+                <Button variant="success" size="sm" onClick={openBonusDialog} className="rounded-xl">
+                  Add bonus
                 </Button>
                 <Button
                   variant="secondary"
@@ -639,6 +701,54 @@ export function FaultsMemberDetailPage() {
               value={penaltyReason}
               onChange={(event) => setPenaltyReason(event.target.value)}
               placeholder="Optional penalty reason"
+            />
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={isBonusDialogOpen}
+        onClose={() => setIsBonusDialogOpen(false)}
+        title={`Add bonus for ${detail.report.fullName}`}
+        description={`${getMonthName(month)} ${year} monthly bonus entry.`}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setIsBonusDialogOpen(false)}
+              disabled={isBonusSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button variant="success" onClick={() => void handleSubmitBonus()} loading={isBonusSubmitting}>
+              Save bonus
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-4">
+          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+            <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Bonus amount</label>
+            <Input
+              type="number"
+              min="1"
+              value={bonusAmount}
+              onChange={(event) => setBonusAmount(event.target.value)}
+              placeholder="Enter bonus amount"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
+            <Textarea
+              value={bonusReason}
+              onChange={(event) => setBonusReason(event.target.value)}
+              placeholder="Optional bonus reason"
             />
           </div>
         </div>

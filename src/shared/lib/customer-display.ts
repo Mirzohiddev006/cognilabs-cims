@@ -49,7 +49,14 @@ function toTitleCaseLabel(value: string) {
 function isPlaceholderName(value: string) {
   const normalized = value.trim().toLowerCase()
 
-  return ['customer', 'client', 'lead', 'unknown'].includes(normalized) || /^customer\s*#?\d+$/i.test(normalized)
+  return (
+    ['customer', 'client', 'lead', 'unknown'].includes(normalized) ||
+    /^customer\s*#?\d+$/i.test(normalized) ||
+    normalized.includes('aniqlashtirilmagan') ||
+    normalized.includes("ismi so'rash kerak") ||
+    normalized.includes("ismi so‘rash kerak") ||
+    normalized.includes('ismi sorash kerak')
+  )
 }
 
 function getSafeIdentityValue(value?: string | null) {

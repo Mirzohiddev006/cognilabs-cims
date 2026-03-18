@@ -680,7 +680,7 @@ export function CrmDashboardPage() {
         />
       </div>
 
-      <Card className="flex flex-1 flex-col overflow-hidden">
+      <Card noPadding className="flex flex-1 flex-col overflow-hidden">
         {/* ── Card header ─────────────────────────── */}
         <div
           className={cn(
@@ -772,7 +772,7 @@ export function CrmDashboardPage() {
         <div
           className={cn(
             'flex min-h-0 flex-1 flex-col py-5',
-            isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
+            isSidebarCollapsed ? 'px-2 xl:px-3' : 'px-0',
           )}
         >
           <DataTable
@@ -781,6 +781,7 @@ export function CrmDashboardPage() {
             getRowKey={(row) => String(row.id)}
             zebra
             fillHeight
+            className="rounded-none border-x-0 border-b-0"
             emptyState={
               <EmptyStateBlock
                 eyebrow="CRM"
@@ -879,7 +880,7 @@ export function CrmDashboardPage() {
                 key: 'notes',
                 header: 'Notes',
                 render: (row) => (
-                  <span className="block max-w-65 truncate text-sm text-(--muted-strong) sm:text-[15px]">
+                  <span className="block max-w-[280px] truncate text-sm text-(--muted-strong) sm:text-[15px]">
                     {row.notes || '-'}
                   </span>
                 ),

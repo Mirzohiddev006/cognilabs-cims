@@ -42,6 +42,7 @@ export type CurrentUser = {
   surname: string
   company_code: string
   role: UserRole
+  job_title?: string | null
   is_active: boolean
   permissions: PermissionMap
 }

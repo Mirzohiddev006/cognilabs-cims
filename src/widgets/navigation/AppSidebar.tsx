@@ -236,6 +236,11 @@ export function AppSidebar() {
                   >
                     {user?.email ?? user?.role ?? 'User'}
                   </p>
+                  {user?.job_title?.trim() ? (
+                    <p className="mt-1 truncate text-[10px] font-medium text-blue-100/75" title={user.job_title}>
+                      {user.job_title}
+                    </p>
+                  ) : null}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -271,6 +276,10 @@ export function AppSidebar() {
           <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company code</p>
             <p className="mt-2 text-lg font-semibold text-white">{user?.company_code ?? '-'}</p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Job title</p>
+            <p className="mt-2 text-lg font-semibold text-white">{user?.job_title ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-[var(--surface)] px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>

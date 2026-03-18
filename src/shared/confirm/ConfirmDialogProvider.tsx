@@ -6,9 +6,12 @@ import {
 import { Button } from '../ui/button'
 import { Dialog } from '../ui/dialog'
 
-const toneClassName = {
-  default: 'bg-[var(--accent)] text-white hover:bg-[var(--accent-strong)]',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+function DangerHeaderIcon() {
+  return (
+    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-red-500/30 bg-[linear-gradient(180deg,rgba(127,29,29,0.92),rgba(69,10,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_16px_32px_rgba(127,29,29,0.28)]">
+      <span className="text-[24px] font-bold leading-none text-red-400">!</span>
+    </div>
+  )
 }
 
 export function ConfirmDialogProvider({ children }: PropsWithChildren) {
@@ -37,13 +40,21 @@ export function ConfirmDialogProvider({ children }: PropsWithChildren) {
         onClose={() => closeWith(false)}
         title={options?.title ?? 'Confirm action'}
         description={options?.description}
+        tone={options?.tone ?? 'default'}
+        eyebrow={options?.tone === 'danger' ? 'Danger zone' : 'Workspace dialog'}
+        headerIcon={options?.tone === 'danger' ? <DangerHeaderIcon /> : undefined}
         footer={
           <>
-            <Button variant="secondary" onClick={() => closeWith(false)}>
+            <Button variant="secondary" className="min-w-[96px]" onClick={() => closeWith(false)}>
               {options?.cancelLabel ?? 'Cancel'}
             </Button>
             <Button
-              className={toneClassName[options?.tone ?? 'default']}
+              variant={options?.tone === 'danger' ? 'danger' : 'primary'}
+              className={
+                options?.tone === 'danger'
+                  ? 'min-w-[156px] border-red-500/40 bg-[linear-gradient(180deg,#dc2626,#b91c1c)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_12px_24px_rgba(127,29,29,0.28)] hover:border-red-400/60 hover:bg-[linear-gradient(180deg,#ef4444,#dc2626)] hover:text-white'
+                  : 'min-w-[132px]'
+              }
               onClick={() => closeWith(true)}
             >
               {options?.confirmLabel ?? 'Confirm'}

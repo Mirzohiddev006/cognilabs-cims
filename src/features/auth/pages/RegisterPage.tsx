@@ -18,6 +18,7 @@ const initialValues: RegisterPayload = {
   password: '',
   company_code: 'oddiy',
   telegram_id: '',
+  job_title: '',
   role: 'Customer',
 }
 
@@ -47,6 +48,7 @@ export function RegisterPage() {
       await authService.register({
         ...values,
         telegram_id: values.telegram_id?.trim() || undefined,
+        job_title: values.job_title?.trim() || undefined,
       })
 
       startTransition(() =>
@@ -130,7 +132,7 @@ export function RegisterPage() {
           onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
         />
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-3">
           <AuthField
             label="Telegram ID"
             name="telegram_id"
@@ -138,6 +140,14 @@ export function RegisterPage() {
             value={values.telegram_id}
             error={errors.telegram_id}
             onChange={(event) => setValues((current) => ({ ...current, telegram_id: event.target.value }))}
+          />
+          <AuthField
+            label="Job title"
+            name="job_title"
+            placeholder="Sales Manager"
+            value={values.job_title ?? ''}
+            error={errors.job_title}
+            onChange={(event) => setValues((current) => ({ ...current, job_title: event.target.value }))}
           />
 
           <label className="grid gap-2">

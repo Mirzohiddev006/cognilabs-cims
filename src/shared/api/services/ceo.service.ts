@@ -39,6 +39,7 @@ export type UserPayload = {
   telegram_id?: string
   default_salary?: number
   role: UserRole
+  job_title?: string
   is_active: boolean
 }
 
@@ -58,6 +59,7 @@ export type PermissionsOverviewResponse = {
     email: string
     name: string
     role: string
+    job_title?: string | null
     is_active: boolean
     permissions: string[]
     permissions_display: string[]

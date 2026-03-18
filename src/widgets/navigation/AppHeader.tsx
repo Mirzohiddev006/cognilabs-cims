@@ -83,7 +83,9 @@ export function AppHeader() {
             ) : null}
             {user ? (
               <p className={cn('text-[11px] font-semibold text-[var(--muted)]', !hideRouteContext && 'mt-1.5')}>
-                {user.name} {user.surname} <span className="mx-1 opacity-30">|</span> {user.email}
+                {user.name} {user.surname}
+                <span className="mx-1 opacity-30">|</span>
+                {user.job_title?.trim() || user.email}
               </p>
             ) : null}
           </div>
@@ -97,6 +99,11 @@ export function AppHeader() {
             {user ? (
               <Badge className={cn(headerMetaChipClassName, 'border-white/10 bg-white/[0.05] text-white')}>
                 {user.role}
+              </Badge>
+            ) : null}
+            {user?.job_title?.trim() ? (
+              <Badge className={cn(headerMetaChipClassName, 'border-white/10 bg-white/[0.05] text-white/85')}>
+                {user.job_title}
               </Badge>
             ) : null}
             <Button
