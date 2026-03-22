@@ -642,22 +642,6 @@ export function CeoUsersPage() {
                 ),
               },
               {
-                key: 'role',
-                header: 'Role',
-                render: (row) => (
-                  <button
-                    type="button"
-                    onClick={() => openSalaryDetail(row)}
-                    className="transition hover:opacity-90"
-                    aria-label={`Open salary detail for ${row.name} ${row.surname}`}
-                  >
-                    <Badge className="bg-white/5 text-white border-white/10">
-                      {String(row.role)}
-                    </Badge>
-                  </button>
-                ),
-              },
-              {
                 key: 'company',
                 header: 'Company',
                 render: (row) => row.company_code ?? '-',

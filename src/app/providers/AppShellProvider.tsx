@@ -1,38 +1,39 @@
-import { useState, type PropsWithChildren } from 'react'
+import { useCallback, useMemo, useState, type PropsWithChildren } from 'react'
 import { AppShellContext } from './AppShellContext'
 
 export function AppShellProvider({ children }: PropsWithChildren) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const isSidebarCollapsed = false
 
-  function openSidebar() {
+  const openSidebar = useCallback(() => {
     setIsSidebarOpen(true)
-  }
+  }, [])
 
-  function closeSidebar() {
+  const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false)
-  }
+  }, [])
 
-  function toggleSidebar() {
+  const toggleSidebar = useCallback(() => {
     setIsSidebarOpen((current) => !current)
-  }
+  }, [])
 
-  function toggleSidebarCollapsed() {
+  const toggleSidebarCollapsed = useCallback(() => {
     // Desktop sidebar collapse was intentionally removed in favor of a fixed rail.
-  }
+  }, [])
+
+  const value = useMemo(
+    () => ({
+      isSidebarOpen,
+      isSidebarCollapsed,
+      openSidebar,
+      closeSidebar,
+      toggleSidebar,
+      toggleSidebarCollapsed,
+    }),
+    [closeSidebar, isSidebarCollapsed, isSidebarOpen, openSidebar, toggleSidebar, toggleSidebarCollapsed],
+  )
 
   return (
-    <AppShellContext.Provider
-      value={{
-        isSidebarOpen,
-        isSidebarCollapsed,
-        openSidebar,
-        closeSidebar,
-        toggleSidebar,
-        toggleSidebarCollapsed,
-      }}
-    >
-      {children}
-    </AppShellContext.Provider>
+    <AppShellContext.Provider value={value}>{children}</AppShellContext.Provider>
   )
 }
