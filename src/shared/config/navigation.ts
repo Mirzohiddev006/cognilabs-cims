@@ -1,4 +1,17 @@
-export const navigationItems = [
+export type NavigationAudience = 'member'
+
+export type NavigationItem = {
+  to: string
+  label: string
+  description: string
+  group: string
+  sidebar: boolean
+  permissionKey?: string
+  defaultRedirect: boolean
+  audience?: NavigationAudience
+}
+
+export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/auth/login',
     label: 'Auth',
@@ -7,6 +20,16 @@ export const navigationItems = [
     sidebar: false,
     permissionKey: undefined,
     defaultRedirect: false,
+  },
+  {
+    to: '/member/dashboard',
+    label: 'Member Dashboard',
+    description: 'Self dashboard with weekly update progress and salary snapshot.',
+    group: 'Member',
+    sidebar: true,
+    permissionKey: undefined,
+    defaultRedirect: true,
+    audience: 'member',
   },
   {
     to: '/ceo/dashboard',
@@ -30,6 +53,15 @@ export const navigationItems = [
     to: '/ceo/team-updates',
     label: 'Team Monthly Updates',
     description: 'Monitor employee update activity by month.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
+    to: '/ceo/workday-overrides',
+    label: 'Workday Overrides',
+    description: 'Create holidays and short working days for update tracking.',
     group: 'CEO',
     permissionKey: 'ceo',
     sidebar: true,
@@ -62,4 +94,13 @@ export const navigationItems = [
     sidebar: true,
     defaultRedirect: true,
   },
-] as const
+  {
+    to: '/projects',
+    label: 'Projects',
+    description: 'Manage projects, boards, and kanban workflows.',
+    group: 'Work',
+    permissionKey: 'projects',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+]

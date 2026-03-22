@@ -176,7 +176,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   async function resolveDashboardPath() {
     const fallbackPath = getDefaultPath()
 
-    if (fallbackPath === '/updates') {
+    if (fallbackPath === '/updates' || fallbackPath === '/member/dashboard') {
       return fallbackPath
     }
 

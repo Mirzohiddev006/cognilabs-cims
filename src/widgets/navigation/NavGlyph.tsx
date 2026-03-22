@@ -8,6 +8,13 @@ type NavGlyphProps = SVGProps<SVGSVGElement> & {
 
 function glyphPath(name: GlyphName) {
   switch (name) {
+    case 'member':
+      return (
+        <>
+          <circle cx="12" cy="8.25" r="3.25" />
+          <path d="M5.5 19a6.5 6.5 0 0 1 13 0" />
+        </>
+      )
     case 'ceo':
       return (
         <>
@@ -72,6 +79,15 @@ function glyphPath(name: GlyphName) {
           <path d="M9.5 7.25V6a2.5 2.5 0 0 1 5 0v1.25" />
           <rect x="7.25" y="7.25" width="9.5" height="9.5" rx="2" />
           <path d="M12 11.25v2.5" />
+        </>
+      )
+    case 'projects':
+      return (
+        <>
+          <rect x="3.75" y="3.75" width="6" height="8" rx="1.5" />
+          <rect x="14.25" y="3.75" width="6" height="4" rx="1.5" />
+          <rect x="14.25" y="12.25" width="6" height="8" rx="1.5" />
+          <rect x="3.75" y="16.25" width="6" height="4" rx="1.5" />
         </>
       )
     default:

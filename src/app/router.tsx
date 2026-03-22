@@ -11,12 +11,17 @@ import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
 import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
 import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
+import { CeoWorkdayOverridesPage } from '../features/ceo/pages/CeoWorkdayOverridesPage'
 import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
 import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
 import { FaultsMemberDetailPage } from '../features/faults/pages/FaultsMemberDetailPage'
 import { FaultsPage } from '../features/faults/pages/FaultsPage'
+import { MemberDashboardPage } from '../features/member/pages/MemberDashboardPage'
 import { NotFoundPage } from '../features/errors/pages/NotFoundPage'
 import { UpdateTrackingPage } from '../features/updateTracking/pages/UpdateTrackingPage'
+import { ProjectsListPage } from '../features/projects/pages/ProjectsListPage'
+import { ProjectDetailPage } from '../features/projects/pages/ProjectDetailPage'
+import { BoardDetailPage } from '../features/projects/pages/BoardDetailPage'
 import { RouterAuthBoundary } from './providers/RouterAuthBoundary'
 
 export const router = createBrowserRouter([
@@ -37,6 +42,22 @@ export const router = createBrowserRouter([
               {
                 path: 'dashboard-redirect',
                 element: <DashboardRedirectPage />,
+              },
+              {
+                path: 'member/dashboard',
+                element: (
+                  <ProtectedRoute audience="member">
+                    <MemberDashboardPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'member',
+                element: (
+                  <ProtectedRoute audience="member">
+                    <Navigate to="/member/dashboard" replace />
+                  </ProtectedRoute>
+                ),
               },
               {
                 path: 'ceo/dashboard',
@@ -67,6 +88,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <CeoTeamUpdatesPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/workday-overrides',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <CeoWorkdayOverridesPage />
                   </ProtectedRoute>
                 ),
               },
@@ -107,6 +136,30 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="update_list">
                     <UpdateTrackingPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'projects',
+                element: (
+                  <ProtectedRoute permissionKey="projects">
+                    <ProjectsListPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'projects/:projectId',
+                element: (
+                  <ProtectedRoute permissionKey="projects">
+                    <ProjectDetailPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'boards/:boardId',
+                element: (
+                  <ProtectedRoute permissionKey="projects">
+                    <BoardDetailPage />
                   </ProtectedRoute>
                 ),
               },

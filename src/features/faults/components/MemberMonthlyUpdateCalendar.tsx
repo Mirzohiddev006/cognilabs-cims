@@ -97,10 +97,20 @@ function formatEntryTimestamp(value?: string) {
   }).format(parsed)
 }
 
-function getStatusLabel(status: DayStatus) {
+function getSpecialDayLabel(day: MemberMonthlyUpdateDay | null | undefined) {
+  if (!day?.workdayOverride) {
+    return null
+  }
+
+  return day.workdayOverride.day_type === 'short_day' ? 'Short Day' : 'Holiday'
+}
+
+function getStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
+  const specialLabel = getSpecialDayLabel(day)
+
   if (status === 'submitted') return 'Submitted'
   if (status === 'missing') return 'Missing'
-  if (status === 'sunday') return 'Sunday'
+  if (status === 'sunday') return specialLabel ?? 'Sunday'
   if (status === 'future') return 'Upcoming'
   return 'Open'
 }
@@ -113,16 +123,19 @@ function getStatusVariant(status: DayStatus) {
   return 'outline' as const
 }
 
-function getCalendarCellStatusLabel(status: DayStatus) {
+function getCalendarCellStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
+  const specialLabel = getSpecialDayLabel(day)
+
   if (status === 'submitted') return 'Logged'
   if (status === 'missing') return 'Missed'
-  if (status === 'sunday') return 'Off Day'
+  if (status === 'sunday') return specialLabel ?? 'Off Day'
   if (status === 'future') return 'Soon'
   return 'Open'
 }
 
 function getCalendarCellHint(day: MemberMonthlyUpdateDay) {
   if (day.hasUpdate) return 'Update captured'
+  if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
   if (day.status === 'missing') return 'Needs submission'
   if (day.status === 'sunday') return 'Weekend'
   if (day.status === 'future') return 'Awaiting date'
@@ -149,6 +162,7 @@ function getShortWeekday(day: MemberMonthlyUpdateDay) {
 
 function getDaySummary(day: MemberMonthlyUpdateDay) {
   if (day.hasUpdate) return 'Update captured'
+  if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
   if (day.status === 'missing') return 'Needs submission'
   if (day.status === 'sunday') return 'Weekend day'
   if (day.status === 'future') return 'Awaiting date'
@@ -176,6 +190,11 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
     return day.note.trim()
   }
 
+  if (day.workdayOverride) {
+    const specialLabel = getSpecialDayLabel(day)
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? 'Special day'} is configured for this date.`
+  }
+
   if (day.status === 'missing') return 'No update was submitted for this working day.'
   if (day.status === 'sunday') return 'This day is marked as Sunday.'
   if (day.status === 'future') return 'This date is still in the future.'
@@ -185,6 +204,7 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
 function getQueueEyebrow(day: MemberMonthlyUpdateDay, todayKey: string, selectedDate: string | null) {
   if (day.date === selectedDate) return 'Selected'
   if (day.date === todayKey) return 'Today'
+  if (day.workdayOverride) return getSpecialDayLabel(day) ?? 'Special day'
   if (day.status === 'missing') return 'Needs action'
   if (day.status === 'submitted') return 'Completed'
   if (day.status === 'future') return 'Upcoming'
@@ -512,7 +532,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 : 'hover:-translate-y-[1px] hover:border-white/14',
                               isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                             )}
-                            title={`${isSelected ? 'Selected: ' : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status)}`}
+                            title={`${isSelected ? 'Selected: ' : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
                           >
                             <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', dayAccentStyle[day.status])} />
                             <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
@@ -554,7 +574,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 )}
                               >
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', dayDotStyle[day.status])} />
-                                {getCalendarCellStatusLabel(day.status)}
+                                {getCalendarCellStatusLabel(day.status, day)}
                               </span>
                               <p className={cn('mt-1.5 text-[9px] leading-3.5', dayStatusTextStyle[day.status])}>
                                 {getCalendarCellHint(day)}
@@ -627,7 +647,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 <div className="mt-3 flex flex-wrap gap-2">
                   {selectedDay ? (
                     <Badge variant={getStatusVariant(selectedDay.status)} dot>
-                      {getStatusLabel(selectedDay.status)}
+                      {getStatusLabel(selectedDay.status, selectedDay)}
                     </Badge>
                   ) : null}
                   {selectedDay?.weekdayLabel ? (
@@ -647,7 +667,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
                 <p>Status</p>
                 <p className="mt-1 font-medium text-(--foreground)">
-                  {selectedDay ? getStatusLabel(selectedDay.status) : 'N/A'}
+                  {selectedDay ? getStatusLabel(selectedDay.status, selectedDay) : 'N/A'}
                 </p>
               </div>
               <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
@@ -744,7 +764,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </div>
 
                   <Badge variant={getStatusVariant(day.status)} size="sm" dot>
-                    {getCalendarCellStatusLabel(day.status)}
+                    {getCalendarCellStatusLabel(day.status, day)}
                   </Badge>
                 </div>
               </button>

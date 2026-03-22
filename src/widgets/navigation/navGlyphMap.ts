@@ -1,4 +1,5 @@
 export type GlyphName =
+  | 'member'
   | 'ceo'
   | 'crm'
   | 'faults'
@@ -7,9 +8,11 @@ export type GlyphName =
   | 'updates'
   | 'auth'
   | 'integrations'
+  | 'projects'
   | 'default'
 
 export function getNavigationGlyphName(pathname: string): GlyphName {
+  if (pathname.startsWith('/member')) return 'member'
   if (pathname.startsWith('/ceo')) return 'ceo'
   if (pathname.startsWith('/crm')) return 'crm'
   if (pathname.startsWith('/faults')) return 'faults'
@@ -18,5 +21,6 @@ export function getNavigationGlyphName(pathname: string): GlyphName {
   if (pathname.startsWith('/updates')) return 'updates'
   if (pathname.startsWith('/integrations')) return 'integrations'
   if (pathname.startsWith('/auth')) return 'auth'
+  if (pathname.startsWith('/projects') || pathname.startsWith('/boards')) return 'projects'
   return 'default'
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
+import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { cn } from '../../../shared/lib/cn'
@@ -38,9 +38,11 @@ type CalendarDay = {
   status: DayStatus
   updates_count?: number | null
   weekday?: string
+  isDayOff?: boolean | null
   hasUpdate?: boolean | null
   updateContent?: string | null
   isValid?: boolean | null
+  workdayOverride?: WorkdayOverrideRecord | null
 }
 
 type CalendarData = {
@@ -156,6 +158,15 @@ function parseDateValue(value: string) {
   return new Date(value)
 }
 
+function normalizeOverrideDayType(value: unknown): WorkdayOverrideRecord['day_type'] {
+  if (typeof value !== 'string') {
+    return 'holiday'
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, '_')
+  return normalized === 'short_day' ? 'short_day' : 'holiday'
+}
+
 function findFirstString(source: UnknownRecord, keys: string[]) {
   for (const key of keys) {
     if (typeof source[key] === 'string' && source[key].trim()) {
@@ -164,6 +175,51 @@ function findFirstString(source: UnknownRecord, keys: string[]) {
   }
 
   return undefined
+}
+
+function extractWorkdayOverride(source: UnknownRecord): WorkdayOverrideRecord | null {
+  const rawOverride = isRecord(source.workday_override)
+    ? source.workday_override
+    : isRecord(source.workdayOverride)
+      ? source.workdayOverride
+      : null
+
+  if (!rawOverride) {
+    return null
+  }
+
+  return {
+    id: toNumber(rawOverride.id) ?? 0,
+    special_date: findFirstString(rawOverride, ['special_date', 'date']) ?? '',
+    day_type: normalizeOverrideDayType(rawOverride.day_type ?? rawOverride.type),
+    title: findFirstString(rawOverride, ['title', 'label', 'name']) ?? 'Workday override',
+    note: findFirstString(rawOverride, ['note', 'description', 'remarks']) ?? null,
+    target_type: findFirstString(rawOverride, ['target_type']) ?? 'all',
+    member_id: toNumber(rawOverride.member_id ?? rawOverride.user_id),
+    member_name: findFirstString(rawOverride, ['member_name', 'member', 'user_name']) ?? null,
+    workday_hours:
+      typeof rawOverride.workday_hours === 'string'
+        ? rawOverride.workday_hours
+        : typeof rawOverride.workday_hours === 'number' && Number.isFinite(rawOverride.workday_hours)
+          ? String(rawOverride.workday_hours)
+          : null,
+    update_required: toBoolean(rawOverride.update_required) ?? false,
+    created_by: toNumber(rawOverride.created_by) ?? 0,
+    created_at: findFirstString(rawOverride, ['created_at']) ?? '',
+    updated_at: findFirstString(rawOverride, ['updated_at']) ?? '',
+  }
+}
+
+function isWorkdayOverrideOffDay(override: WorkdayOverrideRecord | null) {
+  if (!override) {
+    return false
+  }
+
+  if (override.day_type === 'holiday') {
+    return true
+  }
+
+  return override.update_required === false
 }
 
 function getFirstArray(source: UnknownRecord, keys: string[]) {
@@ -224,8 +280,12 @@ function getFallbackDayStatus(date: Date): DayStatus {
   return 'neutral'
 }
 
-function normalizeDayStatus(value: unknown, date: Date): DayStatus {
-  if (date.getDay() === 0) {
+function normalizeDayStatus(
+  value: unknown,
+  date: Date,
+  options?: { isDayOff?: boolean | null },
+): DayStatus {
+  if (date.getDay() === 0 || options?.isDayOff) {
     return 'sunday'
   }
 
@@ -278,6 +338,7 @@ function normalizeDayStatus(value: unknown, date: Date): DayStatus {
   }
 
   if (isRecord(value)) {
+    const workdayOverride = extractWorkdayOverride(value)
     const sundayValue = toBoolean(value.is_sunday ?? value.sunday)
     if (sundayValue) {
       return 'sunday'
@@ -285,6 +346,11 @@ function normalizeDayStatus(value: unknown, date: Date): DayStatus {
 
     const workingDayValue = toBoolean(value.is_working_day ?? value.working_day)
     if (workingDayValue === false) {
+      return 'sunday'
+    }
+
+    const isDayOff = toBoolean(value.is_day_off ?? value.day_off)
+    if (isDayOff === true || isWorkdayOverrideOffDay(workdayOverride)) {
       return 'sunday'
     }
 
@@ -306,6 +372,7 @@ function normalizeDayStatus(value: unknown, date: Date): DayStatus {
         value.value ??
         value.result,
       date,
+      { isDayOff },
     )
   }
 
@@ -369,6 +436,8 @@ function toCalendarDay(entry: unknown, selectedMonth: number, selectedYear: numb
     return null
   }
 
+  const workdayOverride = extractWorkdayOverride(entry)
+  const isDayOff = toBoolean(entry.is_day_off ?? entry.day_off) ?? isWorkdayOverrideOffDay(workdayOverride)
   const explicitHasUpdate = toBoolean(entry.has_update ?? entry.has_updates ?? entry.is_submitted ?? entry.submitted)
   const updateContent = findFirstString(entry, recentTextKeys) ?? null
   const updatesCount =
@@ -387,6 +456,7 @@ function toCalendarDay(entry: unknown, selectedMonth: number, selectedYear: numb
       entry.sunday ??
       entry.value,
     date,
+    { isDayOff },
   )
   const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0) || Boolean(updateContent)
   const status = hasUpdate && normalizedStatus !== 'sunday' ? 'submitted' : normalizedStatus
@@ -397,9 +467,11 @@ function toCalendarDay(entry: unknown, selectedMonth: number, selectedYear: numb
     status,
     updates_count: updatesCount,
     weekday: findFirstString(entry, ['weekday', 'weekday_name', 'day_name']),
+    isDayOff,
     hasUpdate: explicitHasUpdate ?? hasUpdate,
     updateContent,
     isValid: toBoolean(entry.is_valid ?? entry.valid),
+    workdayOverride,
   }
 }
 
@@ -434,9 +506,11 @@ function parseCalendar(data: unknown, selectedMonth: number, selectedYear: numbe
       status: getFallbackDayStatus(currentDate),
       updates_count: null,
       weekday: undefined,
+      isDayOff: null,
       hasUpdate: null,
       updateContent: null,
       isValid: null,
+      workdayOverride: null,
     }
   })
 
@@ -631,10 +705,20 @@ function formatCalendarDayLabel(day: CalendarDay | null) {
   })
 }
 
-function getCalendarStatusLabel(status: DayStatus) {
+function getSpecialDayLabel(day: CalendarDay | null | undefined) {
+  if (!day?.workdayOverride) {
+    return null
+  }
+
+  return day.workdayOverride.day_type === 'short_day' ? 'Short Day' : 'Holiday'
+}
+
+function getCalendarStatusLabel(status: DayStatus, day?: CalendarDay | null) {
+  const specialLabel = getSpecialDayLabel(day)
+
   if (status === 'submitted') return 'Submitted'
   if (status === 'missing') return 'Missing'
-  if (status === 'sunday') return 'Sunday'
+  if (status === 'sunday') return specialLabel ?? 'Sunday'
   if (status === 'future') return 'Upcoming'
   return 'No status'
 }
@@ -657,6 +741,11 @@ function getCalendarDetailText(day: CalendarDay | null) {
     return 'Select a calendar day to inspect the update returned by the API.'
   }
 
+  if (day.workdayOverride) {
+    const specialLabel = getSpecialDayLabel(day)
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? 'Special day'} is configured for this date.`
+  }
+
   if (day.status === 'missing') {
     return 'No update was submitted for this working day.'
   }
@@ -672,10 +761,12 @@ function getCalendarDetailText(day: CalendarDay | null) {
   return 'No update content was returned by the API for this date.'
 }
 
-function getCalendarCellStatusLabel(status: DayStatus) {
+function getCalendarCellStatusLabel(status: DayStatus, day?: CalendarDay | null) {
+  const specialLabel = getSpecialDayLabel(day)
+
   if (status === 'submitted') return 'Logged'
   if (status === 'missing') return 'Missed'
-  if (status === 'sunday') return 'Off Day'
+  if (status === 'sunday') return specialLabel ?? 'Off Day'
   if (status === 'future') return 'Soon'
   return 'Open'
 }
@@ -737,6 +828,10 @@ function getCalendarCellHint(day: CalendarDay) {
     return 'Update captured'
   }
 
+  if (day.workdayOverride) {
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
+  }
+
   if (day.status === 'missing') {
     return 'Needs submission'
   }
@@ -759,6 +854,10 @@ function getCalendarAgendaEyebrow(day: CalendarDay, todayKey: string, selectedDa
 
   if (day.date === todayKey) {
     return 'Today'
+  }
+
+  if (day.workdayOverride) {
+    return getSpecialDayLabel(day) ?? 'Special day'
   }
 
   if (day.status === 'missing') {
@@ -1336,7 +1435,7 @@ export function UpdateTrackingPage() {
                                       : 'hover:-translate-y-[1px] hover:border-(--border-hover)',
                                     isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                                   )}
-                                  title={`${isSelected ? 'Selected: ' : ''}${formatCalendarDayLabel(day) || `Day ${day.day}`}: ${getCalendarStatusLabel(day.status)}`}
+                                  title={`${isSelected ? 'Selected: ' : ''}${formatCalendarDayLabel(day) || `Day ${day.day}`}: ${getCalendarStatusLabel(day.status, day)}`}
                                 >
                                   <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', dayAccentStyle[day.status])} />
                                   <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
@@ -1371,7 +1470,7 @@ export function UpdateTrackingPage() {
                                       dayPillStyle[day.status],
                                     )}>
                                       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', dayDotStyle[day.status])} />
-                                      {getCalendarCellStatusLabel(day.status)}
+                                      {getCalendarCellStatusLabel(day.status, day)}
                                     </span>
                                     <p className={cn('mt-1.5 text-[9px] leading-3.5', dayStatusTextStyle[day.status])}>
                                       {getCalendarCellHint(day)}
@@ -1481,7 +1580,7 @@ export function UpdateTrackingPage() {
                   <div className="mt-3 flex flex-wrap gap-2">
                     {selectedCalendarDay ? (
                       <Badge variant={getCalendarStatusVariant(selectedCalendarDay.status)} dot>
-                        {getCalendarStatusLabel(selectedCalendarDay.status)}
+                        {getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay)}
                       </Badge>
                     ) : null}
                     {selectedCalendarDay?.weekday ? (
@@ -1501,7 +1600,7 @@ export function UpdateTrackingPage() {
                 <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                   <p>Status</p>
                   <p className="mt-1 font-medium text-(--foreground)">
-                    {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status) : 'N/A'}
+                    {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : 'N/A'}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
@@ -1595,7 +1694,7 @@ export function UpdateTrackingPage() {
                     </div>
 
                     <Badge variant={getCalendarStatusVariant(day.status)} size="sm" dot>
-                      {getCalendarCellStatusLabel(day.status)}
+                      {getCalendarCellStatusLabel(day.status, day)}
                     </Badge>
                   </div>
                 </button>

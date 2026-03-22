@@ -1,5 +1,6 @@
 import type { DayStatus } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
+import type { WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 
 export type UnknownRecord = Record<string, unknown>
 
@@ -78,11 +79,13 @@ export type MemberMonthlyUpdateDay = {
   isToday: boolean
   isFuture: boolean
   isWeekend: boolean
+  isDayOff?: boolean | null
   hasUpdate: boolean
   updatesCount: number
   entries: MemberMonthlyUpdateEntry[]
   note?: string | null
   isValid?: boolean | null
+  workdayOverride?: WorkdayOverrideRecord | null
 }
 
 export type MemberMonthlyUpdateCalendar = {
@@ -245,6 +248,60 @@ export function formatDateKey(date: Date) {
 
 export function isValidDateString(value: string) {
   return !Number.isNaN(parseDateValue(value).getTime())
+}
+
+function normalizeOverrideDayType(value: unknown): WorkdayOverrideRecord['day_type'] {
+  if (typeof value !== 'string') {
+    return 'holiday'
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, '_')
+  return normalized === 'short_day' ? 'short_day' : 'holiday'
+}
+
+function extractWorkdayOverride(source: UnknownRecord): WorkdayOverrideRecord | null {
+  const rawOverride = isRecord(source.workday_override)
+    ? source.workday_override
+    : isRecord(source.workdayOverride)
+      ? source.workdayOverride
+      : null
+
+  if (!rawOverride) {
+    return null
+  }
+
+  return {
+    id: findFirstNumber(rawOverride, ['id']) ?? 0,
+    special_date: findFirstString(rawOverride, ['special_date', 'date']) ?? '',
+    day_type: normalizeOverrideDayType(rawOverride.day_type ?? rawOverride.type),
+    title: findFirstString(rawOverride, ['title', 'label', 'name']) ?? 'Workday override',
+    note: findFirstString(rawOverride, ['note', 'description', 'remarks']) ?? null,
+    target_type: findFirstString(rawOverride, ['target_type']) ?? 'all',
+    member_id: findFirstNumber(rawOverride, ['member_id', 'user_id']) ?? null,
+    member_name: findFirstString(rawOverride, ['member_name', 'member', 'user_name']) ?? null,
+    workday_hours:
+      typeof rawOverride.workday_hours === 'string'
+        ? rawOverride.workday_hours
+        : typeof rawOverride.workday_hours === 'number' && Number.isFinite(rawOverride.workday_hours)
+          ? String(rawOverride.workday_hours)
+          : null,
+    update_required: toBoolean(rawOverride.update_required) ?? false,
+    created_by: findFirstNumber(rawOverride, ['created_by']) ?? 0,
+    created_at: findFirstString(rawOverride, ['created_at']) ?? '',
+    updated_at: findFirstString(rawOverride, ['updated_at']) ?? '',
+  }
+}
+
+function isWorkdayOverrideOffDay(override: WorkdayOverrideRecord | null) {
+  if (!override) {
+    return false
+  }
+
+  if (override.day_type === 'holiday') {
+    return true
+  }
+
+  return override.update_required === false
 }
 
 export function findFirstString(source: UnknownRecord, keys: string[]) {
@@ -824,8 +881,12 @@ function getMonthlyDayFallbackStatus(date: Date): DayStatus {
   return 'neutral'
 }
 
-function normalizeMonthlyDayStatus(value: unknown, date: Date): DayStatus {
-  if (date.getDay() === 0) {
+function normalizeMonthlyDayStatus(
+  value: unknown,
+  date: Date,
+  options?: { isDayOff?: boolean | null },
+): DayStatus {
+  if (date.getDay() === 0 || options?.isDayOff) {
     return 'sunday'
   }
 
@@ -892,6 +953,7 @@ function normalizeMonthlyDayStatus(value: unknown, date: Date): DayStatus {
   }
 
   if (isRecord(value)) {
+    const workdayOverride = extractWorkdayOverride(value)
     const sundayValue = toBoolean(value.is_sunday ?? value.sunday)
 
     if (sundayValue) {
@@ -901,6 +963,12 @@ function normalizeMonthlyDayStatus(value: unknown, date: Date): DayStatus {
     const workingDayValue = toBoolean(value.is_working_day ?? value.working_day)
 
     if (workingDayValue === false) {
+      return 'sunday'
+    }
+
+    const isDayOff = toBoolean(value.is_day_off ?? value.day_off)
+
+    if (isDayOff === true || isWorkdayOverrideOffDay(workdayOverride)) {
       return 'sunday'
     }
 
@@ -924,6 +992,7 @@ function normalizeMonthlyDayStatus(value: unknown, date: Date): DayStatus {
         value.value ??
         value.result,
       date,
+      { isDayOff },
     )
   }
 
@@ -1103,6 +1172,8 @@ function parseMonthlyDaySeed(
     return null
   }
 
+  const workdayOverride = extractWorkdayOverride(source)
+  const isDayOff = toBoolean(source.is_day_off ?? source.day_off) ?? isWorkdayOverrideOffDay(workdayOverride)
   const explicitHasUpdate = toBoolean(source.has_update ?? source.has_updates ?? source.is_submitted ?? source.submitted)
   const updatesCount = toNumber(source.updates_count ?? source.count ?? source.total_updates ?? source.submitted_count)
   const note = extractUpdateEntryText(source) ?? null
@@ -1119,6 +1190,7 @@ function parseMonthlyDaySeed(
       source.sunday ??
       source.value,
     date,
+    { isDayOff },
   )
   const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0) || Boolean(note)
 
@@ -1126,10 +1198,12 @@ function parseMonthlyDaySeed(
     day: date.getDate(),
     date: formatDateKey(date),
     status: hasUpdate && normalizedStatus !== 'sunday' ? 'submitted' as const : normalizedStatus,
+    isDayOff,
     hasUpdate,
     updatesCount: updatesCount ?? (hasUpdate ? 1 : 0),
     note,
     isValid: toBoolean(source.is_valid ?? source.valid),
+    workdayOverride,
   }
 }
 
@@ -1209,11 +1283,13 @@ export function buildMemberMonthlyUpdateCalendar(
       isToday: dateKey === formatDateKey(todayStart),
       isFuture: currentDate > todayStart,
       isWeekend: currentDate.getDay() === 0,
+      isDayOff: daySeed?.isDayOff ?? null,
       hasUpdate,
       updatesCount,
       entries,
       note: daySeed?.note ?? entries[0]?.text ?? null,
       isValid: daySeed?.isValid ?? null,
+      workdayOverride: daySeed?.workdayOverride ?? null,
     } satisfies MemberMonthlyUpdateDay
   })
 

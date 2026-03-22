@@ -1,6 +1,62 @@
 import { request } from '../http'
 import type { CompanyStatsResponse, UpdateTrackingStats } from '../types'
 
+export type WorkdayOverrideDayType = 'holiday' | 'short_day' | (string & {})
+
+export type WorkdayOverrideMemberOption = {
+  id: number
+  name: string
+  surname: string
+  full_name: string
+  role: string
+  telegram_id?: string | null
+}
+
+export type WorkdayOverrideRecord = {
+  id: number
+  special_date: string
+  day_type: WorkdayOverrideDayType
+  title: string
+  note?: string | null
+  target_type: string
+  member_id?: number | null
+  member_name?: string | null
+  workday_hours?: string | null
+  update_required: boolean
+  created_by: number
+  created_at: string
+  updated_at: string
+}
+
+export type CreateWorkdayOverridePayload = {
+  special_date: string
+  day_type: WorkdayOverrideDayType
+  title: string
+  note?: string
+  applies_to_all: boolean
+  member_ids?: number[]
+  workday_hours?: number
+  update_required: boolean
+}
+
+export type UpdateWorkdayOverridePayload = {
+  special_date: string
+  day_type: WorkdayOverrideDayType
+  title: string
+  note?: string
+  applies_to_all: boolean
+  member_id?: number | null
+  workday_hours?: number
+  update_required: boolean
+}
+
+export type WorkdayOverrideListParams = {
+  month?: number
+  year?: number
+  startDate?: string
+  endDate?: string
+}
+
 export const updateTrackingService = {
   myStats() {
     return request<UpdateTrackingStats>({
@@ -65,6 +121,50 @@ export const updateTrackingService = {
     return request<unknown>({
       path: '/update-tracking/employee-monthly-updates',
       query: { year, month, employee_id: employeeId },
+    })
+  },
+
+  workdayOverrideMemberOptions() {
+    return request<WorkdayOverrideMemberOption[]>({
+      path: '/update-tracking/workday-overrides/member-options',
+    })
+  },
+
+  workdayOverrides(params?: WorkdayOverrideListParams) {
+    return request<WorkdayOverrideRecord[]>({
+      path: '/update-tracking/workday-overrides',
+      query: {
+        month: params?.month,
+        year: params?.year,
+        start_date: params?.startDate,
+        end_date: params?.endDate,
+      },
+    })
+  },
+
+  createWorkdayOverride(payload: CreateWorkdayOverridePayload) {
+    return request<{
+      message: string
+      items: WorkdayOverrideRecord[]
+    }>({
+      path: '/update-tracking/workday-overrides',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateWorkdayOverride(overrideId: number, payload: UpdateWorkdayOverridePayload) {
+    return request<WorkdayOverrideRecord>({
+      path: `/update-tracking/workday-overrides/${overrideId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deleteWorkdayOverride(overrideId: number) {
+    return request<string>({
+      path: `/update-tracking/workday-overrides/${overrideId}`,
+      method: 'DELETE',
     })
   },
 }

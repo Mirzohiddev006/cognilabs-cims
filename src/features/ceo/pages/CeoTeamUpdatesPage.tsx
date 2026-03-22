@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
+import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { cn } from '../../../shared/lib/cn'
@@ -13,6 +13,7 @@ import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { buildMemberMonthlyUpdateCalendar } from '../../faults/lib/salaryEstimates'
 
 const now = new Date()
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -189,14 +190,6 @@ function isDateKey(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
-function formatDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-
-  return `${year}-${month}-${day}`
-}
-
 function parseDateValue(value: string) {
   if (isDateKey(value)) {
     const [year, month, day] = value.split('-').map(Number)
@@ -204,6 +197,60 @@ function parseDateValue(value: string) {
   }
 
   return new Date(value)
+}
+
+function normalizeOverrideDayType(value: unknown): WorkdayOverrideRecord['day_type'] {
+  if (typeof value !== 'string') {
+    return 'holiday'
+  }
+
+  const normalized = value.trim().toLowerCase().replace(/\s+/g, '_')
+  return normalized === 'short_day' ? 'short_day' : 'holiday'
+}
+
+function extractWorkdayOverride(source: UnknownRecord): WorkdayOverrideRecord | null {
+  const rawOverride = isRecord(source.workday_override)
+    ? source.workday_override
+    : isRecord(source.workdayOverride)
+      ? source.workdayOverride
+      : null
+
+  if (!rawOverride) {
+    return null
+  }
+
+  return {
+    id: toNumber(rawOverride.id) ?? 0,
+    special_date: findFirstString(rawOverride, ['special_date', 'date']) ?? '',
+    day_type: normalizeOverrideDayType(rawOverride.day_type ?? rawOverride.type),
+    title: findFirstString(rawOverride, ['title', 'label', 'name']) ?? 'Workday override',
+    note: findFirstString(rawOverride, ['note', 'description', 'remarks']) ?? null,
+    target_type: findFirstString(rawOverride, ['target_type']) ?? 'all',
+    member_id: toNumber(rawOverride.member_id ?? rawOverride.user_id),
+    member_name: findFirstString(rawOverride, ['member_name', 'member', 'user_name']) ?? null,
+    workday_hours:
+      typeof rawOverride.workday_hours === 'string'
+        ? rawOverride.workday_hours
+        : typeof rawOverride.workday_hours === 'number' && Number.isFinite(rawOverride.workday_hours)
+          ? String(rawOverride.workday_hours)
+          : null,
+    update_required: toBoolean(rawOverride.update_required) ?? false,
+    created_by: toNumber(rawOverride.created_by) ?? 0,
+    created_at: findFirstString(rawOverride, ['created_at']) ?? '',
+    updated_at: findFirstString(rawOverride, ['updated_at']) ?? '',
+  }
+}
+
+function isWorkdayOverrideOffDay(override: WorkdayOverrideRecord | null) {
+  if (!override) {
+    return false
+  }
+
+  if (override.day_type === 'holiday') {
+    return true
+  }
+
+  return override.update_required === false
 }
 
 function getFallbackDayStatus(date: Date | null): DayStatus {
@@ -222,7 +269,15 @@ function getFallbackDayStatus(date: Date | null): DayStatus {
   return 'missing'
 }
 
-function normalizeDayStatus(value: unknown, date: Date | null): DayStatus {
+function normalizeDayStatus(
+  value: unknown,
+  date: Date | null,
+  options?: { isDayOff?: boolean | null },
+): DayStatus {
+  if ((date && date.getDay() === 0) || options?.isDayOff) {
+    return 'sunday'
+  }
+
   const fallback = getFallbackDayStatus(date)
   const booleanValue = toBoolean(value)
 
@@ -285,10 +340,58 @@ function normalizeDayStatus(value: unknown, date: Date | null): DayStatus {
     }
   }
 
+  if (isRecord(value)) {
+    const workdayOverride = extractWorkdayOverride(value)
+    const sundayValue = toBoolean(value.is_sunday ?? value.sunday)
+
+    if (sundayValue) {
+      return 'sunday'
+    }
+
+    const workingDayValue = toBoolean(value.is_working_day ?? value.working_day)
+
+    if (workingDayValue === false) {
+      return 'sunday'
+    }
+
+    const isDayOff = toBoolean(value.is_day_off ?? value.day_off)
+
+    if (isDayOff === true || isWorkdayOverrideOffDay(workdayOverride)) {
+      return 'sunday'
+    }
+
+    const missingValue = toBoolean(value.is_missing ?? value.missing)
+
+    if (missingValue === true) {
+      return 'missing'
+    }
+
+    const submittedValue = toBoolean(value.is_submitted ?? value.submitted)
+
+    if (submittedValue === true) {
+      return 'submitted'
+    }
+
+    return normalizeDayStatus(
+      value.status ??
+        value.day_status ??
+        value.submission_status ??
+        value.type ??
+        value.value ??
+        value.result,
+      date,
+      { isDayOff },
+    )
+  }
+
   return fallback
 }
 
-function normalizeDayStatusEntry(raw: unknown): EmployeeDayStatus | null {
+function normalizeDayStatusEntry(
+  raw: unknown,
+  month: number,
+  year: number,
+): EmployeeDayStatus | null {
   if (!isRecord(raw)) {
     return null
   }
@@ -298,13 +401,15 @@ function normalizeDayStatusEntry(raw: unknown): EmployeeDayStatus | null {
   const date = dateValue
     ? parseDateValue(dateValue)
     : numericDay
-      ? new Date(now.getFullYear(), now.getMonth(), numericDay)
+      ? new Date(year, month - 1, numericDay)
       : null
 
   if (date && Number.isNaN(date.getTime())) {
     return null
   }
 
+  const workdayOverride = extractWorkdayOverride(raw)
+  const isDayOff = toBoolean(raw.is_day_off ?? raw.day_off) ?? isWorkdayOverrideOffDay(workdayOverride)
   const explicitHasUpdate = toBoolean(raw.has_update ?? raw.has_updates ?? raw.is_submitted ?? raw.submitted)
   const updatesCount = toNumber(raw.updates_count ?? raw.count ?? raw.total_updates ?? raw.submitted_count)
   const updateContent = findFirstString(raw, recentTextKeys)
@@ -321,6 +426,7 @@ function normalizeDayStatusEntry(raw: unknown): EmployeeDayStatus | null {
       raw.sunday ??
       raw.value,
     date,
+    { isDayOff },
   )
   const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0) || Boolean(updateContent)
   const status = hasUpdate && normalizedStatus !== 'sunday' ? 'submitted' : normalizedStatus
@@ -336,7 +442,11 @@ function normalizeDayStatusEntry(raw: unknown): EmployeeDayStatus | null {
   }
 }
 
-function parseDayStatuses(raw: unknown): EmployeeDayStatus[] | null {
+function parseDayStatuses(
+  raw: unknown,
+  month: number,
+  year: number,
+): EmployeeDayStatus[] | null {
   const entries = Array.isArray(raw)
     ? raw
     : isRecord(raw)
@@ -346,14 +456,18 @@ function parseDayStatuses(raw: unknown): EmployeeDayStatus[] | null {
       : []
 
   const parsed = entries
-    .map(normalizeDayStatusEntry)
+    .map((entry) => normalizeDayStatusEntry(entry, month, year))
     .filter((entry): entry is EmployeeDayStatus => Boolean(entry))
     .sort((left, right) => left.day - right.day)
 
   return parsed.length > 0 ? parsed : null
 }
 
-function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
+function normalizeEmployee(
+  raw: Record<string, unknown>,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats {
   const name =
     typeof raw.user_name === 'string' ? raw.user_name :
     typeof raw.name      === 'string' ? raw.name :
@@ -369,6 +483,8 @@ function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
     raw.entries ??
     raw.monthly_activity ??
     raw.activity,
+    month,
+    year,
   )
 
   const submitted =
@@ -404,7 +520,11 @@ function normalizeEmployee(raw: Record<string, unknown>): EmployeeMonthlyStats {
   }
 }
 
-function parseAllUsersUpdates(data: unknown): EmployeeMonthlyStats[] {
+function parseAllUsersUpdates(
+  data: unknown,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats[] {
   if (!data) return []
 
   const list: Record<string, unknown>[] = Array.isArray(data)
@@ -419,7 +539,7 @@ function parseAllUsersUpdates(data: unknown): EmployeeMonthlyStats[] {
 
   return list
     .filter((d): d is Record<string, unknown> => typeof d === 'object' && d !== null)
-    .map(normalizeEmployee)
+    .map((entry) => normalizeEmployee(entry, month, year))
 }
 
 function parseEmployeeMonthlyUpdateSummary(
@@ -433,58 +553,46 @@ function parseEmployeeMonthlyUpdateSummary(
   }
 
   const employee = isRecord(data.employee) ? data.employee : null
-  const updates = Array.isArray(data.updates) ? data.updates.filter(isRecord) : []
-  const submittedDates = new Set<string>()
-
-  for (const update of updates) {
-    const dateValue = findFirstString(update, ['update_date', 'date', 'created_at', 'submitted_at'])
-
-    if (!dateValue) {
-      continue
-    }
-
-    const parsedDate = parseDateValue(dateValue)
-
-    if (Number.isNaN(parsedDate.getTime())) {
-      continue
-    }
-
-    if (parsedDate.getFullYear() !== year || parsedDate.getMonth() + 1 !== month) {
-      continue
-    }
-
-    submittedDates.add(formatDateKey(parsedDate))
-  }
-
-  const daysInMonth = new Date(year, month, 0).getDate()
-  const dailyStatuses: EmployeeDayStatus[] = Array.from({ length: daysInMonth }, (_, index) => {
-    const day = index + 1
-    const currentDate = new Date(year, month - 1, day)
-    const dateKey = formatDateKey(currentDate)
-
-    return {
-      day,
-      status: submittedDates.has(dateKey) ? 'submitted' : getFallbackDayStatus(currentDate),
-    }
-  })
-
-  const submittedCount = dailyStatuses.filter((entry) => entry.status === 'submitted').length
-  const missingCount = dailyStatuses.filter((entry) => entry.status === 'missing').length
+  const calendar = buildMemberMonthlyUpdateCalendar(data, month, year)
+  const dailyStatuses = calendar?.days.map((day) => ({
+    day: day.day,
+    status: day.status,
+  })) ?? fallbackEmployee.daily_statuses ?? null
+  const submittedCount =
+    calendar?.submittedCount ??
+    dailyStatuses?.filter((entry) => entry.status === 'submitted').length ??
+    fallbackEmployee.submitted_count
+  const missingCount =
+    calendar?.missingCount ??
+    dailyStatuses?.filter((entry) => entry.status === 'missing').length ??
+    fallbackEmployee.missing_count
   const rawCompletion = toNumber(data.percentage ?? data.completion_percentage ?? data.completion_rate)
   const completion =
-    rawCompletion !== null
+    calendar
+      ? submittedCount + missingCount > 0
+        ? (submittedCount / (submittedCount + missingCount)) * 100
+        : 0
+      : rawCompletion !== null
       ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
       : submittedCount + missingCount > 0
         ? (submittedCount / (submittedCount + missingCount)) * 100
         : 0
   const lastUpdateDate =
-    [...submittedDates].sort((left, right) => left.localeCompare(right)).slice(-1)[0] ??
+    [...(calendar?.days ?? [])]
+      .reverse()
+      .find((day) => day.status === 'submitted')?.date ??
+    findFirstString(data, ['last_update_date', 'last_update', 'updated_at', 'submitted_at']) ??
     fallbackEmployee.last_update_date
 
   return {
-    user_id: toNumber(employee?.id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
-    user_name: findFirstString(employee ?? {}, ['full_name', 'name']) ?? fallbackEmployee.user_name,
-    telegram_username: fallbackEmployee.telegram_username,
+    user_id: toNumber(employee?.id ?? data.user_id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
+    user_name:
+      findFirstString(employee ?? {}, ['full_name', 'name']) ??
+      findFirstString(data, ['user_name', 'full_name', 'name']) ??
+      fallbackEmployee.user_name,
+    telegram_username:
+      findFirstString(data, ['telegram_username', 'telegram_id']) ??
+      fallbackEmployee.telegram_username,
     submitted_count: submittedCount,
     missing_count: missingCount,
     completion_percentage: completion,
@@ -556,8 +664,8 @@ export function CeoTeamUpdatesPage() {
   const companyQuery = useAsyncData(() => updateTrackingService.companyStats(), [])
 
   const rawEmployees = useMemo(
-    () => parseAllUsersUpdates(teamQuery.data),
-    [teamQuery.data],
+    () => parseAllUsersUpdates(teamQuery.data, month, year),
+    [teamQuery.data, month, year],
   )
   const employeeDetailsQuery = useAsyncData(
     async () => {
@@ -678,6 +786,14 @@ export function CeoTeamUpdatesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/ceo/workday-overrides')}
+                className="min-h-9 rounded-xl border border-white/10 bg-white/[0.03] text-white/78 hover:border-white/18 hover:bg-white/[0.06] hover:text-white"
+              >
+                Workday overrides
+              </Button>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
                 <Input
@@ -936,7 +1052,7 @@ export function CeoTeamUpdatesPage() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-amber-400/70" />
-                Sunday
+                Off / Holiday
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-white/18" />

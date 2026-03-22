@@ -1,5 +1,5 @@
 import type { CurrentUser } from '../api/types'
-import { navigationItems } from '../config/navigation'
+import { navigationItems, type NavigationAudience, type NavigationItem } from '../config/navigation'
 
 export function hasPermission(user: CurrentUser | null, permissionKey?: string) {
   if (!permissionKey) {
@@ -17,6 +17,26 @@ export function hasPermission(user: CurrentUser | null, permissionKey?: string) 
   return Boolean(user.permissions[permissionKey])
 }
 
+export function hasAudienceAccess(user: CurrentUser | null, audience?: NavigationAudience) {
+  if (!audience) {
+    return true
+  }
+
+  if (!user) {
+    return false
+  }
+
+  if (audience === 'member') {
+    return user.role !== 'CEO' && user.role !== 'Customer'
+  }
+
+  return true
+}
+
+export function canAccessNavigationItem(user: CurrentUser | null, item: Pick<NavigationItem, 'permissionKey' | 'audience'>) {
+  return hasAudienceAccess(user, item.audience) && hasPermission(user, item.permissionKey)
+}
+
 export function getAccessibleNavigation(user: CurrentUser | null, options?: { sidebarOnly?: boolean }) {
   const sidebarOnly = options?.sidebarOnly ?? false
 
@@ -25,13 +45,13 @@ export function getAccessibleNavigation(user: CurrentUser | null, options?: { si
       return false
     }
 
-    return hasPermission(user, item.permissionKey)
+    return canAccessNavigationItem(user, item)
   })
 }
 
 export function getDefaultDashboardPath(user: CurrentUser | null) {
   const candidate = navigationItems.find(
-    (item) => item.defaultRedirect && hasPermission(user, item.permissionKey),
+    (item) => item.defaultRedirect && canAccessNavigationItem(user, item),
   )
 
   return candidate?.to ?? '/crm'
