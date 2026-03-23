@@ -36,6 +36,10 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
   const soon     = card.due_date ? isDueDateSoon(card.due_date) : false
   const images = Array.isArray(card.images) ? card.images : []
 
+  function stopCardAction(event: React.SyntheticEvent) {
+    event.stopPropagation()
+  }
+
   /* Drag ghost */
   if (isDragging && !isOverlay) {
     return (
@@ -128,24 +132,34 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
       </div>
 
       {/* Hover quick-action icons (top-right) */}
-      <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1">
+      <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onEdit(card) }}
-          className="flex h-5 w-5 items-center justify-center rounded bg-[var(--accent-soft)] text-[var(--muted)] transition hover:text-[var(--foreground)]"
+          onPointerDown={stopCardAction}
+          onMouseDown={stopCardAction}
+          onClick={(event) => {
+            stopCardAction(event)
+            onEdit(card)
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           aria-label="Edit card"
         >
-          <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="m9.5 2.5 1 1L4 10H3v-1l6.5-6.5Z" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onDelete(card.id) }}
-          className="flex h-5 w-5 items-center justify-center rounded bg-red-500/10 text-red-400/60 transition hover:bg-red-500/25 hover:text-red-300"
+          onPointerDown={stopCardAction}
+          onMouseDown={stopCardAction}
+          onClick={(event) => {
+            stopCardAction(event)
+            onDelete(card.id)
+          }}
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/15 bg-red-500/10 text-red-400/75 shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-red-500/30 hover:bg-red-500/25 hover:text-red-300"
           aria-label="Delete card"
         >
-          <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>

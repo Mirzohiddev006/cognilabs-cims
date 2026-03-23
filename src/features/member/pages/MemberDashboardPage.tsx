@@ -13,9 +13,8 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
-import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { ErrorStateBlock } from '../../../shared/ui/state-block'
 import { useAuth } from '../../auth/hooks/useAuth'
-import { MemberMonthlyUpdateCalendarBoard } from '../../faults/components/MemberMonthlyUpdateCalendar'
 import { DetailStatTile, RefreshIcon } from '../../faults/components/SalaryEstimatePrimitives'
 import {
   buildEmployeeSalaryDetail,
@@ -59,6 +58,25 @@ function createMemberUser(user: CurrentUser): CeoUserRecord {
     job_title: user.job_title,
     role: user.role,
     is_active: user.is_active,
+  }
+}
+
+function createFallbackMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number) {
+  return {
+    detail: buildEmployeeSalaryDetail({
+      report: buildReportFromUser(memberUser),
+      user: memberUser,
+      estimatePayload: null,
+      updatesPayload: null,
+      calendarPayload: null,
+      estimateError: null,
+      updatesError: null,
+      calendarError: null,
+      year,
+      month,
+    }),
+    stats: null,
+    statsError: null,
   }
 }
 
@@ -121,6 +139,9 @@ export function MemberDashboardPage() {
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberUser = user ? createMemberUser(user) : null
+  const fallbackDashboardData = memberUser
+    ? createFallbackMemberDashboardData(memberUser, year, month)
+    : undefined
 
   const dashboardQuery = useAsyncData(
     async () => {
@@ -155,10 +176,10 @@ export function MemberDashboardPage() {
       }
     },
     [memberUser?.id, month, year],
-    { enabled: Boolean(memberUser) },
+    { enabled: Boolean(memberUser), initialData: fallbackDashboardData },
   )
 
-  const data = dashboardQuery.data
+  const data = dashboardQuery.data ?? fallbackDashboardData
 
   const calendarCounts = useMemo(() => {
     const days = data?.detail.updateCalendar?.days ?? []
@@ -202,15 +223,6 @@ export function MemberDashboardPage() {
     )
   }
 
-  function handleMonthShift(delta: number) {
-    const shifted = new Date(year, month - 1 + delta, 1)
-
-    updatePeriod({
-      year: shifted.getFullYear(),
-      month: shifted.getMonth() + 1,
-    })
-  }
-
   async function handleRefresh() {
     try {
       await dashboardQuery.refetch()
@@ -234,28 +246,6 @@ export function MemberDashboardPage() {
         eyebrow="Member"
         title="Member session unavailable"
         description="The current authenticated user could not be resolved."
-      />
-    )
-  }
-
-  if (dashboardQuery.isLoading && !data) {
-    return (
-      <LoadingStateBlock
-        eyebrow="Member"
-        title="Loading your dashboard"
-        description="Building your personal update and salary snapshot."
-      />
-    )
-  }
-
-  if (dashboardQuery.isError && !data) {
-    return (
-      <ErrorStateBlock
-        eyebrow="Member"
-        title="Dashboard unavailable"
-        description="Your member dashboard could not be loaded."
-        actionLabel="Retry"
-        onAction={() => void dashboardQuery.refetch()}
       />
     )
   }
@@ -355,6 +345,12 @@ export function MemberDashboardPage() {
                 progressTone={targetReached ? 'success' : weeklyCompletion >= 60 ? 'violet' : 'danger'}
               />
             </div>
+
+            {dashboardQuery.isLoading && !dashboardQuery.data ? (
+              <div className="rounded-[20px] border border-blue-500/20 bg-blue-500/8 px-4 py-4 text-sm text-blue-100/80">
+                Syncing your latest dashboard data...
+              </div>
+            ) : null}
 
             {data?.statsError || detail.estimateError || detail.updatesError || detail.calendarError ? (
               <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/8 px-4 py-4 text-sm text-amber-100/82">
@@ -493,41 +489,6 @@ export function MemberDashboardPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[28px] border-white/10 p-6">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              Monthly Calendar
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
-              Daily update flow for {getMonthName(month)} {year}
-            </h2>
-            <p className="mt-2 text-sm text-[var(--muted-strong)]">
-              Last update: {formatDetailDate(detail.updatesSummary?.lastUpdateDate)}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="success">{calendarCounts.submitted} logged</Badge>
-            <Badge variant="danger">{calendarCounts.missing} missing</Badge>
-            <Badge variant="warning">{calendarCounts.off} off days</Badge>
-            {calendarCounts.future > 0 ? <Badge variant="secondary">{calendarCounts.future} upcoming</Badge> : null}
-          </div>
-        </div>
-
-        {detail.updateCalendar ? (
-          <MemberMonthlyUpdateCalendarBoard
-            calendar={detail.updateCalendar}
-            className="mt-5"
-            onMonthShift={handleMonthShift}
-            onJumpToToday={() => updatePeriod({ year: defaultYear, month: defaultMonth })}
-          />
-        ) : (
-          <div className="mt-5 rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-[var(--muted-strong)]">
-            Monthly calendar data was not returned for this period.
-          </div>
-        )}
-      </Card>
     </section>
   )
 }

@@ -98,8 +98,8 @@ export function DataTable<T>({
         className,
       )}
     >
-      <div className={cn('overflow-x-auto', fillHeight && 'flex-1')}>
-        <table className="min-w-full border-collapse">
+      <div className={cn('overflow-x-auto px-3 pb-2 sm:px-0 sm:pb-0', fillHeight && 'flex-1')}>
+        <table className="w-full min-w-max border-collapse">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
 
           <thead>

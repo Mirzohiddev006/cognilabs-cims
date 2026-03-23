@@ -249,8 +249,8 @@ export function BoardDetailPage() {
         We use negative margins to cancel out the parent padding.
       */}
       <div
-        className="flex flex-col"
-        style={{ height: 'calc(100vh - 88px)', margin: '0 -1rem' }}
+        className="flex flex-col md:-mx-6 lg:-mx-8"
+        style={{ height: 'calc(100dvh - 88px)' }}
       >
         {/* ── Board header ─────────────────────────────────────────────────── */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--shell-header-bg)] px-4 py-3 backdrop-blur-xl sm:px-6">

@@ -356,11 +356,19 @@ export function MemberMonthlyUpdateCalendarBoard({
     : 0
   const selectedMonthName = getMonthName(calendar.month)
   const focusDetailText = getFocusDetailText(selectedDay)
+  const nextDayLabel = nextUpcomingDay
+    ? `${getShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
+    : latestSubmittedDay
+      ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
+      : 'None'
+  const completionSummaryText = elapsedWorkingDays > 0
+    ? `${counts.submitted} of ${elapsedWorkingDays} elapsed workdays logged.`
+    : 'No elapsed workdays yet.'
 
   return (
     <div className={cn('grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]', className)}>
       <div className="cal-inner overflow-hidden rounded-[28px] border">
-        <div className="border-b border-(--border) px-5 py-4">
+        <div className="border-b border-(--border) px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
@@ -380,11 +388,11 @@ export function MemberMonthlyUpdateCalendarBoard({
           </div>
         </div>
 
-        <div className="px-5 py-4">
-          <div className="cal-container rounded-[28px] border p-3 sm:p-4">
-            <div className="cal-inner overflow-hidden rounded-[28px] border p-4 sm:p-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                <div className="max-w-xl">
+        <div className="px-4 py-4 sm:px-5">
+          <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
+            <div className="cal-inner overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-3.5 sm:p-5">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+                <div className="min-w-0 max-w-2xl">
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
                     Calendar System
                   </p>
@@ -404,86 +412,116 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onMonthShift?.(-1)}
-                    disabled={!onMonthShift}
-                    className="min-h-9 rounded-full border-white/10 bg-white/[0.03] px-3 disabled:opacity-50"
-                  >
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M10 3.5 5.5 8 10 12.5" />
-                    </svg>
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onJumpToToday?.()}
-                    disabled={!onJumpToToday}
-                    className="min-h-9 rounded-full border-emerald-400/18 bg-emerald-400/10 px-4 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14 disabled:opacity-50"
-                  >
-                    Today
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => onMonthShift?.(1)}
-                    disabled={!onMonthShift}
-                    className="min-h-9 rounded-full border-white/10 bg-white/[0.03] px-3 disabled:opacity-50"
-                  >
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M6 3.5 10.5 8 6 12.5" />
-                    </svg>
-                  </Button>
+                <div className="flex flex-col gap-3 md:items-end">
+                  <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-white/10 bg-black/18 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onMonthShift?.(-1)}
+                      disabled={!onMonthShift}
+                      className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0 disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M10 3.5 5.5 8 10 12.5" />
+                      </svg>
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onJumpToToday?.()}
+                      disabled={!onJumpToToday}
+                      className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14 disabled:opacity-50"
+                    >
+                      Today
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onMonthShift?.(1)}
+                      disabled={!onMonthShift}
+                      className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0 disabled:opacity-50"
+                    >
+                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M6 3.5 10.5 8 6 12.5" />
+                      </svg>
+                    </Button>
+                  </div>
+
+                  <div className="hidden rounded-[20px] border border-emerald-400/14 bg-emerald-400/[0.05] px-4 py-3 md:block md:min-w-[290px]">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/40">
+                          Completion To Date
+                        </p>
+                        <p className="mt-2 text-sm font-medium text-white/86">
+                          {completionSummaryText}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        <p className="text-[11px] font-semibold tabular-nums text-white/72">
+                          {counts.submitted}/{elapsedWorkingDays || 0}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-300">
+                          {monthProgressPct.toFixed(0)}%
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <CompletionBar pct={monthProgressPct} />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <Badge variant="success" dot className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
-                  {counts.submitted} logged
-                </Badge>
-                <Badge variant="danger" dot className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
-                  {counts.missing} missed
-                </Badge>
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
-                  {attentionDays} attention
-                </Badge>
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
-                  Next:{' '}
-                  {nextUpcomingDay
-                    ? `${getShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
-                    : latestSubmittedDay
-                      ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
-                      : 'None'}
-                </Badge>
+              <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                  <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                    {counts.submitted} logged
+                  </Badge>
+                  <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                    {counts.missing} missed
+                  </Badge>
+                  <Badge variant="secondary" className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                    {attentionDays} attention
+                  </Badge>
+                  <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
+                    <span className="truncate">Next: {nextDayLabel}</span>
+                  </Badge>
+                </div>
 
-                <div className="ml-auto flex w-full items-center gap-3 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 sm:w-auto sm:min-w-[250px]">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/36">
-                      Completion To Date
-                    </p>
-                    <p className="mt-1 text-[11px] text-white/72">
-                      {elapsedWorkingDays > 0
-                        ? `${counts.submitted} of ${elapsedWorkingDays} elapsed workdays logged.`
-                        : 'No elapsed workdays yet.'}
-                    </p>
+                <div className="rounded-[20px] border border-emerald-400/14 bg-emerald-400/[0.05] px-4 py-3 md:hidden">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/40">
+                        Completion To Date
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-white/86">
+                        {completionSummaryText}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="text-[11px] font-semibold tabular-nums text-white/72">
+                        {counts.submitted}/{elapsedWorkingDays || 0}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-300">
+                        {monthProgressPct.toFixed(0)}%
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="w-22 shrink-0">
-                    <div className="mb-1 flex items-center justify-between text-[10px] text-white/68">
-                      <span>{counts.submitted}/{elapsedWorkingDays || 0}</span>
-                      <span>{monthProgressPct.toFixed(0)}%</span>
-                    </div>
+                  <div className="mt-3">
                     <CompletionBar pct={monthProgressPct} />
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 overflow-x-auto pb-1">
-              <div className="min-w-[860px]">
-                <div className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
+            <div className="calendar-board-scroll mt-4 -mx-2 px-2 pb-3 sm:mx-0 sm:px-0 sm:pb-1">
+              <div className="min-w-[812px] pr-1 sm:min-w-[860px]">
+                <div className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
                   <div aria-hidden="true" />
                   {weekdayLabels.map((label) => (
                     <div
@@ -497,7 +535,7 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                 <div className="mt-2.5 space-y-2.5">
                   {calendarWeeks.map((week, weekIndex) => (
-                    <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
+                    <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
                       <div className="cal-day-neutral flex min-h-28.5 flex-col items-center justify-center rounded-[20px] border px-2 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                         <span className="cal-text-neutral text-[9px] font-bold uppercase tracking-[0.26em] opacity-50">Week</span>
                         <span className="mt-2 text-base font-semibold tabular-nums opacity-80">{weekIndex + 1}</span>

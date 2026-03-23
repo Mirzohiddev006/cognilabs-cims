@@ -1,6 +1,6 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
-import type { DayStatus } from '../../../shared/api/types'
+import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
@@ -9,7 +9,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
 import { SectionTitle } from '../../../shared/ui/section-title'
-import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { ErrorStateBlock } from '../../../shared/ui/state-block'
 
 const now = new Date()
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -68,6 +68,22 @@ type TrendMonth = {
   submitted_count?: number
   missing_count?: number
   completion_percentage?: number
+}
+
+const emptyStats: UpdateTrackingStats = {
+  user_id: 0,
+  user_name: '',
+  total_updates: 0,
+  updates_this_week: 0,
+  updates_last_week: 0,
+  updates_this_month: 0,
+  updates_last_month: 0,
+  updates_last_3_months: 0,
+  percentage_this_week: 0,
+  percentage_last_week: 0,
+  percentage_this_month: 0,
+  percentage_last_3_months: 0,
+  expected_updates_per_week: 0,
 }
 
 function parsePayload(payload: unknown): unknown {
@@ -1037,7 +1053,7 @@ export function UpdateTrackingPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const todayKey = formatDateKey(todayStart)
 
-  const statsQuery = useAsyncData(() => updateTrackingService.myStats(), [])
+  const statsQuery = useAsyncData(() => updateTrackingService.myStats(), [], { initialData: emptyStats })
   const calendarQuery = useAsyncData(() => updateTrackingService.calendar(month, year), [month, year])
   const trendsQuery = useAsyncData(() => updateTrackingService.trends(), [])
   const recentQuery = useAsyncData(() => updateTrackingService.recent(20), [])
@@ -1108,17 +1124,7 @@ export function UpdateTrackingPage() {
     setSelectedDate(todayKey)
   }
 
-  if (statsQuery.isLoading && !stats) {
-    return (
-      <LoadingStateBlock
-        eyebrow="Updates"
-        title="Loading your updates"
-        description="Fetching your personal update statistics."
-      />
-    )
-  }
-
-  if (statsQuery.isError && !stats) {
+  if (statsQuery.isError && !stats && calendarQuery.isError && trendsQuery.isError && recentQuery.isError) {
     return (
       <ErrorStateBlock
         eyebrow="Updates"
@@ -1210,6 +1216,12 @@ export function UpdateTrackingPage() {
               </Button>
             </div>
           </div>
+
+          {statsQuery.isError ? (
+            <div className="relative z-10 mt-4 rounded-[18px] border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/82">
+              Stats API unavailable. Calendar and other sections continue loading independently.
+            </div>
+          ) : null}
         </div>
       </Card>
 
@@ -1263,7 +1275,7 @@ export function UpdateTrackingPage() {
       <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]">
         <div className="flex min-h-full flex-col gap-6">
           <Card variant="glass" className="overflow-hidden p-0">
-          <div className="border-b border-(--border) px-5 py-4">
+          <div className="border-b border-(--border) px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <SectionTitle
                 title={`${selectedMonthName} ${year} Calendar`}
@@ -1284,15 +1296,15 @@ export function UpdateTrackingPage() {
               ) : null}
             </div>
           </div>
-          <div className="px-5 py-4">
+          <div className="px-4 py-4 sm:px-5">
             {calendarQuery.isLoading ? (
               <div className="py-10 text-center text-sm text-(--muted)">Loading calendar...</div>
             ) : !calendar ? (
               <div className="py-10 text-center text-sm text-(--muted)">No calendar data for this period.</div>
             ) : (
               <>
-                <div className="cal-container rounded-[28px] border p-3 sm:p-4">
-                  <div className="cal-inner overflow-hidden rounded-[28px] border p-4 sm:p-5">
+                <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
+                  <div className="cal-inner overflow-hidden rounded-[28px] border p-3.5 sm:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-xl">
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
@@ -1314,12 +1326,12 @@ export function UpdateTrackingPage() {
                         </p>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-white/10 bg-black/18 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleMonthShift(-1)}
-                          className="min-h-9 rounded-full border-white/10 bg-white/[0.03] px-3"
+                          className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0"
                         >
                           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M10 3.5 5.5 8 10 12.5" />
@@ -1329,7 +1341,7 @@ export function UpdateTrackingPage() {
                           variant="secondary"
                           size="sm"
                           onClick={handleJumpToToday}
-                          className="min-h-9 rounded-full border-emerald-400/18 bg-emerald-400/10 px-4 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14"
+                          className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14"
                         >
                           Today
                         </Button>
@@ -1337,7 +1349,7 @@ export function UpdateTrackingPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleMonthShift(1)}
-                          className="min-h-9 rounded-full border-white/10 bg-white/[0.03] px-3"
+                          className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0"
                         >
                           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M6 3.5 10.5 8 6 12.5" />
@@ -1346,25 +1358,29 @@ export function UpdateTrackingPage() {
                       </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <Badge variant="success" dot className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] lg:items-start">
+                      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+                      <Badge variant="success" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                         {calendarCounts.submitted} logged
                       </Badge>
-                      <Badge variant="danger" dot className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
+                      <Badge variant="danger" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                         {calendarCounts.missing} missed
                       </Badge>
-                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
+                      <Badge variant="secondary" className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                         {attentionDaysCount} attention
                       </Badge>
-                      <Badge variant="secondary" className="rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em]">
-                        Next:{' '}
-                        {nextUpcomingDay
-                          ? `${getCalendarShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
-                          : latestSubmittedDay
-                            ? `${getCalendarShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
-                            : 'None'}
+                      <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
+                        <span className="truncate">
+                          Next:{' '}
+                          {nextUpcomingDay
+                            ? `${getCalendarShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
+                            : latestSubmittedDay
+                              ? `${getCalendarShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
+                              : 'None'}
+                        </span>
                       </Badge>
-                      <div className="ml-auto flex w-full items-center gap-3 rounded-full border border-white/8 bg-white/[0.04] px-3 py-2 sm:w-auto sm:min-w-[250px]">
+                      </div>
+                      <div className="flex w-full items-center gap-3 rounded-[20px] border border-white/8 bg-white/[0.04] px-3 py-2 sm:min-w-[250px]">
                         <div className="min-w-0 flex-1">
                           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/36">
                             Completion To Date
@@ -1384,9 +1400,9 @@ export function UpdateTrackingPage() {
                     </div>
                   </div>
 
-                  <div className="calendar-board-scroll mt-4 pb-1">
-                    <div className="min-w-[860px]">
-                      <div className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
+                  <div className="calendar-board-scroll mt-4 -mx-2 px-2 pb-3 sm:mx-0 sm:px-0 sm:pb-1">
+                    <div className="min-w-[812px] pr-1 sm:min-w-[860px]">
+                      <div className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
                         <div aria-hidden="true" />
                         {weekdayLabels.map((label) => (
                           <div
@@ -1400,7 +1416,7 @@ export function UpdateTrackingPage() {
 
                       <div className="mt-2.5 space-y-2.5">
                         {calendarWeeks.map((week, weekIndex) => (
-                          <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[68px_repeat(7,minmax(104px,1fr))] gap-2">
+                          <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
                             <div className="cal-day-neutral flex min-h-28.5 flex-col items-center justify-center rounded-[20px] border px-2 py-3 text-center">
                               <span className="cal-text-neutral text-[9px] font-bold uppercase tracking-[0.26em] opacity-55">Week</span>
                               <span className="mt-2 text-base font-semibold tabular-nums opacity-80">{weekIndex + 1}</span>
