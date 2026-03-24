@@ -122,7 +122,7 @@ export function SelectField({
           viewBox="0 0 16 16"
           className={cn(
             'h-4 w-4 shrink-0 fill-current text-[var(--muted)] transition-transform duration-200',
-            isOpen && 'rotate-180 text-white',
+            isOpen && 'rotate-180 text-[var(--foreground)]',
           )}
           aria-hidden="true"
         >
@@ -135,7 +135,7 @@ export function SelectField({
             <>
               <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
-                className="fixed z-[100] max-h-72 overflow-y-auto rounded-2xl border border-white/10 bg-[rgba(16,16,20,0.98)] p-1.5 shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                className="fixed z-[100] max-h-72 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
                 role="listbox"
               >
@@ -157,21 +157,25 @@ export function SelectField({
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                         isSelected
-                          ? 'border border-blue-500/20 bg-blue-600/10 text-white'
-                          : 'border border-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-white',
+                          ? 'border border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--foreground)]'
+                          : 'border border-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
                       )}
                     >
                       <span className="flex items-center gap-2 truncate">
                         <span
                           className={cn(
-                            'inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-white/15',
-                            isSelected && 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.55)]',
+                            'inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--muted)]/40',
+                            isSelected && 'bg-[var(--blue-text)] shadow-[0_0_8px_var(--blue-glow)]',
                           )}
                         />
                         <span className="truncate">{option.label}</span>
                       </span>
                       {isSelected ? (
-                        <svg viewBox="0 0 16 16" className="h-4 w-4 shrink-0 fill-current text-[#3b82f6]" aria-hidden="true">
+                        <svg
+                          viewBox="0 0 16 16"
+                          className="h-4 w-4 shrink-0 fill-current text-[var(--blue-text)]"
+                          aria-hidden="true"
+                        >
                           <path d="M6.6 11.2 3.4 8a.75.75 0 1 0-1.06 1.06l3.73 3.73a.75.75 0 0 0 1.06 0l6.53-6.53A.75.75 0 1 0 12.64 5.2L6.6 11.2Z" />
                         </svg>
                       ) : null}

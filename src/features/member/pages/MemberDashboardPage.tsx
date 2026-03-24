@@ -22,6 +22,7 @@ import {
   defaultMonth,
   defaultYear,
   formatAmount,
+  formatCount,
   formatDetailDate,
   formatPercent,
   getMonthName,
@@ -58,25 +59,6 @@ function createMemberUser(user: CurrentUser): CeoUserRecord {
     job_title: user.job_title,
     role: user.role,
     is_active: user.is_active,
-  }
-}
-
-function createFallbackMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number) {
-  return {
-    detail: buildEmployeeSalaryDetail({
-      report: buildReportFromUser(memberUser),
-      user: memberUser,
-      estimatePayload: null,
-      updatesPayload: null,
-      calendarPayload: null,
-      estimateError: null,
-      updatesError: null,
-      calendarError: null,
-      year,
-      month,
-    }),
-    stats: null,
-    statsError: null,
   }
 }
 
@@ -139,9 +121,6 @@ export function MemberDashboardPage() {
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberUser = user ? createMemberUser(user) : null
-  const fallbackDashboardData = memberUser
-    ? createFallbackMemberDashboardData(memberUser, year, month)
-    : undefined
 
   const dashboardQuery = useAsyncData(
     async () => {
@@ -176,10 +155,10 @@ export function MemberDashboardPage() {
       }
     },
     [memberUser?.id, month, year],
-    { enabled: Boolean(memberUser), initialData: fallbackDashboardData },
+    { enabled: Boolean(memberUser) },
   )
 
-  const data = dashboardQuery.data ?? fallbackDashboardData
+  const data = dashboardQuery.data
 
   const calendarCounts = useMemo(() => {
     const days = data?.detail.updateCalendar?.days ?? []
@@ -200,15 +179,22 @@ export function MemberDashboardPage() {
 
   const elapsedWorkingDays = calendarCounts.submitted + calendarCounts.missing + calendarCounts.open
   const stats = data?.stats
-  const expectedWeeklyUpdates = Math.max(0, stats?.expected_updates_per_week ?? 0)
-  const updatesThisWeek = Math.max(0, stats?.updates_this_week ?? 0)
-  const weeklyRemaining = Math.max(0, expectedWeeklyUpdates - updatesThisWeek)
-  const weeklyCompletion = Math.max(0, stats?.percentage_this_week ?? 0)
-  const monthlyCompletion = Math.max(
-    0,
-    data?.detail.updatesSummary?.completionPercentage ?? stats?.percentage_this_month ?? 0,
-  )
-  const targetReached = weeklyCompletion >= 100 || (expectedWeeklyUpdates > 0 && updatesThisWeek >= expectedWeeklyUpdates)
+  const expectedWeeklyUpdates = typeof stats?.expected_updates_per_week === 'number' ? stats.expected_updates_per_week : undefined
+  const updatesThisWeek = typeof stats?.updates_this_week === 'number' ? stats.updates_this_week : undefined
+  const weeklyRemaining =
+    typeof expectedWeeklyUpdates === 'number' && typeof updatesThisWeek === 'number'
+      ? Math.max(0, expectedWeeklyUpdates - updatesThisWeek)
+      : undefined
+  const weeklyCompletion = typeof stats?.percentage_this_week === 'number' ? Math.max(0, stats.percentage_this_week) : undefined
+  const monthlyCompletion =
+    typeof data?.detail.updatesSummary?.completionPercentage === 'number' && Number.isFinite(data.detail.updatesSummary.completionPercentage)
+      ? data.detail.updatesSummary.completionPercentage
+      : typeof stats?.percentage_this_month === 'number'
+        ? stats.percentage_this_month
+        : undefined
+  const targetReached =
+    (typeof weeklyCompletion === 'number' && weeklyCompletion >= 100) ||
+    (typeof expectedWeeklyUpdates === 'number' && expectedWeeklyUpdates > 0 && typeof updatesThisWeek === 'number' && updatesThisWeek >= expectedWeeklyUpdates)
 
   function updatePeriod(next: { year?: number; month?: number }) {
     const nextYear = next.year ?? year
@@ -251,6 +237,16 @@ export function MemberDashboardPage() {
   }
 
   const detail = data?.detail
+
+  if (dashboardQuery.isLoading && !detail) {
+    return (
+      <ErrorStateBlock
+        eyebrow="Member"
+        title="Dashboard loading"
+        description="Member dashboard API data is still loading."
+      />
+    )
+  }
 
   if (!detail) {
     return (
@@ -334,15 +330,19 @@ export function MemberDashboardPage() {
               />
               <MetricPanel
                 label="This week progress"
-                value={updatesThisWeek}
-                hint={expectedWeeklyUpdates > 0 ? `${weeklyRemaining} remaining from ${expectedWeeklyUpdates} expected.` : 'Weekly target not returned by the API.'}
+                value={formatCount(updatesThisWeek)}
+                hint={
+                  typeof expectedWeeklyUpdates === 'number' && typeof weeklyRemaining === 'number'
+                    ? `${formatCount(weeklyRemaining)} remaining from ${formatCount(expectedWeeklyUpdates)} expected.`
+                    : 'Weekly target not returned by the API.'
+                }
               />
               <MetricPanel
                 label="Weekly completion"
-                value={`${weeklyCompletion.toFixed(1)}%`}
+                value={formatPercent(weeklyCompletion)}
                 hint={targetReached ? 'Current weekly target has been reached.' : 'Keep logging updates to stay on track.'}
-                progress={weeklyCompletion}
-                progressTone={targetReached ? 'success' : weeklyCompletion >= 60 ? 'violet' : 'danger'}
+                progress={typeof weeklyCompletion === 'number' ? weeklyCompletion : undefined}
+                progressTone={targetReached ? 'success' : (weeklyCompletion ?? 0) >= 60 ? 'violet' : 'danger'}
               />
             </div>
 
@@ -382,7 +382,7 @@ export function MemberDashboardPage() {
             <Badge variant={detail.report.hasBonus ? 'success' : 'outline'}>
               {detail.report.hasBonus ? 'Bonus applied' : 'No bonus'}
             </Badge>
-            <Badge variant={monthlyCompletion >= 80 ? 'success' : monthlyCompletion > 0 ? 'warning' : 'outline'}>
+            <Badge variant={(monthlyCompletion ?? 0) >= 80 ? 'success' : (monthlyCompletion ?? 0) > 0 ? 'warning' : 'outline'}>
               {formatPercent(monthlyCompletion)} monthly completion
             </Badge>
           </div>
@@ -396,9 +396,9 @@ export function MemberDashboardPage() {
         </div>
 
         <div className="mt-4 grid gap-4 xl:grid-cols-6">
-          <DetailStatTile label="Penalty entries" value={detail.report.penaltyEntries} tone="danger" />
-          <DetailStatTile label="Bonus entries" value={detail.report.bonusEntries} tone="success" />
-          <DetailStatTile label="Penalty points" value={detail.report.penaltyPoints} tone="danger" />
+          <DetailStatTile label="Penalty entries" value={formatCount(detail.report.penaltyEntries)} tone="danger" />
+          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="success" />
+          <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
           <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="success" />
           <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
@@ -410,7 +410,7 @@ export function MemberDashboardPage() {
               <span className="text-[10px] uppercase tracking-[0.18em] text-rose-200/62">impact</span>
             </div>
             <div className="mt-3">
-              <ProgressBar value={detail.report.penaltyPercentage} tone={detail.report.penaltyPercentage > 0 ? 'danger' : 'violet'} />
+              <ProgressBar value={Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0} tone={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'violet'} />
             </div>
           </div>
         </div>

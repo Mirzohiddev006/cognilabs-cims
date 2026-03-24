@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ceoService } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -21,13 +20,16 @@ import {
   defaultMonth,
   defaultYear,
   type EmployeeSalaryReport,
-  extractEstimateEntries,
+  formatCount,
+  findFirstNumber,
+  findFirstRecord,
   formatAmount,
   formatPercent,
   getMonthName,
   getSuccessMessage,
-  isEmployeeUser,
+  isRecord,
   monthOptions,
+  parseMaybeJson,
 } from '../lib/salaryEstimates'
 
 function clampNumber(value: number, min: number, max: number) {
@@ -48,6 +50,58 @@ function parsePeriodNumber(value: string | null, fallback: number, min: number, 
   return clampNumber(parsed, min, max)
 }
 
+type EmployeeApiSummary = {
+  totalEmployees?: number
+  totalReports?: number
+  averageUpdatePercentage?: number
+  totalSalaryAmount?: number
+  totalBaseSalary?: number
+  totalDeductionAmount?: number
+  totalBonusAmount?: number
+  totalFinalSalary?: number
+  totalEstimatedSalary?: number
+  employeesWithPenalties?: number
+  employeesWithBonuses?: number
+}
+
+function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
+  const parsed = parseMaybeJson(payload)
+  const root = isRecord(parsed) ? parsed : null
+  const nestedData = root && isRecord(root.data) ? root.data : null
+  const summary =
+    root && isRecord(root.summary)
+      ? root.summary
+      : nestedData && isRecord(nestedData.summary)
+        ? nestedData.summary
+        : null
+  const salarySummary = summary
+    ? findFirstRecord(summary, ['salary_estimate_summary', 'salary_summary', 'salary_estimates_summary'])
+    : null
+
+  return {
+    totalEmployees: summary ? findFirstNumber(summary, ['total_employees']) : undefined,
+    totalReports: summary ? findFirstNumber(summary, ['total_reports']) : undefined,
+    averageUpdatePercentage: summary ? findFirstNumber(summary, ['average_update_percentage']) : undefined,
+    totalSalaryAmount:
+      (summary ? findFirstNumber(summary, ['total_salary_amount']) : undefined) ??
+      (salarySummary ? findFirstNumber(salarySummary, ['total_salary_amount', 'total_final_salary', 'final_salary_total']) : undefined),
+    totalBaseSalary:
+      (salarySummary ? findFirstNumber(salarySummary, ['total_base_salary', 'base_salary_total', 'base_salary']) : undefined),
+    totalDeductionAmount:
+      (salarySummary ? findFirstNumber(salarySummary, ['total_deduction_amount', 'deduction_amount_total', 'deduction_total']) : undefined),
+    totalBonusAmount:
+      (salarySummary ? findFirstNumber(salarySummary, ['total_bonus_amount', 'bonus_amount_total', 'bonus_total']) : undefined),
+    totalFinalSalary:
+      (salarySummary ? findFirstNumber(salarySummary, ['total_final_salary', 'final_salary_total']) : undefined),
+    totalEstimatedSalary:
+      (salarySummary ? findFirstNumber(salarySummary, ['total_estimated_salary', 'estimated_salary_total', 'salary_estimate_total']) : undefined),
+    employeesWithPenalties:
+      (salarySummary ? findFirstNumber(salarySummary, ['employees_with_penalties', 'penalty_employee_count', 'employees_with_deductions']) : undefined),
+    employeesWithBonuses:
+      (salarySummary ? findFirstNumber(salarySummary, ['employees_with_bonuses', 'bonus_employee_count']) : undefined),
+  }
+}
+
 export function FaultsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -63,57 +117,54 @@ export function FaultsPage() {
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
 
-  const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
-
-  const employeeUsers = useMemo(
-    () => (dashboardQuery.data?.users ?? []).filter(isEmployeeUser),
-    [dashboardQuery.data?.users],
-  )
-
-  const salaryQuery = useAsyncData(
-    () => membersService.salaryEstimates({ year, month }),
+  const updatesAllQuery = useAsyncData(
+    () => membersService.updatesAll({ year, month }),
     [year, month],
     {
       onError: (error) => {
         showToast({
-          title: 'Salary estimate API failed',
-          description: getApiErrorMessage(error, 'Employee default salary fallback mode is active.'),
+          title: 'Employee updates API failed',
+          description: getApiErrorMessage(error),
           tone: 'error',
         })
       },
     },
   )
 
-  const liveEstimateEntries = useMemo(
-    () => extractEstimateEntries(salaryQuery.data),
-    [salaryQuery.data],
+  const statisticsQuery = useAsyncData(
+    () => membersService.updatesStatistics({ year, month }),
+    [year, month],
+    {
+      onError: (error) => {
+        showToast({
+          title: 'Employee summary API failed',
+          description: getApiErrorMessage(error),
+          tone: 'error',
+        })
+      },
+    },
   )
-  const isUsingLiveEstimateData = liveEstimateEntries.length > 0
 
   const reports = useMemo(
-    () => buildEmployeeReports(employeeUsers, salaryQuery.data, { includeFallbackUsers: !isUsingLiveEstimateData }),
-    [employeeUsers, salaryQuery.data, isUsingLiveEstimateData],
+    () => buildEmployeeReports([], updatesAllQuery.data, { includeFallbackUsers: false }),
+    [updatesAllQuery.data],
   )
-
-  const employeesWithPenalties = reports.filter((report) => report.hasPenalty).length
-  const employeesWithBonuses = reports.filter((report) => report.hasBonus).length
-  const totalBaseSalary = reports.reduce((total, report) => total + report.baseSalary, 0)
-  const totalDeductionAmount = reports.reduce((total, report) => total + report.deductionAmount, 0)
-  const totalBonusAmount = reports.reduce((total, report) => total + report.bonusAmount, 0)
-  const totalFinalSalary = reports.reduce((total, report) => total + report.finalSalary, 0)
-  const totalEstimatedSalary = reports.reduce((total, report) => total + report.estimatedSalary, 0)
+  const apiSummary = useMemo(
+    () => extractEmployeeApiSummary(statisticsQuery.data),
+    [statisticsQuery.data],
+  )
   const hasReports = reports.length > 0
 
   async function handleRefresh() {
-    const [dashboardResult, salaryResult] = await Promise.allSettled([
-      dashboardQuery.refetch(),
-      salaryQuery.refetch(),
+    const [updatesResult, statisticsResult] = await Promise.allSettled([
+      updatesAllQuery.refetch(),
+      statisticsQuery.refetch(),
     ])
 
-    if (dashboardResult.status === 'rejected' && salaryResult.status === 'rejected') {
+    if (updatesResult.status === 'rejected' && statisticsResult.status === 'rejected') {
       showToast({
         title: 'Refresh failed',
-        description: getApiErrorMessage(salaryResult.reason ?? dashboardResult.reason),
+        description: getApiErrorMessage(updatesResult.reason ?? statisticsResult.reason),
         tone: 'error',
       })
       return
@@ -178,7 +229,7 @@ export function FaultsPage() {
         reason: penaltyReason.trim() || undefined,
       })
 
-      await salaryQuery.refetch()
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch()])
       setPenaltyTarget(null)
       showToast({
         title: 'Penalty added',
@@ -223,7 +274,7 @@ export function FaultsPage() {
         reason: bonusReason.trim() || undefined,
       })
 
-      await salaryQuery.refetch()
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch()])
       setBonusTarget(null)
       showToast({
         title: 'Bonus added',
@@ -241,25 +292,25 @@ export function FaultsPage() {
     }
   }
 
-  if (!hasReports && (salaryQuery.isLoading || dashboardQuery.isLoading)) {
+  if (!hasReports && (updatesAllQuery.isLoading || statisticsQuery.isLoading)) {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Salary"
         title="Loading employee salary report"
-        description="Fetching salary estimates from the Employees API."
+        description="Fetching employee monthly salary and update statistics from the Employees API."
       />
     )
   }
 
-  if (!hasReports && salaryQuery.isError) {
+  if (!hasReports && updatesAllQuery.isError) {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Salary"
         title="Salary report unavailable"
-        description="Could not fetch salary estimates from the Employees API."
+        description="Could not fetch employee monthly salary data from the Employees API."
         actionLabel="Retry"
         onAction={() => {
-          void salaryQuery.refetch()
+          void updatesAllQuery.refetch()
         }}
       />
     )
@@ -300,23 +351,18 @@ export function FaultsPage() {
                   {month}/{year}
                 </Badge>
                 <Badge
-                  variant={employeesWithPenalties > 0 ? 'danger' : 'outline'}
+                  variant={(apiSummary.employeesWithPenalties ?? 0) > 0 ? 'danger' : 'outline'}
                   className="rounded-full px-3 py-1 text-xs"
                 >
-                  {employeesWithPenalties} with penalties
+                  {formatCount(apiSummary.employeesWithPenalties)} with penalties
                 </Badge>
                 <Badge
-                  variant={employeesWithBonuses > 0 ? 'success' : 'outline'}
+                  variant={(apiSummary.employeesWithBonuses ?? 0) > 0 ? 'success' : 'outline'}
                   className="rounded-full px-3 py-1 text-xs"
                 >
-                  {employeesWithBonuses} with bonuses
+                  {formatCount(apiSummary.employeesWithBonuses)} with bonuses
                 </Badge>
-                <Badge
-                  variant={isUsingLiveEstimateData ? 'success' : 'secondary'}
-                  className="rounded-full px-3 py-1 text-xs"
-                >
-                  {isUsingLiveEstimateData ? 'Live estimates' : 'Default salary fallback'}
-                </Badge>
+                <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">Employee API summary</Badge>
               </div>
             </div>
 
@@ -360,23 +406,25 @@ export function FaultsPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
-        <SummaryMetricCard label="Employees in report" value={reports.length} />
-        <SummaryMetricCard label="Total base salary" value={formatAmount(totalBaseSalary)} />
+        <SummaryMetricCard label="Employees in report" value={formatCount(apiSummary.totalEmployees)} />
+        <SummaryMetricCard label="Total reports" value={formatCount(apiSummary.totalReports)} />
         <SummaryMetricCard
           label="Total deduction amount"
-          value={formatAmount(totalDeductionAmount)}
+          value={formatAmount(apiSummary.totalDeductionAmount)}
           tone="danger"
-          badge={employeesWithPenalties > 0 ? 'Deductions present' : 'No deductions'}
+          badge={(apiSummary.employeesWithPenalties ?? 0) > 0 ? 'Deductions present' : undefined}
         />
         <SummaryMetricCard
           label="Total bonus amount"
-          value={formatAmount(totalBonusAmount)}
+          value={formatAmount(apiSummary.totalBonusAmount)}
           tone="success"
-          badge={employeesWithBonuses > 0 ? 'Bonuses present' : 'No bonuses'}
+          badge={(apiSummary.employeesWithBonuses ?? 0) > 0 ? 'Bonuses present' : undefined}
         />
-        <SummaryMetricCard label="Employees with penalties" value={employeesWithPenalties} />
-        <SummaryMetricCard label="Total final salary" value={formatAmount(totalFinalSalary)} />
-        <SummaryMetricCard label="Total estimated salary" value={formatAmount(totalEstimatedSalary)} />
+        <SummaryMetricCard label="Average update %" value={formatPercent(apiSummary.averageUpdatePercentage)} />
+        <SummaryMetricCard label="Total salary amount" value={formatAmount(apiSummary.totalSalaryAmount)} />
+        <SummaryMetricCard label="Total base salary" value={formatAmount(apiSummary.totalBaseSalary)} />
+        <SummaryMetricCard label="Total final salary" value={formatAmount(apiSummary.totalFinalSalary)} />
+        <SummaryMetricCard label="Total estimated salary" value={formatAmount(apiSummary.totalEstimatedSalary)} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -436,22 +484,22 @@ export function FaultsPage() {
               <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} />
               <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} />
               <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" />
-              <DetailStatTile label="Penalty points" value={report.penaltyPoints} tone="danger" />
-              <DetailStatTile label="Penalty entries" value={report.penaltyEntries} tone="danger" />
-              <DetailStatTile label="Bonus entries" value={report.bonusEntries} tone="success" />
+              <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" />
+              <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" />
+              <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" />
             </div>
 
             <div className="border-t border-white/8 px-5 py-4">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-rose-300">Penalty percentage</span>
-                <span className={cn('font-semibold', report.penaltyPercentage > 0 ? 'text-rose-400' : 'text-white')}>
+                <span className={cn('font-semibold', (report.penaltyPercentage ?? 0) > 0 ? 'text-rose-400' : 'text-white')}>
                   {formatPercent(report.penaltyPercentage)}
                 </span>
               </div>
               <div className="mt-3 h-2 rounded-full bg-white/7">
                 <div
                   className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
-                  style={{ width: `${Math.min(100, Math.max(0, report.penaltyPercentage))}%` }}
+                  style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(report.penaltyPercentage) ? report.penaltyPercentage : 0))}%` }}
                 />
               </div>
             </div>
@@ -490,13 +538,13 @@ export function FaultsPage() {
               key: 'penalties',
               header: 'Penalties',
               align: 'right',
-              render: (row) => <span className="text-rose-400">{row.penaltyEntries}</span>,
+              render: (row) => <span className="text-rose-400">{formatCount(row.penaltyEntries)}</span>,
             },
             {
               key: 'bonuses',
               header: 'Bonuses',
               align: 'right',
-              render: (row) => <span className="text-emerald-400">{row.bonusEntries}</span>,
+              render: (row) => <span className="text-emerald-400">{formatCount(row.bonusEntries)}</span>,
             },
             {
               key: 'base',
@@ -518,7 +566,7 @@ export function FaultsPage() {
               key: 'points',
               header: 'Points',
               align: 'right',
-              render: (row) => <span className="text-rose-400">{row.penaltyPoints}</span>,
+              render: (row) => <span className="text-rose-400">{formatCount(row.penaltyPoints)}</span>,
             },
             {
               key: 'deduction',

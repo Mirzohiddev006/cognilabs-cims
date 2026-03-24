@@ -101,16 +101,18 @@ export function KanbanBoard({
           const activeIdx = prev[sourceColIdx].cards.findIndex((c) => c.id === activeCard.id)
           const overIdx = prev[targetColIdx].cards.findIndex((c) => c.id === overCard.id)
           if (activeIdx === overIdx) return prev
-          return prev.map((col, i) =>
+          const nextColumns = prev.map((col, i) =>
             i === sourceColIdx ? { ...col, cards: arrayMove(col.cards, activeIdx, overIdx) } : col,
           )
+          localColumnsRef.current = nextColumns
+          return nextColumns
         }
 
         const movedCard = prev[sourceColIdx].cards.find((c) => c.id === activeCard.id)
         if (!movedCard) return prev
         const overCardIdx = prev[targetColIdx].cards.findIndex((c) => c.id === overCard.id)
 
-        return prev.map((col, i) => {
+        const nextColumns = prev.map((col, i) => {
           if (i === sourceColIdx) return { ...col, cards: col.cards.filter((c) => c.id !== activeCard.id) }
           if (i === targetColIdx) {
             const newCards = [...col.cards]
@@ -119,6 +121,8 @@ export function KanbanBoard({
           }
           return col
         })
+        localColumnsRef.current = nextColumns
+        return nextColumns
       }
 
       if (isOverColumn) {
@@ -129,11 +133,13 @@ export function KanbanBoard({
         const movedCard = prev[sourceColIdx].cards.find((c) => c.id === activeCard.id)
         if (!movedCard) return prev
 
-        return prev.map((col, i) => {
+        const nextColumns = prev.map((col, i) => {
           if (i === sourceColIdx) return { ...col, cards: col.cards.filter((c) => c.id !== activeCard.id) }
           if (i === targetColIdx) return { ...col, cards: [...col.cards, { ...movedCard, column_id: col.id }] }
           return col
         })
+        localColumnsRef.current = nextColumns
+        return nextColumns
       }
 
       return prev
@@ -145,20 +151,28 @@ export function KanbanBoard({
       const { active, over } = event
       setActiveDrag(null)
 
-      if (!over || active.id === over.id) return
-
       const isActiveColumn = active.data.current?.type === 'column'
       const isActiveCard = active.data.current?.type === 'card'
 
+      if (!over) {
+        setLocalColumns(preDragColumnsRef.current)
+        localColumnsRef.current = preDragColumnsRef.current
+        return
+      }
+
       if (isActiveColumn) {
+        if (active.id === over.id) return
+
         setLocalColumns((prev) => {
           const activeIdx = prev.findIndex((c) => `col-${c.id}` === active.id)
           const overIdx = prev.findIndex((c) => `col-${c.id}` === over.id)
           if (activeIdx === overIdx) return prev
           const newCols = arrayMove(prev, activeIdx, overIdx)
+          localColumnsRef.current = newCols
           const movedCol = prev[activeIdx]
-          onMoveColumn(movedCol.id, overIdx + 1).catch(() => {
+          onMoveColumn(movedCol.id, overIdx).catch(() => {
             setLocalColumns(preDragColumnsRef.current)
+            localColumnsRef.current = preDragColumnsRef.current
           })
           return newCols
         })
@@ -167,12 +181,22 @@ export function KanbanBoard({
 
       if (isActiveCard) {
         const activeCard = active.data.current?.card as CardRecord
+        const initialCols = preDragColumnsRef.current
+        const initialCol = initialCols.find((col) => col.cards.some((c) => c.id === activeCard.id))
+        const initialIdx = initialCol?.cards.findIndex((c) => c.id === activeCard.id) ?? -1
         const finalCols = localColumnsRef.current
         const targetCol = finalCols.find((col) => col.cards.some((c) => c.id === activeCard.id))
         if (!targetCol) return
         const cardIdx = targetCol.cards.findIndex((c) => c.id === activeCard.id)
-        onMoveCard(activeCard.id, targetCol.id, cardIdx + 1).catch(() => {
+        const positionChanged = initialCol?.id !== targetCol.id || initialIdx !== cardIdx
+
+        if (!positionChanged) {
+          return
+        }
+
+        onMoveCard(activeCard.id, targetCol.id, cardIdx).catch(() => {
           setLocalColumns(preDragColumnsRef.current)
+          localColumnsRef.current = preDragColumnsRef.current
         })
       }
     },

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ceoService } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -18,17 +17,16 @@ import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpd
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
   buildEmployeeSalaryDetail,
-  buildReportFromUser,
   createVirtualUser,
   defaultMonth,
   defaultYear,
   formatAmount,
+  formatCount,
   formatDetailDate,
   formatPercent,
   getMonthName,
   getPrimaryEstimateRecord,
   getSuccessMessage,
-  isEmployeeUser,
   monthOptions,
   normalizeEstimateEntry,
 } from '../lib/salaryEstimates'
@@ -71,35 +69,52 @@ export function FaultsMemberDetailPage() {
 
   const detailQuery = useAsyncData(
     async () => {
-      const [dashboardResult, estimateResult, updatesResult, calendarResult] = await Promise.allSettled([
-        ceoService.getDashboard(),
+      const [estimateResult, updatesResult, calendarResult] = await Promise.allSettled([
         membersService.salaryEstimate(memberId, year, month),
         membersService.updatesStatistics({ year, month, employeeIds: [memberId] }),
         updateTrackingService.employeeMonthlyUpdates(year, month, memberId),
       ])
 
-      const employees =
-        dashboardResult.status === 'fulfilled'
-          ? (dashboardResult.value.users ?? []).filter(isEmployeeUser)
-          : []
-      const user = employees.find((item) => item.id === memberId) ?? null
       const estimatePayload = estimateResult.status === 'fulfilled' ? estimateResult.value : null
       const estimateRecord = getPrimaryEstimateRecord(estimatePayload)
       const snapshot = estimateRecord ? normalizeEstimateEntry(estimateRecord) : null
-      const fallbackReport =
-        user
-          ? buildReportFromUser(user, snapshot)
-          : snapshot
-            ? buildReportFromUser(createVirtualUser(snapshot), snapshot)
-            : null
+      const apiUser = snapshot
+        ? {
+            ...createVirtualUser(snapshot),
+            id: snapshot.userId ?? memberId,
+          }
+        : null
+      const fallbackReport = snapshot && apiUser ? {
+        id: apiUser.id,
+        label: snapshot.userLabel ?? `User #${apiUser.id}`,
+        fullName: snapshot.userName?.trim() || `${apiUser.name} ${apiUser.surname}`.trim() || 'Unknown member',
+        roleLabel: snapshot.roleLabel ?? apiUser.job_title ?? apiUser.role ?? 'Member',
+        baseSalary: Number.isFinite(snapshot.baseSalary) ? Math.max(0, snapshot.baseSalary as number) : Number.NaN,
+        estimatedSalary: Number.isFinite(snapshot.estimatedSalary) ? Math.max(0, snapshot.estimatedSalary as number) : Number.NaN,
+        deductionAmount: Number.isFinite(snapshot.deductionAmount) ? Math.max(0, snapshot.deductionAmount as number) : Number.NaN,
+        bonusAmount: Number.isFinite(snapshot.bonusAmount) ? Math.max(0, snapshot.bonusAmount as number) : Number.NaN,
+        afterPenalty: Number.isFinite(snapshot.afterPenalty) ? Math.max(0, snapshot.afterPenalty as number) : Number.NaN,
+        finalSalary: Number.isFinite(snapshot.finalSalary) ? Math.max(0, snapshot.finalSalary as number) : Number.NaN,
+        penaltyPoints: Number.isFinite(snapshot.penaltyPoints) ? Math.max(0, Math.round(snapshot.penaltyPoints as number)) : Number.NaN,
+        penaltyEntries: Number.isFinite(snapshot.penaltyEntries) ? Math.max(0, Math.round(snapshot.penaltyEntries as number)) : Number.NaN,
+        bonusEntries: Number.isFinite(snapshot.bonusEntries) ? Math.max(0, Math.round(snapshot.bonusEntries as number)) : Number.NaN,
+        penaltyPercentage: Number.isFinite(snapshot.penaltyPercentage) ? Math.max(0, snapshot.penaltyPercentage as number) : Number.NaN,
+        hasPenalty:
+          (Number.isFinite(snapshot.deductionAmount) && (snapshot.deductionAmount as number) > 0) ||
+          (Number.isFinite(snapshot.penaltyPoints) && (snapshot.penaltyPoints as number) > 0) ||
+          (Number.isFinite(snapshot.penaltyEntries) && (snapshot.penaltyEntries as number) > 0),
+        hasBonus:
+          (Number.isFinite(snapshot.bonusAmount) && (snapshot.bonusAmount as number) > 0) ||
+          (Number.isFinite(snapshot.bonusEntries) && (snapshot.bonusEntries as number) > 0),
+      } : null
 
       if (!fallbackReport) {
-        throw new Error('Could not resolve this member from dashboard or salary estimate data.')
+        throw new Error('Could not resolve this member from the Employees API salary estimate response.')
       }
 
       return buildEmployeeSalaryDetail({
         report: fallbackReport,
-        user,
+        user: apiUser,
         estimatePayload,
         updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
         calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
@@ -295,6 +310,12 @@ export function FaultsMemberDetailPage() {
     )
   }
 
+  const updatesSummary = detail.updatesSummary
+  const updatesCompletion =
+    Number.isFinite(updatesSummary?.updatePercentage)
+      ? updatesSummary!.updatePercentage
+      : updatesSummary?.completionPercentage
+
   return (
     <section className="space-y-6 page-enter">
       <div className="flex items-center">
@@ -329,9 +350,7 @@ export function FaultsMemberDetailPage() {
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge variant={detail.estimateSource === 'live' ? 'success' : 'secondary'}>
-                    {detail.estimateSource === 'live' ? 'Live member estimate' : 'Fallback summary'}
-                  </Badge>
+                  <Badge variant="success">Employee API detail</Badge>
                   <Badge variant={detail.report.hasPenalty ? 'danger' : 'outline'}>
                     {detail.report.hasPenalty ? 'Penalty applied' : 'No penalties'}
                   </Badge>
@@ -428,7 +447,7 @@ export function FaultsMemberDetailPage() {
               How the final salary is built
             </h2>
           </div>
-          <Badge variant={detail.report.penaltyPercentage > 0 ? 'danger' : 'outline'}>
+          <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
             {formatPercent(detail.report.penaltyPercentage)} penalty impact
           </Badge>
         </div>
@@ -436,8 +455,8 @@ export function FaultsMemberDetailPage() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
           <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label="Penalty points" value={detail.report.penaltyPoints} tone="danger" />
-          <DetailStatTile label="Bonus entries" value={detail.report.bonusEntries} tone="success" />
+          <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
+          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="success" />
         </div>
 
         <div className="mt-5 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
@@ -455,7 +474,7 @@ export function FaultsMemberDetailPage() {
           <div className="mt-4 h-2 rounded-full bg-white/8">
             <div
               className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
-              style={{ width: `${Math.min(100, Math.max(0, detail.report.penaltyPercentage))}%` }}
+              style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
             />
           </div>
         </div>
@@ -473,29 +492,29 @@ export function FaultsMemberDetailPage() {
           </div>
           <Badge
             variant={
-              (detail.updatesSummary?.completionPercentage ?? 0) >= 80
+              (updatesCompletion ?? 0) >= 80
                 ? 'success'
-                : (detail.updatesSummary?.completionPercentage ?? 0) > 0
+                : (updatesCompletion ?? 0) > 0
                   ? 'warning'
                   : 'outline'
             }
           >
-            {detail.updatesSummary
-              ? `${formatPercent(detail.updatesSummary.completionPercentage)} completion`
+            {updatesSummary
+              ? `${formatPercent(updatesSummary.completionPercentage)} completion`
               : 'No update stats'}
           </Badge>
         </div>
 
-        {detail.updatesSummary ? (
+        {updatesSummary ? (
           <>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <DetailStatTile label="Logged updates" value={detail.updatesSummary.submittedCount} />
-              <DetailStatTile label="Missing days" value={detail.updatesSummary.missingCount} tone="danger" />
-              <DetailStatTile label="Total updates" value={detail.updatesSummary.totalUpdates} />
+              <DetailStatTile label="Logged updates" value={formatCount(updatesSummary.submittedCount)} />
+              <DetailStatTile label="Missing days" value={formatCount(updatesSummary.missingCount)} tone="danger" />
+              <DetailStatTile label="Total updates" value={formatCount(updatesSummary.totalUpdates)} />
               <DetailStatTile
                 label="Update percentage"
-                value={formatPercent(detail.updatesSummary.updatePercentage ?? detail.updatesSummary.completionPercentage)}
-                tone={(detail.updatesSummary.updatePercentage ?? detail.updatesSummary.completionPercentage) >= 80 ? 'success' : 'default'}
+                value={formatPercent(updatesCompletion)}
+                tone={(updatesCompletion ?? 0) >= 80 ? 'success' : 'default'}
               />
             </div>
 
@@ -503,32 +522,32 @@ export function FaultsMemberDetailPage() {
               <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
                 <p className="text-xs text-[var(--muted-strong)]">Last update</p>
                 <p className="mt-2 text-sm font-semibold text-white">
-                  {formatDetailDate(detail.updatesSummary.lastUpdateDate)}
+                  {formatDetailDate(updatesSummary!.lastUpdateDate)}
                 </p>
               </div>
               <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
                 <p className="text-xs text-[var(--muted-strong)]">Next payment date</p>
                 <p className="mt-2 text-sm font-semibold text-white">
-                  {formatDetailDate(detail.updatesSummary.nextPaymentDate)}
+                  {formatDetailDate(updatesSummary!.nextPaymentDate)}
                 </p>
               </div>
               <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
                 <p className="text-xs text-[var(--muted-strong)]">Salary amount in update record</p>
                 <p className="mt-2 text-sm font-semibold text-white">
-                  {typeof detail.updatesSummary.salaryAmount === 'number'
-                    ? formatAmount(detail.updatesSummary.salaryAmount)
+                  {typeof updatesSummary!.salaryAmount === 'number'
+                    ? formatAmount(updatesSummary!.salaryAmount)
                     : 'Not returned'}
                 </p>
               </div>
             </div>
 
-            {detail.updatesSummary.note ? (
+            {updatesSummary!.note ? (
               <div className="mt-4 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                   Manager note
                 </p>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/80">
-                  {detail.updatesSummary.note}
+                  {updatesSummary!.note}
                 </p>
               </div>
             ) : null}

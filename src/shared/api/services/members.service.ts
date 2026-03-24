@@ -68,6 +68,21 @@ export const membersService = {
     })
   },
 
+  updatesAll(params?: {
+    year?: number
+    month?: number
+    employeeIds?: number[]
+  }) {
+    return request<unknown>({
+      path: '/members/member/updates/all',
+      query: {
+        year: params?.year,
+        month: params?.month,
+        employee_ids: serializeEmployeeIds(params?.employeeIds),
+      },
+    })
+  },
+
   addPenalty({ userId, year, month, penaltyPoints, reason }: AddMemberPenaltyPayload) {
     return request<unknown>({
       path: '/members/member/penalties/add',

@@ -118,6 +118,7 @@ export const now = new Date()
 export const defaultYear = now.getFullYear()
 export const defaultMonth = now.getMonth() + 1
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+const missingMetricValue = Number.NaN
 const monthlyDayCollectionKeys = [
   'daily_statuses',
   'day_statuses',
@@ -371,14 +372,30 @@ export const monthOptions = Array.from({ length: 12 }, (_, index) => ({
   label: getMonthName(index + 1),
 }))
 
-export function formatAmount(value: number) {
+export function formatAmount(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '—'
+  }
+
   return new Intl.NumberFormat('ru-RU', {
     maximumFractionDigits: 0,
   }).format(Math.round(value)).replace(/\u00A0/g, ' ')
 }
 
-export function formatPercent(value: number) {
+export function formatPercent(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '—'
+  }
+
   return `${value.toFixed(1)}%`
+}
+
+export function formatCount(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '—'
+  }
+
+  return String(Math.round(value))
 }
 
 export function formatDetailDate(value?: string | null) {
@@ -442,6 +459,14 @@ export function getPenaltyPercentage(baseSalary: number, deductionAmount: number
   }
 
   return (deductionAmount / baseSalary) * 100
+}
+
+function getOptionalMetric(value?: number | null) {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : missingMetricValue
+}
+
+function getOptionalCount(value?: number | null) {
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.round(value)) : missingMetricValue
 }
 
 function looksLikeEstimateEntry(value: UnknownRecord) {
@@ -583,16 +608,16 @@ export function isEmployeeUser(user: CeoUserRecord) {
 }
 
 export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstimateSnapshot | null): EmployeeSalaryReport {
-  const baseSalary = Math.max(0, snapshot?.baseSalary ?? toNumber(user.default_salary) ?? 0)
-  const deductionAmount = Math.max(0, snapshot?.deductionAmount ?? 0)
-  const bonusAmount = Math.max(0, snapshot?.bonusAmount ?? 0)
-  const penaltyPoints = Math.max(0, snapshot?.penaltyPoints ?? 0)
-  const penaltyEntries = Math.max(0, Math.round(snapshot?.penaltyEntries ?? 0))
-  const bonusEntries = Math.max(0, Math.round(snapshot?.bonusEntries ?? 0))
-  const penaltyPercentage = Math.max(0, getPenaltyPercentage(baseSalary, deductionAmount, snapshot?.penaltyPercentage))
-  const afterPenalty = Math.max(0, snapshot?.afterPenalty ?? (baseSalary - deductionAmount))
-  const finalSalary = Math.max(0, snapshot?.finalSalary ?? (afterPenalty + bonusAmount))
-  const estimatedSalary = Math.max(0, snapshot?.estimatedSalary ?? finalSalary)
+  const baseSalary = getOptionalMetric(snapshot?.baseSalary)
+  const deductionAmount = getOptionalMetric(snapshot?.deductionAmount)
+  const bonusAmount = getOptionalMetric(snapshot?.bonusAmount)
+  const penaltyPoints = getOptionalCount(snapshot?.penaltyPoints)
+  const penaltyEntries = getOptionalCount(snapshot?.penaltyEntries)
+  const bonusEntries = getOptionalCount(snapshot?.bonusEntries)
+  const penaltyPercentage = getOptionalMetric(normalizePercentageValue(snapshot?.penaltyPercentage))
+  const afterPenalty = getOptionalMetric(snapshot?.afterPenalty)
+  const finalSalary = getOptionalMetric(snapshot?.finalSalary)
+  const estimatedSalary = getOptionalMetric(snapshot?.estimatedSalary)
 
   return {
     id: user.id,
@@ -609,8 +634,14 @@ export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstima
     penaltyEntries,
     bonusEntries,
     penaltyPercentage,
-    hasPenalty: deductionAmount > 0 || penaltyPoints > 0 || penaltyEntries > 0 || penaltyPercentage > 0,
-    hasBonus: bonusAmount > 0 || bonusEntries > 0,
+    hasPenalty:
+      (Number.isFinite(deductionAmount) && deductionAmount > 0) ||
+      (Number.isFinite(penaltyPoints) && penaltyPoints > 0) ||
+      (Number.isFinite(penaltyEntries) && penaltyEntries > 0) ||
+      (Number.isFinite(penaltyPercentage) && penaltyPercentage > 0),
+    hasBonus:
+      (Number.isFinite(bonusAmount) && bonusAmount > 0) ||
+      (Number.isFinite(bonusEntries) && bonusEntries > 0),
   }
 }
 
@@ -705,19 +736,18 @@ export function mergeReportWithSnapshot(
   user: CeoUserRecord | null,
   snapshot?: SalaryEstimateSnapshot | null,
 ) {
-  const baseSalary = Math.max(0, snapshot?.baseSalary ?? report.baseSalary)
-  const deductionAmount = Math.max(0, snapshot?.deductionAmount ?? report.deductionAmount)
-  const bonusAmount = Math.max(0, snapshot?.bonusAmount ?? report.bonusAmount)
-  const penaltyPoints = Math.max(0, snapshot?.penaltyPoints ?? report.penaltyPoints)
-  const penaltyEntries = Math.max(0, Math.round(snapshot?.penaltyEntries ?? report.penaltyEntries))
-  const bonusEntries = Math.max(0, Math.round(snapshot?.bonusEntries ?? report.bonusEntries))
-  const penaltyPercentage = Math.max(
-    0,
-    getPenaltyPercentage(baseSalary, deductionAmount, snapshot?.penaltyPercentage ?? report.penaltyPercentage),
-  )
-  const afterPenalty = Math.max(0, snapshot?.afterPenalty ?? (baseSalary - deductionAmount))
-  const finalSalary = Math.max(0, snapshot?.finalSalary ?? (afterPenalty + bonusAmount))
-  const estimatedSalary = Math.max(0, snapshot?.estimatedSalary ?? report.estimatedSalary ?? finalSalary)
+  const baseSalary = snapshot ? getOptionalMetric(snapshot.baseSalary) : report.baseSalary
+  const deductionAmount = snapshot ? getOptionalMetric(snapshot.deductionAmount) : report.deductionAmount
+  const bonusAmount = snapshot ? getOptionalMetric(snapshot.bonusAmount) : report.bonusAmount
+  const penaltyPoints = snapshot ? getOptionalCount(snapshot.penaltyPoints) : report.penaltyPoints
+  const penaltyEntries = snapshot ? getOptionalCount(snapshot.penaltyEntries) : report.penaltyEntries
+  const bonusEntries = snapshot ? getOptionalCount(snapshot.bonusEntries) : report.bonusEntries
+  const penaltyPercentage = snapshot
+    ? getOptionalMetric(normalizePercentageValue(snapshot.penaltyPercentage))
+    : report.penaltyPercentage
+  const afterPenalty = snapshot ? getOptionalMetric(snapshot.afterPenalty) : report.afterPenalty
+  const finalSalary = snapshot ? getOptionalMetric(snapshot.finalSalary) : report.finalSalary
+  const estimatedSalary = snapshot ? getOptionalMetric(snapshot.estimatedSalary) : report.estimatedSalary
 
   return {
     ...report,
@@ -734,8 +764,14 @@ export function mergeReportWithSnapshot(
     penaltyEntries,
     bonusEntries,
     penaltyPercentage,
-    hasPenalty: deductionAmount > 0 || penaltyPoints > 0 || penaltyEntries > 0 || penaltyPercentage > 0,
-    hasBonus: bonusAmount > 0 || bonusEntries > 0,
+    hasPenalty:
+      (Number.isFinite(deductionAmount) && deductionAmount > 0) ||
+      (Number.isFinite(penaltyPoints) && penaltyPoints > 0) ||
+      (Number.isFinite(penaltyEntries) && penaltyEntries > 0) ||
+      (Number.isFinite(penaltyPercentage) && penaltyPercentage > 0),
+    hasBonus:
+      (Number.isFinite(bonusAmount) && bonusAmount > 0) ||
+      (Number.isFinite(bonusEntries) && bonusEntries > 0),
   } satisfies EmployeeSalaryReport
 }
 
@@ -753,7 +789,7 @@ export function getPrimaryEstimateRecord(payload: unknown) {
 export function buildSalaryLedgerItems(
   payload: unknown,
   kind: 'penalty' | 'bonus',
-  report: EmployeeSalaryReport,
+  _report: EmployeeSalaryReport,
 ) {
   const root = getPrimaryEstimateRecord(payload)
 
@@ -802,35 +838,7 @@ export function buildSalaryLedgerItems(
     })
     .filter((item) => item.amount > 0 || (item.points ?? 0) > 0)
 
-  if (items.length > 0) {
-    return items
-  }
-
-  if (kind === 'penalty' && report.hasPenalty) {
-    return [
-      {
-        id: `penalty-summary-${report.id}`,
-        title: 'Monthly penalty summary',
-        description: `${report.penaltyEntries} entries applied in the selected month.`,
-        amount: report.deductionAmount,
-        points: report.penaltyPoints || undefined,
-        percentage: report.penaltyPercentage || undefined,
-      },
-    ] satisfies SalaryLedgerItem[]
-  }
-
-  if (kind === 'bonus' && report.hasBonus) {
-    return [
-      {
-        id: `bonus-summary-${report.id}`,
-        title: 'Monthly bonus summary',
-        description: `${report.bonusEntries} bonus entries applied in the selected month.`,
-        amount: report.bonusAmount,
-      },
-    ] satisfies SalaryLedgerItem[]
-  }
-
-  return []
+  return items
 }
 
 function getPrimaryUpdateRecord(payload: unknown) {
@@ -1207,30 +1215,6 @@ function parseMonthlyDaySeed(
   }
 }
 
-function buildUpdateSummaryFromCalendar(calendar: MemberMonthlyUpdateCalendar | null): MemberUpdateSummary | null {
-  if (!calendar) {
-    return null
-  }
-
-  const lastSubmittedDay = [...calendar.days]
-    .reverse()
-    .find((day) => day.status === 'submitted')
-
-  const completionPercentage =
-    calendar.submittedCount + calendar.missingCount > 0
-      ? (calendar.submittedCount / (calendar.submittedCount + calendar.missingCount)) * 100
-      : 0
-
-  return {
-    totalUpdates: calendar.totalUpdates,
-    submittedCount: calendar.submittedCount,
-    missingCount: calendar.missingCount,
-    completionPercentage,
-    updatePercentage: completionPercentage,
-    lastUpdateDate: lastSubmittedDay?.date,
-  }
-}
-
 export function buildMemberMonthlyUpdateCalendar(
   payload: unknown,
   month: number,
@@ -1307,30 +1291,27 @@ export function buildMemberMonthlyUpdateCalendar(
 
 export function parseMemberUpdateSummary(
   payload: unknown,
-  calendar?: MemberMonthlyUpdateCalendar | null,
+  _calendar?: MemberMonthlyUpdateCalendar | null,
 ): MemberUpdateSummary | null {
   const primaryRecord = getPrimaryUpdateRecord(payload)
-  const calendarSummary = buildUpdateSummaryFromCalendar(calendar ?? null)
 
   if (!primaryRecord) {
-    return calendarSummary
+    return null
   }
 
   const nestedSummary = findFirstRecord(primaryRecord, ['summary', 'statistics', 'update_stats', 'monthly_stats', 'salary_update'])
   const sources = [primaryRecord, nestedSummary].filter(Boolean) as UnknownRecord[]
 
   const submittedCount =
-    sources.map((source) => findFirstNumber(source, ['submitted_count', 'updates_count', 'total_submitted', 'logged_count', 'submitted'])).find((value) => value !== undefined) ?? 0
+    sources.map((source) => findFirstNumber(source, ['submitted_count', 'updates_count', 'total_submitted', 'logged_count', 'submitted'])).find((value) => value !== undefined)
   const missingCount =
-    sources.map((source) => findFirstNumber(source, ['missing_count', 'total_missing', 'missing_days', 'missed_count', 'absent_count', 'missing'])).find((value) => value !== undefined) ?? 0
+    sources.map((source) => findFirstNumber(source, ['missing_count', 'total_missing', 'missing_days', 'missed_count', 'absent_count', 'missing'])).find((value) => value !== undefined)
   const totalUpdates =
-    sources.map((source) => findFirstNumber(source, ['total_updates', 'updates_count', 'submitted_count', 'updates_this_month'])).find((value) => value !== undefined) ??
-    submittedCount
+    sources.map((source) => findFirstNumber(source, ['total_updates', 'updates_count', 'submitted_count', 'updates_this_month'])).find((value) => value !== undefined)
   const completionPercentage =
     normalizePercentageValue(
       sources.map((source) => findFirstNumber(source, ['completion_percentage', 'completion_rate', 'percentage', 'percent', 'avg_percentage'])).find((value) => value !== undefined),
-    ) ??
-    (submittedCount + missingCount > 0 ? (submittedCount / (submittedCount + missingCount)) * 100 : 0)
+    )
   const updatePercentage = normalizePercentageValue(
     sources.map((source) => findFirstNumber(source, ['update_percentage', 'salary_update_percentage'])).find((value) => value !== undefined),
   )
@@ -1339,23 +1320,30 @@ export function parseMemberUpdateSummary(
   const note = sources.map((source) => findFirstString(source, ['note', 'summary', 'description', 'remarks'])).find(Boolean)
   const lastUpdateDate = sources.map((source) => findFirstString(source, ['last_update_date', 'last_update', 'updated_at', 'submitted_at'])).find(Boolean)
 
-  if (submittedCount <= 0 && missingCount <= 0 && totalUpdates <= 0 && !nextPaymentDate && !salaryAmount && !note && !lastUpdateDate) {
-    return calendarSummary
+  if (
+    submittedCount === undefined &&
+    missingCount === undefined &&
+    totalUpdates === undefined &&
+    completionPercentage === undefined &&
+    updatePercentage === undefined &&
+    salaryAmount === undefined &&
+    !nextPaymentDate &&
+    !note &&
+    !lastUpdateDate
+  ) {
+    return null
   }
 
   return {
-    totalUpdates: totalUpdates > 0 ? totalUpdates : (calendarSummary?.totalUpdates ?? totalUpdates),
-    submittedCount: submittedCount > 0 ? submittedCount : (calendarSummary?.submittedCount ?? submittedCount),
-    missingCount: missingCount > 0 ? missingCount : (calendarSummary?.missingCount ?? missingCount),
-    completionPercentage:
-      completionPercentage > 0 || submittedCount > 0 || missingCount > 0
-        ? completionPercentage
-        : (calendarSummary?.completionPercentage ?? completionPercentage),
-    updatePercentage: updatePercentage ?? calendarSummary?.updatePercentage,
+    totalUpdates: totalUpdates ?? missingMetricValue,
+    submittedCount: submittedCount ?? missingMetricValue,
+    missingCount: missingCount ?? missingMetricValue,
+    completionPercentage: completionPercentage ?? missingMetricValue,
+    updatePercentage,
     salaryAmount,
     nextPaymentDate,
     note,
-    lastUpdateDate: lastUpdateDate ?? calendarSummary?.lastUpdateDate,
+    lastUpdateDate,
   }
 }
 

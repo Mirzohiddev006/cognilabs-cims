@@ -120,8 +120,15 @@ async function performRequest<T>(
     })
   }
 
+  if (method === 'GET') {
+    requestHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate')
+    requestHeaders.set('Pragma', 'no-cache')
+    requestHeaders.set('Expires', '0')
+  }
+
   const response = await fetch(buildUrl(path, query), {
     method,
+    cache: 'no-store',
     headers: requestHeaders,
     body:
       body === undefined

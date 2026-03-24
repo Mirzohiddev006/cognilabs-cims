@@ -8,6 +8,7 @@ import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
   projectsService,
+  type BoardDetail,
   type ColumnRecord,
   type CardRecord,
 } from '../../../shared/api/services/projects.service'
@@ -21,6 +22,76 @@ import { formatProjectDate } from '../lib/format'
 type AddCardState = { columnId: number } | null
 type EditCardState = { card: CardRecord } | null
 type EditColumnState = { column: ColumnRecord } | null
+
+function moveCardInBoard(board: BoardDetail, cardId: number, columnId: number, order: number): BoardDetail {
+  const sourceColumnIndex = board.columns.findIndex((column) => column.cards.some((card) => card.id === cardId))
+  const targetColumnIndex = board.columns.findIndex((column) => column.id === columnId)
+
+  if (sourceColumnIndex === -1 || targetColumnIndex === -1) {
+    return board
+  }
+
+  const sourceColumn = board.columns[sourceColumnIndex]
+  const sourceCardIndex = sourceColumn.cards.findIndex((card) => card.id === cardId)
+
+  if (sourceCardIndex === -1) {
+    return board
+  }
+
+  const movedCard = sourceColumn.cards[sourceCardIndex]
+  const nextColumns = board.columns.map((column) => ({
+    ...column,
+    cards: [...column.cards],
+  }))
+
+  nextColumns[sourceColumnIndex].cards.splice(sourceCardIndex, 1)
+
+  const targetCards = nextColumns[targetColumnIndex].cards
+  const nextOrder = Math.max(0, Math.min(order, targetCards.length))
+  targetCards.splice(nextOrder, 0, {
+    ...movedCard,
+    column_id: columnId,
+    order: nextOrder,
+  })
+
+  return {
+    ...board,
+    columns: nextColumns.map((column) => ({
+      ...column,
+      cards: column.cards.map((card, index) => ({
+        ...card,
+        column_id: column.id,
+        order: index,
+      })),
+    })),
+  }
+}
+
+function moveColumnInBoard(board: BoardDetail, columnId: number, order: number): BoardDetail {
+  const sourceIndex = board.columns.findIndex((column) => column.id === columnId)
+
+  if (sourceIndex === -1) {
+    return board
+  }
+
+  const targetIndex = Math.max(0, Math.min(order, board.columns.length - 1))
+
+  if (sourceIndex === targetIndex) {
+    return board
+  }
+
+  const nextColumns = [...board.columns]
+  const [movedColumn] = nextColumns.splice(sourceIndex, 1)
+  nextColumns.splice(targetIndex, 0, movedColumn)
+
+  return {
+    ...board,
+    columns: nextColumns.map((column, index) => ({
+      ...column,
+      order: index,
+    })),
+  }
+}
 
 export function BoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -195,8 +266,10 @@ export function BoardDetailPage() {
   async function handleMoveCard(cardId: number, columnId: number, order: number) {
     try {
       await projectsService.moveCard(cardId, columnId, order)
+      boardQuery.setData((current) => (current ? moveCardInBoard(current, cardId, columnId, order) : current))
     } catch {
       showToast({ title: 'Failed to move card — changes reverted.', tone: 'error' })
+      await boardQuery.refetch()
       throw new Error('moveCard failed')
     }
   }
@@ -204,8 +277,10 @@ export function BoardDetailPage() {
   async function handleMoveColumn(columnId: number, order: number) {
     try {
       await projectsService.moveColumn(columnId, order)
+      boardQuery.setData((current) => (current ? moveColumnInBoard(current, columnId, order) : current))
     } catch {
       showToast({ title: 'Failed to reorder column — changes reverted.', tone: 'error' })
+      await boardQuery.refetch()
       throw new Error('moveColumn failed')
     }
   }

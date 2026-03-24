@@ -70,6 +70,20 @@ export const updateTrackingService = {
     })
   },
 
+  myReport(month?: number, year?: number) {
+    return request<unknown>({
+      path: '/update-tracking/my-report',
+      query: { month, year },
+    })
+  },
+
+  myCombinedReport(month?: number, year?: number) {
+    return request<unknown>({
+      path: '/update-tracking/my-combined-report',
+      query: { month, year },
+    })
+  },
+
   monthlyReport(month?: number, year?: number) {
     return request<unknown>({
       path: '/update-tracking/my-monthly-report',
@@ -94,6 +108,14 @@ export const updateTrackingService = {
     return request<unknown>({
       path: '/update-tracking/recent',
       query: { limit, user_id: userId },
+    })
+  },
+
+  processDailyNotifications(targetDate?: string) {
+    return request<string>({
+      path: '/update-tracking/process-daily-notifications',
+      method: 'POST',
+      query: { target_date: targetDate },
     })
   },
 

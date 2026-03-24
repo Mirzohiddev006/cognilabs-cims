@@ -215,34 +215,6 @@ function normalizePhoneValue(value?: string | null) {
   return (value ?? '').replace(/\D/g, '')
 }
 
-function getStatusCount(statusDict: Record<string, number> | undefined, ...keys: string[]) {
-  if (!statusDict) {
-    return 0
-  }
-
-  const normalizedCandidates = keys.map(normalizeStatusKey)
-
-  for (const [key, count] of Object.entries(statusDict)) {
-    if (normalizedCandidates.includes(normalizeStatusKey(key))) {
-      return count
-    }
-  }
-
-  return 0
-}
-
-function resolveMetricValue(primary: number | undefined, fallback: number) {
-  if (typeof primary === 'number' && primary > 0) {
-    return primary
-  }
-
-  if (fallback > 0) {
-    return fallback
-  }
-
-  return primary ?? fallback
-}
-
 function buildNormalizedStatusMetaMap(statusOptions: DynamicStatusOption[]) {
   const map = new Map<string, DynamicStatusOption>()
 
@@ -349,7 +321,7 @@ function MetricCard({
   tone = 'blue',
 }: {
   label: string
-  value: number
+  value: string | number
   description: string
   tone?: 'blue' | 'success' | 'warning' | 'violet' | 'danger'
 }) {
@@ -373,7 +345,7 @@ function MetricCard({
       <div>
         <p className={cn('text-[10px] font-semibold uppercase tracking-[0.28em]', toneLabelClassNames[tone])}>{label}</p>
         <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">
-          {formatCompactNumber(value)}
+          {typeof value === 'number' ? formatCompactNumber(value) : value}
         </p>
       </div>
       <p className="text-xs leading-5 text-(--muted)">{description}</p>
@@ -606,19 +578,12 @@ export function CrmDashboardPage() {
   }
 
   const stats = summaryQuery.data
-  const fallbackStatusDict = dashboardQuery.data?.status_dict ?? dashboardQuery.data?.status_stats
   const platformFilterOptions = [
     { value: '', label: 'All platforms' },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
   ]
   const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
   const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
-  const needToCallCount = resolveMetricValue(stats?.need_to_call, getStatusCount(fallbackStatusDict, 'need_to_call', 'need to call'))
-  const contactedCount = resolveMetricValue(stats?.contacted, getStatusCount(fallbackStatusDict, 'contacted'))
-  const projectStartedCount = resolveMetricValue(stats?.project_started, getStatusCount(fallbackStatusDict, 'project_started', 'project started'))
-  const continuingCount = resolveMetricValue(stats?.continuing, getStatusCount(fallbackStatusDict, 'continuing'))
-  const finishedCount = resolveMetricValue(stats?.finished, getStatusCount(fallbackStatusDict, 'finished'))
-  const rejectedCount = resolveMetricValue(stats?.rejected, getStatusCount(fallbackStatusDict, 'rejected'))
 
   return (
     <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
@@ -638,43 +603,43 @@ export function CrmDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard
           label="Total Customers"
-          value={stats?.total_customers ?? customers.length}
+          value={typeof stats?.total_customers === 'number' ? stats.total_customers : '—'}
           description="Total clients in CRM"
           tone="blue"
         />
         <MetricCard
           label="Need to Call"
-          value={needToCallCount}
+          value={typeof stats?.need_to_call === 'number' ? stats.need_to_call : '—'}
           description="Leads to be contacted"
           tone="warning"
         />
         <MetricCard
           label="Contacted"
-          value={contactedCount}
+          value={typeof stats?.contacted === 'number' ? stats.contacted : '—'}
           description="Initial contact made"
           tone="blue"
         />
         <MetricCard
           label="Project Started"
-          value={projectStartedCount}
+          value={typeof stats?.project_started === 'number' ? stats.project_started : '—'}
           description="Projects in kickoff phase"
           tone="violet"
         />
         <MetricCard
           label="Continuing"
-          value={continuingCount}
+          value={typeof stats?.continuing === 'number' ? stats.continuing : '—'}
           description="Ongoing projects"
           tone="success"
         />
         <MetricCard
           label="Finished"
-          value={finishedCount}
+          value={typeof stats?.finished === 'number' ? stats.finished : '—'}
           description="Projects successfully completed"
           tone="success"
         />
         <MetricCard
           label="Rejected"
-          value={rejectedCount}
+          value={typeof stats?.rejected === 'number' ? stats.rejected : '—'}
           description="Deals not closed"
           tone="danger"
         />

@@ -30,6 +30,26 @@ export type CeoMessageRecord = {
   sent_at: string
 }
 
+export type IncomingCeoMessageRecord = {
+  id: number
+  sender_id: number
+  sender_name: string
+  sender_email: string
+  subject: string
+  body: string
+  sent_at: string
+}
+
+export type CompanyPaymentRecord = {
+  id: number
+  title: string
+  amount: number
+  payment_day: number
+  payment_time: string
+  note?: string | null
+  is_active: boolean
+} & Record<string, unknown>
+
 export type UserPayload = {
   email: string
   name: string
@@ -99,6 +119,17 @@ export const ceoService = {
     return request<SuccessResponse>({
       path: `/ceo/users/${userId}`,
       method: 'DELETE',
+    })
+  },
+
+  uploadUserProfileImage(userId: number, image: File) {
+    const formData = new FormData()
+    formData.append('image', image)
+
+    return request<SuccessResponse>({
+      path: `/ceo/users/${userId}/profile-image`,
+      method: 'POST',
+      body: formData,
     })
   },
 
@@ -187,6 +218,14 @@ export const ceoService = {
     })
   },
 
+  listMyMessages() {
+    return request<{
+      messages: IncomingCeoMessageRecord[]
+    }>({
+      path: '/ceo/my-messages',
+    })
+  },
+
   deleteMessage(messageId: number) {
     return request<SuccessResponse>({
       path: `/ceo/messages/${messageId}`,
@@ -231,6 +270,49 @@ export const ceoService = {
     }>({
       path: `/ceo/payments/${paymentId}/toggle`,
       method: 'PATCH',
+    })
+  },
+
+  listCompanyPayments() {
+    return request<CompanyPaymentRecord[] | unknown>({
+      path: '/ceo/company-payments',
+    })
+  },
+
+  createCompanyPayment(payload: {
+    title: string
+    amount: number
+    payment_day: number
+    payment_time: string
+    note?: string
+    is_active: boolean
+  }) {
+    return request<CreateResponse>({
+      path: '/ceo/company-payments',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateCompanyPayment(paymentId: number, payload: {
+    title: string
+    amount: number
+    payment_day: number
+    payment_time: string
+    note?: string
+    is_active: boolean
+  }) {
+    return request<SuccessResponse>({
+      path: `/ceo/company-payments/${paymentId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deleteCompanyPayment(paymentId: number) {
+    return request<SuccessResponse>({
+      path: `/ceo/company-payments/${paymentId}`,
+      method: 'DELETE',
     })
   },
 }
