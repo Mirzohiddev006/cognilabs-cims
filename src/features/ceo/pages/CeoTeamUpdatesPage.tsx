@@ -1,10 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
+import { membersService } from '../../../shared/api/services/members.service'
+import {
+  updateTrackingService,
+  type WorkdayOverrideMemberOption,
+  type WorkdayOverrideRecord,
+} from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
+import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -13,15 +19,44 @@ import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
-import { buildMemberMonthlyUpdateCalendar } from '../../faults/lib/salaryEstimates'
 
 const now = new Date()
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+const currentDateKey = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, '0'),
+  String(now.getDate()).padStart(2, '0'),
+].join('-')
 
 const COMPLETION_ON_TRACK = 80
 const recentTextKeys = ['update_content', 'update_text', 'message', 'text', 'summary', 'description', 'content', 'body', 'note', 'comment', 'remarks', 'title']
 
 type UnknownRecord = Record<string, unknown>
+type TeamUpdatesSummary = {
+  totalEmployees: number
+  totalReports: number
+  averageCompletion: number
+}
+type TeamSalarySummary = {
+  employeesCount: number
+  totalBaseSalary: number
+  totalDeductionAmount: number
+  totalBonusAmount: number
+  totalFinalSalary: number
+  totalEstimatedSalary: number
+}
+
+type TeamSalaryEntry = {
+  userId: number
+  baseSalary: number | null
+  deductionAmount: number | null
+  bonusAmount: number | null
+  finalSalary: number | null
+  estimatedSalary: number | null
+  penaltyPoints: number | null
+  penaltiesCount: number | null
+  bonusesCount: number | null
+}
 
 /* ─── Month name helper ───────────────────────────────────── */
 function getMonthName(month: number): string {
@@ -69,7 +104,7 @@ function ActivityStrip({ statuses }: { statuses: EmployeeMonthlyStats['daily_sta
       {statuses.map((entry) => (
         <span
           key={entry.day}
-          title={`Day ${entry.day}: ${entry.status}`}
+          title={`${entry.label ?? `Slot ${entry.day}`}: ${entry.status}`}
           className={cn('inline-block h-2 w-2 rounded-full shrink-0', dotStatusStyle[entry.status])}
         />
       ))}
@@ -130,9 +165,45 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
   )
 }
 
+function getOverrideTypeLabel(dayType: string | null | undefined) {
+  return normalizeOverrideDayType(dayType) === 'short_day' ? 'Short Day' : 'Holiday'
+}
+
+function getOverrideScopeLabel(item: WorkdayOverrideRecord) {
+  if (item.target_type === 'all') {
+    return 'All members'
+  }
+
+  return item.member_name?.trim() || (item.member_id ? `Member #${item.member_id}` : 'Selected members')
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 /* ─── Parse all-users-updates response ───────────────────── */
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function parsePayload(payload: unknown): unknown {
+  if (typeof payload !== 'string') {
+    return payload
+  }
+
+  const trimmed = payload.trim()
+
+  if (!trimmed) {
+    return ''
+  }
+
+  try {
+    return JSON.parse(trimmed) as unknown
+  } catch {
+    return payload
+  }
 }
 
 function toNumber(value: unknown): number | null {
@@ -468,14 +539,18 @@ function normalizeEmployee(
   month: number,
   year: number,
 ): EmployeeMonthlyStats {
+  const userRecord = isRecord(raw.user) ? raw.user : null
+  const summaryRecord = isRecord(raw.summary) ? raw.summary : null
   const name =
-    typeof raw.user_name === 'string' ? raw.user_name :
-    typeof raw.name      === 'string' ? raw.name :
-    typeof raw.full_name === 'string' ? raw.full_name : 'Unknown'
+    findFirstString(raw, ['user_name', 'name', 'full_name', 'employee_name', 'member_name']) ??
+    findFirstString(userRecord ?? {}, ['full_name', 'name']) ??
+    'Unknown'
 
   const dayStatuses = parseDayStatuses(
     raw.daily_statuses ??
+    summaryRecord?.daily_statuses ??
     raw.day_statuses ??
+    summaryRecord?.day_statuses ??
     raw.daily_updates ??
     raw.statuses ??
     raw.days ??
@@ -488,16 +563,16 @@ function normalizeEmployee(
   )
 
   const submitted =
-    toNumber(raw.submitted_count ?? raw.updates_count ?? raw.total_submitted ?? raw.logged_count ?? raw.submitted) ??
+    toNumber(raw.submitted_count ?? raw.updates_count ?? raw.total_submitted ?? raw.logged_count ?? raw.submitted ?? raw.total_reports ?? raw.report_count ?? raw.reports_count ?? summaryRecord?.submitted_count ?? summaryRecord?.updates_count ?? summaryRecord?.total_reports ?? summaryRecord?.report_count ?? summaryRecord?.reports_count) ??
     (Array.isArray(raw.updates) ? raw.updates.length : null) ??
     (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'submitted').length : 0)
 
   const missing =
-    toNumber(raw.missing_count ?? raw.total_missing ?? raw.missing_days ?? raw.missed_count ?? raw.absent_count ?? raw.missing) ??
+    toNumber(raw.missing_count ?? raw.total_missing ?? raw.missing_days ?? raw.missed_count ?? raw.absent_count ?? raw.missing ?? summaryRecord?.missing_count ?? summaryRecord?.total_missing ?? summaryRecord?.missing_days) ??
     (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'missing').length : 0)
 
   const rawCompletion =
-    toNumber(raw.completion_percentage ?? raw.completion_rate ?? raw.percentage ?? raw.percent ?? raw.avg_percentage)
+    toNumber(raw.completion_percentage ?? raw.completion_rate ?? raw.percentage ?? raw.percent ?? raw.avg_percentage ?? raw.update_percentage ?? raw.average_update_percentage ?? raw.salary_update_percentage ?? summaryRecord?.completion_percentage ?? summaryRecord?.completion_rate ?? summaryRecord?.percentage ?? summaryRecord?.avg_percentage ?? summaryRecord?.average_update_percentage)
   const completion =
     rawCompletion !== null
       ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
@@ -506,12 +581,17 @@ function normalizeEmployee(
         : 0
 
   const lastDate =
-    findFirstString(raw, ['last_update_date', 'last_update', 'updated_at', 'submitted_at']) ?? null
+    findFirstString(raw, ['last_update_date', 'last_update', 'updated_at', 'submitted_at', 'last_report_date']) ??
+    findFirstString(summaryRecord ?? {}, ['last_update_date', 'last_update', 'updated_at', 'submitted_at', 'last_report_date']) ??
+    null
 
   return {
-    user_id: typeof raw.user_id === 'number' ? raw.user_id : 0,
+    user_id: toNumber(raw.user_id ?? raw.id ?? raw.employee_id ?? raw.member_id ?? userRecord?.id) ?? 0,
     user_name: name,
-    telegram_username: typeof raw.telegram_username === 'string' ? raw.telegram_username : null,
+    telegram_username:
+      findFirstString(raw, ['telegram_username', 'telegram_id']) ??
+      findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
+      null,
     submitted_count: submitted,
     missing_count: missing,
     completion_percentage: completion,
@@ -525,12 +605,14 @@ function parseAllUsersUpdates(
   month: number,
   year: number,
 ): EmployeeMonthlyStats[] {
-  if (!data) return []
+  const parsed = parsePayload(data)
 
-  const list: Record<string, unknown>[] = Array.isArray(data)
-    ? data as Record<string, unknown>[]
+  if (!parsed) return []
+
+  const list: Record<string, unknown>[] = Array.isArray(parsed)
+    ? parsed as Record<string, unknown>[]
     : (() => {
-        const obj = data as Record<string, unknown>
+        const obj = parsed as Record<string, unknown>
         for (const key of ['employees', 'users', 'data', 'results', 'items', 'team', 'members', 'team_updates', 'all_users', 'monthly_updates']) {
           if (Array.isArray(obj[key])) return obj[key] as Record<string, unknown>[]
         }
@@ -542,62 +624,388 @@ function parseAllUsersUpdates(
     .map((entry) => normalizeEmployee(entry, month, year))
 }
 
-function parseEmployeeMonthlyUpdateSummary(
-  data: unknown,
+function buildEmployeesFromRoster(memberOptions: WorkdayOverrideMemberOption[]): EmployeeMonthlyStats[] {
+  return memberOptions.map((member) => ({
+    user_id: member.id,
+    user_name: member.full_name?.trim() || `${member.name ?? ''} ${member.surname ?? ''}`.trim() || `User #${member.id}`,
+    telegram_username: member.telegram_id ?? null,
+    submitted_count: 0,
+    missing_count: 0,
+    completion_percentage: 0,
+    last_update_date: null,
+    daily_statuses: null,
+    base_salary: null,
+    estimated_salary: null,
+    final_salary: null,
+    deduction_amount: null,
+    bonus_amount: null,
+    penalty_points: null,
+    penalties_count: null,
+    bonuses_count: null,
+  }))
+}
+
+function normalizePercentage(value: unknown) {
+  const rawValue = toNumber(value)
+
+  if (rawValue === null) {
+    return null
+  }
+
+  return rawValue <= 1 ? rawValue * 100 : rawValue
+}
+
+function getEmployeePeriods(raw: unknown) {
+  if (!isRecord(raw) || !Array.isArray(raw.periods)) {
+    return [] as UnknownRecord[]
+  }
+
+  return raw.periods.filter(isRecord)
+}
+
+function getSelectedPeriod(periods: UnknownRecord[], month: number, year: number) {
+  return periods.find((period) => (
+    toNumber(period.year) === year &&
+    toNumber(period.month) === month
+  )) ?? null
+}
+
+function getLatestReportDate(periods: UnknownRecord[]) {
+  const datedPeriods = periods
+    .map((period) => findFirstString(period, ['latest_report_date', 'last_update_date', 'last_report_date', 'updated_at']))
+    .filter((value): value is string => Boolean(value))
+
+  if (datedPeriods.length === 0) {
+    return null
+  }
+
+  return datedPeriods.reduce<string | null>((latest, current) => {
+    if (!latest) {
+      return current
+    }
+
+    const latestDate = new Date(latest)
+    const currentDate = new Date(current)
+
+    if (Number.isNaN(currentDate.getTime())) {
+      return latest
+    }
+
+    if (Number.isNaN(latestDate.getTime()) || currentDate > latestDate) {
+      return current
+    }
+
+    return latest
+  }, null)
+}
+
+function buildMonthlyActivityFromPeriods(periods: UnknownRecord[], year: number): EmployeeDayStatus[] {
+  const currentYear = now.getFullYear()
+  const currentMonth = now.getMonth() + 1
+
+  return ALL_MONTHS.map(({ value, label }) => {
+    const period = getSelectedPeriod(periods, value, year)
+    const reportsCount = toNumber(period?.reports_count ?? period?.total_reports ?? period?.submitted_count) ?? 0
+    const averagePercentage = normalizePercentage(
+      period?.average_update_percentage ??
+      period?.completion_percentage ??
+      period?.percentage,
+    ) ?? 0
+    const latestReportDate = findFirstString(period ?? {}, ['latest_report_date', 'last_update_date', 'last_report_date', 'updated_at'])
+
+    let status: DayStatus = 'neutral'
+
+    if (year > currentYear || (year === currentYear && value > currentMonth)) {
+      status = 'future'
+    } else if (period) {
+      status = reportsCount > 0 || averagePercentage > 0 || Boolean(latestReportDate)
+        ? 'submitted'
+        : 'missing'
+    }
+
+    return {
+      day: value,
+      label: label.slice(0, 3),
+      status,
+    }
+  })
+}
+
+function mergeEmployeeHistory(
   fallbackEmployee: EmployeeMonthlyStats,
+  rawHistory: unknown,
   month: number,
   year: number,
 ): EmployeeMonthlyStats {
-  if (!isRecord(data)) {
+  if (!isRecord(rawHistory)) {
     return fallbackEmployee
   }
 
-  const employee = isRecord(data.employee) ? data.employee : null
-  const calendar = buildMemberMonthlyUpdateCalendar(data, month, year)
-  const dailyStatuses = calendar?.days.map((day) => ({
-    day: day.day,
-    status: day.status,
-  })) ?? fallbackEmployee.daily_statuses ?? null
-  const submittedCount =
-    calendar?.submittedCount ??
-    dailyStatuses?.filter((entry) => entry.status === 'submitted').length ??
-    fallbackEmployee.submitted_count
-  const missingCount =
-    calendar?.missingCount ??
-    dailyStatuses?.filter((entry) => entry.status === 'missing').length ??
-    fallbackEmployee.missing_count
-  const rawCompletion = toNumber(data.percentage ?? data.completion_percentage ?? data.completion_rate)
-  const completion =
-    calendar
-      ? submittedCount + missingCount > 0
-        ? (submittedCount / (submittedCount + missingCount)) * 100
-        : 0
-      : rawCompletion !== null
-      ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
-      : submittedCount + missingCount > 0
-        ? (submittedCount / (submittedCount + missingCount)) * 100
-        : 0
+  const summary = isRecord(rawHistory.summary) ? rawHistory.summary : null
+  const periods = getEmployeePeriods(rawHistory)
+  const selectedPeriod = getSelectedPeriod(periods, month, year)
+  const historySubmittedCount =
+    toNumber(selectedPeriod?.reports_count ?? selectedPeriod?.total_reports ?? selectedPeriod?.submitted_count) ??
+    toNumber(summary?.total_reports ?? summary?.reports_count ?? summary?.submitted_count) ??
+    null
+  const historyCompletion =
+    normalizePercentage(
+      selectedPeriod?.average_update_percentage ??
+      selectedPeriod?.completion_percentage ??
+      selectedPeriod?.percentage ??
+      summary?.average_update_percentage ??
+      summary?.completion_percentage ??
+      summary?.percentage,
+    )
   const lastUpdateDate =
-    [...(calendar?.days ?? [])]
-      .reverse()
-      .find((day) => day.status === 'submitted')?.date ??
-    findFirstString(data, ['last_update_date', 'last_update', 'updated_at', 'submitted_at']) ??
+    findFirstString(selectedPeriod ?? {}, ['latest_report_date', 'last_update_date', 'last_report_date', 'updated_at']) ??
+    getLatestReportDate(periods) ??
     fallbackEmployee.last_update_date
+  const fallbackHasLiveStats =
+    fallbackEmployee.submitted_count > 0 ||
+    fallbackEmployee.missing_count > 0 ||
+    fallbackEmployee.completion_percentage > 0
+  const fallbackHasDayStatuses = Boolean(fallbackEmployee.daily_statuses?.length)
+  const historyHasUsefulStats =
+    (typeof historySubmittedCount === 'number' && historySubmittedCount > 0) ||
+    (typeof historyCompletion === 'number' && historyCompletion > 0)
+  const historyActivity = buildMonthlyActivityFromPeriods(periods, year)
 
   return {
-    user_id: toNumber(employee?.id ?? data.user_id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
+    user_id: toNumber(rawHistory.user_id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
     user_name:
-      findFirstString(employee ?? {}, ['full_name', 'name']) ??
-      findFirstString(data, ['user_name', 'full_name', 'name']) ??
+      findFirstString(rawHistory, ['full_name', 'user_name', 'name']) ??
       fallbackEmployee.user_name,
     telegram_username:
-      findFirstString(data, ['telegram_username', 'telegram_id']) ??
+      findFirstString(rawHistory, ['telegram_username', 'telegram_id']) ??
       fallbackEmployee.telegram_username,
-    submitted_count: submittedCount,
-    missing_count: missingCount,
-    completion_percentage: completion,
+    submitted_count: historyHasUsefulStats ? (historySubmittedCount ?? fallbackEmployee.submitted_count) : fallbackEmployee.submitted_count,
+    missing_count: fallbackEmployee.missing_count,
+    completion_percentage: historyHasUsefulStats ? (historyCompletion ?? fallbackEmployee.completion_percentage) : fallbackEmployee.completion_percentage,
     last_update_date: lastUpdateDate,
-    daily_statuses: dailyStatuses,
+    daily_statuses: fallbackHasDayStatuses || fallbackHasLiveStats ? fallbackEmployee.daily_statuses : historyActivity,
+    base_salary: fallbackEmployee.base_salary ?? null,
+    estimated_salary: fallbackEmployee.estimated_salary ?? null,
+    final_salary: fallbackEmployee.final_salary ?? null,
+    deduction_amount: fallbackEmployee.deduction_amount ?? null,
+    bonus_amount: fallbackEmployee.bonus_amount ?? null,
+    penalty_points: fallbackEmployee.penalty_points ?? null,
+    penalties_count: fallbackEmployee.penalties_count ?? null,
+    bonuses_count: fallbackEmployee.bonuses_count ?? null,
+  }
+}
+
+function parseUpdatesAllByEmployee(data: unknown) {
+  const parsed = parsePayload(data)
+
+  if (!isRecord(parsed) || !Array.isArray(parsed.employees)) {
+    return new Map<number, UnknownRecord>()
+  }
+
+  return new Map(
+    parsed.employees
+      .filter(isRecord)
+      .map((employee) => [toNumber(employee.user_id) ?? 0, employee] satisfies [number, UnknownRecord])
+      .filter(([userId]) => userId > 0),
+  )
+}
+
+function buildEmployeesFromHistoryRecords(
+  historyByEmployee: Map<number, UnknownRecord>,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats[] {
+  return Array.from(historyByEmployee.values()).map((record) => (
+    mergeEmployeeHistory(
+      {
+        user_id: toNumber(record.user_id ?? record.id ?? record.employee_id ?? record.member_id) ?? 0,
+        user_name: findFirstString(record, ['full_name', 'user_name', 'name']) ?? 'Unknown',
+        telegram_username: findFirstString(record, ['telegram_username', 'telegram_id']) ?? null,
+        submitted_count: 0,
+        missing_count: 0,
+        completion_percentage: 0,
+        last_update_date: null,
+        daily_statuses: null,
+        base_salary: null,
+        estimated_salary: null,
+        final_salary: null,
+        deduction_amount: null,
+        bonus_amount: null,
+        penalty_points: null,
+        penalties_count: null,
+        bonuses_count: null,
+      },
+      record,
+      month,
+      year,
+    )
+  )).filter((employee) => employee.user_id > 0)
+}
+
+function parseTeamUpdatesSummary(data: unknown): TeamUpdatesSummary | null {
+  const parsed = parsePayload(data)
+
+  if (!isRecord(parsed)) {
+    return null
+  }
+
+  const summary = isRecord(parsed.summary) ? parsed.summary : parsed
+  const rawAverage =
+    toNumber(
+      summary.average_update_percentage ??
+      summary.avg_completion_percentage ??
+      summary.completion_percentage ??
+      summary.update_percentage,
+    ) ?? 0
+
+  return {
+    totalEmployees:
+      toNumber(summary.total_employees ?? summary.employees_count ?? summary.employee_count) ?? 0,
+    totalReports:
+      toNumber(summary.total_reports ?? summary.updates_count ?? summary.submitted_count) ?? 0,
+    averageCompletion:
+      rawAverage <= 1 ? rawAverage * 100 : rawAverage,
+  }
+}
+
+function parseMissingEmployeesCount(data: unknown): number | null {
+  const parsed = parsePayload(data)
+
+  if (Array.isArray(parsed)) {
+    return parsed.length
+  }
+
+  if (!isRecord(parsed)) {
+    return null
+  }
+
+  for (const key of ['employees', 'users', 'items', 'results', 'data', 'members']) {
+    if (Array.isArray(parsed[key])) {
+      return parsed[key].length
+    }
+  }
+
+  return toNumber(
+    parsed.missing_count ??
+    parsed.total_missing ??
+    parsed.count ??
+    parsed.total,
+  )
+}
+
+function parseSalarySummary(data: unknown): TeamSalarySummary | null {
+  const parsed = parsePayload(data)
+
+  if (!isRecord(parsed)) {
+    return null
+  }
+
+  const summary = isRecord(parsed.summary) ? parsed.summary : parsed
+
+  return {
+    employeesCount: toNumber(summary.employees_count ?? summary.total_employees ?? summary.employee_count) ?? 0,
+    totalBaseSalary: toNumber(summary.total_base_salary ?? summary.base_salary_total) ?? 0,
+    totalDeductionAmount: toNumber(summary.total_deduction_amount ?? summary.deduction_amount_total) ?? 0,
+    totalBonusAmount: toNumber(summary.total_bonus_amount ?? summary.bonus_amount_total) ?? 0,
+    totalFinalSalary: toNumber(summary.total_final_salary ?? summary.final_salary_total) ?? 0,
+    totalEstimatedSalary: toNumber(summary.total_estimated_salary ?? summary.estimated_salary_total ?? summary.salary_estimate_total) ?? 0,
+  }
+}
+
+function parseSalaryEntry(raw: unknown): TeamSalaryEntry | null {
+  if (!isRecord(raw)) {
+    return null
+  }
+
+  const salaryEstimate = isRecord(raw.salary_estimate)
+    ? raw.salary_estimate
+    : isRecord(raw.salaryEstimate)
+      ? raw.salaryEstimate
+      : null
+
+  const userId = toNumber(raw.user_id ?? raw.id ?? raw.employee_id ?? raw.member_id)
+
+  if (!userId) {
+    return null
+  }
+
+  return {
+    userId,
+    baseSalary: toNumber(salaryEstimate?.base_salary ?? raw.base_salary ?? raw.default_salary),
+    deductionAmount: toNumber(salaryEstimate?.deduction_amount ?? raw.deduction_amount),
+    bonusAmount: toNumber(salaryEstimate?.total_bonus_amount ?? salaryEstimate?.bonus_amount ?? raw.total_bonus_amount ?? raw.bonus_amount),
+    finalSalary: toNumber(salaryEstimate?.final_salary ?? raw.final_salary),
+    estimatedSalary: toNumber(salaryEstimate?.estimated_salary ?? raw.estimated_salary),
+    penaltyPoints: toNumber(salaryEstimate?.total_penalty_points ?? raw.total_penalty_points ?? raw.penalty_points),
+    penaltiesCount: toNumber(raw.penalties_count ?? raw.penalty_count),
+    bonusesCount: toNumber(raw.bonuses_count ?? raw.bonus_count),
+  }
+}
+
+function parseSalaryEstimatesByEmployee(data: unknown) {
+  const parsed = parsePayload(data)
+
+  if (!isRecord(parsed) || !Array.isArray(parsed.employees)) {
+    return new Map<number, TeamSalaryEntry>()
+  }
+
+  return new Map(
+    parsed.employees
+      .map((entry) => parseSalaryEntry(entry))
+      .filter((entry): entry is TeamSalaryEntry => Boolean(entry))
+      .map((entry) => [entry.userId, entry] satisfies [number, TeamSalaryEntry]),
+  )
+}
+
+function mergeEmployeeSalary(
+  employee: EmployeeMonthlyStats,
+  salaryEntry: TeamSalaryEntry | undefined,
+): EmployeeMonthlyStats {
+  if (!salaryEntry) {
+    return employee
+  }
+
+  return {
+    ...employee,
+    base_salary: salaryEntry.baseSalary,
+    estimated_salary: salaryEntry.estimatedSalary,
+    final_salary: salaryEntry.finalSalary,
+    deduction_amount: salaryEntry.deductionAmount,
+    bonus_amount: salaryEntry.bonusAmount,
+    penalty_points: salaryEntry.penaltyPoints,
+    penalties_count: salaryEntry.penaltiesCount,
+    bonuses_count: salaryEntry.bonusesCount,
+  }
+}
+
+function mergeEmployeeStats(
+  employee: EmployeeMonthlyStats,
+  statsEntry: EmployeeMonthlyStats | undefined,
+): EmployeeMonthlyStats {
+  if (!statsEntry) {
+    return employee
+  }
+
+  const statsHasUsefulValues =
+    statsEntry.submitted_count > 0 ||
+    statsEntry.missing_count > 0 ||
+    statsEntry.completion_percentage > 0 ||
+    Boolean(statsEntry.last_update_date) ||
+    Boolean(statsEntry.daily_statuses?.length)
+
+  return {
+    ...employee,
+    user_id: statsEntry.user_id || employee.user_id,
+    user_name: statsEntry.user_name || employee.user_name,
+    telegram_username: statsEntry.telegram_username ?? employee.telegram_username,
+    submitted_count: statsHasUsefulValues ? statsEntry.submitted_count : employee.submitted_count,
+    missing_count: statsHasUsefulValues ? statsEntry.missing_count : employee.missing_count,
+    completion_percentage: statsHasUsefulValues ? statsEntry.completion_percentage : employee.completion_percentage,
+    last_update_date: statsHasUsefulValues ? (statsEntry.last_update_date ?? employee.last_update_date) : employee.last_update_date,
+    daily_statuses:
+      statsHasUsefulValues && statsEntry.daily_statuses && statsEntry.daily_statuses.length > 0
+        ? statsEntry.daily_statuses
+        : employee.daily_statuses,
   }
 }
 
@@ -656,59 +1064,133 @@ export function CeoTeamUpdatesPage() {
   const [search, setSearch]             = useState('')
   const [sortKey, setSortKey]           = useState<SortKey>('submitted')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const memberOptionsQuery = useAsyncData(() => updateTrackingService.workdayOverrideMemberOptions(), [])
+  const rosterEmployees = useMemo(
+    () => buildEmployeesFromRoster(memberOptionsQuery.data ?? []),
+    [memberOptionsQuery.data],
+  )
+  const rosterEmployeeIds = useMemo(
+    () => rosterEmployees.map((member) => member.user_id),
+    [rosterEmployees],
+  )
 
-  const teamQuery    = useAsyncData(
+  const historyQuery = useAsyncData(
+    () => membersService.updatesAll({
+      year,
+      month,
+      employeeIds: rosterEmployeeIds.length > 0 ? rosterEmployeeIds : undefined,
+    }),
+    [year, month, rosterEmployeeIds.join(',')],
+  )
+  const historyByEmployee = useMemo(
+    () => parseUpdatesAllByEmployee(historyQuery.data),
+    [historyQuery.data],
+  )
+  const historyEmployees = useMemo(
+    () => buildEmployeesFromHistoryRecords(historyByEmployee, month, year),
+    [historyByEmployee, month, year],
+  )
+  const employeeIds = useMemo(
+    () => (rosterEmployeeIds.length > 0 ? rosterEmployeeIds : historyEmployees.map((member) => member.user_id)),
+    [historyEmployees, rosterEmployeeIds],
+  )
+
+  const trackingMonthlyQuery = useAsyncData(
     () => updateTrackingService.teamMonthly(month, year),
     [month, year],
   )
-  const companyQuery = useAsyncData(() => updateTrackingService.companyStats(), [])
-
-  const rawEmployees = useMemo(
+  const missingTodayQuery = useAsyncData(
+    () => updateTrackingService.missing(currentDateKey),
+    [],
+  )
+  const teamQuery    = useAsyncData(
+    () => membersService.updatesStatistics({ month, year, employeeIds }),
+    [month, year, employeeIds.join(',')],
+    { enabled: employeeIds.length > 0 },
+  )
+  const salaryQuery = useAsyncData(
+    () => membersService.salaryEstimates({ year, month, employeeIds }),
+    [month, year, employeeIds.join(',')],
+    { enabled: employeeIds.length > 0 },
+  )
+  const workdayOverridesQuery = useAsyncData(
+    () => updateTrackingService.workdayOverrides({ month, year }),
+    [month, year],
+  )
+  const teamSummary = useMemo(
+    () => parseTeamUpdatesSummary(teamQuery.data),
+    [teamQuery.data],
+  )
+  const teamEmployees = useMemo(
     () => parseAllUsersUpdates(teamQuery.data, month, year),
     [teamQuery.data, month, year],
   )
-  const employeeDetailsQuery = useAsyncData(
-    async () => {
-      const employeesWithIds = rawEmployees.filter((employee) => employee.user_id > 0)
+  const teamEmployeesById = useMemo(
+    () => new Map(teamEmployees.map((employee) => [employee.user_id, employee])),
+    [teamEmployees],
+  )
+  const missingTodayCount = useMemo(
+    () => parseMissingEmployeesCount(missingTodayQuery.data),
+    [missingTodayQuery.data],
+  )
+  const salarySummary = useMemo(
+    () => parseSalarySummary(salaryQuery.data),
+    [salaryQuery.data],
+  )
+  const rawEmployees = useMemo(
+    () => {
+      const parsedEmployees = parseAllUsersUpdates(trackingMonthlyQuery.data, month, year)
 
-      if (employeesWithIds.length === 0) {
-        return rawEmployees
+      if (parsedEmployees.length === 0) {
+        return rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
       }
 
-      const uniqueEmployees = Array.from(
-        new Map(employeesWithIds.map((employee) => [employee.user_id, employee])).values(),
-      )
+      const parsedById = new Map(parsedEmployees.map((employee) => [employee.user_id, employee]))
+      const fallbackEmployees = rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
 
-      const detailedEmployees = await Promise.all(
-        uniqueEmployees.map(async (employee) => {
-          try {
-            const response = await updateTrackingService.employeeMonthlyUpdates(year, month, employee.user_id)
-            return parseEmployeeMonthlyUpdateSummary(response, employee, month, year)
-          } catch {
-            return employee
-          }
-        }),
-      )
-
-      const detailedById = new Map(detailedEmployees.map((employee) => [employee.user_id, employee]))
-
-      return rawEmployees.map((employee) => {
-        if (employee.user_id <= 0) {
-          return employee
-        }
-
-        return detailedById.get(employee.user_id) ?? employee
-      })
+      return fallbackEmployees.map((employee) => parsedById.get(employee.user_id) ?? employee)
     },
-    [teamQuery.data, month, year],
-    { enabled: rawEmployees.length > 0 },
+    [historyEmployees, month, rosterEmployees, trackingMonthlyQuery.data, year],
+  )
+  const salaryByEmployee = useMemo(
+    () => parseSalaryEstimatesByEmployee(salaryQuery.data),
+    [salaryQuery.data],
+  )
+  const mergedEmployees = useMemo(
+    () => rawEmployees.map((employee) => (
+      mergeEmployeeSalary(
+        mergeEmployeeStats(
+          mergeEmployeeHistory(employee, historyByEmployee.get(employee.user_id), month, year),
+          teamEmployeesById.get(employee.user_id),
+        ),
+        salaryByEmployee.get(employee.user_id),
+      )
+    )),
+    [historyByEmployee, month, rawEmployees, salaryByEmployee, teamEmployeesById, year],
   )
 
   async function handleRefresh() {
-    await Promise.all([teamQuery.refetch(), companyQuery.refetch()])
-    if (rawEmployees.length > 0) {
-      await employeeDetailsQuery.refetch()
+    const results = await Promise.allSettled([
+      memberOptionsQuery.refetch(),
+      trackingMonthlyQuery.refetch(),
+      missingTodayQuery.refetch(),
+      teamQuery.refetch(),
+      historyQuery.refetch(),
+      salaryQuery.refetch(),
+      workdayOverridesQuery.refetch(),
+    ])
+
+    const failed = results.find((result) => result.status === 'rejected')
+
+    if (failed?.status === 'rejected') {
+      showToast({
+        title: 'Refresh failed',
+        description: getApiErrorMessage(failed.reason),
+        tone: 'error',
+      })
+      return
     }
+
     showToast({ title: 'Refreshed', description: 'Team monthly data reloaded.', tone: 'success' })
   }
 
@@ -725,13 +1207,22 @@ export function CeoTeamUpdatesPage() {
     navigate(`/faults/members/${employee.user_id}?year=${year}&month=${month}`)
   }
 
-  const sourceEmployees = employeeDetailsQuery.data?.length ? employeeDetailsQuery.data : rawEmployees
+  const sourceEmployees = mergedEmployees.length > 0 ? mergedEmployees : rawEmployees
   const employees = useMemo(
     () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
     [sourceEmployees, search, sortKey, statusFilter],
   )
+  const workdayOverrides = useMemo(
+    () => [...(workdayOverridesQuery.data ?? [])].sort((left, right) => right.special_date.localeCompare(left.special_date)),
+    [workdayOverridesQuery.data],
+  )
 
-  if ((teamQuery.isLoading && !teamQuery.data) || (employeeDetailsQuery.isLoading && rawEmployees.length > 0 && !employeeDetailsQuery.data)) {
+  const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
+
+  if (
+    (memberOptionsQuery.isLoading && historyQuery.isLoading && !hasRosterData) ||
+    ((teamQuery.isLoading || trackingMonthlyQuery.isLoading) && !teamQuery.data && !trackingMonthlyQuery.data && !hasRosterData)
+  ) {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Team Updates"
@@ -741,28 +1232,37 @@ export function CeoTeamUpdatesPage() {
     )
   }
 
-  if (teamQuery.isError && !teamQuery.data) {
+  if (
+    (memberOptionsQuery.isError && historyQuery.isError && !hasRosterData) ||
+    (teamQuery.isError && trackingMonthlyQuery.isError && !teamQuery.data && !trackingMonthlyQuery.data && !hasRosterData)
+  ) {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Team Updates"
         title="Team data unavailable"
         description="Could not load monthly team update statistics."
         actionLabel="Retry"
-        onAction={() => void teamQuery.refetch()}
+        onAction={() => void handleRefresh()}
       />
     )
   }
 
-  const totalEmployees = sourceEmployees.length || (companyQuery.data?.total_employees ?? 0)
+  const totalEmployees = rosterEmployees.length || sourceEmployees.length || teamSummary?.totalEmployees || salarySummary?.employeesCount || 0
   const totalSubmitted = sourceEmployees.reduce((s, e) => s + e.submitted_count, 0)
   const totalMissing   = sourceEmployees.reduce((s, e) => s + e.missing_count, 0)
+  const totalEstimatedSalary = salarySummary?.totalEstimatedSalary ??
+    sourceEmployees.reduce((sum, employee) => sum + (employee.estimated_salary ?? 0), 0)
   const avgCompletion  = sourceEmployees.length
     ? sourceEmployees.reduce((s, e) => s + e.completion_percentage, 0) / sourceEmployees.length
-    : (companyQuery.data?.avg_percentage_this_month ?? 0)
+    : (teamSummary?.averageCompletion ?? 0)
   const topPerformer   = sourceEmployees.length
     ? sourceEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, sourceEmployees[0])
     : null
   const selectedMonthName = getMonthName(month)
+  const holidayOverrides = workdayOverrides.filter((item) => normalizeOverrideDayType(item.day_type) === 'holiday')
+  const shortDayOverrides = workdayOverrides.filter((item) => normalizeOverrideDayType(item.day_type) === 'short_day')
+  const noUpdateOverrides = workdayOverrides.filter((item) => !item.update_required)
+  const scopedOverrideCount = workdayOverrides.filter((item) => item.target_type !== 'all').length
 
   return (
     <section className="space-y-6 page-enter">
@@ -786,11 +1286,16 @@ export function CeoTeamUpdatesPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {typeof missingTodayCount === 'number' ? (
+                <Badge variant={missingTodayCount > 0 ? 'warning' : 'success'} dot>
+                  {missingTodayCount} missing today
+                </Badge>
+              ) : null}
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="sm"
                 onClick={() => navigate('/ceo/workday-overrides')}
-                className="min-h-9 rounded-xl border border-white/10 bg-white/[0.03] text-white/78 hover:border-white/18 hover:bg-white/[0.06] hover:text-white"
+                className="min-h-[42px] rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-white hover:border-white/15 hover:bg-white/6"
               >
                 Workday overrides
               </Button>
@@ -834,7 +1339,7 @@ export function CeoTeamUpdatesPage() {
       </Card>
 
       {/* ── Metric cards ───────────────────────── */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 stagger-children">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6 stagger-children">
         <SummaryCard
           accent="blue"
           label="Total Employees"
@@ -884,6 +1389,19 @@ export function CeoTeamUpdatesPage() {
         />
         <SummaryCard
           accent="default"
+          label="Estimated Payroll"
+          value={formatCurrency(totalEstimatedSalary)}
+          icon={
+            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h12" />
+              <path d="M4 10h12" />
+              <path d="M4 14h12" />
+              <path d="M7 3v14" />
+            </svg>
+          }
+        />
+        <SummaryCard
+          accent="default"
           label="Top Performer"
           value={
             topPerformer
@@ -899,6 +1417,119 @@ export function CeoTeamUpdatesPage() {
       </div>
 
       {/* ── Filters ─────────────────────────────── */}
+      <Card variant="glass" className="p-5">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+          <SectionTitle
+            title="Workday Overrides"
+            description="Holiday va short day yozuvlari monthly update expectation bilan birga ko‘rinadi."
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="blue">{workdayOverrides.length} entries</Badge>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate('/ceo/workday-overrides')}
+              className="rounded-xl"
+            >
+              Open overrides page
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard
+            accent="warning"
+            label="Holiday Rules"
+            value={holidayOverrides.length}
+            icon={
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 3v4" />
+                <path d="M10 13v4" />
+                <path d="M3 10h4" />
+                <path d="M13 10h4" />
+                <circle cx="10" cy="10" r="3" />
+              </svg>
+            }
+          />
+          <SummaryCard
+            accent="blue"
+            label="Short Day Rules"
+            value={shortDayOverrides.length}
+            icon={
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="10" r="8" />
+                <path d="M10 5v5l3 2" />
+              </svg>
+            }
+          />
+          <SummaryCard
+            accent="success"
+            label="No Update Required"
+            value={noUpdateOverrides.length}
+            icon={
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6.5 10 2.5 2.5 4.5-4.5" />
+                <circle cx="10" cy="10" r="8" />
+              </svg>
+            }
+          />
+          <SummaryCard
+            accent="default"
+            label="Specific Scope"
+            value={scopedOverrideCount}
+            icon={
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="8" cy="7" r="3" />
+                <path d="M2 17c0-3.3 2.7-6 6-6" />
+                <path d="M13 7h4" />
+                <path d="M15 5v4" />
+              </svg>
+            }
+          />
+        </div>
+
+        <div className="mt-5">
+          {workdayOverridesQuery.isError ? (
+            <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.08] px-4 py-4 text-sm text-amber-100/82">
+              Workday overrides endpointdan ma'lumot olinmadi. Team table ishlashda davom etadi, lekin override section bo‘sh qoladi.
+            </div>
+          ) : workdayOverrides.length > 0 ? (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {workdayOverrides.slice(0, 4).map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-4"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <Badge variant={normalizeOverrideDayType(item.day_type) === 'short_day' ? 'blue' : 'warning'}>
+                      {getOverrideTypeLabel(item.day_type)}
+                    </Badge>
+                    <Badge variant={item.update_required ? 'success' : 'outline'}>
+                      {item.update_required ? 'Update required' : 'No update required'}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-(--muted-strong)">{formatShortDate(item.special_date)}</p>
+                  <p className="mt-2 text-sm text-white/76">{getOverrideScopeLabel(item)}</p>
+                  {item.note?.trim() ? (
+                    <p className="mt-2 line-clamp-2 text-sm text-white/70">{item.note}</p>
+                  ) : null}
+                  {item.workday_hours ? (
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-blue-300/70">
+                      {item.workday_hours}h workday
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-[20px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
+              {selectedMonthName} {year} uchun override yozuvlari topilmadi.
+            </div>
+          )}
+        </div>
+      </Card>
+
       <Card variant="glass" className="p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
           <SectionTitle title="Filters and Comparison Controls" />
@@ -998,7 +1629,14 @@ export function CeoTeamUpdatesPage() {
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
                         <EmployeeAvatar name={emp.user_name} />
-                        <span className="text-sm font-semibold text-white">{emp.user_name}</span>
+                        <div>
+                          <span className="text-sm font-semibold text-white">{emp.user_name}</span>
+                          {typeof emp.estimated_salary === 'number' && emp.estimated_salary > 0 ? (
+                            <p className="mt-1 text-xs text-(--muted)">
+                              Est. salary: {formatCurrency(emp.estimated_salary)}
+                            </p>
+                          ) : null}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-3.5 text-sm font-semibold text-white tabular-nums">
@@ -1044,19 +1682,19 @@ export function CeoTeamUpdatesPage() {
             <div className="flex gap-3 text-[11px] text-(--muted)">
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]" />
-                Submitted
+                Active month
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-rose-500/80" />
-                Missing
+                No reports
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400/70" />
-                Off / Holiday
+                <span className="h-2 w-2 rounded-full bg-white/12" />
+                No data
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-white/18" />
-                Upcoming
+                Future month
               </span>
             </div>
             <p className="text-[11px] text-(--muted)">
