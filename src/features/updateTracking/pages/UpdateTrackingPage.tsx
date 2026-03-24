@@ -1343,7 +1343,7 @@ export function UpdateTrackingPage() {
                           onClick={handleJumpToToday}
                           className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14"
                         >
-                          Today
+                          This month
                         </Button>
                         <Button
                           variant="secondary"

@@ -4,6 +4,7 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ProjectRecord } from '../../../shared/api/services/projects.service'
 import { Avatar, AvatarGroup } from './Avatar'
 import { formatRelativeDate } from '../lib/format'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type ProjectCardProps = {
   project: ProjectRecord
@@ -18,7 +19,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
       <div className="relative h-36 w-full overflow-hidden bg-[var(--muted-surface)]">
         {project.image ? (
           <img
-            src={project.image}
+            src={resolveMediaUrl(project.image) ?? project.image}
             alt={project.project_name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

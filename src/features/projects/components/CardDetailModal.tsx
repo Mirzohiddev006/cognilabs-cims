@@ -1,11 +1,12 @@
 import { createPortal } from 'react-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
 import { PRIORITY_CONFIG, formatProjectDate, isDueDateOverdue, isDueDateSoon, getSnoozePresets } from '../lib/format'
 import { cn } from '../../../shared/lib/cn'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type CardDetailModalProps = {
   card: CardRecord | null
@@ -15,6 +16,11 @@ type CardDetailModalProps = {
   onDelete: () => void
   boardName?: string
   projectName?: string
+}
+
+function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
+  const value = image.url ?? image.url_path ?? ''
+  return resolveMediaUrl(value) ?? value
 }
 
 function SnoozeMenu({ disabled }: { disabled?: boolean }) {
@@ -65,6 +71,8 @@ export function CardDetailModal({
   boardName,
   projectName,
 }: CardDetailModalProps) {
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+
   useEffect(() => {
     if (!open) return
     const prev = document.body.style.overflow
@@ -79,12 +87,21 @@ export function CardDetailModal({
     }
   }, [open, onClose])
 
+  useEffect(() => {
+    setSelectedImageIndex(0)
+  }, [card?.id, open])
+
   if (!open || !card) return null
 
   const priority = card.priority ? PRIORITY_CONFIG[card.priority] : null
   const overdue = card.due_date ? isDueDateOverdue(card.due_date) : false
   const soon = card.due_date ? isDueDateSoon(card.due_date) : false
-  const images = Array.isArray(card.images) ? card.images : []
+  const images = Array.isArray(card.images)
+    ? card.images
+    : Array.isArray(card.files)
+      ? card.files
+      : []
+  const selectedImage = images[selectedImageIndex] ?? images[0] ?? null
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-start justify-end sm:items-center sm:justify-center p-3 sm:p-6">
@@ -97,7 +114,7 @@ export function CardDetailModal({
       />
 
       {/* Drawer / modal */}
-      <div className="relative z-10 flex h-full max-h-[calc(100vh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]">
+      <div className="relative z-10 flex h-full max-h-[calc(100vh-1.5rem)] w-full max-w-5xl flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]">
 
         {/* Gradient accent */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_72%)]" />
@@ -159,9 +176,35 @@ export function CardDetailModal({
 
         {/* Body */}
         <div className="relative z-10 flex-1 overflow-y-auto">
-          <div className="grid gap-0 sm:grid-cols-[1fr_220px]">
+          <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_260px]">
             {/* Main column */}
-            <div className="flex flex-col gap-5 border-b sm:border-b-0 sm:border-r border-[var(--border)] p-6">
+            <div className="flex flex-col gap-5 border-b border-[var(--border)] p-6 xl:border-b-0 xl:border-r">
+              {selectedImage ? (
+                <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-black/20">
+                  <a
+                    href={getCardImageUrl(selectedImage)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative block"
+                  >
+                    <img
+                      src={getCardImageUrl(selectedImage)}
+                      alt={selectedImage.filename}
+                      className="h-[320px] w-full object-cover transition duration-300 group-hover:scale-[1.015] sm:h-[420px]"
+                    />
+                    <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">{selectedImage.filename}</p>
+                        <p className="mt-1 text-xs text-white/70">Open full size</p>
+                      </div>
+                      <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-medium text-white/80">
+                        {selectedImageIndex + 1} / {images.length}
+                      </span>
+                    </div>
+                  </a>
+                </div>
+              ) : null}
+
               {/* Description */}
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
@@ -182,26 +225,28 @@ export function CardDetailModal({
                   <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
                     Attachments ({images.length})
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {images.map((img) => (
-                      <a
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                    {images.map((img, index) => (
+                      <button
                         key={img.id}
-                        href={img.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative h-20 w-20 overflow-hidden rounded-xl border border-[var(--border)] transition hover:border-blue-500/30"
+                        type="button"
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={cn(
+                          'group relative overflow-hidden rounded-2xl border transition hover:border-blue-500/30',
+                          index === selectedImageIndex ? 'border-blue-400/40 ring-1 ring-blue-400/30' : 'border-[var(--border)]',
+                        )}
                       >
                         <img
-                          src={img.url}
+                          src={getCardImageUrl(img)}
                           alt={img.filename}
-                          className="h-full w-full object-cover transition group-hover:scale-105"
+                          className="h-28 w-full object-cover transition group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 flex items-end justify-center bg-gradient-to-t from-black/60 to-transparent p-1 opacity-0 transition-opacity group-hover:opacity-100">
-                          <span className="text-[9px] text-white truncate w-full text-center">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
+                          <span className="block truncate text-[10px] text-white">
                             {img.filename}
                           </span>
                         </div>
-                      </a>
+                      </button>
                     ))}
                   </div>
                 </div>

@@ -57,11 +57,142 @@ export type WorkdayOverrideListParams = {
   endDate?: string
 }
 
+const emptyStats: UpdateTrackingStats = {
+  user_id: 0,
+  user_name: '',
+  total_updates: 0,
+  updates_this_week: 0,
+  updates_last_week: 0,
+  updates_this_month: 0,
+  updates_last_month: 0,
+  updates_last_3_months: 0,
+  percentage_this_week: 0,
+  percentage_last_week: 0,
+  percentage_this_month: 0,
+  percentage_last_3_months: 0,
+  expected_updates_per_week: 0,
+}
+
+function parsePayload(payload: unknown): unknown {
+  if (typeof payload !== 'string') {
+    return payload
+  }
+
+  const trimmed = payload.trim()
+
+  if (!trimmed) {
+    return ''
+  }
+
+  try {
+    return JSON.parse(trimmed) as unknown
+  } catch {
+    return payload
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim())
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
+}
+
+function findFirstString(source: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = source[key]
+
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim()
+    }
+  }
+
+  return null
+}
+
+function hasStatsShape(source: Record<string, unknown>) {
+  return [
+    'total_updates',
+    'updates_this_week',
+    'updates_this_month',
+    'percentage_this_week',
+    'percentage_this_month',
+    'expected_updates_per_week',
+  ].some((key) => key in source)
+}
+
+function normalizeStatsPayload(payload: unknown): UpdateTrackingStats {
+  const parsed = parsePayload(payload)
+
+  if (!isRecord(parsed)) {
+    return emptyStats
+  }
+
+  const nestedCandidates = [parsed, ...Object.values(parsed).filter(isRecord)]
+  const source = nestedCandidates.find(hasStatsShape) ?? parsed
+
+  return {
+    user_id: toNumber(source.user_id ?? source.id) ?? emptyStats.user_id,
+    user_name: findFirstString(source, ['user_name', 'full_name', 'name']) ?? emptyStats.user_name,
+    total_updates: toNumber(source.total_updates ?? source.total_submitted ?? source.updates_count) ?? emptyStats.total_updates,
+    updates_this_week: toNumber(source.updates_this_week ?? source.this_week_updates) ?? emptyStats.updates_this_week,
+    updates_last_week: toNumber(source.updates_last_week ?? source.last_week_updates) ?? emptyStats.updates_last_week,
+    updates_this_month: toNumber(source.updates_this_month ?? source.this_month_updates) ?? emptyStats.updates_this_month,
+    updates_last_month: toNumber(source.updates_last_month ?? source.last_month_updates) ?? emptyStats.updates_last_month,
+    updates_last_3_months: toNumber(source.updates_last_3_months ?? source.last_3_months_updates) ?? emptyStats.updates_last_3_months,
+    percentage_this_week: toNumber(source.percentage_this_week ?? source.weekly_percentage ?? source.completion_this_week) ?? emptyStats.percentage_this_week,
+    percentage_last_week: toNumber(source.percentage_last_week ?? source.last_week_percentage) ?? emptyStats.percentage_last_week,
+    percentage_this_month: toNumber(source.percentage_this_month ?? source.monthly_percentage ?? source.completion_this_month) ?? emptyStats.percentage_this_month,
+    percentage_last_3_months: toNumber(source.percentage_last_3_months ?? source.last_3_months_percentage) ?? emptyStats.percentage_last_3_months,
+    expected_updates_per_week: toNumber(source.expected_updates_per_week ?? source.weekly_target ?? source.expected_weekly_updates) ?? emptyStats.expected_updates_per_week,
+  }
+}
+
+function is404Error(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return false
+  }
+
+  return 'status' in error && (error as { status?: unknown }).status === 404
+}
+
 export const updateTrackingService = {
-  myStats() {
-    return request<UpdateTrackingStats>({
-      path: '/update-tracking/stats/me',
-    })
+  async myStats() {
+    try {
+      return await request<UpdateTrackingStats>({
+        path: '/update-tracking/stats/me',
+      })
+    } catch (error) {
+      if (!is404Error(error)) {
+        throw error
+      }
+
+      const fallbacks = [
+        () => request<unknown>({ path: '/update-tracking/my-profile' }),
+        () => request<unknown>({ path: '/update-tracking/my-combined-report' }),
+        () => request<unknown>({ path: '/update-tracking/my-report' }),
+      ]
+
+      for (const loadFallback of fallbacks) {
+        try {
+          return normalizeStatsPayload(await loadFallback())
+        } catch {
+          continue
+        }
+      }
+
+      return emptyStats
+    }
   },
 
   myProfile() {

@@ -50,6 +50,24 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: false,
   },
   {
+    to: '/ceo/ai',
+    label: 'CIMS AI',
+    description: 'CEO assistant chat with backend metadata and prompt shortcuts.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
+    to: '/ceo/management',
+    label: 'Management API',
+    description: 'Statuses, roles and page registry controls in one module.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/ceo/team-updates',
     label: 'Team Monthly Updates',
     description: 'Monitor employee update activity by month.',
@@ -64,7 +82,7 @@ export const navigationItems: readonly NavigationItem[] = [
     description: 'Create holidays and short working days for update tracking.',
     group: 'CEO',
     permissionKey: 'ceo',
-    sidebar: true,
+    sidebar: false,
     defaultRedirect: false,
   },
   {

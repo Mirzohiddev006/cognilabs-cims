@@ -58,7 +58,7 @@ export function Avatar({ name, surname, imageUrl, size = 'md', className, title 
 }
 
 type AvatarGroupProps = {
-  users: Array<{ id: number; name?: string | null; surname?: string | null; email: string }>
+  users: Array<{ id: number; name?: string | null; surname?: string | null; email: string; profile_image?: string | null }>
   max?: number
   size?: AvatarSize
   className?: string
@@ -76,7 +76,7 @@ export function AvatarGroup({ users, max = 4, size = 'sm', className }: AvatarGr
           className="ring-2 ring-[var(--surface)] rounded-full"
           style={{ marginLeft: idx === 0 ? 0 : '-6px', zIndex: visible.length - idx }}
         >
-          <Avatar name={user.name} surname={user.surname} size={size} />
+          <Avatar name={user.name} surname={user.surname} imageUrl={user.profile_image} size={size} />
         </div>
       ))}
       {overflow > 0 && (

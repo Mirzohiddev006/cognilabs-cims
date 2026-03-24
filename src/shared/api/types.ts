@@ -35,6 +35,19 @@ export type UserRole =
 
 export type PermissionMap = Record<string, boolean>
 
+export type AiChatRequest = {
+  question: string
+}
+
+export type AiChatResponse = {
+  answer?: string | null
+  used_llm?: string | null
+  intents?: unknown
+  period?: unknown
+  employee?: unknown
+  context?: unknown
+} & Record<string, unknown>
+
 export type CurrentUser = {
   id: number
   email: string
@@ -184,6 +197,7 @@ export type DayStatus = 'submitted' | 'missing' | 'sunday' | 'future' | 'neutral
 export type EmployeeDayStatus = {
   day: number
   status: DayStatus
+  label?: string
 }
 
 export type EmployeeMonthlyStats = {
@@ -195,6 +209,14 @@ export type EmployeeMonthlyStats = {
   completion_percentage: number
   last_update_date: string | null
   daily_statuses?: EmployeeDayStatus[] | null
+  base_salary?: number | null
+  estimated_salary?: number | null
+  final_salary?: number | null
+  deduction_amount?: number | null
+  bonus_amount?: number | null
+  penalty_points?: number | null
+  penalties_count?: number | null
+  bonuses_count?: number | null
 }
 
 export type TeamMonthlyResponse = {
@@ -206,4 +228,110 @@ export type TeamMonthlyResponse = {
   avg_completion_percentage: number
   top_performer: EmployeeMonthlyStats | null
   employees: EmployeeMonthlyStats[]
+}
+
+export type ManagementPageRecord = {
+  id: number
+  name: string
+  display_name: string
+  description?: string | null
+  route_path: string
+  order: number
+  is_active: boolean
+  is_system: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ManagementPageCreatePayload = {
+  name: string
+  display_name: string
+  description?: string
+  route_path: string
+  order: number
+  is_active: boolean
+  is_system: boolean
+}
+
+export type ManagementPageUpdatePayload = {
+  display_name: string
+  description?: string
+  route_path: string
+  order: number
+  is_active: boolean
+}
+
+export type ManagementImageCleanupResponse = {
+  message: string
+  requested_count: number
+  deleted_count: number
+  missing_count: number
+  skipped_count: number
+  deleted_paths: string[]
+  missing_paths: string[]
+  skipped_items: string[]
+  cleared_references: Record<string, number>
+}
+
+export type ManagementImageBulkDeletePayload = {
+  image_paths?: string[]
+  category?: string
+  delete_all_in_category: boolean
+  only_unreferenced: boolean
+}
+
+export type ManagementStatusRecord = {
+  id: number
+  name: string
+  display_name: string
+  description?: string | null
+  color: string
+  order: number
+  is_active: boolean
+  is_system: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ManagementStatusCreatePayload = {
+  name: string
+  display_name: string
+  description?: string
+  color: string
+  order: number
+  is_active: boolean
+  is_system: boolean
+}
+
+export type ManagementStatusUpdatePayload = {
+  display_name: string
+  description?: string
+  color: string
+  order: number
+  is_active: boolean
+}
+
+export type ManagementRoleRecord = {
+  id: number
+  name: string
+  display_name: string
+  description?: string | null
+  is_active: boolean
+  is_system: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ManagementRoleCreatePayload = {
+  name: string
+  display_name: string
+  description?: string
+  is_active: boolean
+  is_system: boolean
+}
+
+export type ManagementRoleUpdatePayload = {
+  display_name: string
+  description?: string
+  is_active: boolean
 }

@@ -9,11 +9,13 @@ export type UserSummary = {
   surname: string
   email: string
   job_title?: string | null
+  profile_image?: string | null
 }
 
 export type CardImage = {
   id: number
   url: string
+  url_path?: string
   filename: string
 }
 
@@ -93,6 +95,7 @@ export type CardRecord = {
   created_at: string
   updated_at: string
   images: CardImage[]
+  files?: CardImage[]
 }
 
 // ─── File types ───────────────────────────────────────────────────────────────
@@ -100,8 +103,104 @@ export type CardRecord = {
 export type FileRecord = {
   id: number
   url: string
+  url_path?: string
   filename: string
   created_at: string
+}
+
+type ApiCardImage = {
+  id?: number
+  url?: string | null
+  url_path?: string | null
+  filename?: string | null
+  created_at?: string
+}
+
+type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files'> & {
+  images?: ApiCardImage[] | null
+  files?: ApiCardImage[] | null
+}
+
+type ApiColumnRecord = Omit<Partial<ColumnRecord>, 'cards'> & {
+  cards?: ApiCardRecord[] | null
+}
+
+type ApiBoardDetail = Omit<Partial<BoardDetail>, 'columns' | 'files'> & {
+  columns?: ApiColumnRecord[] | null
+  files?: ApiCardImage[] | null
+}
+
+function normalizeCardImage(image: ApiCardImage): CardImage {
+  const url = image.url ?? image.url_path ?? ''
+  const fallbackFilename = url.split('/').filter(Boolean).at(-1) ?? 'Attachment'
+
+  return {
+    id: image.id ?? 0,
+    url,
+    url_path: image.url_path ?? undefined,
+    filename: image.filename ?? fallbackFilename,
+  }
+}
+
+function normalizeCard(card: ApiCardRecord): CardRecord {
+  const images = Array.isArray(card.images)
+    ? card.images
+    : Array.isArray(card.files)
+      ? card.files
+      : []
+
+  return {
+    id: card.id ?? 0,
+    title: card.title ?? '',
+    description: card.description ?? null,
+    order: card.order ?? 0,
+    priority: card.priority ?? null,
+    assignee: card.assignee ?? null,
+    assignee_id: card.assignee_id ?? null,
+    due_date: card.due_date ?? null,
+    column_id: card.column_id ?? 0,
+    created_by: card.created_by ?? { id: 0, name: '', surname: '', email: '' },
+    created_at: card.created_at ?? '',
+    updated_at: card.updated_at ?? '',
+    images: images.map(normalizeCardImage),
+    files: Array.isArray(card.files) ? card.files.map(normalizeCardImage) : undefined,
+  }
+}
+
+function normalizeBoardFiles(files?: ApiCardImage[] | null) {
+  return Array.isArray(files)
+    ? files.map((file) => ({
+        id: file.id ?? 0,
+        url: file.url ?? file.url_path ?? '',
+        url_path: file.url_path ?? undefined,
+        filename: file.filename ?? ((file.url ?? file.url_path ?? '').split('/').filter(Boolean).at(-1) ?? 'Attachment'),
+        created_at: file.created_at ?? '',
+      }))
+    : []
+}
+
+function normalizeBoardDetail(board: ApiBoardDetail): BoardDetail {
+  return {
+    id: board.id ?? 0,
+    name: board.name ?? '',
+    description: board.description ?? null,
+    project_id: board.project_id ?? 0,
+    created_by: board.created_by ?? { id: 0, name: '', surname: '', email: '' },
+    is_archived: Boolean(board.is_archived),
+    created_at: board.created_at ?? '',
+    updated_at: board.updated_at ?? '',
+    columns: Array.isArray(board.columns)
+      ? board.columns.map((column) => ({
+          id: column.id ?? 0,
+          name: column.name ?? '',
+          color: column.color ?? null,
+          order: column.order ?? 0,
+          board_id: column.board_id ?? 0,
+          cards: Array.isArray(column.cards) ? column.cards.map(normalizeCard) : [],
+        }))
+      : [],
+    files: normalizeBoardFiles(board.files),
+  }
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -157,7 +256,7 @@ export const projectsService = {
   },
 
   getBoard(boardId: number) {
-    return request<BoardDetail>({ path: `/boards/${boardId}` })
+    return request<ApiBoardDetail>({ path: `/boards/${boardId}` }).then(normalizeBoardDetail)
   },
 
   updateBoard(boardId: number, payload: { name?: string; description?: string }) {
@@ -217,7 +316,7 @@ export const projectsService = {
   },
 
   getCard(cardId: number) {
-    return request<CardRecord>({ path: `/cards/${cardId}` })
+    return request<ApiCardRecord>({ path: `/cards/${cardId}` }).then(normalizeCard)
   },
 
   updateCard(cardId: number, formData: FormData) {

@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import {
@@ -29,6 +29,7 @@ import {
 import { MetricCard } from '../components/MetricCard'
 import { UserFormModal, type UserFormValues } from '../components/UserFormModal'
 import { permissionCatalog } from '../lib/permissionCatalog'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 const initialUserForm: UserFormValues = {
   email: '',
@@ -164,6 +165,9 @@ export function CeoUsersPage() {
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false)
   const [isMessageSubmitting, setIsMessageSubmitting] = useState(false)
 
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const profileImageRef = useRef<HTMLInputElement>(null)
+
   const users = dashboardQuery.data?.users ?? emptyUsers
   const statistics = dashboardQuery.data?.statistics
 
@@ -181,20 +185,16 @@ export function CeoUsersPage() {
     )
   }, [deferredSearch, users])
 
-  const permissionOverviewUsers = useMemo(() => {
-    const allUsers = permissionsOverviewQuery.data?.users ?? []
-    const normalizedSearch = deferredSearch.trim().toLowerCase()
-
-    if (!normalizedSearch) {
-      return allUsers
+  const permissionsByUserId = useMemo(() => {
+    const map = new Map<number, { permissions_count: number; permissions_display: string[] }>()
+    for (const u of permissionsOverviewQuery.data?.users ?? []) {
+      map.set(u.user_id, {
+        permissions_count: u.permissions_count,
+        permissions_display: u.permissions_display,
+      })
     }
-
-    return allUsers.filter((user) =>
-      [user.name, user.email, user.role, user.job_title, ...user.permissions]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
-    )
-  }, [deferredSearch, permissionsOverviewQuery.data?.users])
+    return map
+  }, [permissionsOverviewQuery.data?.users])
 
   useEffect(() => {
     if (!isPermissionModalOpen || !permissionTargetUser) {
@@ -554,6 +554,26 @@ export function CeoUsersPage() {
     }
   }
 
+  async function handleUploadProfileImage(file: File) {
+    if (!profileUser) return
+    setIsUploadingImage(true)
+    try {
+      await ceoService.uploadUserProfileImage(profileUser.id, file)
+      await dashboardQuery.refetch()
+      const updated = dashboardQuery.data?.users.find((u) => u.id === profileUser.id)
+      if (updated) setProfileUser(updated)
+      showToast({ title: 'Profile image updated', tone: 'success' })
+    } catch (error) {
+      showToast({
+        title: 'Image upload failed',
+        description: error instanceof Error ? error.message : 'Upload error.',
+        tone: 'error',
+      })
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
@@ -647,6 +667,43 @@ export function CeoUsersPage() {
                 render: (row) => row.company_code ?? '-',
               },
               {
+                key: 'role',
+                header: 'Role',
+                render: (row) => (
+                  <span
+                    data-keep-color="true"
+                    className={cn('text-xs font-semibold', isCeoUser(row) ? 'text-violet-400' : 'text-blue-400')}
+                  >
+                    {row.role}
+                  </span>
+                ),
+              },
+              {
+                key: 'permissions',
+                header: 'Permissions',
+                render: (row) => {
+                  const perms = permissionsByUserId.get(row.id)
+                  if (!perms) return <span className="text-xs text-zinc-500">—</span>
+                  return (
+                    <div className="flex flex-wrap items-center gap-1">
+                      <Badge className="bg-white/5 text-white border-white/10 text-[10px]">
+                        {perms.permissions_count}
+                      </Badge>
+                      {perms.permissions_display.slice(0, 2).map((p) => (
+                        <Badge key={p} className="bg-white/5 text-white/60 border-white/8 text-[10px]">
+                          {p}
+                        </Badge>
+                      ))}
+                      {perms.permissions_display.length > 2 && (
+                        <Badge className="bg-white/5 text-white/40 border-white/8 text-[10px]">
+                          +{perms.permissions_display.length - 2}
+                        </Badge>
+                      )}
+                    </div>
+                  )
+                },
+              },
+              {
                 key: 'status',
                 header: 'Status',
                 render: (row) => (
@@ -696,79 +753,6 @@ export function CeoUsersPage() {
                       },
                     ]}
                   />
-                ),
-              },
-            ]}
-          />
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <SectionTitle
-          eyebrow="Permissions overview"
-          title="User permissions summary"
-          description="Detailed overview of permissions across all users with filtered results."
-        />
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {Object.entries(permissionsOverviewQuery.data?.summary ?? {}).map(([key, value]) => (
-            <Badge key={key} className="bg-blue-600/10 text-blue-400 border-blue-500/20">{`${key}: ${value}`}</Badge>
-          ))}
-        </div>
-
-        <div className="mt-6">
-          <DataTable
-            caption="Permission overview"
-            rows={permissionOverviewUsers}
-            getRowKey={(row) => String(row.user_id)}
-            emptyState={
-              <EmptyStateBlock
-                eyebrow="Permissions"
-                title="Permission overview empty"
-                description="No overview data returned from backend or filter yielded no results."
-              />
-            }
-            columns={[
-              {
-                key: 'user',
-                header: 'User',
-                render: (row) => (
-                  <div>
-                    <p className="font-bold text-white tracking-tight">{row.name}</p>
-                    <p className="text-xs font-medium text-zinc-500">{row.email}</p>
-                    {row.job_title ? (
-                      renderJobTitleTag(row.job_title, row.role)
-                    ) : null}
-                  </div>
-                ),
-              },
-              {
-                key: 'role',
-                header: 'Role',
-                render: (row) => row.role,
-              },
-              {
-                key: 'count',
-                header: 'Count',
-                align: 'right',
-                render: (row) => formatCompactNumber(row.permissions_count),
-              },
-              {
-                key: 'permissions',
-                header: 'Permissions',
-                render: (row) => (
-                  <div className="flex flex-wrap gap-2">
-                    {row.permissions_display.slice(0, 4).map((permission) => (
-                      <Badge key={permission} className="bg-white/5 text-white border-white/10">
-                        {permission}
-                      </Badge>
-                    ))}
-                    {row.permissions_display.length > 4 ? (
-                      <Badge className="bg-white/5 text-white border-white/10">
-                        +{row.permissions_display.length - 4}
-                      </Badge>
-                    ) : null}
-                  </div>
                 ),
               },
             ]}
@@ -841,6 +825,51 @@ export function CeoUsersPage() {
           </>
         }
       >
+        {/* Profile image section */}
+        <div className="mb-4 flex items-center gap-4">
+          {profileUser?.profile_image ? (
+            <img
+              src={resolveMediaUrl(profileUser.profile_image) ?? profileUser.profile_image}
+              alt={`${profileUser.name} ${profileUser.surname}`}
+              className="h-16 w-16 rounded-full object-cover border border-white/10"
+            />
+          ) : (
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold shrink-0"
+              style={{
+                background: `hsl(${(profileUser?.name?.charCodeAt(0) ?? 0) * 7 % 360}, 45%, 18%)`,
+                color: `hsl(${(profileUser?.name?.charCodeAt(0) ?? 0) * 7 % 360}, 65%, 65%)`,
+              }}
+            >
+              {profileUser?.name?.charAt(0).toUpperCase()}{profileUser?.surname?.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="text-sm font-semibold text-white">{profileUser?.name} {profileUser?.surname}</p>
+            <p className="text-xs text-zinc-500 mb-2">{profileUser?.email}</p>
+            <input
+              ref={profileImageRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) void handleUploadProfileImage(file)
+                e.target.value = ''
+              }}
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => profileImageRef.current?.click()}
+              loading={isUploadingImage}
+              className="rounded-xl text-xs"
+            >
+              {profileUser?.profile_image ? 'Change photo' : 'Upload photo'}
+            </Button>
+          </div>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Role</p>

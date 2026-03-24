@@ -368,6 +368,7 @@ export function CrmDashboardPage() {
   const [platformFilter, setPlatformFilter] = useState('')
   const [dateStart, setDateStart] = useState('')
   const [dateEnd, setDateEnd] = useState('')
+  const [pageSize, setPageSize] = useState('10')
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
@@ -376,7 +377,9 @@ export function CrmDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
-  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
+  const pageSizeValue = Number(pageSize) || 10
+
+  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(pageSizeValue), [pageSizeValue])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
   const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
 
@@ -582,6 +585,12 @@ export function CrmDashboardPage() {
     { value: '', label: 'All platforms' },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
   ]
+  const pageSizeOptions: SelectFieldOption[] = [
+    { value: '10', label: '10 per page' },
+    { value: '20', label: '20 per page' },
+    { value: '50', label: '50 per page' },
+    { value: '75', label: '75 per page' },
+  ]
   const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
   const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
 
@@ -731,6 +740,15 @@ export function CrmDashboardPage() {
               <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">End date</label>
               <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} className="h-9" />
             </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Pagination</label>
+              <SelectField
+                value={pageSize}
+                options={pageSizeOptions}
+                onValueChange={setPageSize}
+              />
+            </div>
           </div>
         </div>
 
@@ -744,6 +762,7 @@ export function CrmDashboardPage() {
             caption="CRM customers table"
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
+            pageSize={pageSizeValue}
             zebra
             fillHeight
             className="rounded-none border-x-0 border-b-0"

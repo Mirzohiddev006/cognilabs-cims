@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
+import { updateTrackingService, type WorkdayOverrideMemberOption } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
@@ -64,6 +66,21 @@ type EmployeeApiSummary = {
   employeesWithBonuses?: number
 }
 
+function createRosterUsers(memberOptions: WorkdayOverrideMemberOption[]): CeoUserRecord[] {
+  return memberOptions.map((member) => ({
+    id: member.id,
+    email: '',
+    name: member.name,
+    surname: member.surname,
+    company_code: '',
+    telegram_id: member.telegram_id ?? null,
+    default_salary: null,
+    role: member.role,
+    job_title: member.role,
+    is_active: true,
+  }))
+}
+
 function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
   const parsed = parseMaybeJson(payload)
   const root = isRecord(parsed) ? parsed : null
@@ -116,6 +133,18 @@ export function FaultsPage() {
   const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
+  const memberOptionsQuery = useAsyncData(
+    () => updateTrackingService.workdayOverrideMemberOptions(),
+    [],
+  )
+  const rosterUsers = useMemo(
+    () => createRosterUsers(memberOptionsQuery.data ?? []),
+    [memberOptionsQuery.data],
+  )
+  const employeeIds = useMemo(
+    () => rosterUsers.map((user) => user.id),
+    [rosterUsers],
+  )
 
   const updatesAllQuery = useAsyncData(
     () => membersService.updatesAll({ year, month }),
@@ -144,27 +173,67 @@ export function FaultsPage() {
       },
     },
   )
+  const salaryEstimatesQuery = useAsyncData(
+    () => membersService.salaryEstimates({ year, month, employeeIds }),
+    [year, month, employeeIds.join(',')],
+    {
+      enabled: employeeIds.length > 0,
+      onError: (error) => {
+        showToast({
+          title: 'Employee salary estimates API failed',
+          description: getApiErrorMessage(error),
+          tone: 'error',
+        })
+      },
+    },
+  )
 
   const reports = useMemo(
-    () => buildEmployeeReports([], updatesAllQuery.data, { includeFallbackUsers: false }),
-    [updatesAllQuery.data],
+    () => buildEmployeeReports(rosterUsers, salaryEstimatesQuery.data ?? updatesAllQuery.data, { includeFallbackUsers: true }),
+    [rosterUsers, salaryEstimatesQuery.data, updatesAllQuery.data],
   )
   const apiSummary = useMemo(
-    () => extractEmployeeApiSummary(statisticsQuery.data),
-    [statisticsQuery.data],
+    () => {
+      const statisticsSummary = extractEmployeeApiSummary(statisticsQuery.data)
+      const salarySummary = extractEmployeeApiSummary(salaryEstimatesQuery.data)
+
+      return {
+        totalEmployees: salarySummary.totalEmployees ?? statisticsSummary.totalEmployees,
+        totalReports: statisticsSummary.totalReports,
+        averageUpdatePercentage: statisticsSummary.averageUpdatePercentage,
+        totalSalaryAmount: salarySummary.totalSalaryAmount ?? statisticsSummary.totalSalaryAmount,
+        totalBaseSalary: salarySummary.totalBaseSalary ?? statisticsSummary.totalBaseSalary,
+        totalDeductionAmount: salarySummary.totalDeductionAmount ?? statisticsSummary.totalDeductionAmount,
+        totalBonusAmount: salarySummary.totalBonusAmount ?? statisticsSummary.totalBonusAmount,
+        totalFinalSalary: salarySummary.totalFinalSalary ?? statisticsSummary.totalFinalSalary,
+        totalEstimatedSalary: salarySummary.totalEstimatedSalary ?? statisticsSummary.totalEstimatedSalary,
+        employeesWithPenalties: statisticsSummary.employeesWithPenalties,
+        employeesWithBonuses: statisticsSummary.employeesWithBonuses,
+      } satisfies EmployeeApiSummary
+    },
+    [salaryEstimatesQuery.data, statisticsQuery.data],
   )
   const hasReports = reports.length > 0
 
   async function handleRefresh() {
-    const [updatesResult, statisticsResult] = await Promise.allSettled([
+    const [membersResult, updatesResult, statisticsResult, salaryResult] = await Promise.allSettled([
+      memberOptionsQuery.refetch(),
       updatesAllQuery.refetch(),
       statisticsQuery.refetch(),
+      employeeIds.length > 0 ? salaryEstimatesQuery.refetch() : Promise.resolve(undefined),
     ])
 
-    if (updatesResult.status === 'rejected' && statisticsResult.status === 'rejected') {
+    if (
+      membersResult.status === 'rejected' &&
+      updatesResult.status === 'rejected' &&
+      statisticsResult.status === 'rejected' &&
+      salaryResult.status === 'rejected'
+    ) {
       showToast({
         title: 'Refresh failed',
-        description: getApiErrorMessage(updatesResult.reason ?? statisticsResult.reason),
+        description: getApiErrorMessage(
+          membersResult.reason ?? updatesResult.reason ?? statisticsResult.reason ?? salaryResult.reason,
+        ),
         tone: 'error',
       })
       return
@@ -292,7 +361,7 @@ export function FaultsPage() {
     }
   }
 
-  if (!hasReports && (updatesAllQuery.isLoading || statisticsQuery.isLoading)) {
+  if (!hasReports && (memberOptionsQuery.isLoading || updatesAllQuery.isLoading || statisticsQuery.isLoading || salaryEstimatesQuery.isLoading)) {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Salary"
@@ -302,7 +371,7 @@ export function FaultsPage() {
     )
   }
 
-  if (!hasReports && updatesAllQuery.isError) {
+  if (!hasReports && updatesAllQuery.isError && salaryEstimatesQuery.isError) {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Salary"
@@ -310,7 +379,7 @@ export function FaultsPage() {
         description="Could not fetch employee monthly salary data from the Employees API."
         actionLabel="Retry"
         onAction={() => {
-          void updatesAllQuery.refetch()
+          void handleRefresh()
         }}
       />
     )

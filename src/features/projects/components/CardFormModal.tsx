@@ -10,6 +10,7 @@ import type {
 } from '../../../shared/api/services/projects.service'
 import { buildFormData } from '../lib/formdata'
 import { PRIORITY_CONFIG } from '../lib/format'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type CardFormValues = {
   title: string
@@ -50,6 +51,11 @@ const PRIORITY_OPTIONS: SelectFieldOption[] = [
   { value: 'urgent', label: 'Urgent' },
 ]
 
+function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
+  const value = image.url ?? image.url_path ?? ''
+  return resolveMediaUrl(value) ?? value
+}
+
 export function CardFormModal({
   open,
   onClose,
@@ -73,7 +79,11 @@ export function CardFormModal({
   useEffect(() => {
     if (open) {
       if (initial) {
-        const initialImages = Array.isArray(initial.images) ? initial.images : []
+        const initialImages = Array.isArray(initial.images)
+          ? initial.images
+          : Array.isArray(initial.files)
+            ? initial.files
+            : []
 
         setValues({
           title: initial.title,
@@ -84,7 +94,7 @@ export function CardFormModal({
           images: [],
           clear_existing_images: false,
         })
-        setImagePreviews(initialImages.map((img) => img.url))
+        setImagePreviews(initialImages.map(getCardImageUrl))
       } else {
         setValues(empty)
         setImagePreviews([])
@@ -148,7 +158,7 @@ export function CardFormModal({
       fd.append('clear_existing_images', 'true')
     }
     for (const img of values.images) {
-      fd.append('images[]', img)
+      fd.append('images', img)
     }
     await onSubmit(fd)
   }

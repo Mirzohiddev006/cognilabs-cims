@@ -17,6 +17,8 @@ import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpd
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
   buildEmployeeSalaryDetail,
+  buildEmployeeReports,
+  buildReportFromUser,
   createVirtualUser,
   defaultMonth,
   defaultYear,
@@ -27,8 +29,10 @@ import {
   getMonthName,
   getPrimaryEstimateRecord,
   getSuccessMessage,
+  isRecord,
   monthOptions,
   normalizeEstimateEntry,
+  parseMaybeJson,
 } from '../lib/salaryEstimates'
 
 function clampNumber(value: number, min: number, max: number) {
@@ -47,6 +51,31 @@ function parsePeriodNumber(value: string | null, fallback: number, min: number, 
   }
 
   return clampNumber(parsed, min, max)
+}
+
+function findHistoryEmployeeRecord(payload: unknown, memberId: number) {
+  const parsed = parseMaybeJson(payload)
+
+  if (!isRecord(parsed) || !Array.isArray(parsed.employees)) {
+    return null
+  }
+
+  return parsed.employees.find((item) => (
+    isRecord(item) &&
+    Number(item.user_id ?? item.id ?? item.employee_id ?? item.member_id) === memberId
+  )) ?? null
+}
+
+function findHistoryPeriodRecord(historyEmployeeRecord: Record<string, unknown> | null, year: number, month: number) {
+  if (!historyEmployeeRecord || !Array.isArray(historyEmployeeRecord.periods)) {
+    return null
+  }
+
+  return historyEmployeeRecord.periods.find((item) => (
+    isRecord(item) &&
+    Number(item.year) === year &&
+    Number(item.month) === month
+  )) ?? null
 }
 
 export function FaultsMemberDetailPage() {
@@ -69,44 +98,43 @@ export function FaultsMemberDetailPage() {
 
   const detailQuery = useAsyncData(
     async () => {
-      const [estimateResult, updatesResult, calendarResult] = await Promise.allSettled([
+      const [estimateResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
         membersService.salaryEstimate(memberId, year, month),
         membersService.updatesStatistics({ year, month, employeeIds: [memberId] }),
         updateTrackingService.employeeMonthlyUpdates(year, month, memberId),
+        membersService.updatesAll({ year, month, employeeIds: [memberId] }),
       ])
 
       const estimatePayload = estimateResult.status === 'fulfilled' ? estimateResult.value : null
-      const estimateRecord = getPrimaryEstimateRecord(estimatePayload)
+      const historyPayload = historyResult.status === 'fulfilled' ? historyResult.value : null
+      const historyEmployeeRecord = findHistoryEmployeeRecord(historyPayload, memberId)
+      const historyPeriodRecord = findHistoryPeriodRecord(historyEmployeeRecord, year, month)
+      const effectiveEstimatePayload = estimatePayload ?? historyPeriodRecord ?? historyEmployeeRecord
+      const estimateRecord = getPrimaryEstimateRecord(effectiveEstimatePayload)
       const snapshot = estimateRecord ? normalizeEstimateEntry(estimateRecord) : null
+      const historyReport = historyPayload
+        ? buildEmployeeReports([], historyPayload, { includeFallbackUsers: false }).find((entry) => entry.id === memberId) ?? null
+        : null
       const apiUser = snapshot
         ? {
             ...createVirtualUser(snapshot),
             id: snapshot.userId ?? memberId,
           }
-        : null
-      const fallbackReport = snapshot && apiUser ? {
-        id: apiUser.id,
-        label: snapshot.userLabel ?? `User #${apiUser.id}`,
-        fullName: snapshot.userName?.trim() || `${apiUser.name} ${apiUser.surname}`.trim() || 'Unknown member',
-        roleLabel: snapshot.roleLabel ?? apiUser.job_title ?? apiUser.role ?? 'Member',
-        baseSalary: Number.isFinite(snapshot.baseSalary) ? Math.max(0, snapshot.baseSalary as number) : Number.NaN,
-        estimatedSalary: Number.isFinite(snapshot.estimatedSalary) ? Math.max(0, snapshot.estimatedSalary as number) : Number.NaN,
-        deductionAmount: Number.isFinite(snapshot.deductionAmount) ? Math.max(0, snapshot.deductionAmount as number) : Number.NaN,
-        bonusAmount: Number.isFinite(snapshot.bonusAmount) ? Math.max(0, snapshot.bonusAmount as number) : Number.NaN,
-        afterPenalty: Number.isFinite(snapshot.afterPenalty) ? Math.max(0, snapshot.afterPenalty as number) : Number.NaN,
-        finalSalary: Number.isFinite(snapshot.finalSalary) ? Math.max(0, snapshot.finalSalary as number) : Number.NaN,
-        penaltyPoints: Number.isFinite(snapshot.penaltyPoints) ? Math.max(0, Math.round(snapshot.penaltyPoints as number)) : Number.NaN,
-        penaltyEntries: Number.isFinite(snapshot.penaltyEntries) ? Math.max(0, Math.round(snapshot.penaltyEntries as number)) : Number.NaN,
-        bonusEntries: Number.isFinite(snapshot.bonusEntries) ? Math.max(0, Math.round(snapshot.bonusEntries as number)) : Number.NaN,
-        penaltyPercentage: Number.isFinite(snapshot.penaltyPercentage) ? Math.max(0, snapshot.penaltyPercentage as number) : Number.NaN,
-        hasPenalty:
-          (Number.isFinite(snapshot.deductionAmount) && (snapshot.deductionAmount as number) > 0) ||
-          (Number.isFinite(snapshot.penaltyPoints) && (snapshot.penaltyPoints as number) > 0) ||
-          (Number.isFinite(snapshot.penaltyEntries) && (snapshot.penaltyEntries as number) > 0),
-        hasBonus:
-          (Number.isFinite(snapshot.bonusAmount) && (snapshot.bonusAmount as number) > 0) ||
-          (Number.isFinite(snapshot.bonusEntries) && (snapshot.bonusEntries as number) > 0),
-      } : null
+        : historyEmployeeRecord
+          ? {
+              ...createVirtualUser({
+                userId: memberId,
+                userName: typeof historyEmployeeRecord.full_name === 'string' ? historyEmployeeRecord.full_name : 'Unknown member',
+                roleLabel: 'Member',
+                baseSalary: typeof historyEmployeeRecord.default_salary === 'number' ? historyEmployeeRecord.default_salary : undefined,
+              }),
+              id: memberId,
+            }
+          : null
+      const fallbackReport =
+        snapshot && apiUser
+          ? buildReportFromUser(apiUser, snapshot)
+          : historyReport ?? (apiUser ? buildReportFromUser(apiUser) : null)
 
       if (!fallbackReport) {
         throw new Error('Could not resolve this member from the Employees API salary estimate response.')
@@ -115,7 +143,7 @@ export function FaultsMemberDetailPage() {
       return buildEmployeeSalaryDetail({
         report: fallbackReport,
         user: apiUser,
-        estimatePayload,
+        estimatePayload: effectiveEstimatePayload,
         updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
         calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
         estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,

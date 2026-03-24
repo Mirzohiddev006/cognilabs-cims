@@ -9,6 +9,8 @@ import { LoginPage } from '../features/auth/pages/LoginPage'
 import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
 import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
+import { CeoAiChatPage } from '../features/ceo/pages/CeoAiChatPage'
+import { CeoManagementPage } from '../features/ceo/pages/CeoManagementPage'
 import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
 import { CeoWorkdayOverridesPage } from '../features/ceo/pages/CeoWorkdayOverridesPage'
@@ -80,6 +82,22 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <CeoUsersPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/ai',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <CeoAiChatPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/management',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <CeoManagementPage />
                   </ProtectedRoute>
                 ),
               },

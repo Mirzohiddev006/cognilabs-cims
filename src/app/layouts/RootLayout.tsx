@@ -4,6 +4,8 @@ import { useTheme } from '../hooks/useTheme'
 import { AppShellProvider } from '../providers/AppShellProvider'
 import { AppHeader } from '../../widgets/navigation/AppHeader'
 import { AppSidebar } from '../../widgets/navigation/AppSidebar'
+import { CimsAiProvider } from '../../features/ceo/context/CimsAiContext'
+import { CimsAiLauncher } from '../../widgets/ai/CimsAiLauncher'
 
 function RootLayoutFrame() {
   const { theme } = useTheme()
@@ -44,6 +46,7 @@ function RootLayoutFrame() {
             <Outlet />
           </div>
         </main>
+        <CimsAiLauncher />
       </div>
     </div>
   )
@@ -52,7 +55,9 @@ function RootLayoutFrame() {
 export function RootLayout() {
   return (
     <AppShellProvider>
-      <RootLayoutFrame />
+      <CimsAiProvider>
+        <RootLayoutFrame />
+      </CimsAiProvider>
     </AppShellProvider>
   )
 }

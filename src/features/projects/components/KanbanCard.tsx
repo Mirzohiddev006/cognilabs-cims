@@ -34,7 +34,11 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
   const priority = card.priority ? PRIORITY_CONFIG[card.priority] : null
   const overdue  = card.due_date ? isDueDateOverdue(card.due_date) : false
   const soon     = card.due_date ? isDueDateSoon(card.due_date) : false
-  const images = Array.isArray(card.images) ? card.images : []
+  const images = Array.isArray(card.images)
+    ? card.images
+    : Array.isArray(card.files)
+      ? card.files
+      : []
 
   function stopCardAction(event: React.SyntheticEvent) {
     event.stopPropagation()
@@ -124,6 +128,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
           <Avatar
             name={card.assignee.name}
             surname={card.assignee.surname}
+            imageUrl={card.assignee.profile_image}
             size="xs"
             title={`${card.assignee.name} ${card.assignee.surname}`}
             className="shrink-0"

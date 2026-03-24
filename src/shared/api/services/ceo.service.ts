@@ -19,6 +19,7 @@ export type CeoUserRecord = {
   job_title?: string | null
   role: UserRole
   is_active: boolean
+  profile_image?: string | null
 } & Record<string, unknown>
 
 export type CeoMessageRecord = {
@@ -49,6 +50,103 @@ export type CompanyPaymentRecord = {
   note?: string | null
   is_active: boolean
 } & Record<string, unknown>
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim())
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  return null
+}
+
+function toBoolean(value: unknown): boolean {
+  if (typeof value === 'boolean') {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    return value.trim().toLowerCase() === 'true'
+  }
+
+  return Boolean(value)
+}
+
+function parsePayload(payload: unknown): unknown {
+  if (typeof payload !== 'string') {
+    return payload
+  }
+
+  const trimmed = payload.trim()
+
+  if (!trimmed) {
+    return ''
+  }
+
+  try {
+    return JSON.parse(trimmed) as unknown
+  } catch {
+    return payload
+  }
+}
+
+function normalizeCompanyPayment(item: unknown): CompanyPaymentRecord | null {
+  if (!isRecord(item)) {
+    return null
+  }
+
+  const id = toNumber(item.id)
+  const title = typeof item.title === 'string' ? item.title.trim() : ''
+
+  if (!id || !title) {
+    return null
+  }
+
+  return {
+    ...item,
+    id,
+    title,
+    amount: toNumber(item.amount) ?? 0,
+    payment_day: toNumber(item.payment_day ?? item.paymentDay) ?? 1,
+    payment_time: typeof item.payment_time === 'string'
+      ? item.payment_time
+      : typeof item.paymentTime === 'string'
+        ? item.paymentTime
+        : '',
+    note: typeof item.note === 'string' ? item.note : null,
+    is_active: toBoolean(item.is_active ?? item.isActive),
+  }
+}
+
+function normalizeCompanyPaymentsResponse(payload: unknown): CompanyPaymentRecord[] {
+  const parsed = parsePayload(payload)
+
+  if (Array.isArray(parsed)) {
+    return parsed.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+  }
+
+  if (!isRecord(parsed)) {
+    return []
+  }
+
+  const list = ['items', 'payments', 'data', 'results']
+    .map((key) => parsed[key])
+    .find(Array.isArray)
+
+  if (!Array.isArray(list)) {
+    return []
+  }
+
+  return list.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+}
 
 export type UserPayload = {
   email: string
@@ -273,10 +371,12 @@ export const ceoService = {
     })
   },
 
-  listCompanyPayments() {
-    return request<CompanyPaymentRecord[] | unknown>({
+  async listCompanyPayments() {
+    const response = await request<unknown>({
       path: '/ceo/company-payments',
     })
+
+    return normalizeCompanyPaymentsResponse(response)
   },
 
   createCompanyPayment(payload: {
