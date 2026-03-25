@@ -5,6 +5,7 @@ import type {
   CustomerStatsResponse,
   CustomerSummary,
   DynamicStatusOption,
+  SalesDashboardChartsResponse,
   SalesStatsResponse,
   SuccessResponse,
 } from '../types'
@@ -192,6 +193,17 @@ export const crmService = {
     return request<unknown>({
       path: '/sales/detailed',
       query: { days, customer_type },
+    })
+  },
+
+  salesDashboardCharts(params?: {
+    days?: number
+    customer_type?: string
+    platform_limit?: number
+  }) {
+    return request<SalesDashboardChartsResponse>({
+      path: '/sales/dashboard/charts',
+      query: params,
     })
   },
 

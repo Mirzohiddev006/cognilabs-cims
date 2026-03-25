@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { managementService } from '../../../shared/api/services/management.service'
 import type {
+  ManagementImageCategory,
   ManagementImageCleanupResponse,
+  ManagementImageRecord,
   ManagementPageCreatePayload,
   ManagementPageRecord,
   ManagementPageUpdatePayload,
@@ -30,8 +32,10 @@ import { SectionTitle } from '../../../shared/ui/section-title'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type ManagementTab = 'pages' | 'statuses' | 'roles' | 'images'
+type ImageReferenceFilter = 'all' | 'referenced' | 'unreferenced'
 
 type PageFormState = {
   name: string
@@ -80,10 +84,17 @@ const tabOptions: Array<{ key: ManagementTab; label: string; description: string
 ]
 
 const imageCategoryOptions: SelectFieldOption[] = [
-  { value: '', label: 'Select category' },
+  { value: '', label: 'All categories' },
   { value: 'project_images', label: 'Project images' },
   { value: 'card_images', label: 'Card images' },
   { value: 'profile_images', label: 'Profile images' },
+  { value: 'profil_images', label: 'Profil images (legacy)' },
+]
+
+const imageReferenceFilterOptions: SelectFieldOption[] = [
+  { value: 'all', label: 'All images' },
+  { value: 'referenced', label: 'Referenced only' },
+  { value: 'unreferenced', label: 'Unreferenced only' },
 ]
 
 const initialPageForm: PageFormState = {
@@ -232,6 +243,42 @@ function BooleanToggle({
   )
 }
 
+function formatBytes(value?: number | null) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return '-'
+  }
+
+  if (value < 1024) {
+    return `${value} B`
+  }
+
+  const units = ['KB', 'MB', 'GB', 'TB']
+  let size = value / 1024
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex += 1
+  }
+
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`
+}
+
+function getImageCategoryLabel(category?: ManagementImageCategory | null) {
+  switch (category) {
+    case 'project_images':
+      return 'Project images'
+    case 'card_images':
+      return 'Card images'
+    case 'profile_images':
+      return 'Profile images'
+    case 'profil_images':
+      return 'Profil images'
+    default:
+      return category || 'Unknown'
+  }
+}
+
 export function CeoManagementPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
@@ -260,10 +307,29 @@ export function CeoManagementPage() {
   const [isSingleDeleteSubmitting, setIsSingleDeleteSubmitting] = useState(false)
   const [isBulkDeleteSubmitting, setIsBulkDeleteSubmitting] = useState(false)
   const [imageCleanupResult, setImageCleanupResult] = useState<ManagementImageCleanupResponse | null>(null)
+  const [imageCategoryFilter, setImageCategoryFilter] = useState<string>('')
+  const [imageReferenceFilter, setImageReferenceFilter] = useState<ImageReferenceFilter>('all')
+  const [imageSearch, setImageSearch] = useState('')
+  const [selectedImagePaths, setSelectedImagePaths] = useState<string[]>([])
+  const [imageDetailPath, setImageDetailPath] = useState<string | null>(null)
 
   const pagesQuery = useAsyncData(() => managementService.listPages(), [])
   const statusesQuery = useAsyncData(() => managementService.listStatuses(), [])
   const rolesQuery = useAsyncData(() => managementService.listRoles(), [])
+  const imagesQuery = useAsyncData(
+    () => managementService.listImages({
+      category: (imageCategoryFilter || undefined) as ManagementImageCategory | undefined,
+      referenced_only: imageReferenceFilter === 'referenced',
+      unreferenced_only: imageReferenceFilter === 'unreferenced',
+    }),
+    [activeTab, imageCategoryFilter, imageReferenceFilter],
+    { enabled: activeTab === 'images' },
+  )
+  const imageDetailQuery = useAsyncData(
+    () => managementService.getImageDetail(imageDetailPath ?? ''),
+    [imageDetailPath],
+    { enabled: Boolean(imageDetailPath) },
+  )
 
   const pageItems = useMemo(
     () => [...(pagesQuery.data ?? [])].sort((left, right) => left.order - right.order || left.display_name.localeCompare(right.display_name)),
@@ -278,6 +344,54 @@ export function CeoManagementPage() {
     () => [...(rolesQuery.data ?? [])].sort((left, right) => left.display_name.localeCompare(right.display_name)),
     [rolesQuery.data],
   )
+  const imageItems = useMemo(
+    () => [...(imagesQuery.data?.images ?? [])].sort((left, right) => (
+      new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime() ||
+      left.filename.localeCompare(right.filename)
+    )),
+    [imagesQuery.data?.images],
+  )
+  const filteredImages = useMemo(() => {
+    const normalizedSearch = imageSearch.trim().toLowerCase()
+
+    if (!normalizedSearch) {
+      return imageItems
+    }
+
+    return imageItems.filter((image) =>
+      [image.filename, image.path, image.category]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+    )
+  }, [imageItems, imageSearch])
+  const selectedImagePathSet = useMemo(
+    () => new Set(selectedImagePaths),
+    [selectedImagePaths],
+  )
+  const referencedImagesCount = useMemo(
+    () => imageItems.filter((image) => image.is_referenced).length,
+    [imageItems],
+  )
+  const unreferencedImagesCount = useMemo(
+    () => imageItems.filter((image) => !image.is_referenced).length,
+    [imageItems],
+  )
+  const allFilteredImagesSelected = filteredImages.length > 0 && filteredImages.every((image) => selectedImagePathSet.has(image.path))
+  const activeImageDetail = useMemo(() => {
+    if (!imageDetailPath) {
+      return null
+    }
+
+    if (imageDetailQuery.data?.path === imageDetailPath) {
+      return imageDetailQuery.data
+    }
+
+    return imageItems.find((image) => image.path === imageDetailPath) ?? null
+  }, [imageDetailPath, imageDetailQuery.data, imageItems])
+
+  useEffect(() => {
+    setSelectedImagePaths((current) => current.filter((path) => imageItems.some((image) => image.path === path)))
+  }, [imageItems])
 
   const isInitialLoading =
     !pagesQuery.data &&
@@ -286,11 +400,17 @@ export function CeoManagementPage() {
     (pagesQuery.isLoading || statusesQuery.isLoading || rolesQuery.isLoading)
 
   async function refreshAll() {
-    const results = await Promise.allSettled([
+    const tasks: Array<Promise<unknown>> = [
       pagesQuery.refetch(),
       statusesQuery.refetch(),
       rolesQuery.refetch(),
-    ])
+    ]
+
+    if (activeTab === 'images' || imagesQuery.data) {
+      tasks.push(imagesQuery.refetch())
+    }
+
+    const results = await Promise.allSettled(tasks)
 
     const failed = results.find((result) => result.status === 'rejected')
 
@@ -305,9 +425,103 @@ export function CeoManagementPage() {
 
     showToast({
       title: 'Management refreshed',
-      description: 'Pages, statuses and roles reloaded.',
+      description: activeTab === 'images'
+        ? 'Pages, statuses, roles and images reloaded.'
+        : 'Pages, statuses and roles reloaded.',
       tone: 'success',
     })
+  }
+
+  function toggleImageSelection(imagePath: string, nextValue?: boolean) {
+    setSelectedImagePaths((current) => {
+      const hasPath = current.includes(imagePath)
+
+      if (nextValue ?? !hasPath) {
+        return hasPath ? current : [...current, imagePath]
+      }
+
+      return current.filter((path) => path !== imagePath)
+    })
+  }
+
+  function toggleSelectAllFilteredImages(nextValue: boolean) {
+    setSelectedImagePaths((current) => {
+      const filteredPaths = filteredImages.map((image) => image.path)
+
+      if (nextValue) {
+        return Array.from(new Set([...current, ...filteredPaths]))
+      }
+
+      const filteredSet = new Set(filteredPaths)
+      return current.filter((path) => !filteredSet.has(path))
+    })
+  }
+
+  function openImageDetail(image: Pick<ManagementImageRecord, 'path'>) {
+    setImageDetailPath(image.path)
+    setSingleDeleteForm({ imagePath: image.path })
+  }
+
+  function applyCleanupResult(response: ManagementImageCleanupResponse) {
+    setImageCleanupResult(response)
+
+    if (response.deleted_paths.length === 0) {
+      return
+    }
+
+    const deletedPathSet = new Set(response.deleted_paths)
+
+    setSelectedImagePaths((current) => current.filter((path) => !deletedPathSet.has(path)))
+
+    if (imageDetailPath && deletedPathSet.has(imageDetailPath)) {
+      setImageDetailPath(null)
+    }
+
+    setSingleDeleteForm((current) => (
+      deletedPathSet.has(current.imagePath.trim())
+        ? initialSingleDeleteForm
+        : current
+    ))
+  }
+
+  async function refreshImagesAfterCleanup() {
+    if (activeTab === 'images' || imagesQuery.data) {
+      await imagesQuery.refetch()
+    }
+  }
+
+  async function handleDeleteImageByPath(imagePath: string) {
+    const approved = await confirm({
+      title: 'Delete this image?',
+      description: imagePath,
+      confirmLabel: 'Delete image',
+      tone: 'danger',
+    })
+
+    if (!approved) {
+      return
+    }
+
+    setIsSingleDeleteSubmitting(true)
+
+    try {
+      const response = await managementService.deleteImage(imagePath)
+      applyCleanupResult(response)
+      await refreshImagesAfterCleanup()
+      showToast({
+        title: 'Image cleanup complete',
+        description: response.message,
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: 'Image delete failed',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsSingleDeleteSubmitting(false)
+    }
   }
 
   function openCreatePageDialog() {
@@ -618,10 +832,23 @@ export function CeoManagementPage() {
       return
     }
 
+    await handleDeleteImageByPath(imagePath)
+  }
+
+  async function handleDeleteSelectedImages() {
+    if (selectedImagePaths.length === 0) {
+      showToast({
+        title: 'No images selected',
+        description: 'Delete qilish uchun kamida bitta rasm tanlang.',
+        tone: 'error',
+      })
+      return
+    }
+
     const approved = await confirm({
-      title: 'Delete this image?',
-      description: imagePath,
-      confirmLabel: 'Delete image',
+      title: `Delete ${selectedImagePaths.length} selected image${selectedImagePaths.length > 1 ? 's' : ''}?`,
+      description: 'Bulk delete selected paths orqali ishlaydi va DB reference-lar ham tozalanishi mumkin.',
+      confirmLabel: 'Delete selected',
       tone: 'danger',
     })
 
@@ -629,24 +856,30 @@ export function CeoManagementPage() {
       return
     }
 
-    setIsSingleDeleteSubmitting(true)
+    setIsBulkDeleteSubmitting(true)
 
     try {
-      const response = await managementService.deleteImage(imagePath)
-      setImageCleanupResult(response)
+      const response = await managementService.bulkDeleteImages({
+        image_paths: selectedImagePaths,
+        delete_all_in_category: false,
+        only_unreferenced: false,
+      })
+
+      applyCleanupResult(response)
+      await refreshImagesAfterCleanup()
       showToast({
-        title: 'Image cleanup complete',
+        title: 'Selected images deleted',
         description: response.message,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Image delete failed',
+        title: 'Selected delete failed',
         description: getApiErrorMessage(error),
         tone: 'error',
       })
     } finally {
-      setIsSingleDeleteSubmitting(false)
+      setIsBulkDeleteSubmitting(false)
     }
   }
 
@@ -692,12 +925,13 @@ export function CeoManagementPage() {
     try {
       const response = await managementService.bulkDeleteImages({
         image_paths: imagePaths.length > 0 ? imagePaths : undefined,
-        category: bulkDeleteForm.category || undefined,
+        category: (bulkDeleteForm.category || undefined) as ManagementImageCategory | undefined,
         delete_all_in_category: bulkDeleteForm.deleteAllInCategory,
         only_unreferenced: bulkDeleteForm.onlyUnreferenced,
       })
 
-      setImageCleanupResult(response)
+      applyCleanupResult(response)
+      await refreshImagesAfterCleanup()
       showToast({
         title: 'Bulk cleanup complete',
         description: response.message,
@@ -740,11 +974,6 @@ export function CeoManagementPage() {
     <section className="space-y-6 page-enter">
       <PageHeader
         title="Management API"
-        meta={[
-          { label: 'Pages', value: String(pageItems.length), tone: 'blue' },
-          { label: 'Statuses', value: String(statuses.length), tone: 'success' },
-          { label: 'Roles', value: String(roles.length), tone: 'violet' },
-        ]}
         actions={(
           <>
             <Button variant="secondary" onClick={() => void refreshAll()}>
@@ -1041,6 +1270,229 @@ export function CeoManagementPage() {
             description="Single image delete va bulk cleanup actionlar shu section ichida ishlaydi."
           />
 
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <SummaryCard
+              label="Images loaded"
+              value={imagesQuery.data?.total_count ?? imageItems.length}
+              hint="Current category and reference filters bilan yuklangan rasmlar."
+            />
+            <SummaryCard
+              label="Referenced"
+              value={referencedImagesCount}
+              hint="DB ichida kamida bitta reference bor."
+            />
+            <SummaryCard
+              label="Unreferenced"
+              value={unreferencedImagesCount}
+              hint="DB da ishlatilmayotgan rasmlar."
+            />
+            <SummaryCard
+              label="Selected"
+              value={selectedImagePaths.length}
+              hint="Bulk delete uchun tanlangan rasmlar."
+            />
+          </div>
+
+          <div className="mt-5 rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-white">Image library</p>
+                <p className="mt-1 text-xs text-(--muted)">
+                  GET /management/images va GET /management/images/detail endpointlari shu yerga ulandi.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => void imagesQuery.refetch()}
+                  disabled={imagesQuery.isLoading && !imagesQuery.data}
+                >
+                  Refresh images
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedImagePaths([])}
+                  disabled={selectedImagePaths.length === 0}
+                >
+                  Clear selection
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={() => void handleDeleteSelectedImages()}
+                  disabled={selectedImagePaths.length === 0}
+                  loading={isBulkDeleteSubmitting}
+                >
+                  Delete selected
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.85fr_0.85fr]">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Search</label>
+                <Input
+                  value={imageSearch}
+                  onChange={(event) => setImageSearch(event.target.value)}
+                  placeholder="Search by file name or path"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+                <SelectField
+                  value={imageCategoryFilter}
+                  options={imageCategoryOptions}
+                  onValueChange={(value) => setImageCategoryFilter(value)}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Reference filter</label>
+                <SelectField
+                  value={imageReferenceFilter}
+                  options={imageReferenceFilterOptions}
+                  onValueChange={(value) => setImageReferenceFilter(value as ImageReferenceFilter)}
+                />
+              </div>
+            </div>
+
+            <div className="mt-5">
+              {imagesQuery.isLoading && !imagesQuery.data ? (
+                <LoadingStateBlock
+                  eyebrow="Management / Images"
+                  title="Loading image library"
+                  description="Fetching management image metadata and reference counts."
+                />
+              ) : imagesQuery.isError && !imagesQuery.data ? (
+                <ErrorStateBlock
+                  eyebrow="Management / Images"
+                  title="Image library unavailable"
+                  description="Could not load management images."
+                  actionLabel="Retry"
+                  onAction={() => void imagesQuery.refetch()}
+                />
+              ) : (
+                <DataTable
+                  caption="Management images"
+                  rows={filteredImages}
+                  getRowKey={(row) => row.path}
+                  pageSize={12}
+                  zebra
+                  emptyState={(
+                    <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
+                      Image list is empty for the current filters.
+                    </div>
+                  )}
+                  columns={[
+                    {
+                      key: 'select',
+                      header: (
+                        <input
+                          type="checkbox"
+                          checked={allFilteredImagesSelected}
+                          onChange={(event) => toggleSelectAllFilteredImages(event.target.checked)}
+                          aria-label="Select all filtered images"
+                          className="h-4 w-4 rounded border border-white/15 bg-black/20 accent-blue-500"
+                        />
+                      ),
+                      width: '52px',
+                      align: 'center',
+                      render: (row) => (
+                        <input
+                          type="checkbox"
+                          checked={selectedImagePathSet.has(row.path)}
+                          onChange={(event) => toggleImageSelection(row.path, event.target.checked)}
+                          aria-label={`Select ${row.filename}`}
+                          className="h-4 w-4 rounded border border-white/15 bg-black/20 accent-blue-500"
+                        />
+                      ),
+                    },
+                    {
+                      key: 'image',
+                      header: 'Image',
+                      width: '360px',
+                      render: (row) => (
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => openImageDetail(row)}
+                            className="overflow-hidden rounded-[14px] border border-white/10 bg-black/10"
+                          >
+                            <img
+                              src={resolveMediaUrl(row.file_url) ?? row.file_url}
+                              alt={row.filename}
+                              className="h-14 w-14 object-cover"
+                            />
+                          </button>
+                          <div className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => openImageDetail(row)}
+                              className="truncate text-left text-sm font-semibold text-white hover:text-blue-300"
+                            >
+                              {row.filename}
+                            </button>
+                            <p className="mt-1 break-all text-xs text-white/45">{row.path}</p>
+                          </div>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'category',
+                      header: 'Category',
+                      render: (row) => <Badge variant="secondary">{getImageCategoryLabel(row.category)}</Badge>,
+                    },
+                    {
+                      key: 'references',
+                      header: 'References',
+                      align: 'center',
+                      render: (row) => (
+                        <div className="flex flex-col items-center gap-1">
+                          <Badge variant={row.is_referenced ? 'success' : 'outline'}>
+                            {row.is_referenced ? 'Referenced' : 'Unused'}
+                          </Badge>
+                          <span className="text-xs text-white/55">{row.reference_count} refs</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'size',
+                      header: 'Size',
+                      align: 'right',
+                      render: (row) => formatBytes(row.size_bytes),
+                    },
+                    {
+                      key: 'updated',
+                      header: 'Updated',
+                      render: (row) => formatShortDate(row.updated_at),
+                    },
+                    {
+                      key: 'actions',
+                      header: 'Actions',
+                      render: (row) => (
+                        <ActionsMenu
+                          label={`Actions for ${row.filename}`}
+                          items={[
+                            { label: 'View detail', onSelect: () => openImageDetail(row) },
+                            {
+                              label: selectedImagePathSet.has(row.path) ? 'Unselect' : 'Select',
+                              onSelect: () => toggleImageSelection(row.path),
+                            },
+                            {
+                              label: 'Delete',
+                              onSelect: () => void handleDeleteImageByPath(row.path),
+                              tone: 'danger',
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]}
+                />
+              )}
+            </div>
+          </div>
+
           <div className="mt-5 grid gap-5 xl:grid-cols-2">
             <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
               <div className="flex items-start justify-between gap-3">
@@ -1199,6 +1651,89 @@ export function CeoManagementPage() {
           </div>
         </Card>
       ) : null}
+
+      <Dialog
+        open={Boolean(imageDetailPath)}
+        onClose={() => setImageDetailPath(null)}
+        title={activeImageDetail?.filename ?? 'Image detail'}
+        description={activeImageDetail?.path ?? 'Management image metadata'}
+        size="lg"
+        footer={(
+          <>
+            {activeImageDetail ? (
+              <Button
+                variant="secondary"
+                onClick={() => toggleImageSelection(activeImageDetail.path)}
+              >
+                {selectedImagePathSet.has(activeImageDetail.path) ? 'Unselect' : 'Select'}
+              </Button>
+            ) : null}
+            {activeImageDetail ? (
+              <Button
+                variant="danger"
+                onClick={() => void handleDeleteImageByPath(activeImageDetail.path)}
+                loading={isSingleDeleteSubmitting}
+              >
+                Delete image
+              </Button>
+            ) : null}
+            <Button variant="secondary" onClick={() => setImageDetailPath(null)}>
+              Close
+            </Button>
+          </>
+        )}
+      >
+        {activeImageDetail ? (
+          <div className="space-y-5">
+            <div className="overflow-hidden rounded-[22px] border border-white/10 bg-black/10">
+              <img
+                src={resolveMediaUrl(activeImageDetail.file_url) ?? activeImageDetail.file_url}
+                alt={activeImageDetail.filename}
+                className="max-h-[420px] w-full object-contain"
+              />
+            </div>
+
+            {imageDetailQuery.isLoading && imageDetailQuery.data?.path !== imageDetailPath ? (
+              <p className="text-sm text-(--muted)">Refreshing image detail...</p>
+            ) : null}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Category</p>
+                <p className="mt-2 text-sm font-semibold text-white">{getImageCategoryLabel(activeImageDetail.category)}</p>
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Size</p>
+                <p className="mt-2 text-sm font-semibold text-white">{formatBytes(activeImageDetail.size_bytes)}</p>
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">References</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <Badge variant={activeImageDetail.is_referenced ? 'success' : 'outline'}>
+                    {activeImageDetail.is_referenced ? 'Referenced' : 'Unused'}
+                  </Badge>
+                  <span className="text-sm font-semibold text-white">{activeImageDetail.reference_count}</span>
+                </div>
+              </div>
+              <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Updated</p>
+                <p className="mt-2 text-sm font-semibold text-white">{formatShortDate(activeImageDetail.updated_at)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Path</p>
+              <p className="mt-2 break-all text-sm font-semibold text-white">{activeImageDetail.path}</p>
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">File URL</p>
+              <p className="mt-2 break-all text-sm text-white/72">{activeImageDetail.file_url}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
+            Image detail not found.
+          </div>
+        )}
+      </Dialog>
 
       <Dialog
         open={pageDialogOpen}

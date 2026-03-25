@@ -1,5 +1,4 @@
 import { useDeferredValue, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
@@ -25,6 +24,7 @@ import { Input } from '../../../shared/ui/input'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
 const emptyCustomers: CustomerSummary[] = []
@@ -356,7 +356,6 @@ function MetricCard({
 
 export function CrmDashboardPage() {
   const { isSidebarCollapsed } = useAppShell()
-  const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
 
@@ -372,6 +371,7 @@ export function CrmDashboardPage() {
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
+  const [detailCustomer, setDetailCustomer] = useState<CustomerSummary | null>(null)
   const [formValues, setFormValues] = useState<CustomerFormValues>(initialFormValues)
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
@@ -448,7 +448,7 @@ export function CrmDashboardPage() {
   }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter])
 
   async function refreshAll() {
-    await Promise.all([
+    await Promise.allSettled([
       dashboardQuery.refetch(),
       statusesQuery.refetch(),
       summaryQuery.refetch(),
@@ -480,6 +480,10 @@ export function CrmDashboardPage() {
     setIsFormOpen(true)
   }
 
+  function openCustomerDrawer(customer: CustomerSummary) {
+    setDetailCustomer(customer)
+  }
+
   async function handleDeleteCustomer(customer: CustomerSummary) {
     const customerName = getCustomerDisplayName(customer)
     const approved = await confirm({
@@ -496,7 +500,7 @@ export function CrmDashboardPage() {
 
     try {
       await crmService.deleteCustomer(customer.id)
-      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch()])
+      await Promise.allSettled([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
         title: 'Customer deleted',
         description: `${customerName} has been removed from the CRM list.`,
@@ -539,7 +543,7 @@ export function CrmDashboardPage() {
 
       setIsFormOpen(false)
       setAudioFile(null)
-      await Promise.all([dashboardQuery.refetch(), summaryQuery.refetch()])
+      await Promise.allSettled([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
         title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
         description: 'The CRM list has been refreshed.',
@@ -765,6 +769,7 @@ export function CrmDashboardPage() {
             pageSize={pageSizeValue}
             zebra
             fillHeight
+            onRowClick={openCustomerDrawer}
             className="rounded-none border-x-0 border-b-0"
             emptyState={
               <EmptyStateBlock
@@ -789,7 +794,10 @@ export function CrmDashboardPage() {
                       <div className="min-w-0">
                         <button
                           type="button"
-                          onClick={() => navigate(`/crm/customers/${row.id}`)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            openCustomerDrawer(row)
+                          }}
                           className="block truncate text-left text-sm font-semibold text-white transition hover:text-zinc-300 sm:text-[15px]"
                         >
                           {displayName}
@@ -883,26 +891,35 @@ export function CrmDashboardPage() {
                 key: 'actions',
                 header: 'Actions',
                 render: (row) => (
-                  <ActionsMenu
-                    label={`Open actions for ${getCustomerDisplayName(row)}`}
-                    items={[
-                      {
-                        label: 'Edit',
-                        onSelect: () => openEditModal(row),
-                      },
-                      {
-                        label: 'Delete',
-                        onSelect: () => void handleDeleteCustomer(row),
-                        tone: 'danger',
-                      },
-                    ]}
-                  />
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <ActionsMenu
+                      label={`Open actions for ${getCustomerDisplayName(row)}`}
+                      items={[
+                        {
+                          label: 'Edit',
+                          onSelect: () => openEditModal(row),
+                        },
+                        {
+                          label: 'Delete',
+                          onSelect: () => void handleDeleteCustomer(row),
+                          tone: 'danger',
+                        },
+                      ]}
+                    />
+                  </div>
                 ),
               },
             ]}
           />
         </div>
       </Card>
+
+      <CustomerDetailDrawer
+        open={detailCustomer !== null}
+        customerId={detailCustomer?.id ?? null}
+        initialCustomer={detailCustomer}
+        onClose={() => setDetailCustomer(null)}
+      />
 
       <CustomerFormModal
         open={isFormOpen}

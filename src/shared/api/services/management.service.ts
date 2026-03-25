@@ -1,7 +1,10 @@
 import { request } from '../http'
 import type {
+  ManagementImageCategory,
   ManagementImageBulkDeletePayload,
   ManagementImageCleanupResponse,
+  ManagementImageRecord,
+  ManagementImagesListResponse,
   ManagementPageCreatePayload,
   ManagementPageRecord,
   ManagementPageUpdatePayload,
@@ -40,6 +43,30 @@ export const managementService = {
     return request<string>({
       path: `/management/pages/${pageId}`,
       method: 'DELETE',
+    })
+  },
+
+  listImages(filters?: {
+    category?: ManagementImageCategory
+    referenced_only?: boolean
+    unreferenced_only?: boolean
+  }) {
+    return request<ManagementImagesListResponse>({
+      path: '/management/images',
+      query: {
+        category: filters?.category,
+        referenced_only: filters?.referenced_only ?? false,
+        unreferenced_only: filters?.unreferenced_only ?? false,
+      },
+    })
+  },
+
+  getImageDetail(imagePath: string) {
+    return request<ManagementImageRecord>({
+      path: '/management/images/detail',
+      query: {
+        image_path: imagePath,
+      },
     })
   },
 

@@ -257,6 +257,44 @@ function findFirstString(source: UnknownRecord, keys: string[]) {
   return undefined
 }
 
+const unknownNameLabels = new Set(['unknown', 'unknown member', 'unknown user', 'member unknown'])
+
+function joinNameParts(...parts: Array<string | undefined>) {
+  const value = parts.filter(Boolean).join(' ').trim()
+  return value || undefined
+}
+
+function resolveDisplayName(...sources: Array<UnknownRecord | null | undefined>) {
+  for (const source of sources) {
+    if (!source) {
+      continue
+    }
+
+    const directName = findFirstString(source, ['full_name', 'user_name', 'employee_name', 'member_name', 'display_name'])
+
+    if (directName && !unknownNameLabels.has(directName.trim().toLowerCase())) {
+      return directName.trim()
+    }
+
+    const composedName = joinNameParts(
+      findFirstString(source, ['first_name', 'firstName', 'name']),
+      findFirstString(source, ['surname', 'last_name', 'lastName']),
+    )
+
+    if (composedName && !unknownNameLabels.has(composedName.trim().toLowerCase())) {
+      return composedName
+    }
+
+    const plainName = findFirstString(source, ['name'])
+
+    if (plainName && !unknownNameLabels.has(plainName.trim().toLowerCase())) {
+      return plainName.trim()
+    }
+  }
+
+  return undefined
+}
+
 function isDateKey(value: string) {
   return /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
@@ -541,10 +579,7 @@ function normalizeEmployee(
 ): EmployeeMonthlyStats {
   const userRecord = isRecord(raw.user) ? raw.user : null
   const summaryRecord = isRecord(raw.summary) ? raw.summary : null
-  const name =
-    findFirstString(raw, ['user_name', 'name', 'full_name', 'employee_name', 'member_name']) ??
-    findFirstString(userRecord ?? {}, ['full_name', 'name']) ??
-    'Unknown'
+  const name = resolveDisplayName(raw, userRecord, summaryRecord) ?? 'Unknown'
 
   const dayStatuses = parseDayStatuses(
     raw.daily_statuses ??
@@ -773,9 +808,7 @@ function mergeEmployeeHistory(
 
   return {
     user_id: toNumber(rawHistory.user_id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
-    user_name:
-      findFirstString(rawHistory, ['full_name', 'user_name', 'name']) ??
-      fallbackEmployee.user_name,
+    user_name: resolveDisplayName(rawHistory, summary, selectedPeriod) ?? fallbackEmployee.user_name,
     telegram_username:
       findFirstString(rawHistory, ['telegram_username', 'telegram_id']) ??
       fallbackEmployee.telegram_username,
@@ -819,7 +852,13 @@ function buildEmployeesFromHistoryRecords(
     mergeEmployeeHistory(
       {
         user_id: toNumber(record.user_id ?? record.id ?? record.employee_id ?? record.member_id) ?? 0,
-        user_name: findFirstString(record, ['full_name', 'user_name', 'name']) ?? 'Unknown',
+        user_name:
+          resolveDisplayName(
+            record,
+            isRecord(record.user) ? record.user : null,
+            isRecord(record.summary) ? record.summary : null,
+          ) ??
+          `Member #${toNumber(record.user_id ?? record.id ?? record.employee_id ?? record.member_id) ?? 0}`,
         telegram_username: findFirstString(record, ['telegram_username', 'telegram_id']) ?? null,
         submitted_count: 0,
         missing_count: 0,

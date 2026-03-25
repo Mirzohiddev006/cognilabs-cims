@@ -119,6 +119,17 @@ export const defaultYear = now.getFullYear()
 export const defaultMonth = now.getMonth() + 1
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 const missingMetricValue = Number.NaN
+const unknownNameLabels = new Set([
+  'unknown',
+  'unknown member',
+  'unknown user',
+  'member unknown',
+  'n/a',
+  'na',
+  'none',
+  'null',
+  'undefined',
+])
 const monthlyDayCollectionKeys = [
   'daily_statuses',
   'day_statuses',
@@ -317,6 +328,56 @@ export function findFirstString(source: UnknownRecord, keys: string[]) {
   return undefined
 }
 
+function joinNameParts(...parts: Array<string | undefined>) {
+  const value = parts.filter(Boolean).join(' ').trim()
+  return value || undefined
+}
+
+function isUnknownName(value?: string | null) {
+  if (typeof value !== 'string') {
+    return false
+  }
+
+  return unknownNameLabels.has(value.trim().toLowerCase())
+}
+
+export function resolveRecordDisplayName(...sources: Array<UnknownRecord | null | undefined>) {
+  for (const source of sources) {
+    if (!source) {
+      continue
+    }
+
+    const directName = findFirstString(source, [
+      'full_name',
+      'user_name',
+      'employee_name',
+      'member_name',
+      'display_name',
+    ])
+
+    if (directName && !isUnknownName(directName)) {
+      return directName
+    }
+
+    const composedName = joinNameParts(
+      findFirstString(source, ['first_name', 'firstName', 'name']),
+      findFirstString(source, ['surname', 'last_name', 'lastName']),
+    )
+
+    if (composedName && !isUnknownName(composedName)) {
+      return composedName
+    }
+
+    const plainName = findFirstString(source, ['name'])
+
+    if (plainName && !isUnknownName(plainName)) {
+      return plainName
+    }
+  }
+
+  return undefined
+}
+
 export function findFirstNumber(source: UnknownRecord, keys: string[]) {
   for (const key of keys) {
     const value = toNumber(source[key])
@@ -441,12 +502,25 @@ export function normalizeRoleLabel(user?: CeoUserRecord | null, snapshot?: Salar
 }
 
 export function getUserFullName(user?: CeoUserRecord | null, snapshot?: SalaryEstimateSnapshot | null) {
-  if (snapshot?.userName?.trim()) {
+  if (snapshot?.userName?.trim() && !isUnknownName(snapshot.userName)) {
     return snapshot.userName
   }
 
   const name = `${user?.name ?? ''} ${user?.surname ?? ''}`.trim()
-  return name || 'Unknown member'
+
+  if (name) {
+    return name
+  }
+
+  if (snapshot?.userLabel?.trim()) {
+    return snapshot.userLabel
+  }
+
+  if (typeof snapshot?.userId === 'number' && snapshot.userId > 0) {
+    return `Member #${snapshot.userId}`
+  }
+
+  return 'Unknown member'
 }
 
 export function getPenaltyPercentage(baseSalary: number, deductionAmount: number, explicitPercentage?: number) {
@@ -577,8 +651,7 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     sources.map((source) => findFirstNumber(source, ['final_salary', 'final_amount', 'payable_salary'])).find((value) => value !== undefined)
   const estimatedSalary =
     sources.map((source) => findFirstNumber(source, ['estimated_salary', 'salary_estimate', 'salary_amount'])).find((value) => value !== undefined)
-  const userName =
-    sources.map((source) => findFirstString(source, ['full_name', 'user_name', 'employee_name', 'member_name', 'name'])).find(Boolean)
+  const userName = resolveRecordDisplayName(...sources)
   const roleLabel =
     sources.map((source) => findFirstString(source, ['job_title', 'role_name', 'role'])).find(Boolean)
   const userLabel =
@@ -646,7 +719,14 @@ export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstima
 }
 
 export function createVirtualUser(snapshot: SalaryEstimateSnapshot): CeoUserRecord {
-  const fullName = snapshot.userName?.trim() || 'Unknown member'
+  const fullName =
+    (snapshot.userName?.trim() && !isUnknownName(snapshot.userName)
+      ? snapshot.userName.trim()
+      : undefined) ??
+    snapshot.userLabel?.trim() ??
+    (typeof snapshot.userId === 'number' && snapshot.userId > 0
+      ? `Member #${snapshot.userId}`
+      : 'Unknown member')
   const parts = fullName.split(/\s+/)
   const name = parts.shift() ?? 'Unknown'
 
@@ -1200,7 +1280,7 @@ function parseMonthlyDaySeed(
     date,
     { isDayOff },
   )
-  const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0) || Boolean(note)
+  const hasUpdate = explicitHasUpdate === true || (updatesCount !== null && updatesCount > 0)
 
   return {
     day: date.getDate(),
@@ -1291,15 +1371,17 @@ export function buildMemberMonthlyUpdateCalendar(
 
 export function parseMemberUpdateSummary(
   payload: unknown,
-  _calendar?: MemberMonthlyUpdateCalendar | null,
+  calendar?: MemberMonthlyUpdateCalendar | null,
 ): MemberUpdateSummary | null {
   const primaryRecord = getPrimaryUpdateRecord(payload)
 
-  if (!primaryRecord) {
+  if (!primaryRecord && !calendar) {
     return null
   }
 
-  const nestedSummary = findFirstRecord(primaryRecord, ['summary', 'statistics', 'update_stats', 'monthly_stats', 'salary_update'])
+  const nestedSummary = primaryRecord
+    ? findFirstRecord(primaryRecord, ['summary', 'statistics', 'update_stats', 'monthly_stats', 'salary_update'])
+    : null
   const sources = [primaryRecord, nestedSummary].filter(Boolean) as UnknownRecord[]
 
   const submittedCount =
@@ -1319,6 +1401,39 @@ export function parseMemberUpdateSummary(
   const nextPaymentDate = sources.map((source) => findFirstString(source, ['next_payment_date', 'payment_date'])).find(Boolean)
   const note = sources.map((source) => findFirstString(source, ['note', 'summary', 'description', 'remarks'])).find(Boolean)
   const lastUpdateDate = sources.map((source) => findFirstString(source, ['last_update_date', 'last_update', 'updated_at', 'submitted_at'])).find(Boolean)
+  const isCurrentPeriod = calendar !== null && calendar !== undefined && calendar.month === defaultMonth && calendar.year === defaultYear
+  const calendarSummary = calendar
+    ? (() => {
+        const activeCalendar = calendar
+        const completedDays = activeCalendar.days.filter((day) => day.status === 'submitted' || day.status === 'missing')
+        const lastSubmittedDay = [...activeCalendar.days]
+          .reverse()
+          .find((day) => day.status === 'submitted' || day.entries.length > 0 || day.hasUpdate)
+        const latestEntryTimestamp = lastSubmittedDay?.entries
+          ?.map((entry) => entry.createdAt)
+          .filter((value): value is string => Boolean(value))
+          .sort((left, right) => new Date(right).getTime() - new Date(left).getTime())[0]
+
+        return {
+          submittedCount: activeCalendar.submittedCount,
+          missingCount: activeCalendar.missingCount,
+          totalUpdates: activeCalendar.totalUpdates,
+          completionPercentage:
+            completedDays.length > 0
+              ? (activeCalendar.submittedCount / completedDays.length) * 100
+              : 0,
+          lastUpdateDate: latestEntryTimestamp ?? lastSubmittedDay?.date,
+        }
+      })()
+    : null
+  const shouldUseCalendarSummary =
+    Boolean(calendarSummary) && (
+      isCurrentPeriod ||
+      submittedCount === undefined ||
+      missingCount === undefined ||
+      totalUpdates === undefined ||
+      completionPercentage === undefined
+    )
 
   if (
     submittedCount === undefined &&
@@ -1329,21 +1444,22 @@ export function parseMemberUpdateSummary(
     salaryAmount === undefined &&
     !nextPaymentDate &&
     !note &&
-    !lastUpdateDate
+    !lastUpdateDate &&
+    !calendarSummary
   ) {
     return null
   }
 
   return {
-    totalUpdates: totalUpdates ?? missingMetricValue,
-    submittedCount: submittedCount ?? missingMetricValue,
-    missingCount: missingCount ?? missingMetricValue,
-    completionPercentage: completionPercentage ?? missingMetricValue,
-    updatePercentage,
+    totalUpdates: shouldUseCalendarSummary ? calendarSummary!.totalUpdates : totalUpdates ?? missingMetricValue,
+    submittedCount: shouldUseCalendarSummary ? calendarSummary!.submittedCount : submittedCount ?? missingMetricValue,
+    missingCount: shouldUseCalendarSummary ? calendarSummary!.missingCount : missingCount ?? missingMetricValue,
+    completionPercentage: shouldUseCalendarSummary ? calendarSummary!.completionPercentage : completionPercentage ?? missingMetricValue,
+    updatePercentage: updatePercentage ?? (shouldUseCalendarSummary ? calendarSummary!.completionPercentage : undefined),
     salaryAmount,
     nextPaymentDate,
     note,
-    lastUpdateDate,
+    lastUpdateDate: lastUpdateDate ?? calendarSummary?.lastUpdateDate,
   }
 }
 

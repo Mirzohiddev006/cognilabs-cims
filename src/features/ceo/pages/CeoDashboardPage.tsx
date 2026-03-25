@@ -15,6 +15,7 @@ import { DataTable } from '../../../shared/ui/data-table'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
 import { MetricCard } from '../components/MetricCard'
@@ -159,6 +160,27 @@ export function CeoDashboardPage() {
   const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
   const companyPaymentsQuery = useAsyncData(() => ceoService.listCompanyPayments(), [])
+  const [chartCustomerType, setChartCustomerType] = useState('')
+  const chartsQuery = useAsyncData(
+    async () => {
+      const selectedCustomerType = chartCustomerType || undefined
+      const [weekly, monthly] = await Promise.all([
+        crmService.salesDashboardCharts({
+          days: 7,
+          customer_type: selectedCustomerType,
+          platform_limit: 8,
+        }),
+        crmService.salesDashboardCharts({
+          days: 30,
+          customer_type: selectedCustomerType,
+          platform_limit: 10,
+        }),
+      ])
+
+      return { weekly, monthly }
+    },
+    [chartCustomerType],
+  )
 
   const [broadcastValues, setBroadcastValues] = useState<MessageComposerValues>(initialBroadcastMessage)
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false)
@@ -194,12 +216,13 @@ export function CeoDashboardPage() {
   }, [companyPayments])
 
   async function refreshAll() {
-    await Promise.all([
+    await Promise.allSettled([
       dashboardQuery.refetch(),
       todayMetricsQuery.refetch(),
       messagesQuery.refetch(),
       paymentsQuery.refetch(),
       companyPaymentsQuery.refetch(),
+      chartsQuery.refetch(),
     ])
   }
 
@@ -555,6 +578,18 @@ export function CeoDashboardPage() {
           sparkBars={[2, 3, 4, 5, 5, 6]}
         />
       </div>
+
+      <CrmDashboardCharts
+        weekly={chartsQuery.data?.weekly}
+        monthly={chartsQuery.data?.monthly}
+        customerType={chartCustomerType}
+        onCustomerTypeChange={setChartCustomerType}
+        isLoading={chartsQuery.isLoading}
+        isError={chartsQuery.isError}
+        onRetry={() => {
+          void chartsQuery.refetch()
+        }}
+      />
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="p-6">

@@ -12,6 +12,7 @@ import { ProjectFormModal } from '../components/ProjectFormModal'
 import { BoardFormModal } from '../components/BoardFormModal'
 import { BoardCard } from '../components/BoardCard'
 import { formatProjectDate } from '../lib/format'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -34,6 +35,7 @@ export function ProjectDetailPage() {
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
 
   const project = projectQuery.data
+  const projectImage = resolveMediaUrl(project?.image) ?? project?.image ?? null
 
   async function handleUpdateProject(fd: FormData) {
     if (!project) return
@@ -160,9 +162,9 @@ export function ProjectDetailPage() {
         <Card variant="glass" noPadding className="overflow-hidden rounded-[28px]">
           <div className="relative overflow-hidden">
             {/* Background image */}
-            {project.image && (
+            {projectImage && (
               <div className="relative h-40 w-full overflow-hidden">
-                <img src={project.image} alt={project.project_name} className="h-full w-full object-cover opacity-40" />
+                <img src={projectImage} alt={project.project_name} className="h-full w-full object-cover opacity-40" />
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--surface-elevated)]" />
               </div>
             )}
@@ -175,9 +177,9 @@ export function ProjectDetailPage() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-start gap-4 min-w-0">
                   {/* Project image / initials */}
-                  {project.image ? (
+                  {projectImage ? (
                     <img
-                      src={project.image}
+                      src={projectImage}
                       alt={project.project_name}
                       className="h-16 w-16 shrink-0 rounded-2xl object-cover border border-[var(--border)] shadow-lg"
                     />

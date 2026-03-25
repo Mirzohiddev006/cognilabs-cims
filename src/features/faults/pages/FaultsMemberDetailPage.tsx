@@ -22,6 +22,7 @@ import {
   createVirtualUser,
   defaultMonth,
   defaultYear,
+  findFirstRecord,
   formatAmount,
   formatCount,
   formatDetailDate,
@@ -33,6 +34,7 @@ import {
   monthOptions,
   normalizeEstimateEntry,
   parseMaybeJson,
+  resolveRecordDisplayName,
 } from '../lib/salaryEstimates'
 
 function clampNumber(value: number, min: number, max: number) {
@@ -78,6 +80,53 @@ function findHistoryPeriodRecord(historyEmployeeRecord: Record<string, unknown> 
   )) ?? null
 }
 
+function resolveMemberDisplayName(...sources: Array<unknown>) {
+  for (const source of sources) {
+    const parsed = parseMaybeJson(source)
+    const candidateRecords: Record<string, unknown>[] = []
+
+    if (Array.isArray(parsed)) {
+      const firstRecord = parsed.find(isRecord)
+
+      if (firstRecord) {
+        candidateRecords.push(firstRecord)
+      }
+    } else if (isRecord(parsed)) {
+      candidateRecords.push(parsed)
+
+      for (const key of ['user', 'employee', 'member', 'user_data', 'member_data', 'summary', 'statistics', 'salary_update', 'monthly_stats']) {
+        const nestedRecord = findFirstRecord(parsed, [key])
+
+        if (nestedRecord) {
+          candidateRecords.push(nestedRecord)
+        }
+      }
+
+      for (const key of ['employees', 'members', 'items', 'results', 'rows', 'updates', 'data']) {
+        const collection = parsed[key]
+
+        if (!Array.isArray(collection)) {
+          continue
+        }
+
+        const firstRecord = collection.find(isRecord)
+
+        if (firstRecord) {
+          candidateRecords.push(firstRecord)
+        }
+      }
+    }
+
+    const resolvedName = resolveRecordDisplayName(...candidateRecords)
+
+    if (resolvedName) {
+      return resolvedName
+    }
+  }
+
+  return null
+}
+
 export function FaultsMemberDetailPage() {
   const navigate = useNavigate()
   const params = useParams()
@@ -106,6 +155,8 @@ export function FaultsMemberDetailPage() {
       ])
 
       const estimatePayload = estimateResult.status === 'fulfilled' ? estimateResult.value : null
+      const updatesPayload = updatesResult.status === 'fulfilled' ? updatesResult.value : null
+      const calendarPayload = calendarResult.status === 'fulfilled' ? calendarResult.value : null
       const historyPayload = historyResult.status === 'fulfilled' ? historyResult.value : null
       const historyEmployeeRecord = findHistoryEmployeeRecord(historyPayload, memberId)
       const historyPeriodRecord = findHistoryPeriodRecord(historyEmployeeRecord, year, month)
@@ -115,25 +166,49 @@ export function FaultsMemberDetailPage() {
       const historyReport = historyPayload
         ? buildEmployeeReports([], historyPayload, { includeFallbackUsers: false }).find((entry) => entry.id === memberId) ?? null
         : null
-      const apiUser = snapshot
+      const historyReportBaseSalary = historyReport?.baseSalary
+      const resolvedUserName =
+        resolveMemberDisplayName(
+          estimatePayload,
+          effectiveEstimatePayload,
+          historyPeriodRecord,
+          historyEmployeeRecord,
+          updatesPayload,
+          calendarPayload,
+        ) ??
+        historyReport?.fullName ??
+        `Member #${memberId}`
+      const resolvedSnapshot = snapshot
         ? {
-            ...createVirtualUser(snapshot),
-            id: snapshot.userId ?? memberId,
+            ...snapshot,
+            userId: snapshot.userId ?? memberId,
+            userName: snapshot.userName?.trim() || resolvedUserName,
           }
-        : historyEmployeeRecord
+        : null
+      const apiUser = resolvedSnapshot
+        ? {
+            ...createVirtualUser(resolvedSnapshot),
+            id: resolvedSnapshot.userId ?? memberId,
+          }
+        : historyEmployeeRecord || historyReport || resolvedUserName
           ? {
               ...createVirtualUser({
                 userId: memberId,
-                userName: typeof historyEmployeeRecord.full_name === 'string' ? historyEmployeeRecord.full_name : 'Unknown member',
-                roleLabel: 'Member',
-                baseSalary: typeof historyEmployeeRecord.default_salary === 'number' ? historyEmployeeRecord.default_salary : undefined,
+                userName: resolvedUserName,
+                roleLabel: historyReport?.roleLabel ?? 'Member',
+                baseSalary:
+                  typeof historyEmployeeRecord?.default_salary === 'number'
+                    ? historyEmployeeRecord.default_salary
+                    : typeof historyReportBaseSalary === 'number' && Number.isFinite(historyReportBaseSalary)
+                      ? historyReportBaseSalary
+                      : undefined,
               }),
               id: memberId,
             }
           : null
       const fallbackReport =
-        snapshot && apiUser
-          ? buildReportFromUser(apiUser, snapshot)
+        resolvedSnapshot && apiUser
+          ? buildReportFromUser(apiUser, resolvedSnapshot)
           : historyReport ?? (apiUser ? buildReportFromUser(apiUser) : null)
 
       if (!fallbackReport) {
@@ -144,8 +219,8 @@ export function FaultsMemberDetailPage() {
         report: fallbackReport,
         user: apiUser,
         estimatePayload: effectiveEstimatePayload,
-        updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
-        calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
+        updatesPayload,
+        calendarPayload,
         estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
         updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
         calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,

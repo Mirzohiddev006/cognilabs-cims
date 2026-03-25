@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import {
   ceoService,
+  type CeoMessageRecord,
   type CeoUserRecord,
+  type IncomingCeoMessageRecord,
   type UserPayload,
 } from '../../../shared/api/services/ceo.service'
 import type { PermissionMap } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { formatCompactNumber } from '../../../shared/lib/format'
+import { formatCompactNumber, formatShortDate } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -21,11 +23,9 @@ import { Input } from '../../../shared/ui/input'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { Textarea } from '../../../shared/ui/textarea'
 import { PermissionEditorModal } from '../components/PermissionEditorModal'
-import {
-  MessageComposerModal,
-  type MessageComposerValues,
-} from '../components/MessageComposerModal'
+import { type MessageComposerValues } from '../components/MessageComposerModal'
 import { MetricCard } from '../components/MetricCard'
 import { UserFormModal, type UserFormValues } from '../components/UserFormModal'
 import { permissionCatalog } from '../lib/permissionCatalog'
@@ -52,8 +52,38 @@ const initialMessageForm: MessageComposerValues = {
 }
 
 const emptyUsers: CeoUserRecord[] = []
+const emptySentMessages: CeoMessageRecord[] = []
+const emptyIncomingMessages: IncomingCeoMessageRecord[] = []
 const now = new Date()
 const supportedUserRoles = ['Customer', 'SalesManager', 'Finance', 'CEO', 'Admin'] as const
+const messageTimestampFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+type UserConversationEntry = {
+  id: string
+  direction: 'incoming' | 'outgoing'
+  subject: string
+  body: string
+  sentAt: string
+}
+
+type UserConversationSummary = {
+  entries: UserConversationEntry[]
+  incomingCount: number
+  outgoingCount: number
+  totalCount: number
+}
+
+const emptyConversationSummary: UserConversationSummary = {
+  entries: [],
+  incomingCount: 0,
+  outgoingCount: 0,
+  totalCount: 0,
+}
 
 function formatSalary(value?: number | null) {
   if (typeof value !== 'number' || Number.isNaN(value)) {
@@ -93,6 +123,80 @@ function renderJobTitleTag(jobTitle: string, role?: string | null) {
       {jobTitle}
     </span>
   )
+}
+
+function getUserDisplayName(user: Pick<CeoUserRecord, 'name' | 'surname'>) {
+  return `${user.name} ${user.surname}`.trim()
+}
+
+function getUserInitials(user: Pick<CeoUserRecord, 'name' | 'surname'>) {
+  return `${user.name?.charAt(0) ?? ''}${user.surname?.charAt(0) ?? ''}`.toUpperCase() || '?'
+}
+
+function getUserAvatarHue(user: Pick<CeoUserRecord, 'name'>) {
+  return ((user.name?.charCodeAt(0) ?? 0) * 7) % 360
+}
+
+function UserAvatar({
+  user,
+  size = 'md',
+}: {
+  user: Pick<CeoUserRecord, 'name' | 'surname' | 'profile_image'>
+  size?: 'sm' | 'md' | 'lg'
+}) {
+  const imageUrl = resolveMediaUrl(user.profile_image) ?? user.profile_image
+  const sizeClassName = size === 'lg' ? 'h-16 w-16 text-lg' : size === 'sm' ? 'h-10 w-10 text-sm' : 'h-12 w-12 text-base'
+
+  if (imageUrl) {
+    return (
+      <img
+        src={imageUrl}
+        alt={getUserDisplayName(user)}
+        className={cn('shrink-0 rounded-full border border-white/10 object-cover', sizeClassName)}
+      />
+    )
+  }
+
+  const hue = getUserAvatarHue(user)
+
+  return (
+    <div
+      className={cn('flex shrink-0 items-center justify-center rounded-full font-bold', sizeClassName)}
+      style={{
+        background: `hsl(${hue}, 45%, 18%)`,
+        color: `hsl(${hue}, 65%, 65%)`,
+      }}
+    >
+      {getUserInitials(user)}
+    </div>
+  )
+}
+
+function getMessageHeadline(entry: UserConversationEntry) {
+  const headline = entry.subject.trim() || entry.body.trim()
+  return headline || 'Untitled message'
+}
+
+function getMessagePreview(entry: UserConversationEntry) {
+  if (entry.subject.trim() && entry.body.trim()) {
+    return entry.body.trim()
+  }
+
+  return entry.subject.trim() || entry.body.trim() || 'No message preview'
+}
+
+function formatMessageTimestamp(sentAt?: string | null) {
+  if (!sentAt) {
+    return '-'
+  }
+
+  const parsed = new Date(sentAt)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return '-'
+  }
+
+  return messageTimestampFormatter.format(parsed)
 }
 
 function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
@@ -141,6 +245,8 @@ export function CeoUsersPage() {
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
   const permissionsOverviewQuery = useAsyncData(() => ceoService.permissionsOverview(), [])
+  const sentMessagesQuery = useAsyncData(() => ceoService.listMessages(), [])
+  const incomingMessagesQuery = useAsyncData(() => ceoService.listMyMessages(), [])
 
   const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create')
   const [selectedUser, setSelectedUser] = useState<CeoUserRecord | null>(null)
@@ -161,8 +267,9 @@ export function CeoUsersPage() {
   const [isPermissionLoading, setIsPermissionLoading] = useState(false)
   const [isPermissionSubmitting, setIsPermissionSubmitting] = useState(false)
 
+  const [messageThreadUser, setMessageThreadUser] = useState<CeoUserRecord | null>(null)
   const [messageValues, setMessageValues] = useState<MessageComposerValues>(initialMessageForm)
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false)
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false)
   const [isMessageSubmitting, setIsMessageSubmitting] = useState(false)
 
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -170,6 +277,8 @@ export function CeoUsersPage() {
 
   const users = dashboardQuery.data?.users ?? emptyUsers
   const statistics = dashboardQuery.data?.statistics
+  const sentMessages = sentMessagesQuery.data?.messages ?? emptySentMessages
+  const incomingMessages = incomingMessagesQuery.data?.messages ?? emptyIncomingMessages
 
   const filteredUsers = useMemo(() => {
     const normalizedSearch = deferredSearch.trim().toLowerCase()
@@ -195,6 +304,70 @@ export function CeoUsersPage() {
     }
     return map
   }, [permissionsOverviewQuery.data?.users])
+
+  const conversationByUserId = useMemo(() => {
+    const sentEntriesByEmail = new Map<string, UserConversationEntry[]>()
+    const incomingEntriesByUserId = new Map<number, UserConversationEntry[]>()
+
+    for (const message of sentMessages) {
+      const receiverEmail = message.receiver_email.trim().toLowerCase()
+
+      if (!receiverEmail) {
+        continue
+      }
+
+      const current = sentEntriesByEmail.get(receiverEmail) ?? []
+      current.push({
+        id: `outgoing-${message.id}`,
+        direction: 'outgoing',
+        subject: message.subject ?? '',
+        body: message.body ?? '',
+        sentAt: message.sent_at,
+      })
+      sentEntriesByEmail.set(receiverEmail, current)
+    }
+
+    for (const message of incomingMessages) {
+      const senderId = Number(message.sender_id)
+
+      if (!Number.isFinite(senderId)) {
+        continue
+      }
+
+      const current = incomingEntriesByUserId.get(senderId) ?? []
+      current.push({
+        id: `incoming-${message.id}`,
+        direction: 'incoming',
+        subject: message.subject ?? '',
+        body: message.body ?? '',
+        sentAt: message.sent_at,
+      })
+      incomingEntriesByUserId.set(senderId, current)
+    }
+
+    const conversations = new Map<number, UserConversationSummary>()
+
+    for (const user of users) {
+      const outgoingEntries = sentEntriesByEmail.get(user.email.trim().toLowerCase()) ?? []
+      const incomingEntries = incomingEntriesByUserId.get(user.id) ?? []
+      const entries = [...outgoingEntries, ...incomingEntries].sort(
+        (left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime(),
+      )
+
+      conversations.set(user.id, {
+        entries,
+        incomingCount: incomingEntries.length,
+        outgoingCount: outgoingEntries.length,
+        totalCount: entries.length,
+      })
+    }
+
+    return conversations
+  }, [incomingMessages, sentMessages, users])
+
+  const activeConversation = messageThreadUser
+    ? (conversationByUserId.get(messageThreadUser.id) ?? emptyConversationSummary)
+    : emptyConversationSummary
 
   useEffect(() => {
     if (!isPermissionModalOpen || !permissionTargetUser) {
@@ -252,7 +425,12 @@ export function CeoUsersPage() {
   }, [isPermissionModalOpen, permissionTargetUser, permissionsOverviewQuery.data?.available_pages, showToast])
 
   function refreshAll() {
-    return Promise.all([dashboardQuery.refetch(), permissionsOverviewQuery.refetch()])
+    return Promise.all([
+      dashboardQuery.refetch(),
+      permissionsOverviewQuery.refetch(),
+      sentMessagesQuery.refetch(),
+      incomingMessagesQuery.refetch(),
+    ])
   }
 
   function openCreateUserModal() {
@@ -509,14 +687,15 @@ export function CeoUsersPage() {
     }
   }
 
-  function openMessageModal(user: CeoUserRecord) {
+  function openMessageDialog(user: CeoUserRecord) {
+    setMessageThreadUser(user)
     setMessageValues({
       receiver_id: user.id,
       receiver_label: `${user.name} ${user.surname} (${user.email})`,
       subject: '',
       body: '',
     })
-    setIsMessageModalOpen(true)
+    setIsMessageDialogOpen(true)
   }
 
   async function handleSendSingleMessage() {
@@ -537,7 +716,12 @@ export function CeoUsersPage() {
         subject: messageValues.subject.trim(),
         body: messageValues.body.trim(),
       })
-      setIsMessageModalOpen(false)
+      await Promise.all([sentMessagesQuery.refetch(), dashboardQuery.refetch()])
+      setMessageValues((current) => ({
+        ...current,
+        subject: '',
+        body: '',
+      }))
       showToast({
         title: 'Message sent',
         description: messageValues.receiver_label,
@@ -559,8 +743,8 @@ export function CeoUsersPage() {
     setIsUploadingImage(true)
     try {
       await ceoService.uploadUserProfileImage(profileUser.id, file)
-      await dashboardQuery.refetch()
-      const updated = dashboardQuery.data?.users.find((u) => u.id === profileUser.id)
+      const refreshedDashboard = await dashboardQuery.refetch()
+      const updated = refreshedDashboard.users.find((u) => u.id === profileUser.id)
       if (updated) setProfileUser(updated)
       showToast({ title: 'Profile image updated', tone: 'success' })
     } catch (error) {
@@ -620,12 +804,12 @@ export function CeoUsersPage() {
         <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
       </div>
 
-<Card className="p-6">
+      <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
             eyebrow="Users list"
             title="CEO users table"
-            description="Search, edit, toggle status, manage permissions, and send messages directly from the table."
+            description="Search, edit, toggle status, manage permissions, and review message history directly from the table."
           />
           <Input
             className="w-full md:w-80"
@@ -652,19 +836,17 @@ export function CeoUsersPage() {
                 key: 'identity',
                 header: 'User',
                 render: (row) => (
-                  <div>
-                    <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
-                    <p className="text-xs font-medium text-zinc-500">{row.email}</p>
-                    {row.job_title ? (
-                      renderJobTitleTag(row.job_title, row.role)
-                    ) : null}
+                  <div className="flex items-center gap-3">
+                    <UserAvatar user={row} size="sm" />
+                    <div>
+                      <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
+                      <p className="text-xs font-medium text-zinc-500">{row.email}</p>
+                      {row.job_title ? (
+                        renderJobTitleTag(row.job_title, row.role)
+                      ) : null}
+                    </div>
                   </div>
                 ),
-              },
-              {
-                key: 'company',
-                header: 'Company',
-                render: (row) => row.company_code ?? '-',
               },
               {
                 key: 'role',
@@ -704,6 +886,49 @@ export function CeoUsersPage() {
                 },
               },
               {
+                key: 'messages',
+                header: 'Messages',
+                width: '140px',
+                render: (row) => {
+                  const conversation = conversationByUserId.get(row.id) ?? emptyConversationSummary
+                  const isMessageDataLoading =
+                    sentMessagesQuery.isLoading ||
+                    incomingMessagesQuery.isLoading
+
+                  if (isMessageDataLoading && !sentMessagesQuery.data && !incomingMessagesQuery.data) {
+                    return <span className="text-xs text-zinc-600">…</span>
+                  }
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => openMessageDialog(row)}
+                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-left transition hover:border-blue-400/30 hover:bg-blue-500/8"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 shrink-0 text-blue-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
+                      {conversation.totalCount > 0 ? (
+                        <span className="text-xs font-semibold text-white">
+                          {conversation.totalCount}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-500">Send</span>
+                      )}
+                    </button>
+                  )
+                },
+              },
+              {
                 key: 'status',
                 header: 'Status',
                 render: (row) => (
@@ -737,10 +962,6 @@ export function CeoUsersPage() {
                       {
                         label: 'Permissions',
                         onSelect: () => openPermissionModal(row),
-                      },
-                      {
-                        label: 'Message',
-                        onSelect: () => openMessageModal(row),
                       },
                       {
                         label: row.is_active ? 'Deactivate' : 'Activate',
@@ -792,19 +1013,151 @@ export function CeoUsersPage() {
         isSubmitting={isPermissionSubmitting || isPermissionLoading}
       />
 
-      <MessageComposerModal
-        open={isMessageModalOpen}
-        onClose={() => setIsMessageModalOpen(false)}
-        values={messageValues}
-        isSubmitting={isMessageSubmitting}
-        onChange={(field, value) =>
-          setMessageValues((current) => ({
-            ...current,
-            [field]: value,
-          }))
+      <Dialog
+        open={isMessageDialogOpen}
+        onClose={() => setIsMessageDialogOpen(false)}
+        title={messageThreadUser ? `Messages with ${getUserDisplayName(messageThreadUser)}` : 'Message thread'}
+        description={
+          messageThreadUser
+            ? `${activeConversation.outgoingCount} sent • ${activeConversation.incomingCount} incoming`
+            : 'Review prior conversation and send a new message.'
         }
-        onSubmit={() => void handleSendSingleMessage()}
-      />
+        size="xl"
+      >
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-4">
+              <div>
+                <p className="text-sm font-semibold text-white">Conversation</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Oldingi yozishmalar va oxirgi activity shu yerda ko‘rinadi.
+                </p>
+              </div>
+              <Badge variant="outline">{activeConversation.totalCount} entries</Badge>
+            </div>
+
+            <div className="mt-4 max-h-[440px] space-y-3 overflow-y-auto pr-1">
+              {activeConversation.totalCount > 0 ? (
+                activeConversation.entries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className={cn(
+                      'max-w-[88%] rounded-[22px] border px-4 py-3',
+                      entry.direction === 'outgoing'
+                        ? 'ml-auto border-violet-500/20 bg-violet-500/[0.12]'
+                        : 'border-blue-500/20 bg-blue-500/[0.10]',
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <Badge
+                        variant={entry.direction === 'incoming' ? 'blue' : 'violet'}
+                        size="sm"
+                      >
+                        {entry.direction === 'incoming' ? 'From user' : 'From CEO'}
+                      </Badge>
+                      <span className="text-[11px] text-white/45">
+                        {formatMessageTimestamp(entry.sentAt)}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-white">
+                      {getMessageHeadline(entry)}
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/72">
+                      {getMessagePreview(entry)}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-zinc-500">
+                  Hali shu user bilan yozishma yo‘q. O‘ng paneldan birinchi message yuborsangiz, thread shu yerda chiqadi.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Card variant="glass" className="space-y-4 p-5">
+              <div className="flex items-center gap-3">
+                {messageThreadUser ? <UserAvatar user={messageThreadUser} size="md" /> : null}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">
+                    {messageThreadUser ? getUserDisplayName(messageThreadUser) : 'Selected user'}
+                  </p>
+                  <p className="truncate text-xs text-zinc-500">
+                    {messageThreadUser?.email ?? 'No recipient selected'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Sent</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
+                </div>
+                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Incoming</p>
+                  <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
+                </div>
+                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Latest</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {activeConversation.entries.length > 0
+                      ? formatShortDate(activeConversation.entries[activeConversation.entries.length - 1]?.sentAt)
+                      : '-'}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="space-y-4 p-5">
+              <div>
+                <p className="text-sm font-semibold text-white">Write new message</p>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Thread ichidan yozsangiz, oldingi xabarlar bilan bir joyda kuzatish oson bo‘ladi.
+                </p>
+              </div>
+
+              <label className="grid gap-2">
+                <span className="text-xs font-semibold text-white">Subject</span>
+                <Input
+                  value={messageValues.subject}
+                  placeholder="Enter message subject"
+                  onChange={(event) =>
+                    setMessageValues((current) => ({
+                      ...current,
+                      subject: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-xs font-semibold text-white">Body</span>
+                <Textarea
+                  rows={8}
+                  value={messageValues.body}
+                  placeholder="Enter message body"
+                  onChange={(event) =>
+                    setMessageValues((current) => ({
+                      ...current,
+                      body: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <div className="flex flex-wrap justify-end gap-3">
+                <Button variant="secondary" onClick={() => setIsMessageDialogOpen(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => void handleSendSingleMessage()} loading={isMessageSubmitting}>
+                  Send message
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </Dialog>
 
       <Dialog
         open={Boolean(profileUser)}
@@ -827,23 +1180,7 @@ export function CeoUsersPage() {
       >
         {/* Profile image section */}
         <div className="mb-4 flex items-center gap-4">
-          {profileUser?.profile_image ? (
-            <img
-              src={resolveMediaUrl(profileUser.profile_image) ?? profileUser.profile_image}
-              alt={`${profileUser.name} ${profileUser.surname}`}
-              className="h-16 w-16 rounded-full object-cover border border-white/10"
-            />
-          ) : (
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-full text-lg font-bold shrink-0"
-              style={{
-                background: `hsl(${(profileUser?.name?.charCodeAt(0) ?? 0) * 7 % 360}, 45%, 18%)`,
-                color: `hsl(${(profileUser?.name?.charCodeAt(0) ?? 0) * 7 % 360}, 65%, 65%)`,
-              }}
-            >
-              {profileUser?.name?.charAt(0).toUpperCase()}{profileUser?.surname?.charAt(0).toUpperCase()}
-            </div>
-          )}
+          {profileUser ? <UserAvatar user={profileUser} size="lg" /> : null}
           <div>
             <p className="text-sm font-semibold text-white">{profileUser?.name} {profileUser?.surname}</p>
             <p className="text-xs text-zinc-500 mb-2">{profileUser?.email}</p>

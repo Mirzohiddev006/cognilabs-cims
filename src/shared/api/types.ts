@@ -159,6 +159,46 @@ export type SalesStatsResponse = {
   customer_type: string
 }
 
+export type SalesDashboardChartsPeriod = {
+  start_date: string
+  end_date: string
+  days: number
+}
+
+export type SalesDashboardChartsSummary = {
+  total_period_leads: number
+  today: number
+  yesterday: number
+  this_week: number
+  last_week: number
+  project_started: number
+  finished: number
+  rejected: number
+  conversion_rate_percent: number
+}
+
+export type SalesDashboardTrendPoint = {
+  date: string
+  count: number
+}
+
+export type SalesDashboardDistributionItem = {
+  key: string
+  label: string
+  value: number
+  percentage: number
+}
+
+export type SalesDashboardChartsResponse = {
+  customer_type?: string | null
+  period: SalesDashboardChartsPeriod
+  summary: SalesDashboardChartsSummary
+  trend: SalesDashboardTrendPoint[]
+  status_distribution: SalesDashboardDistributionItem[]
+  platform_distribution: SalesDashboardDistributionItem[]
+  customer_type_distribution: SalesDashboardDistributionItem[]
+}
+
 export type ConversionRateResponse = {
   total_customers: number
   project_started_count: number
@@ -273,9 +313,33 @@ export type ManagementImageCleanupResponse = {
   cleared_references: Record<string, number>
 }
 
+export type ManagementImageCategory =
+  | 'project_images'
+  | 'profile_images'
+  | 'profil_images'
+  | 'card_images'
+  | (string & {})
+
+export type ManagementImageRecord = {
+  path: string
+  file_url: string
+  filename: string
+  category: ManagementImageCategory
+  size_bytes: number
+  reference_count: number
+  is_referenced: boolean
+  updated_at: string
+}
+
+export type ManagementImagesListResponse = {
+  total_count: number
+  category?: ManagementImageCategory | null
+  images: ManagementImageRecord[]
+}
+
 export type ManagementImageBulkDeletePayload = {
   image_paths?: string[]
-  category?: string
+  category?: ManagementImageCategory
   delete_all_in_category: boolean
   only_unreferenced: boolean
 }

@@ -5,6 +5,7 @@ import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { projectsService, type ProjectRecord } from '../../../shared/api/services/projects.service'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { buildFormData } from '../lib/formdata'
 import { MemberSelector } from './MemberSelector'
 
@@ -65,7 +66,7 @@ export function ProjectFormModal({
           member_ids: initial.members.map((m) => m.id),
           image: null,
         })
-        setPreviewUrl(initial.image ?? null)
+        setPreviewUrl(resolveMediaUrl(initial.image) ?? initial.image ?? null)
       } else {
         setValues(empty)
         setPreviewUrl(null)

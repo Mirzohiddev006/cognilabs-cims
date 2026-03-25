@@ -59,6 +59,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: false,
   },
   {
+    to: '/cims-team',
+    label: 'CIMS Team',
+    description: 'Official social pages and operational bot links in one branded hub.',
+    group: 'Workspace',
+    permissionKey: undefined,
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/ceo/management',
     label: 'Management API',
     description: 'Statuses, roles and page registry controls in one module.',
@@ -111,6 +120,7 @@ export const navigationItems: readonly NavigationItem[] = [
     permissionKey: 'update_list',
     sidebar: true,
     defaultRedirect: true,
+    audience: 'member',
   },
   {
     to: '/projects',

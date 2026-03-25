@@ -211,25 +211,26 @@ function getQueueEyebrow(day: MemberMonthlyUpdateDay, todayKey: string, selected
   return 'Calendar day'
 }
 
+function isHighlightedDay(day: MemberMonthlyUpdateDay) {
+  return day.status === 'submitted' || day.status === 'missing'
+}
+
 function getQueueDays(calendar: MemberMonthlyUpdateCalendar, todayKey: string, selectedDate: string | null) {
   const selectedDay = selectedDate
-    ? calendar.days.find((day) => day.date === selectedDate) ?? null
+    ? calendar.days.find((day) => day.date === selectedDate && isHighlightedDay(day)) ?? null
     : null
-  const todayDay = calendar.days.find((day) => day.date === todayKey) ?? null
+  const todayDay = calendar.days.find((day) => day.date === todayKey && isHighlightedDay(day)) ?? null
   const missingDays = calendar.days
     .filter((day) => day.status === 'missing')
     .sort((left, right) => right.date.localeCompare(left.date))
   const submittedDays = calendar.days
     .filter((day) => day.status === 'submitted')
     .sort((left, right) => right.date.localeCompare(left.date))
-  const upcomingDays = calendar.days
-    .filter((day) => day.status === 'future')
-    .sort((left, right) => left.date.localeCompare(right.date))
 
   const seen = new Set<string>()
   const result: MemberMonthlyUpdateDay[] = []
 
-  for (const day of [selectedDay, todayDay, ...missingDays, ...submittedDays, ...upcomingDays]) {
+  for (const day of [selectedDay, todayDay, ...missingDays, ...submittedDays]) {
     if (!day || seen.has(day.date)) {
       continue
     }
@@ -309,10 +310,10 @@ export function MemberMonthlyUpdateCalendarBoard({
     }
 
     return (
-      calendar.days.find((day) => day.date === todayKey) ??
-      calendar.days.find((day) => day.hasUpdate) ??
       calendar.days.find((day) => day.status === 'submitted') ??
       calendar.days.find((day) => day.status === 'missing') ??
+      calendar.days.find((day) => day.date === todayKey) ??
+      calendar.days.find((day) => day.hasUpdate) ??
       calendar.days[0] ??
       null
     )
@@ -432,7 +433,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       disabled={!onJumpToToday}
                       className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14 disabled:opacity-50"
                     >
-                      Today
+                      {selectedMonthName} {calendar.year}
                     </Button>
                     <Button
                       variant="secondary"
@@ -771,7 +772,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               Action Queue
             </h3>
             <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-              Recent misses, today, and the next upcoming dates stay one click away.
+              Submitted and missing dates stay one click away for fast review.
             </p>
           </div>
 

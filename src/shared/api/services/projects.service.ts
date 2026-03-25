@@ -130,6 +130,69 @@ type ApiBoardDetail = Omit<Partial<BoardDetail>, 'columns' | 'files'> & {
   files?: ApiCardImage[] | null
 }
 
+type ApiUserSummary = Partial<UserSummary> | null | undefined
+
+type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members'> & {
+  image_url?: string | null
+  image_path?: string | null
+  project_image?: string | null
+  thumbnail?: string | null
+  created_by?: ApiUserSummary
+  members?: ApiUserSummary[] | null
+}
+
+type ApiProjectDetail = Omit<ApiProjectRecord, 'boards'> & {
+  boards?: Array<Partial<BoardRecord> | null> | null
+}
+
+function normalizeUserSummary(user: ApiUserSummary): UserSummary {
+  return {
+    id: user?.id ?? 0,
+    name: user?.name ?? '',
+    surname: user?.surname ?? '',
+    email: user?.email ?? '',
+    job_title: user?.job_title ?? null,
+    profile_image: user?.profile_image ?? null,
+  }
+}
+
+function resolveProjectImage(project: ApiProjectRecord) {
+  return project.image ?? project.image_url ?? project.image_path ?? project.project_image ?? project.thumbnail ?? null
+}
+
+function normalizeProject(project: ApiProjectRecord): ProjectRecord {
+  return {
+    id: project.id ?? 0,
+    project_name: project.project_name ?? '',
+    project_description: project.project_description ?? null,
+    project_url: project.project_url ?? null,
+    image: resolveProjectImage(project),
+    created_by: normalizeUserSummary(project.created_by),
+    members: Array.isArray(project.members) ? project.members.map(normalizeUserSummary) : [],
+    boards_count: project.boards_count ?? 0,
+    created_at: project.created_at ?? '',
+    updated_at: project.updated_at ?? '',
+  }
+}
+
+function normalizeProjectDetail(project: ApiProjectDetail): ProjectDetail {
+  return {
+    ...normalizeProject(project),
+    boards: Array.isArray(project.boards)
+      ? project.boards.map((board) => ({
+          id: board?.id ?? 0,
+          name: board?.name ?? '',
+          description: board?.description ?? null,
+          project_id: board?.project_id ?? project.id ?? 0,
+          created_by: normalizeUserSummary(board?.created_by),
+          is_archived: Boolean(board?.is_archived),
+          created_at: board?.created_at ?? '',
+          updated_at: board?.updated_at ?? '',
+        }))
+      : [],
+  }
+}
+
 function normalizeCardImage(image: ApiCardImage): CardImage {
   const url = image.url ?? image.url_path ?? ''
   const fallbackFilename = url.split('/').filter(Boolean).at(-1) ?? 'Attachment'
@@ -208,7 +271,11 @@ function normalizeBoardDetail(board: ApiBoardDetail): BoardDetail {
 export const projectsService = {
   // Projects
   listProjects() {
-    return request<ProjectListResponse>({ path: '/projects' })
+    return request<ProjectListResponse & { projects?: ApiProjectRecord[] }>({ path: '/projects' }).then((response) => ({
+      ...response,
+      projects: Array.isArray(response.projects) ? response.projects.map(normalizeProject) : [],
+      total_count: response.total_count ?? (Array.isArray(response.projects) ? response.projects.length : 0),
+    }))
   },
 
   getAllUsers() {
@@ -224,7 +291,7 @@ export const projectsService = {
   },
 
   getProject(projectId: number) {
-    return request<ProjectDetail>({ path: `/projects/${projectId}` })
+    return request<ApiProjectDetail>({ path: `/projects/${projectId}` }).then(normalizeProjectDetail)
   },
 
   updateProject(projectId: number, formData: FormData) {

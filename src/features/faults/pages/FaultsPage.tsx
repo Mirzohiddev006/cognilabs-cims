@@ -16,7 +16,7 @@ import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
-import { DetailStatTile, RefreshIcon, SummaryMetricCard } from '../components/SalaryEstimatePrimitives'
+import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
   buildEmployeeReports,
   defaultMonth,
@@ -474,108 +474,6 @@ export function FaultsPage() {
         </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
-        <SummaryMetricCard label="Employees in report" value={formatCount(apiSummary.totalEmployees)} />
-        <SummaryMetricCard label="Total reports" value={formatCount(apiSummary.totalReports)} />
-        <SummaryMetricCard
-          label="Total deduction amount"
-          value={formatAmount(apiSummary.totalDeductionAmount)}
-          tone="danger"
-          badge={(apiSummary.employeesWithPenalties ?? 0) > 0 ? 'Deductions present' : undefined}
-        />
-        <SummaryMetricCard
-          label="Total bonus amount"
-          value={formatAmount(apiSummary.totalBonusAmount)}
-          tone="success"
-          badge={(apiSummary.employeesWithBonuses ?? 0) > 0 ? 'Bonuses present' : undefined}
-        />
-        <SummaryMetricCard label="Average update %" value={formatPercent(apiSummary.averageUpdatePercentage)} />
-        <SummaryMetricCard label="Total salary amount" value={formatAmount(apiSummary.totalSalaryAmount)} />
-        <SummaryMetricCard label="Total base salary" value={formatAmount(apiSummary.totalBaseSalary)} />
-        <SummaryMetricCard label="Total final salary" value={formatAmount(apiSummary.totalFinalSalary)} />
-        <SummaryMetricCard label="Total estimated salary" value={formatAmount(apiSummary.totalEstimatedSalary)} />
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        {reports.map((report) => (
-          <Card
-            key={`${report.id}-${report.fullName}`}
-            className="overflow-hidden rounded-[24px] border-white/10 bg-[linear-gradient(180deg,rgba(24,24,28,0.98),rgba(16,16,19,0.98))] p-0"
-          >
-            <div className="border-b border-white/8 px-5 py-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <p className="text-sm text-[var(--muted-strong)]">{report.label}</p>
-                  <h2 className="mt-2 text-[1.9rem] font-semibold tracking-tight text-white">
-                    {report.fullName}
-                  </h2>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{report.roleLabel}</p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={report.hasPenalty ? 'danger' : 'outline'}>
-                    {report.hasPenalty ? 'Has deduction' : 'Clean'}
-                  </Badge>
-                  <Badge variant={report.hasBonus ? 'success' : 'outline'}>
-                    {report.hasBonus ? 'Has bonus' : 'No bonus'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDetailPage(report)}
-                    className="rounded-xl"
-                  >
-                    View details
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openPenaltyDialog(report)}
-                    className="rounded-xl"
-                  >
-                    Add penalty
-                  </Button>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => openBonusDialog(report)}
-                    className="rounded-xl"
-                  >
-                    Add bonus
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-3 px-5 py-5 sm:grid-cols-3">
-              <DetailStatTile label="Final salary" value={formatAmount(report.finalSalary)} />
-              <DetailStatTile label="Estimated salary" value={formatAmount(report.estimatedSalary)} />
-              <DetailStatTile label="Deduction" value={formatAmount(report.deductionAmount)} tone="danger" />
-              <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} />
-              <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} />
-              <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" />
-              <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" />
-              <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" />
-              <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" />
-            </div>
-
-            <div className="border-t border-white/8 px-5 py-4">
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-rose-300">Penalty percentage</span>
-                <span className={cn('font-semibold', (report.penaltyPercentage ?? 0) > 0 ? 'text-rose-400' : 'text-white')}>
-                  {formatPercent(report.penaltyPercentage)}
-                </span>
-              </div>
-              <div className="mt-3 h-2 rounded-full bg-white/7">
-                <div
-                  className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
-                  style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(report.penaltyPercentage) ? report.penaltyPercentage : 0))}%` }}
-                />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="mb-5 flex flex-col gap-2">
           <h2 className="text-2xl font-semibold tracking-tight text-white">All Members</h2>
@@ -697,6 +595,86 @@ export function FaultsPage() {
           ]}
         />
       </Card>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {reports.map((report) => (
+          <Card
+            key={`${report.id}-${report.fullName}`}
+            className="overflow-hidden rounded-[24px] border-white/10 bg-[linear-gradient(180deg,rgba(24,24,28,0.98),rgba(16,16,19,0.98))] p-0"
+          >
+            <div className="border-b border-white/8 px-5 py-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-sm text-[var(--muted-strong)]">{report.label}</p>
+                  <h2 className="mt-2 text-[1.9rem] font-semibold tracking-tight text-white">
+                    {report.fullName}
+                  </h2>
+                  <p className="mt-1 text-sm text-[var(--muted)]">{report.roleLabel}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={report.hasPenalty ? 'danger' : 'outline'}>
+                    {report.hasPenalty ? 'Has deduction' : 'Clean'}
+                  </Badge>
+                  <Badge variant={report.hasBonus ? 'success' : 'outline'}>
+                    {report.hasBonus ? 'Has bonus' : 'No bonus'}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openDetailPage(report)}
+                    className="rounded-xl"
+                  >
+                    View details
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => openPenaltyDialog(report)}
+                    className="rounded-xl"
+                  >
+                    Add penalty
+                  </Button>
+                  <Button
+                    variant="success"
+                    size="sm"
+                    onClick={() => openBonusDialog(report)}
+                    className="rounded-xl"
+                  >
+                    Add bonus
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-3 px-5 py-5 sm:grid-cols-3">
+              <DetailStatTile label="Final salary" value={formatAmount(report.finalSalary)} />
+              <DetailStatTile label="Estimated salary" value={formatAmount(report.estimatedSalary)} />
+              <DetailStatTile label="Deduction" value={formatAmount(report.deductionAmount)} tone="danger" />
+              <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} />
+              <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} />
+              <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" />
+              <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" />
+              <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" />
+              <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" />
+            </div>
+
+            <div className="border-t border-white/8 px-5 py-4">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-rose-300">Penalty percentage</span>
+                <span className={cn('font-semibold', (report.penaltyPercentage ?? 0) > 0 ? 'text-rose-400' : 'text-white')}>
+                  {formatPercent(report.penaltyPercentage)}
+                </span>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white/7">
+                <div
+                  className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
+                  style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(report.penaltyPercentage) ? report.penaltyPercentage : 0))}%` }}
+                />
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <Dialog
         open={Boolean(penaltyTarget)}

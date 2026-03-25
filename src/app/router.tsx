@@ -10,6 +10,7 @@ import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
 import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
 import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
 import { CeoAiChatPage } from '../features/ceo/pages/CeoAiChatPage'
+import { CimsTeamPage } from '../features/ceo/pages/CimsTeamPage'
 import { CeoManagementPage } from '../features/ceo/pages/CeoManagementPage'
 import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
@@ -94,6 +95,16 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: 'cims-team',
+                element: <CimsTeamPage />,
+              },
+              {
+                path: 'ceo/cims-team',
+                element: (
+                  <Navigate to="/cims-team" replace />
+                ),
+              },
+              {
                 path: 'ceo/management',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
@@ -152,7 +163,7 @@ export const router = createBrowserRouter([
               {
                 path: 'updates',
                 element: (
-                  <ProtectedRoute permissionKey="update_list">
+                  <ProtectedRoute permissionKey="update_list" audience="member">
                     <UpdateTrackingPage />
                   </ProtectedRoute>
                 ),

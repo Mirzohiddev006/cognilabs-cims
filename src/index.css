@@ -332,6 +332,23 @@ html.light .text-gradient-blue {
   will-change: transform, opacity, clip-path, filter;
 }
 
+.sheet-enter {
+  animation: sheet-enter 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+@keyframes sheet-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(56px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @media (max-width: 960px) {
   .shell-sidebar {
     opacity: 0;
