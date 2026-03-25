@@ -149,9 +149,9 @@ function TrendChartCard({
   const ids = useId()
   const gradientId = `crm-chart-${ids.replace(/:/g, '')}`
   const colors = tonePalette[accent]
-  const chartWidth = 420
+  const chartWidth = 620
   const chartHeight = 220
-  const padX = 18
+  const padX = 14
   const padY = 18
   const trend = payload?.trend ?? []
   const totalPoints = trend.length
@@ -207,7 +207,7 @@ function TrendChartCard({
 
       {payload && trend.length > 0 ? (
         <>
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-3 py-4">
+          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-2 py-4">
             <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="h-56 w-full">
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -261,12 +261,17 @@ function TrendChartCard({
                   return null
                 }
 
+                const textAnchor =
+                  index === 0 ? 'start' :
+                  index === points.length - 1 ? 'end' :
+                  'middle'
+
                 return (
                   <text
                     key={`label-${point.date}`}
                     x={point.x}
                     y={chartHeight - 2}
-                    textAnchor="middle"
+                    textAnchor={textAnchor}
                     fill="rgba(255,255,255,0.45)"
                     fontSize="10"
                     fontWeight="600"

@@ -201,51 +201,6 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
   return 'No update content was returned by the API for this date.'
 }
 
-function getQueueEyebrow(day: MemberMonthlyUpdateDay, todayKey: string, selectedDate: string | null) {
-  if (day.date === selectedDate) return 'Selected'
-  if (day.date === todayKey) return 'Today'
-  if (day.workdayOverride) return getSpecialDayLabel(day) ?? 'Special day'
-  if (day.status === 'missing') return 'Needs action'
-  if (day.status === 'submitted') return 'Completed'
-  if (day.status === 'future') return 'Upcoming'
-  return 'Calendar day'
-}
-
-function isHighlightedDay(day: MemberMonthlyUpdateDay) {
-  return day.status === 'submitted' || day.status === 'missing'
-}
-
-function getQueueDays(calendar: MemberMonthlyUpdateCalendar, todayKey: string, selectedDate: string | null) {
-  const selectedDay = selectedDate
-    ? calendar.days.find((day) => day.date === selectedDate && isHighlightedDay(day)) ?? null
-    : null
-  const todayDay = calendar.days.find((day) => day.date === todayKey && isHighlightedDay(day)) ?? null
-  const missingDays = calendar.days
-    .filter((day) => day.status === 'missing')
-    .sort((left, right) => right.date.localeCompare(left.date))
-  const submittedDays = calendar.days
-    .filter((day) => day.status === 'submitted')
-    .sort((left, right) => right.date.localeCompare(left.date))
-
-  const seen = new Set<string>()
-  const result: MemberMonthlyUpdateDay[] = []
-
-  for (const day of [selectedDay, todayDay, ...missingDays, ...submittedDays]) {
-    if (!day || seen.has(day.date)) {
-      continue
-    }
-
-    seen.add(day.date)
-    result.push(day)
-
-    if (result.length === 6) {
-      break
-    }
-  }
-
-  return result
-}
-
 function CompletionBar({ pct }: { pct: number }) {
   const color = pct >= 90 ? 'bg-emerald-500' : pct >= 75 ? 'bg-amber-400' : 'bg-rose-500'
 
@@ -321,10 +276,6 @@ export function MemberMonthlyUpdateCalendarBoard({
 
   const selectedKey = selectedDay?.date ?? null
   const selectedLabel = selectedDay ? formatLongDate(selectedDay.date) : 'No date selected'
-  const queueDays = useMemo(
-    () => getQueueDays(calendar, todayKey, selectedKey),
-    [calendar, selectedKey, todayKey],
-  )
   const latestSubmittedDay = useMemo(() => (
     [...calendar.days]
       .filter((day) => day.status === 'submitted')
@@ -367,7 +318,7 @@ export function MemberMonthlyUpdateCalendarBoard({
     : 'No elapsed workdays yet.'
 
   return (
-    <div className={cn('grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]', className)}>
+    <div className={cn('w-full', className)}>
       <div className="cal-inner overflow-hidden rounded-[28px] border">
         <div className="border-b border-(--border) px-4 py-4 sm:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -650,168 +601,113 @@ export function MemberMonthlyUpdateCalendarBoard({
                 Open or upcoming
               </span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-6">
-        <div className="cal-inner overflow-hidden rounded-[28px] border">
-          <div className="border-b border-(--border) px-5 py-4">
-            <h3 className="cal-heading text-[1.55rem] font-semibold tracking-tight">
-              Focus Day
-            </h3>
-            <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-              Selected-date inspector with status, validation, and returned content.
-            </p>
-          </div>
-
-          <div className="space-y-4 px-5 py-4">
-            <div className="flex items-start gap-4">
-              <div
-                className={cn(
-                  'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-                  selectedDay ? dayFocusStyle[selectedDay.status] : dayFocusStyle.neutral,
-                )}
-              >
-                {selectedDay?.day ?? '--'}
-              </div>
-
-              <div className="min-w-0">
-                <h4 className="text-base font-semibold tracking-tight text-(--foreground)">
-                  {selectedLabel}
-                </h4>
-                <p className="mt-1 text-[12px] leading-5 text-[var(--muted)]">
-                  {selectedDay ? getDaySummary(selectedDay) : 'Pick a date from the month grid to inspect details.'}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedDay ? (
-                    <Badge variant={getStatusVariant(selectedDay.status)} dot>
-                      {getStatusLabel(selectedDay.status, selectedDay)}
-                    </Badge>
-                  ) : null}
-                  {selectedDay?.weekdayLabel ? (
-                    <Badge variant="secondary">{selectedDay.weekdayLabel}</Badge>
-                  ) : null}
-                  {selectedDay?.date === todayKey ? (
-                    <Badge variant="blue">Today</Badge>
-                  ) : null}
-                  {selectedDay?.hasUpdate ? (
-                    <Badge variant="violet">Payload available</Badge>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                <p>Status</p>
-                <p className="mt-1 font-medium text-(--foreground)">
-                  {selectedDay ? getStatusLabel(selectedDay.status, selectedDay) : 'N/A'}
-                </p>
-              </div>
-              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                <p>Submission</p>
-                <p className="mt-1 font-medium text-(--foreground)">
-                  {selectedDay?.hasUpdate ? 'Available' : 'None'}
-                </p>
-              </div>
-              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                <p>Validation</p>
-                <p
-                  className={cn(
-                    'mt-1 font-medium',
-                    selectedDay?.isValid === false
-                      ? 'text-amber-300'
-                      : selectedDay?.isValid === true
-                        ? 'text-emerald-300'
-                        : 'text-(--foreground)',
-                  )}
-                >
-                  {selectedDay?.isValid === false ? 'Needs review' : selectedDay?.isValid === true ? 'Valid' : 'N/A'}
-                </p>
-              </div>
-              <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                <p>Entries</p>
-                <p className="mt-1 font-medium text-(--foreground)">
-                  {selectedDay ? getEntryCount(selectedDay) : 0}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-[20px] border border-(--border) bg-(--surface) p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
-                    {selectedDay?.hasUpdate ? 'Update Content' : 'Day Note'}
-                  </p>
-                  <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
-                    {selectedDay?.hasUpdate ? 'Returned content for this date' : 'No returned content for this date'}
-                  </h4>
-                </div>
-                {selectedDay?.hasUpdate ? <Badge variant="blue">API payload</Badge> : null}
-              </div>
-
-              <div className="mt-4 max-h-[280px] overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
-                <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
-                  {focusDetailText}
-                </p>
-              </div>
-
-              {selectedDay?.isValid === false ? (
-                <p className="mt-3 text-xs text-amber-300">
-                  This update was returned with an invalid flag by the API.
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className="cal-inner overflow-hidden rounded-[28px] border">
-          <div className="border-b border-(--border) px-5 py-4">
-            <h3 className="cal-heading text-[1.55rem] font-semibold tracking-tight">
-              Action Queue
-            </h3>
-            <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-              Submitted and missing dates stay one click away for fast review.
-            </p>
-          </div>
-
-          <div className="space-y-2.5 px-5 py-4">
-            {queueDays.length > 0 ? queueDays.map((day) => (
-              <button
-                key={`queue-${day.date}`}
-                type="button"
-                onClick={() => setSelectedDate(day.date)}
-                className={cn(
-                  'w-full rounded-[18px] border px-3.5 py-3 text-left transition',
-                  selectedKey === day.date
-                    ? 'border-violet-400/45 bg-violet-500/[0.08] shadow-[0_10px_24px_rgba(76,29,149,0.20)]'
-                    : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/[0.04]',
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
-                      {getQueueEyebrow(day, todayKey, selectedKey)}
-                    </p>
-                    <p className="mt-1 text-sm font-semibold tracking-tight text-(--foreground)">
-                      {formatLongDate(day.date)}
-                    </p>
-                    <p className={cn('mt-1 text-[11px] leading-5', dayStatusTextStyle[day.status])}>
-                      {getCalendarCellHint(day)}
-                    </p>
+            <div className="mt-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 sm:p-5">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="flex items-start gap-4">
+                  <div
+                    className={cn(
+                      'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+                      selectedDay ? dayFocusStyle[selectedDay.status] : dayFocusStyle.neutral,
+                    )}
+                  >
+                    {selectedDay?.day ?? '--'}
                   </div>
 
-                  <Badge variant={getStatusVariant(day.status)} size="sm" dot>
-                    {getCalendarCellStatusLabel(day.status, day)}
-                  </Badge>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-blue-300/72">
+                      Focus Day
+                    </p>
+                    <h4 className="mt-2 text-lg font-semibold tracking-tight text-(--foreground)">
+                      {selectedLabel}
+                    </h4>
+                    <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[var(--muted)]">
+                      {selectedDay ? getDaySummary(selectedDay) : 'Pick a date from the month grid to inspect details.'}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedDay ? (
+                        <Badge variant={getStatusVariant(selectedDay.status)} dot>
+                          {getStatusLabel(selectedDay.status, selectedDay)}
+                        </Badge>
+                      ) : null}
+                      {selectedDay?.weekdayLabel ? (
+                        <Badge variant="secondary">{selectedDay.weekdayLabel}</Badge>
+                      ) : null}
+                      {selectedDay?.date === todayKey ? (
+                        <Badge variant="blue">Today</Badge>
+                      ) : null}
+                      {selectedDay?.hasUpdate ? (
+                        <Badge variant="violet">Payload available</Badge>
+                      ) : null}
+                      {selectedDay?.workdayOverride ? (
+                        <Badge variant="warning">{getSpecialDayLabel(selectedDay) ?? 'Special day'}</Badge>
+                      ) : null}
+                    </div>
+                  </div>
                 </div>
-              </button>
-            )) : (
-              <div className="rounded-[18px] border border-dashed border-(--border) bg-(--card) px-4 py-5 text-sm text-(--muted)">
-                No highlighted days in this range.
+
+                <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[420px] xl:max-w-[480px]">
+                  <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
+                    <p>Status</p>
+                    <p className="mt-1 font-medium text-(--foreground)">
+                      {selectedDay ? getStatusLabel(selectedDay.status, selectedDay) : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
+                    <p>Submission</p>
+                    <p className="mt-1 font-medium text-(--foreground)">
+                      {selectedDay?.hasUpdate ? 'Available' : 'None'}
+                    </p>
+                  </div>
+                  <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
+                    <p>Validation</p>
+                    <p
+                      className={cn(
+                        'mt-1 font-medium',
+                        selectedDay?.isValid === false
+                          ? 'text-amber-300'
+                          : selectedDay?.isValid === true
+                            ? 'text-emerald-300'
+                            : 'text-(--foreground)',
+                      )}
+                    >
+                      {selectedDay?.isValid === false ? 'Needs review' : selectedDay?.isValid === true ? 'Valid' : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
+                    <p>Entries</p>
+                    <p className="mt-1 font-medium text-(--foreground)">
+                      {selectedDay ? getEntryCount(selectedDay) : 0}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+
+              <div className="mt-4 rounded-[20px] border border-(--border) bg-(--surface) p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
+                      {selectedDay?.hasUpdate ? 'Update Content' : 'Day Note'}
+                    </p>
+                    <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
+                      {selectedDay?.hasUpdate ? 'Returned content for this date' : 'No returned content for this date'}
+                    </h4>
+                  </div>
+                  {selectedDay?.hasUpdate ? <Badge variant="blue">API payload</Badge> : null}
+                </div>
+
+                <div className="mt-4 max-h-[320px] overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                  <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
+                    {focusDetailText}
+                  </p>
+                </div>
+
+                {selectedDay?.isValid === false ? (
+                  <p className="mt-3 text-xs text-amber-300">
+                    This update was returned with an invalid flag by the API.
+                  </p>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
       </div>
