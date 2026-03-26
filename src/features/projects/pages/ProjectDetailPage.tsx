@@ -12,6 +12,7 @@ import { ProjectFormModal } from '../components/ProjectFormModal'
 import { BoardFormModal } from '../components/BoardFormModal'
 import { BoardCard } from '../components/BoardCard'
 import { formatProjectDate } from '../lib/format'
+import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 export function ProjectDetailPage() {
@@ -45,6 +46,7 @@ export function ProjectDetailPage() {
       showToast({ title: 'Project updated', tone: 'success' })
       setIsEditProjectOpen(false)
       await projectQuery.refetch()
+      notifyProjectsNavigationChanged()
     } catch {
       showToast({ title: 'Failed to update project', tone: 'error' })
     } finally {
@@ -63,6 +65,7 @@ export function ProjectDetailPage() {
     try {
       await projectsService.deleteProject(project.id)
       showToast({ title: 'Project deleted', tone: 'success' })
+      notifyProjectsNavigationChanged()
       navigate('/projects')
     } catch {
       showToast({ title: 'Failed to delete project', tone: 'error' })
@@ -285,9 +288,10 @@ export function ProjectDetailPage() {
             </h2>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {project.members.map((member) => (
-                <div
+                <Link
                   key={member.id}
-                  className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3"
+                  to={`/projects?member=${member.id}`}
+                  className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
                 >
                   <Avatar name={member.name} surname={member.surname} size="sm" />
                   <div className="min-w-0">
@@ -297,8 +301,11 @@ export function ProjectDetailPage() {
                     {member.job_title && (
                       <p className="truncate text-[10px] text-[var(--muted)]">{member.job_title}</p>
                     )}
+                    <p className="mt-1 text-[10px] text-blue-400">
+                      View member projects and tasks
+                    </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

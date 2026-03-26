@@ -1,7 +1,6 @@
 import { useId, useMemo } from 'react'
 import type {
   SalesDashboardChartsResponse,
-  SalesDashboardDistributionItem,
   SalesDashboardTrendPoint,
 } from '../../../shared/api/types'
 import { cn } from '../../../shared/lib/cn'
@@ -310,64 +309,6 @@ function TrendChartCard({
   )
 }
 
-function DistributionCard({
-  title,
-  description,
-  items,
-  accent,
-}: {
-  title: string
-  description: string
-  items: SalesDashboardDistributionItem[]
-  accent: AccentTone
-}) {
-  const palette = tonePalette[accent]
-  const rows = [...items]
-    .sort((left, right) => right.value - left.value)
-    .slice(0, 8)
-
-  return (
-    <Card className={cn('p-5', palette.ring)}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', palette.label)}>{title}</p>
-          <h3 className="mt-2 text-xl font-semibold tracking-tight text-white">{description}</h3>
-        </div>
-        <Badge variant={palette.badge}>{rows.length} items</Badge>
-      </div>
-
-      {rows.length > 0 ? (
-        <div className="mt-5 space-y-3">
-          {rows.map((item) => (
-            <div key={`${item.key}-${item.label}`} className="rounded-[20px] border border-white/8 bg-black/10 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">{item.label}</p>
-                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{formatPercent(item.percentage)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-white">{formatCompactNumber(item.value)}</p>
-                </div>
-              </div>
-
-              <div className="mt-3 h-2 rounded-full bg-white/8">
-                <div
-                  className={cn('h-full rounded-full transition-[width] duration-300', palette.bar)}
-                  style={{ width: `${Math.min(100, Math.max(4, item.percentage))}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="mt-5 rounded-[24px] border border-dashed border-white/10 bg-black/10 px-4 py-8 text-sm text-[var(--muted-strong)]">
-          Distribution dataset is empty for this view.
-        </div>
-      )}
-    </Card>
-  )
-}
-
 export function CrmDashboardCharts({
   weekly,
   monthly,
@@ -378,18 +319,15 @@ export function CrmDashboardCharts({
   onRetry,
 }: CrmDashboardChartsProps) {
   const summary = monthly?.summary ?? weekly?.summary
-  const customerTypeMix = customerType ? [] : monthly?.customer_type_distribution ?? []
 
   return (
     <Card className="overflow-hidden border-white/10 p-5">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-300/78">Sales dashboard charts</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">
-            7-day and 30-day CRM lead movement
-          </h2>
-          <p className="mt-2 max-w-3xl text-sm text-[var(--muted-strong)]">
-            Aggregated trend and distribution data now comes from `/sales/dashboard/charts` for both weekly and monthly views.
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/80">CRM</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">CRM lead movement</h2>
+          <p className="mt-1 text-sm text-[var(--muted-strong)]">
+            7-day va 30-day lead flow bir joyda ko'rsatiladi.
           </p>
         </div>
 
@@ -440,40 +378,17 @@ export function CrmDashboardCharts({
         <>
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <TrendChartCard
-              title="7-day Trend"
+              title="7-day view"
               description="Short-range lead flow for the last week."
               payload={weekly}
               accent="blue"
             />
             <TrendChartCard
-              title="30-day Trend"
+              title="30-day view"
               description="Longer-range lead flow for the last month."
               payload={monthly}
               accent="violet"
             />
-          </div>
-
-          <div className={cn('mt-4 grid gap-4', customerTypeMix.length > 0 ? 'xl:grid-cols-3' : 'xl:grid-cols-2')}>
-            <DistributionCard
-              title="Status Distribution"
-              description="30-day status mix"
-              items={monthly?.status_distribution ?? []}
-              accent="emerald"
-            />
-            <DistributionCard
-              title="Platform Distribution"
-              description="30-day source channels"
-              items={monthly?.platform_distribution ?? []}
-              accent="amber"
-            />
-            {customerTypeMix.length > 0 ? (
-              <DistributionCard
-                title="Customer Type Split"
-                description="30-day local vs international mix"
-                items={customerTypeMix}
-                accent="blue"
-              />
-            ) : null}
           </div>
         </>
       )}

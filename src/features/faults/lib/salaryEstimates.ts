@@ -543,6 +543,63 @@ function getOptionalCount(value?: number | null) {
   return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, Math.round(value)) : missingMetricValue
 }
 
+function isFiniteMetric(value: number) {
+  return Number.isFinite(value)
+}
+
+function areAmountsEquivalent(left: number, right: number) {
+  return isFiniteMetric(left) && isFiniteMetric(right) && Math.abs(left - right) < 0.5
+}
+
+function resolveSalaryMetrics(snapshot?: SalaryEstimateSnapshot | null) {
+  const baseSalary = getOptionalMetric(snapshot?.baseSalary)
+  const deductionAmount = getOptionalMetric(snapshot?.deductionAmount)
+  const bonusAmount = getOptionalMetric(snapshot?.bonusAmount)
+  const snapshotAfterPenalty = getOptionalMetric(snapshot?.afterPenalty)
+  const snapshotFinalSalary = getOptionalMetric(snapshot?.finalSalary)
+  const snapshotEstimatedSalary = getOptionalMetric(snapshot?.estimatedSalary)
+
+  const computedAfterPenalty =
+    isFiniteMetric(baseSalary) && isFiniteMetric(deductionAmount)
+      ? Math.max(0, baseSalary - deductionAmount)
+      : missingMetricValue
+  const afterPenalty =
+    isFiniteMetric(computedAfterPenalty)
+      ? computedAfterPenalty
+      : snapshotAfterPenalty
+  const computedFinalSalary =
+    isFiniteMetric(afterPenalty) && isFiniteMetric(bonusAmount)
+      ? Math.max(0, afterPenalty + bonusAmount)
+      : missingMetricValue
+  const finalSalary =
+    isFiniteMetric(computedFinalSalary)
+      ? computedFinalSalary
+      : snapshotFinalSalary
+
+  let estimatedSalary = snapshotEstimatedSalary
+
+  if (!isFiniteMetric(estimatedSalary) && isFiniteMetric(finalSalary)) {
+    estimatedSalary = finalSalary
+  } else if (
+    isFiniteMetric(snapshotEstimatedSalary) &&
+    isFiniteMetric(snapshotFinalSalary) &&
+    isFiniteMetric(finalSalary) &&
+    areAmountsEquivalent(snapshotEstimatedSalary, snapshotFinalSalary) &&
+    !areAmountsEquivalent(snapshotFinalSalary, finalSalary)
+  ) {
+    estimatedSalary = finalSalary
+  }
+
+  return {
+    baseSalary,
+    deductionAmount,
+    bonusAmount,
+    afterPenalty,
+    finalSalary,
+    estimatedSalary,
+  }
+}
+
 function looksLikeEstimateEntry(value: UnknownRecord) {
   return [
     'user_id',
@@ -681,16 +738,18 @@ export function isEmployeeUser(user: CeoUserRecord) {
 }
 
 export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstimateSnapshot | null): EmployeeSalaryReport {
-  const baseSalary = getOptionalMetric(snapshot?.baseSalary)
-  const deductionAmount = getOptionalMetric(snapshot?.deductionAmount)
-  const bonusAmount = getOptionalMetric(snapshot?.bonusAmount)
+  const {
+    baseSalary,
+    deductionAmount,
+    bonusAmount,
+    afterPenalty,
+    finalSalary,
+    estimatedSalary,
+  } = resolveSalaryMetrics(snapshot)
   const penaltyPoints = getOptionalCount(snapshot?.penaltyPoints)
   const penaltyEntries = getOptionalCount(snapshot?.penaltyEntries)
   const bonusEntries = getOptionalCount(snapshot?.bonusEntries)
   const penaltyPercentage = getOptionalMetric(normalizePercentageValue(snapshot?.penaltyPercentage))
-  const afterPenalty = getOptionalMetric(snapshot?.afterPenalty)
-  const finalSalary = getOptionalMetric(snapshot?.finalSalary)
-  const estimatedSalary = getOptionalMetric(snapshot?.estimatedSalary)
 
   return {
     id: user.id,
@@ -816,18 +875,19 @@ export function mergeReportWithSnapshot(
   user: CeoUserRecord | null,
   snapshot?: SalaryEstimateSnapshot | null,
 ) {
-  const baseSalary = snapshot ? getOptionalMetric(snapshot.baseSalary) : report.baseSalary
-  const deductionAmount = snapshot ? getOptionalMetric(snapshot.deductionAmount) : report.deductionAmount
-  const bonusAmount = snapshot ? getOptionalMetric(snapshot.bonusAmount) : report.bonusAmount
+  const resolvedSalaryMetrics = snapshot ? resolveSalaryMetrics(snapshot) : null
+  const baseSalary = resolvedSalaryMetrics?.baseSalary ?? report.baseSalary
+  const deductionAmount = resolvedSalaryMetrics?.deductionAmount ?? report.deductionAmount
+  const bonusAmount = resolvedSalaryMetrics?.bonusAmount ?? report.bonusAmount
   const penaltyPoints = snapshot ? getOptionalCount(snapshot.penaltyPoints) : report.penaltyPoints
   const penaltyEntries = snapshot ? getOptionalCount(snapshot.penaltyEntries) : report.penaltyEntries
   const bonusEntries = snapshot ? getOptionalCount(snapshot.bonusEntries) : report.bonusEntries
   const penaltyPercentage = snapshot
     ? getOptionalMetric(normalizePercentageValue(snapshot.penaltyPercentage))
     : report.penaltyPercentage
-  const afterPenalty = snapshot ? getOptionalMetric(snapshot.afterPenalty) : report.afterPenalty
-  const finalSalary = snapshot ? getOptionalMetric(snapshot.finalSalary) : report.finalSalary
-  const estimatedSalary = snapshot ? getOptionalMetric(snapshot.estimatedSalary) : report.estimatedSalary
+  const afterPenalty = resolvedSalaryMetrics?.afterPenalty ?? report.afterPenalty
+  const finalSalary = resolvedSalaryMetrics?.finalSalary ?? report.finalSalary
+  const estimatedSalary = resolvedSalaryMetrics?.estimatedSalary ?? report.estimatedSalary
 
   return {
     ...report,

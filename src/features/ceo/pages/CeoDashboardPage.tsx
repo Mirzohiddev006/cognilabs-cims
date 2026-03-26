@@ -579,6 +579,94 @@ export function CeoDashboardPage() {
         />
       </div>
 
+      <Card className="p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <SectionTitle
+            eyebrow="Recurring payments"
+            title="Company payment reminders"
+            description="GET/POST/PUT/DELETE /ceo/company-payments endpointlari shu sectionga ulandi."
+          />
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="success" dot>
+              {activeRecurringPayments} active
+            </Badge>
+            <Badge variant="secondary" dot>
+              {companyPayments.length - activeRecurringPayments} inactive
+            </Badge>
+            <Button size="sm" onClick={openCreateCompanyPaymentModal}>
+              Create reminder
+            </Button>
+          </div>
+        </div>
+        <div className="mt-6">
+          <DataTable
+            caption="Company payment reminders"
+            rows={companyPayments}
+            getRowKey={(row) => String(row.id)}
+            zebra
+            emptyState={
+              <EmptyStateBlock
+                eyebrow="Recurring payments"
+                title="Reminderlar yo'q"
+                description="Company recurring payment endpoint hozircha bo'sh ro'yxat qaytardi."
+              />
+            }
+            columns={[
+              {
+                key: 'title',
+                header: 'Title',
+                render: (row) => (
+                  <div className="max-w-[320px]">
+                    <p className="font-semibold text-(--foreground)">{row.title}</p>
+                    <p className="text-xs text-(--muted)">{row.note?.trim() || 'No note'}</p>
+                  </div>
+                ),
+              },
+              {
+                key: 'schedule',
+                header: 'Schedule',
+                render: (row) => `Day ${row.payment_day} • ${formatCompanyPaymentTime(row.payment_time)}`,
+              },
+              {
+                key: 'amount',
+                header: 'Amount',
+                align: 'right',
+                render: (row) => formatCurrency(Number(row.amount ?? 0)),
+              },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (row) => (
+                  <Badge variant={row.is_active ? 'success' : 'secondary'} dot>
+                    {row.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                ),
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                render: (row) => (
+                  <ActionsMenu
+                    label={`Open actions for ${row.title}`}
+                    items={[
+                      {
+                        label: 'Edit',
+                        onSelect: () => openEditCompanyPaymentModal(row),
+                      },
+                      {
+                        label: 'Delete',
+                        onSelect: () => void handleDeleteCompanyPayment(row),
+                        tone: 'danger',
+                      },
+                    ]}
+                  />
+                ),
+              },
+            ]}
+          />
+        </div>
+      </Card>
+
       <CrmDashboardCharts
         weekly={chartsQuery.data?.weekly}
         monthly={chartsQuery.data?.monthly}
@@ -841,6 +929,7 @@ export function CeoDashboardPage() {
         </Card>
       </div>
 
+      {false && (
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
@@ -928,6 +1017,7 @@ export function CeoDashboardPage() {
           />
         </div>
       </Card>
+      )}
 
       <MessageComposerModal
         open={isBroadcastOpen}

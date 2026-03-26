@@ -45,6 +45,8 @@ export type ProjectListResponse = {
   total_count: number
 }
 
+export type UserOpenProjectListResponse = ProjectListResponse
+
 // ─── Board types ──────────────────────────────────────────────────────────────
 
 export type BoardRecord = {
@@ -98,6 +100,19 @@ export type CardRecord = {
   files?: CardImage[]
 }
 
+export type UserOpenCardRecord = CardRecord & {
+  board_id: number
+  project_id: number
+  project_name: string
+  board_name: string
+  column_name: string
+}
+
+export type UserOpenCardListResponse = {
+  cards: UserOpenCardRecord[]
+  total_count: number
+}
+
 // ─── File types ───────────────────────────────────────────────────────────────
 
 export type FileRecord = {
@@ -116,33 +131,49 @@ type ApiCardImage = {
   created_at?: string
 }
 
-type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files'> & {
+type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by'> & {
+  created_by?: ApiUserSummary | number | null
+  created_by_user?: ApiUserSummary
   images?: ApiCardImage[] | null
   files?: ApiCardImage[] | null
+  board_id?: number
+  project_id?: number
+  project_name?: string | null
+  board_name?: string | null
+  column_name?: string | null
 }
 
 type ApiColumnRecord = Omit<Partial<ColumnRecord>, 'cards'> & {
   cards?: ApiCardRecord[] | null
 }
 
-type ApiBoardDetail = Omit<Partial<BoardDetail>, 'columns' | 'files'> & {
+type ApiBoardRecord = Omit<Partial<BoardRecord>, 'created_by'> & {
+  created_by?: ApiUserSummary | number | null
+  created_by_user?: ApiUserSummary
+}
+
+type ApiBoardDetail = Omit<ApiBoardRecord, 'columns'> & {
   columns?: ApiColumnRecord[] | null
   files?: ApiCardImage[] | null
 }
 
 type ApiUserSummary = Partial<UserSummary> | null | undefined
 
-type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members'> & {
+type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members' | 'boards_count'> & {
+  boards_count?: number | null
   image_url?: string | null
   image_path?: string | null
   project_image?: string | null
   thumbnail?: string | null
-  created_by?: ApiUserSummary
+  board_count?: number | null
+  member_count?: number | null
+  created_by?: ApiUserSummary | number | null
+  created_by_user?: ApiUserSummary
   members?: ApiUserSummary[] | null
 }
 
 type ApiProjectDetail = Omit<ApiProjectRecord, 'boards'> & {
-  boards?: Array<Partial<BoardRecord> | null> | null
+  boards?: Array<ApiBoardRecord | null> | null
 }
 
 function normalizeUserSummary(user: ApiUserSummary): UserSummary {
@@ -156,6 +187,14 @@ function normalizeUserSummary(user: ApiUserSummary): UserSummary {
   }
 }
 
+function resolveUserReference(primary?: ApiUserSummary | number | null, fallback?: ApiUserSummary) {
+  if (fallback) {
+    return fallback
+  }
+
+  return typeof primary === 'object' ? primary : null
+}
+
 function resolveProjectImage(project: ApiProjectRecord) {
   return project.image ?? project.image_url ?? project.image_path ?? project.project_image ?? project.thumbnail ?? null
 }
@@ -167,11 +206,24 @@ function normalizeProject(project: ApiProjectRecord): ProjectRecord {
     project_description: project.project_description ?? null,
     project_url: project.project_url ?? null,
     image: resolveProjectImage(project),
-    created_by: normalizeUserSummary(project.created_by),
+    created_by: normalizeUserSummary(resolveUserReference(project.created_by, project.created_by_user)),
     members: Array.isArray(project.members) ? project.members.map(normalizeUserSummary) : [],
-    boards_count: project.boards_count ?? 0,
+    boards_count: project.boards_count ?? project.board_count ?? 0,
     created_at: project.created_at ?? '',
     updated_at: project.updated_at ?? '',
+  }
+}
+
+function normalizeBoardRecord(board: ApiBoardRecord | null | undefined, fallbackProjectId = 0): BoardRecord {
+  return {
+    id: board?.id ?? 0,
+    name: board?.name ?? '',
+    description: board?.description ?? null,
+    project_id: board?.project_id ?? fallbackProjectId,
+    created_by: normalizeUserSummary(resolveUserReference(board?.created_by, board?.created_by_user)),
+    is_archived: Boolean(board?.is_archived),
+    created_at: board?.created_at ?? '',
+    updated_at: board?.updated_at ?? '',
   }
 }
 
@@ -179,16 +231,7 @@ function normalizeProjectDetail(project: ApiProjectDetail): ProjectDetail {
   return {
     ...normalizeProject(project),
     boards: Array.isArray(project.boards)
-      ? project.boards.map((board) => ({
-          id: board?.id ?? 0,
-          name: board?.name ?? '',
-          description: board?.description ?? null,
-          project_id: board?.project_id ?? project.id ?? 0,
-          created_by: normalizeUserSummary(board?.created_by),
-          is_archived: Boolean(board?.is_archived),
-          created_at: board?.created_at ?? '',
-          updated_at: board?.updated_at ?? '',
-        }))
+      ? project.boards.map((board) => normalizeBoardRecord(board, project.id ?? 0))
       : [],
   }
 }
@@ -218,15 +261,28 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     description: card.description ?? null,
     order: card.order ?? 0,
     priority: card.priority ?? null,
-    assignee: card.assignee ?? null,
+    assignee: card.assignee ? normalizeUserSummary(card.assignee) : null,
     assignee_id: card.assignee_id ?? null,
     due_date: card.due_date ?? null,
     column_id: card.column_id ?? 0,
-    created_by: card.created_by ?? { id: 0, name: '', surname: '', email: '' },
+    created_by: normalizeUserSummary(resolveUserReference(card.created_by, card.created_by_user)),
     created_at: card.created_at ?? '',
     updated_at: card.updated_at ?? '',
     images: images.map(normalizeCardImage),
     files: Array.isArray(card.files) ? card.files.map(normalizeCardImage) : undefined,
+  }
+}
+
+function normalizeOpenCard(card: ApiCardRecord): UserOpenCardRecord {
+  const normalizedCard = normalizeCard(card)
+
+  return {
+    ...normalizedCard,
+    board_id: card.board_id ?? 0,
+    project_id: card.project_id ?? 0,
+    project_name: card.project_name ?? '',
+    board_name: card.board_name ?? '',
+    column_name: card.column_name ?? '',
   }
 }
 
@@ -243,15 +299,10 @@ function normalizeBoardFiles(files?: ApiCardImage[] | null) {
 }
 
 function normalizeBoardDetail(board: ApiBoardDetail): BoardDetail {
+  const normalizedBoard = normalizeBoardRecord(board, board.project_id ?? 0)
+
   return {
-    id: board.id ?? 0,
-    name: board.name ?? '',
-    description: board.description ?? null,
-    project_id: board.project_id ?? 0,
-    created_by: board.created_by ?? { id: 0, name: '', surname: '', email: '' },
-    is_archived: Boolean(board.is_archived),
-    created_at: board.created_at ?? '',
-    updated_at: board.updated_at ?? '',
+    ...normalizedBoard,
     columns: Array.isArray(board.columns)
       ? board.columns.map((column) => ({
           id: column.id ?? 0,
@@ -278,6 +329,16 @@ export const projectsService = {
     }))
   },
 
+  listUserOpenProjects(userId: number) {
+    return request<UserOpenProjectListResponse & { projects?: ApiProjectRecord[] }>({
+      path: `/open/projects/user/${userId}`,
+    }).then((response) => ({
+      ...response,
+      projects: Array.isArray(response.projects) ? response.projects.map(normalizeProject) : [],
+      total_count: response.total_count ?? (Array.isArray(response.projects) ? response.projects.length : 0),
+    }))
+  },
+
   getAllUsers() {
     return request<UserSummary[]>({ path: '/projects/users/all' })
   },
@@ -292,6 +353,12 @@ export const projectsService = {
 
   getProject(projectId: number) {
     return request<ApiProjectDetail>({ path: `/projects/${projectId}` }).then(normalizeProjectDetail)
+  },
+
+  getUserOpenProjectDetail(projectId: number, userId: number) {
+    return request<ApiProjectDetail>({
+      path: `/open/projects/${projectId}/detail/user/${userId}`,
+    }).then(normalizeProjectDetail)
   },
 
   updateProject(projectId: number, formData: FormData) {
@@ -312,6 +379,16 @@ export const projectsService = {
   // Boards
   listBoards(projectId: number) {
     return request<BoardListResponse>({ path: `/projects/${projectId}/boards` })
+  },
+
+  listUserOpenProjectBoards(projectId: number, userId: number) {
+    return request<{ project_id?: number; boards?: ApiBoardDetail[]; total_count?: number }>({
+      path: `/open/projects/${projectId}/boards/detail/user/${userId}`,
+    }).then((response) => ({
+      project_id: response.project_id ?? projectId,
+      boards: Array.isArray(response.boards) ? response.boards.map(normalizeBoardDetail) : [],
+      total_count: response.total_count ?? (Array.isArray(response.boards) ? response.boards.length : 0),
+    }))
   },
 
   createBoard(projectId: number, payload: { name: string; description?: string }) {
@@ -384,6 +461,25 @@ export const projectsService = {
 
   getCard(cardId: number) {
     return request<ApiCardRecord>({ path: `/cards/${cardId}` }).then(normalizeCard)
+  },
+
+  listUserOpenCards(userId: number, projectId?: number | null) {
+    return request<UserOpenCardListResponse & { cards?: ApiCardRecord[] }>({
+      path: `/open/cards/user/${userId}`,
+      query: {
+        project_id: projectId,
+      },
+    }).then((response) => ({
+      ...response,
+      cards: Array.isArray(response.cards) ? response.cards.map(normalizeOpenCard) : [],
+      total_count: response.total_count ?? (Array.isArray(response.cards) ? response.cards.length : 0),
+    }))
+  },
+
+  getUserOpenCard(cardId: number, userId: number) {
+    return request<ApiCardRecord>({
+      path: `/open/cards/${cardId}/user/${userId}`,
+    }).then(normalizeOpenCard)
   },
 
   updateCard(cardId: number, formData: FormData) {

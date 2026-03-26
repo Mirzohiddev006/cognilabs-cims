@@ -3,12 +3,15 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
+import { projectsService } from '../../shared/api/services/projects.service'
 import { env } from '../../shared/config/env'
+import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
 import { getAccessibleNavigation } from '../../shared/lib/permissions'
 import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
 import { Dialog } from '../../shared/ui/dialog'
+import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
@@ -31,7 +34,11 @@ export function AppSidebar() {
   const { user } = useAuth()
   const isLight = theme === 'light'
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
+  const hasProjectsAccess = visibleNavigation.some((item) => item.to === '/projects')
+  const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(isProjectsRoute)
+  const [projectsRefreshKey, setProjectsRefreshKey] = useState(0)
   const activePermissions = useMemo(
     () =>
       Object.entries(user?.permissions ?? {})
@@ -39,10 +46,41 @@ export function AppSidebar() {
         .map(([key]) => humanizePermissionKey(key)),
     [user?.permissions],
   )
+  const projectsQuery = useAsyncData(
+    () => projectsService.listProjects(),
+    [hasProjectsAccess, projectsRefreshKey],
+    { enabled: hasProjectsAccess },
+  )
+  const sidebarProjects = useMemo(
+    () => [...(projectsQuery.data?.projects ?? [])].sort((left, right) => left.project_name.localeCompare(right.project_name)),
+    [projectsQuery.data?.projects],
+  )
 
   useEffect(() => {
     closeSidebar()
   }, [closeSidebar, location.pathname])
+
+  useEffect(() => {
+    if (isProjectsRoute) {
+      setIsProjectsExpanded(true)
+    }
+  }, [isProjectsRoute])
+
+  useEffect(() => {
+    if (!hasProjectsAccess) {
+      return
+    }
+
+    function handleProjectsNavigationUpdated() {
+      setProjectsRefreshKey((current) => current + 1)
+    }
+
+    window.addEventListener(PROJECTS_NAVIGATION_UPDATED_EVENT, handleProjectsNavigationUpdated)
+
+    return () => {
+      window.removeEventListener(PROJECTS_NAVIGATION_UPDATED_EVENT, handleProjectsNavigationUpdated)
+    }
+  }, [hasProjectsAccess])
 
   function openMemberDialog() {
     if (!user) {
@@ -50,6 +88,10 @@ export function AppSidebar() {
     }
 
     setIsMemberDialogOpen(true)
+  }
+
+  function toggleProjectsExpanded() {
+    setIsProjectsExpanded((current) => !current)
   }
 
   return (
@@ -101,35 +143,163 @@ export function AppSidebar() {
           </div>
 
           <nav className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
-            {visibleNavigation.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                aria-label={item.label}
-                className={({ isActive }) =>
-                  cn(
-                    'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm transition-all duration-200',
-                    isActive
-                      ? isLight
-                        ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
-                        : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
-                      : 'border-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
-                  )
-                }
-              >
-                <div className={cn(
-                  'grid place-items-center border text-(--muted-strong) transition-all duration-150',
-                  'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
-                )}>
-                  <NavGlyph name={getNavigationGlyphName(item.to)} />
-                </div>
+            {visibleNavigation.map((item) => {
+              if (item.to === '/projects') {
+                return (
+                  <div key={item.to} className="space-y-1">
+                    <div className="relative">
+                      <NavLink
+                        to={item.to}
+                        aria-label={item.label}
+                        className={({ isActive }) =>
+                          cn(
+                            'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 pr-12 text-sm transition-all duration-200',
+                            isActive || isProjectsRoute
+                              ? isLight
+                                ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                                : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+                              : 'border-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
+                          )
+                        }
+                        onClick={() => setIsProjectsExpanded(true)}
+                      >
+                        <div className={cn(
+                          'grid place-items-center border text-(--muted-strong) transition-all duration-150',
+                          'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
+                        )}>
+                          <NavGlyph name={getNavigationGlyphName(item.to)} />
+                        </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-semibold">{item.label}</p>
-                  <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
-                </div>
-              </NavLink>
-            ))}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-[13px] font-semibold">{item.label}</p>
+                            {sidebarProjects.length > 0 ? (
+                              <Badge
+                                size="sm"
+                                variant={isProjectsRoute ? 'blue' : 'secondary'}
+                                className="rounded-full px-1.5 py-0 text-[9px]"
+                              >
+                                {sidebarProjects.length}
+                              </Badge>
+                            ) : null}
+                          </div>
+                          <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
+                        </div>
+                      </NavLink>
+
+                      <button
+                        type="button"
+                        onClick={toggleProjectsExpanded}
+                        aria-label={isProjectsExpanded ? 'Collapse projects' : 'Expand projects'}
+                        className={cn(
+                          'absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border transition-colors',
+                          isProjectsRoute
+                            ? isLight
+                              ? 'border-blue-200 bg-blue-100/80 text-blue-700'
+                              : 'border-blue-500/30 bg-blue-600/15 text-blue-100'
+                            : 'border-transparent bg-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                        )}
+                      >
+                        <svg
+                          viewBox="0 0 16 16"
+                          className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        >
+                          <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {isProjectsExpanded ? (
+                      <div className="ml-4 space-y-1 border-l border-[var(--border)] pl-3">
+                        {projectsQuery.isLoading ? (
+                          <div className="space-y-1 py-1">
+                            {Array.from({ length: 4 }).map((_, index) => (
+                              <div
+                                key={index}
+                                className="h-8 animate-pulse rounded-lg bg-[var(--muted-surface)]"
+                              />
+                            ))}
+                          </div>
+                        ) : projectsQuery.isError ? (
+                          <button
+                            type="button"
+                            onClick={() => void projectsQuery.refetch()}
+                            className="w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[11px] text-[var(--danger-text)] transition hover:bg-red-500/10"
+                          >
+                            Failed to load projects. Retry
+                          </button>
+                        ) : sidebarProjects.length === 0 ? (
+                          <p className="rounded-lg px-3 py-2 text-[11px] text-[var(--muted)]">
+                            No projects yet.
+                          </p>
+                        ) : (
+                          sidebarProjects.map((project) => {
+                            const isActiveProject = location.pathname === `/projects/${project.id}`
+
+                            return (
+                              <NavLink
+                                key={project.id}
+                                to={`/projects/${project.id}`}
+                                className={({ isActive }) =>
+                                  cn(
+                                    'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[12px] transition-all duration-150',
+                                    isActive || isActiveProject
+                                      ? isLight
+                                        ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                        : 'border-blue-500/30 bg-blue-600/10 text-blue-100'
+                                      : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                                  )
+                                }
+                              >
+                                <span className="truncate font-medium">{project.project_name}</span>
+                                {project.boards_count > 0 ? (
+                                  <span className="shrink-0 text-[10px] text-[var(--muted)]">
+                                    {project.boards_count}
+                                  </span>
+                                ) : null}
+                              </NavLink>
+                            )
+                          })
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              }
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  aria-label={item.label}
+                  className={({ isActive }) =>
+                    cn(
+                      'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm transition-all duration-200',
+                      isActive
+                        ? isLight
+                          ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                          : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+                        : 'border-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
+                    )
+                  }
+                >
+                  <div className={cn(
+                    'grid place-items-center border text-(--muted-strong) transition-all duration-150',
+                    'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
+                  )}>
+                    <NavGlyph name={getNavigationGlyphName(item.to)} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold">{item.label}</p>
+                    <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
+                  </div>
+                </NavLink>
+              )
+            })}
           </nav>
 
           <button

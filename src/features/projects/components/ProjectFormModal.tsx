@@ -114,17 +114,9 @@ export function ProjectFormModal({
       project_name: values.project_name.trim(),
       project_description: values.project_description.trim() || undefined,
       project_url: values.project_url.trim() || undefined,
-      'member_ids[]': values.member_ids as unknown as number[],
+      member_ids: values.member_ids,
       image: values.image ?? undefined,
     })
-    // member_ids need special handling
-    if (values.member_ids.length > 0) {
-      // remove 'member_ids[]' and re-add as 'member_ids'
-      fd.delete('member_ids[]')
-      for (const id of values.member_ids) {
-        fd.append('member_ids[]', String(id))
-      }
-    }
     await onSubmit(fd)
   }
 
