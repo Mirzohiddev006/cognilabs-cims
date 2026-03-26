@@ -48,7 +48,7 @@ const emptyMessages: CeoMessageRecord[] = []
 const emptyCustomers: CustomerSummary[] = []
 const showRecurringPayments = false
 
-function normalizeCustomerId(value: CustomerSummary['id']) {
+function normalizeCustomerId(value: unknown) {
   if (typeof value === 'number') {
     return Number.isFinite(value) && value > 0 ? value : null
   }
