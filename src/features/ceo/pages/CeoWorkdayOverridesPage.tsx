@@ -7,6 +7,7 @@ import {
 } from '../../../shared/api/services/updateTracking.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
@@ -41,7 +42,7 @@ type OverrideFormState = {
 }
 
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
@@ -63,7 +64,7 @@ function formatDateTime(value: string) {
     return value
   }
 
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',

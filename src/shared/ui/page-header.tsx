@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
 import { Card } from './card'
 
@@ -31,6 +32,8 @@ const metaToneClassNames: Record<PageHeaderTone, string> = {
 
 export function PageHeader({
   title,
+  eyebrow,
+  description,
   meta = [],
   actions,
   className,
@@ -49,9 +52,19 @@ export function PageHeader({
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
+              {eyebrow ? (
+                <p className="page-header-label text-[10px] font-semibold uppercase tracking-[0.22em]">
+                  {translateCurrentLiteral(eyebrow)}
+                </p>
+              ) : null}
               <h1 className="page-header-title text-2xl font-semibold tracking-tight sm:text-[2rem]">
-                {title}
+                {translateCurrentLiteral(title)}
               </h1>
+              {description ? (
+                <p className="page-header-hint mt-3 max-w-2xl text-sm leading-6">
+                  {translateCurrentLiteral(description)}
+                </p>
+              ) : null}
             </div>
 
             {actions ? (
@@ -72,14 +85,14 @@ export function PageHeader({
                   )}
                 >
                   <p className="page-header-label text-[10px] font-semibold uppercase tracking-[0.22em]">
-                    {item.label}
+                    {translateCurrentLiteral(item.label)}
                   </p>
                   <p className="mt-2 text-base font-semibold tracking-tight text-current">
                     {item.value}
                   </p>
                   {item.hint ? (
                     <p className="page-header-hint mt-1.5 text-[11px] leading-5">
-                      {item.hint}
+                      {translateCurrentLiteral(item.hint)}
                     </p>
                   ) : null}
                 </div>

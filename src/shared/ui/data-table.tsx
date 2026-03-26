@@ -1,6 +1,6 @@
-/* eslint-disable prefer-const */
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
 import { Button } from './button'
 
@@ -27,9 +27,9 @@ type DataTableProps<T> = {
 }
 
 const alignClassName = {
-  left:   'text-left',
+  left: 'text-left',
   center: 'text-center',
-  right:  'text-right',
+  right: 'text-right',
 }
 
 function getVisiblePageItems(totalPages: number) {
@@ -73,13 +73,16 @@ export function DataTable<T>({
   const [currentPage, setCurrentPage] = useState(1)
   const totalPages = Math.max(1, Math.ceil(rows.length / effectivePageSize))
 
-  useEffect(() => { setCurrentPage(1) }, [rows.length, effectivePageSize])
   useEffect(() => {
-    setCurrentPage((c) => Math.min(c, totalPages))
+    setCurrentPage(1)
+  }, [rows.length, effectivePageSize])
+
+  useEffect(() => {
+    setCurrentPage((current) => Math.min(current, totalPages))
   }, [totalPages])
 
-  const startIndex  = (currentPage - 1) * effectivePageSize
-  const endIndex    = Math.min(startIndex + effectivePageSize, rows.length)
+  const startIndex = (currentPage - 1) * effectivePageSize
+  const endIndex = Math.min(startIndex + effectivePageSize, rows.length)
   const visibleRows = useMemo(() => rows.slice(startIndex, endIndex), [endIndex, rows, startIndex])
   const visiblePageItems = useMemo(() => getVisiblePageItems(totalPages), [totalPages])
 
@@ -89,6 +92,7 @@ export function DataTable<T>({
 
   const rowPadding = compact ? 'py-2.5 px-4' : 'py-3.5 px-4'
   const headPadding = compact ? 'py-2.5 px-4' : 'py-3 px-4'
+  const localizedCaption = caption ? translateCurrentLiteral(caption) : null
 
   return (
     <div
@@ -100,7 +104,7 @@ export function DataTable<T>({
     >
       <div className={cn('overflow-x-auto px-3 pb-2 sm:px-0 sm:pb-0', fillHeight && 'flex-1')}>
         <table className="w-full min-w-max border-collapse">
-          {caption ? <caption className="sr-only">{caption}</caption> : null}
+          {localizedCaption ? <caption className="sr-only">{localizedCaption}</caption> : null}
 
           <thead>
             <tr className="bg-[var(--muted-surface)]">
@@ -114,7 +118,7 @@ export function DataTable<T>({
                     alignClassName[col.align ?? 'left'],
                   )}
                 >
-                  {col.header}
+                  {typeof col.header === 'string' ? translateCurrentLiteral(col.header) : col.header}
                 </th>
               ))}
             </tr>
@@ -154,13 +158,10 @@ export function DataTable<T>({
         </table>
       </div>
 
-      {/* ── Pagination ──────────────────────────── */}
       {totalPages > 1 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--caption)] sm:text-[13px]">
-            {startIndex + 1}–{endIndex}{' '}
-            <span className="text-[var(--muted)]">of</span>{' '}
-            {rows.length} results
+            {translateCurrentLiteral(`${startIndex + 1}-${endIndex} of ${rows.length} results`)}
           </p>
 
           <div className="flex flex-wrap items-center gap-1">
@@ -169,8 +170,8 @@ export function DataTable<T>({
               size="md"
               className="px-2"
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
-              aria-label="Previous page"
+              onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
+              aria-label={translateCurrentLiteral('Previous page')}
             >
               <ChevronLeft />
             </Button>
@@ -209,8 +210,8 @@ export function DataTable<T>({
               size="md"
               className="px-2"
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((c) => Math.min(totalPages, c + 1))}
-              aria-label="Next page"
+              onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
+              aria-label={translateCurrentLiteral('Next page')}
             >
               <ChevronRight />
             </Button>

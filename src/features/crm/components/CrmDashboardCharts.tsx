@@ -3,6 +3,7 @@ import type {
   SalesDashboardChartsResponse,
   SalesDashboardTrendPoint,
 } from '../../../shared/api/types'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatCompactNumber } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
@@ -91,7 +92,7 @@ function formatRangeLabel(payload?: SalesDashboardChartsResponse) {
     return `${payload.period.days} days`
   }
 
-  const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
+  const formatter = new Intl.DateTimeFormat(getIntlLocale(), { month: 'short', day: 'numeric' })
   return `${formatter.format(start)} - ${formatter.format(end)}`
 }
 
@@ -103,7 +104,7 @@ function formatTickLabel(date: string, totalPoints: number) {
   }
 
   return new Intl.DateTimeFormat(
-    'en-US',
+    getIntlLocale(),
     totalPoints <= 8
       ? { weekday: 'short' }
       : { month: 'short', day: 'numeric' },

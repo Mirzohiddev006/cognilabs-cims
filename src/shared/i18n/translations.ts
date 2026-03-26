@@ -1,3 +1,5 @@
+import { literalPhrases } from './literalPhrases'
+
 export type AppLocale = 'en' | 'uz' | 'ru'
 
 export type TranslationParams = Record<string, string | number | boolean | null | undefined>
@@ -9,6 +11,9 @@ export const localeLabels: Record<AppLocale, string> = {
 }
 
 const STORAGE_KEY = 'cims-locale'
+const DEFAULT_LOCALE: AppLocale = 'en'
+
+let currentLocale: AppLocale | null = null
 
 const translations: Record<AppLocale, Record<string, string>> = {
   en: {
@@ -395,12 +400,32 @@ const translations: Record<AppLocale, Record<string, string>> = {
 }
 
 export function getStoredLocale(): AppLocale {
+  if (currentLocale !== null) {
+    return currentLocale
+  }
+
   if (typeof window === 'undefined') {
-    return 'en'
+    return DEFAULT_LOCALE
   }
 
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  return stored === 'uz' || stored === 'ru' ? stored : 'en'
+  return stored === 'uz' || stored === 'ru' ? stored : DEFAULT_LOCALE
+}
+
+export function setCurrentLocale(locale: AppLocale) {
+  currentLocale = locale
+}
+
+export function getIntlLocale(locale: AppLocale = getStoredLocale()) {
+  if (locale === 'uz') {
+    return 'uz-UZ'
+  }
+
+  if (locale === 'ru') {
+    return 'ru-RU'
+  }
+
+  return 'en-US'
 }
 
 function interpolate(template: string, params?: TranslationParams) {
@@ -414,9 +439,271 @@ function interpolate(template: string, params?: TranslationParams) {
   })
 }
 
+function normalizeTranslationSource(value: string) {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
+}
+
+function preserveCase(source: string, translated: string) {
+  const trimmed = source.trim()
+
+  if (!trimmed) {
+    return translated
+  }
+
+  if (trimmed === trimmed.toUpperCase()) {
+    return translated.toUpperCase()
+  }
+
+  if (/^[A-ZА-ЯЁ]/.test(trimmed)) {
+    return translated.charAt(0).toUpperCase() + translated.slice(1)
+  }
+
+  return translated
+}
+
+type PhraseMap = Record<AppLocale, Map<string, string>>
+
+const literalLookups = buildLiteralLookups()
+
+function buildLiteralLookups(): PhraseMap {
+  const maps: PhraseMap = {
+    en: new Map<string, string>(),
+    uz: new Map<string, string>(),
+    ru: new Map<string, string>(),
+  }
+
+  const allKeys = new Set<string>([
+    ...Object.keys(translations.en),
+    ...Object.keys(translations.uz),
+    ...Object.keys(translations.ru),
+  ])
+
+  const register = (phrase: { en: string; uz: string; ru: string }) => {
+    const variants = [phrase.en, phrase.uz, phrase.ru]
+
+    ;(['en', 'uz', 'ru'] as AppLocale[]).forEach((locale) => {
+      variants.forEach((variant) => {
+        const normalized = normalizeTranslationSource(variant)
+
+        if (normalized) {
+          maps[locale].set(normalized, phrase[locale])
+        }
+      })
+    })
+  }
+
+  allKeys.forEach((key) => {
+    register({
+      en: translations.en[key] ?? key,
+      uz: translations.uz[key] ?? translations.en[key] ?? key,
+      ru: translations.ru[key] ?? translations.en[key] ?? key,
+    })
+  })
+
+  literalPhrases.forEach(register)
+
+  return maps
+}
+
+function resolveLiteral(locale: AppLocale, value: string) {
+  const normalized = normalizeTranslationSource(value)
+
+  if (!normalized) {
+    return null
+  }
+
+  return literalLookups[locale].get(normalized) ?? null
+}
+
+function withLocalePrefix(locale: AppLocale, prefix: string, subject: string) {
+  if (locale === 'uz') {
+    return `${subject} ${prefix}`
+  }
+
+  if (locale === 'ru') {
+    return `${prefix} ${subject}`
+  }
+
+  return `${prefix} ${subject}`
+}
+
+function translatePattern(locale: AppLocale, value: string): string | null {
+  const normalized = normalizeTranslationSource(value)
+
+  if (!normalized) {
+    return null
+  }
+
+  const perPageMatch = normalized.match(/^(\d+)\s+per\s+page$/)
+
+  if (perPageMatch) {
+    const amount = perPageMatch[1]
+    return locale === 'uz' ? `Har sahifada ${amount} ta` : locale === 'ru' ? `${amount} на странице` : `${amount} per page`
+  }
+
+  const resultsMatch = normalized.match(/^(\d+)\s*[-–]\s*(\d+)\s+of\s+(\d+)\s+results$/)
+
+  if (resultsMatch) {
+    const [, start, end, total] = resultsMatch
+    return locale === 'uz'
+      ? `${start}-${end} / ${total} natija`
+      : locale === 'ru'
+        ? `${start}-${end} из ${total} результатов`
+        : `${start}-${end} of ${total} results`
+  }
+
+  const withPenaltyMatch = normalized.match(/^(\d+)\s+with\s+penalties$/)
+
+  if (withPenaltyMatch) {
+    const amount = withPenaltyMatch[1]
+    return locale === 'uz' ? `${amount} penaltili` : locale === 'ru' ? `${amount} со штрафами` : `${amount} with penalties`
+  }
+
+  const withBonusMatch = normalized.match(/^(\d+)\s+with\s+bonuses$/)
+
+  if (withBonusMatch) {
+    const amount = withBonusMatch[1]
+    return locale === 'uz' ? `${amount} bonusli` : locale === 'ru' ? `${amount} с бонусами` : `${amount} with bonuses`
+  }
+
+  const stateMatch = normalized.match(/^(.+)\s+(created|updated|deleted|refreshed|loading|unavailable|failed)$/)
+
+  if (stateMatch) {
+    const [, subject, state] = stateMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? subject
+
+    if (locale === 'uz') {
+      const uzStateMap: Record<string, string> = {
+        created: 'yaratildi',
+        updated: 'yangilandi',
+        deleted: "o'chirildi",
+        refreshed: 'qayta yuklandi',
+        loading: 'yuklanmoqda',
+        unavailable: 'mavjud emas',
+        failed: 'muvaffaqiyatsiz tugadi',
+      }
+
+      return `${localizedSubject} ${uzStateMap[state]}`
+    }
+
+    if (locale === 'ru') {
+      const ruStateMap: Record<string, string> = {
+        created: 'создан',
+        updated: 'обновлен',
+        deleted: 'удален',
+        refreshed: 'обновлен',
+        loading: 'загружается',
+        unavailable: 'недоступен',
+        failed: 'завершился ошибкой',
+      }
+
+      return `${localizedSubject} ${ruStateMap[state]}`
+    }
+
+    return `${localizedSubject} ${state}`
+  }
+
+  const prefixedMatch = normalized.match(/^(back to|create|add|save|search|all|selected|active|current|total|close|view)\s+(.+)$/)
+
+  if (prefixedMatch) {
+    const [, prefix, subject] = prefixedMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? subject
+
+    if (locale === 'uz') {
+      const uzPrefixMap: Record<string, string> = {
+        'back to': 'qaytish',
+        create: 'yaratish',
+        add: "qo'shish",
+        save: 'saqlash',
+        search: 'qidirish',
+        all: 'Barcha',
+        selected: 'Tanlangan',
+        active: 'Faol',
+        current: 'Joriy',
+        total: 'Jami',
+        close: 'yopish',
+        view: "ko'rish",
+      }
+
+      if (['all', 'selected', 'active', 'current', 'total'].includes(prefix)) {
+        return `${uzPrefixMap[prefix]} ${localizedSubject}`
+      }
+
+      return withLocalePrefix(locale, uzPrefixMap[prefix], localizedSubject)
+    }
+
+    if (locale === 'ru') {
+      const ruPrefixMap: Record<string, string> = {
+        'back to': 'Назад к',
+        create: 'Создать',
+        add: 'Добавить',
+        save: 'Сохранить',
+        search: 'Поиск',
+        all: 'Все',
+        selected: 'Выбранные',
+        active: 'Активные',
+        current: 'Текущие',
+        total: 'Всего',
+        close: 'Закрыть',
+        view: 'Посмотреть',
+      }
+
+      return `${ruPrefixMap[prefix]} ${localizedSubject}`
+    }
+
+    return `${prefix} ${localizedSubject}`
+  }
+
+  const noMatch = normalized.match(/^no\s+(.+?)(\s+yet)?$/)
+
+  if (noMatch) {
+    const [, subject, yet] = noMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? subject
+
+    if (locale === 'uz') {
+      return yet ? `Hali ${localizedSubject} yo'q` : `${localizedSubject} yo'q`
+    }
+
+    if (locale === 'ru') {
+      return yet ? `Пока нет ${localizedSubject}` : `Нет ${localizedSubject}`
+    }
+
+    return yet ? `No ${localizedSubject} yet` : `No ${localizedSubject}`
+  }
+
+  return null
+}
+
+export function translateLiteral(locale: AppLocale, value: string) {
+  const direct = resolveLiteral(locale, value)
+
+  if (direct) {
+    return preserveCase(value, direct)
+  }
+
+  const patterned = translatePattern(locale, value)
+
+  if (patterned) {
+    return preserveCase(value, patterned)
+  }
+
+  return value
+}
+
+export function translateCurrentLiteral(value: string) {
+  return translateLiteral(getStoredLocale(), value)
+}
+
 export function translate(locale: AppLocale, key: string, fallback?: string, params?: TranslationParams) {
   const template = translations[locale][key] ?? translations.en[key] ?? fallback ?? key
-  return interpolate(template, params)
+  return interpolate(translateLiteral(locale, template), params)
 }
 
 export function translateCurrent(key: string, fallback?: string, params?: TranslationParams) {

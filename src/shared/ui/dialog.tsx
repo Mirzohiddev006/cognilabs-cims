@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
 
 type DialogProps = {
@@ -63,7 +64,7 @@ export function Dialog({
     <div className="fixed inset-0 z-[80] grid place-items-center p-3 sm:p-6">
       <button
         type="button"
-        aria-label="Close dialog"
+        aria-label={translateCurrentLiteral('Close dialog')}
         className={cn(
           'absolute inset-0 backdrop-blur-md',
           tone === 'danger'
@@ -99,15 +100,17 @@ export function Dialog({
               'text-[10px] font-semibold uppercase tracking-[0.24em]',
               tone === 'danger' ? 'text-red-300/80' : 'text-blue-300/70',
             )}>
-              {eyebrow ?? 'Workspace dialog'}
+              {translateCurrentLiteral(eyebrow ?? 'Workspace dialog')}
             </p>
-            <h2 className="mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]">{title}</h2>
+            <h2 className="mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]">
+              {translateCurrentLiteral(title)}
+            </h2>
             {description ? (
               <p className={cn(
                 'mt-2 text-xs leading-5',
                 tone === 'danger' ? 'text-zinc-300/80' : 'text-[var(--muted-strong)]',
               )}>
-                {description}
+                {translateCurrentLiteral(description)}
               </p>
             ) : null}
           </div>
@@ -120,7 +123,7 @@ export function Dialog({
                 ? 'border-red-500/15 hover:border-red-500/30 hover:bg-red-500/10'
                 : 'border-[var(--border)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
             )}
-            aria-label="Close dialog panel"
+            aria-label={translateCurrentLiteral('Close dialog panel')}
           >
             <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
               <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />

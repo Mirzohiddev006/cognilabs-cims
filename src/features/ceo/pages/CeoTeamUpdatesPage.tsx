@@ -8,6 +8,7 @@ import {
 } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -60,7 +61,7 @@ type TeamSalaryEntry = {
 
 /* ─── Month name helper ───────────────────────────────────── */
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
 const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
@@ -178,7 +179,7 @@ function getOverrideScopeLabel(item: WorkdayOverrideRecord) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(getIntlLocale(), {
     maximumFractionDigits: 0,
   }).format(value)
 }

@@ -1,6 +1,7 @@
 import type { DayStatus } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import type { WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 
 export type UnknownRecord = Record<string, unknown>
 
@@ -425,7 +426,7 @@ export function sumByKeys(items: unknown[], keys: string[]): number {
 }
 
 export function getMonthName(month: number) {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2026, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2026, month - 1))
 }
 
 export const monthOptions = Array.from({ length: 12 }, (_, index) => ({
@@ -438,7 +439,7 @@ export function formatAmount(value?: number | null) {
     return '—'
   }
 
-  return new Intl.NumberFormat('ru-RU', {
+  return new Intl.NumberFormat(getIntlLocale(), {
     maximumFractionDigits: 0,
   }).format(Math.round(value)).replace(/\u00A0/g, ' ')
 }
@@ -461,7 +462,7 @@ export function formatCount(value?: number | null) {
 
 export function formatDetailDate(value?: string | null) {
   if (!value) {
-    return 'Not provided'
+    return translateCurrentLiteral('Not provided')
   }
 
   const parsed = new Date(value)
@@ -470,7 +471,7 @@ export function formatDetailDate(value?: string | null) {
     return value
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -1435,8 +1436,8 @@ export function buildMemberMonthlyUpdateCalendar(
       day,
       date: dateKey,
       status,
-      weekdayShort: new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(currentDate),
-      weekdayLabel: new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(currentDate),
+      weekdayShort: new Intl.DateTimeFormat(getIntlLocale(), { weekday: 'short' }).format(currentDate),
+      weekdayLabel: new Intl.DateTimeFormat(getIntlLocale(), { weekday: 'long' }).format(currentDate),
       isToday: dateKey === formatDateKey(todayStart),
       isFuture: currentDate > todayStart,
       isWeekend: currentDate.getDay() === 0,

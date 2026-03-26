@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { Button } from './button'
 
 type StateBlockProps = {
@@ -97,7 +98,7 @@ export function StateBlock({
       {/* Text */}
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[var(--caption)]">
-          {eyebrow}
+          {translateCurrentLiteral(eyebrow)}
         </p>
         <h3
           className={
@@ -106,10 +107,10 @@ export function StateBlock({
               : 'mt-2 text-base font-semibold text-white'
           }
         >
-          {title}
+          {translateCurrentLiteral(title)}
         </h3>
         <p className="mt-2 max-w-sm text-xs leading-5 text-[var(--muted)]">
-          {description}
+          {translateCurrentLiteral(description)}
         </p>
       </div>
 
@@ -119,7 +120,7 @@ export function StateBlock({
       {/* Action */}
       {actionLabel && onAction ? (
         <Button variant="secondary" size="md" className="mt-2" onClick={onAction}>
-          {actionLabel}
+          {translateCurrentLiteral(actionLabel)}
         </Button>
       ) : null}
     </div>

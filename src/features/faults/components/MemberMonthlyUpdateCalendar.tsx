@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { DayStatus } from '../../../shared/api/types'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -60,7 +61,7 @@ const dayFocusStyle: Record<DayStatus, string> = {
 }
 
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
 function formatLongDate(date: string) {
@@ -70,7 +71,7 @@ function formatLongDate(date: string) {
     return date
   }
 
-  return parsed.toLocaleDateString('en-US', {
+  return parsed.toLocaleDateString(getIntlLocale(), {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
@@ -89,7 +90,7 @@ function formatEntryTimestamp(value?: string) {
     return value
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',

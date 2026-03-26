@@ -5,6 +5,7 @@ import { env } from '../../../shared/config/env'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import {
@@ -168,7 +169,7 @@ function formatDateTime(value?: string | null) {
     return '-'
   }
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

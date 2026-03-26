@@ -2,6 +2,7 @@ import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
@@ -315,7 +316,7 @@ function getFirstArray(source: UnknownRecord, keys: string[]) {
 }
 
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
 function monthNameToNumber(value: string): number | null {
@@ -767,7 +768,7 @@ function formatRecentDate(value?: string) {
     return ''
   }
 
-  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  return new Date(value).toLocaleDateString(getIntlLocale(), { month: 'short', day: 'numeric' })
 }
 
 function getCalendarCounts(calendar: CalendarData | null) {
@@ -834,7 +835,7 @@ function formatCalendarDayLabel(day: CalendarDay | null) {
     return day.date
   }
 
-  return parsedDate.toLocaleDateString('en-US', {
+  return parsedDate.toLocaleDateString(getIntlLocale(), {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

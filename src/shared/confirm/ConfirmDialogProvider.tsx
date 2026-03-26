@@ -3,6 +3,7 @@ import {
   ConfirmDialogContext,
   type ConfirmOptions,
 } from './ConfirmDialogContext'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { Button } from '../ui/button'
 import { Dialog } from '../ui/dialog'
 
@@ -38,15 +39,15 @@ export function ConfirmDialogProvider({ children }: PropsWithChildren) {
       <Dialog
         open={Boolean(options)}
         onClose={() => closeWith(false)}
-        title={options?.title ?? 'Confirm action'}
+        title={translateCurrentLiteral(options?.title ?? 'Confirm action')}
         description={options?.description}
         tone={options?.tone ?? 'default'}
-        eyebrow={options?.tone === 'danger' ? 'Danger zone' : 'Workspace dialog'}
+        eyebrow={translateCurrentLiteral(options?.tone === 'danger' ? 'Danger zone' : 'Workspace dialog')}
         headerIcon={options?.tone === 'danger' ? <DangerHeaderIcon /> : undefined}
         footer={
           <>
             <Button variant="secondary" className="min-w-[96px]" onClick={() => closeWith(false)}>
-              {options?.cancelLabel ?? 'Cancel'}
+              {translateCurrentLiteral(options?.cancelLabel ?? 'Cancel')}
             </Button>
             <Button
               variant={options?.tone === 'danger' ? 'danger' : 'primary'}
@@ -57,7 +58,7 @@ export function ConfirmDialogProvider({ children }: PropsWithChildren) {
               }
               onClick={() => closeWith(true)}
             >
-              {options?.confirmLabel ?? 'Confirm'}
+              {translateCurrentLiteral(options?.confirmLabel ?? 'Confirm')}
             </Button>
           </>
         }
