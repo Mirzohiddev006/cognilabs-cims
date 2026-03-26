@@ -1,12 +1,23 @@
 type CustomerIdentity = {
   id?: number | string | null
   full_name?: string | null
+  fullName?: string | null
+  displayName?: string | null
   name?: string | null
   surname?: string | null
   first_name?: string | null
   last_name?: string | null
   firstName?: string | null
   lastName?: string | null
+  display_name?: string | null
+  customer_name?: string | null
+  customerName?: string | null
+  contact_name?: string | null
+  full?: string | null
+  client_name?: string | null
+  lead_name?: string | null
+  user_name?: string | null
+  fio?: string | null
   username?: string | null
   phone_number?: string | null
   phone?: string | null
@@ -18,6 +29,12 @@ type CustomerIdentity = {
   lead_source?: string | null
   channel?: string | null
   platforms?: Array<string | null> | null
+  customer?: Record<string, unknown> | null
+  client?: Record<string, unknown> | null
+  lead?: Record<string, unknown> | null
+  contact?: Record<string, unknown> | null
+  profile?: Record<string, unknown> | null
+  details?: Record<string, unknown> | null
 } & Record<string, unknown>
 
 function normalizeIdentityValue(value?: string | null) {
@@ -50,8 +67,9 @@ function isPlaceholderName(value: string) {
   const normalized = value.trim().toLowerCase()
 
   return (
-    ['customer', 'client', 'lead', 'unknown'].includes(normalized) ||
+    ['customer', 'client', 'lead', 'unknown', 'mijoz'].includes(normalized) ||
     /^customer\s*#?\d+$/i.test(normalized) ||
+    /^mijoz\s*#?\d+$/i.test(normalized) ||
     normalized.includes('aniqlashtirilmagan') ||
     normalized.includes("ismi so'rash kerak") ||
     normalized.includes("ismi so‘rash kerak") ||
@@ -63,6 +81,16 @@ function getSafeIdentityValue(value?: string | null) {
   const normalized = normalizeIdentityValue(value)
 
   if (!normalized || isProbablyEncryptedValue(normalized)) {
+    return null
+  }
+
+  return normalized
+}
+
+function getMeaningfulIdentityValue(value?: string | null) {
+  const normalized = getSafeIdentityValue(value)
+
+  if (!normalized || isPlaceholderName(normalized)) {
     return null
   }
 
@@ -93,15 +121,43 @@ function getReadablePhone(value?: string | null) {
   return getSafeIdentityValue(value)
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+function getNestedIdentityCandidates(customer: CustomerIdentity) {
+  return [customer.customer, customer.client, customer.lead, customer.contact, customer.profile, customer.details].filter(isRecord)
+}
+
+function getNestedIdentityValue(customer: CustomerIdentity, keys: string[]) {
+  for (const source of getNestedIdentityCandidates(customer)) {
+    for (const key of keys) {
+      const value = source[key]
+
+      if (typeof value === 'string') {
+        const safeValue = getSafeIdentityValue(value)
+
+        if (safeValue) {
+          return safeValue
+        }
+      }
+    }
+  }
+
+  return null
+}
+
 function getComposedName(customer: CustomerIdentity) {
   const firstName =
-    getSafeIdentityValue(customer.name) ??
-    getSafeIdentityValue(customer.first_name) ??
-    getSafeIdentityValue(customer.firstName)
+    getMeaningfulIdentityValue(customer.name) ??
+    getMeaningfulIdentityValue(customer.first_name) ??
+    getMeaningfulIdentityValue(customer.firstName) ??
+    getMeaningfulIdentityValue(getNestedIdentityValue(customer, ['name', 'first_name', 'firstName']))
   const lastName =
-    getSafeIdentityValue(customer.surname) ??
-    getSafeIdentityValue(customer.last_name) ??
-    getSafeIdentityValue(customer.lastName)
+    getMeaningfulIdentityValue(customer.surname) ??
+    getMeaningfulIdentityValue(customer.last_name) ??
+    getMeaningfulIdentityValue(customer.lastName) ??
+    getMeaningfulIdentityValue(getNestedIdentityValue(customer, ['surname', 'last_name', 'lastName']))
 
   const composedName = [firstName, lastName].filter(Boolean).join(' ').trim()
   return composedName || null
@@ -136,19 +192,51 @@ export function getCustomerDisplayPlatform(customer: CustomerIdentity) {
 }
 
 export function getCustomerDisplayName(customer: CustomerIdentity, fallbackLabel = 'Customer') {
-  const fullName = getSafeIdentityValue(customer.full_name)
+  const directNameCandidates = [
+    customer.full_name,
+    customer.fullName,
+    customer.displayName,
+    customer.display_name,
+    customer.customerName,
+    customer.customer_name,
+    customer.contact_name,
+    customer.full,
+    customer.client_name,
+    customer.lead_name,
+    customer.user_name,
+    customer.fio,
+  ]
+  const nestedNameCandidates = [
+    getNestedIdentityValue(customer, [
+      'full_name',
+      'fullName',
+      'display_name',
+      'displayName',
+      'customer_name',
+      'customerName',
+      'client_name',
+      'lead_name',
+      'user_name',
+      'contact_name',
+      'fio',
+      'full',
+    ]),
+  ]
+  const allNameCandidates = [...directNameCandidates, ...nestedNameCandidates]
+  const preferredFullName = allNameCandidates.map((value) => getMeaningfulIdentityValue(value)).find(Boolean) ?? null
+  const fallbackFullName = allNameCandidates.map((value) => getSafeIdentityValue(value)).find(Boolean) ?? null
   const composedName = getComposedName(customer)
 
-  if (fullName && !isPlaceholderName(fullName)) {
-    return fullName
+  if (preferredFullName) {
+    return preferredFullName
   }
 
   if (composedName) {
     return composedName
   }
 
-  if (fullName) {
-    return fullName
+  if (fallbackFullName) {
+    return fallbackFullName
   }
 
   return (

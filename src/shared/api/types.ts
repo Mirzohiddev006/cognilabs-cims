@@ -71,12 +71,23 @@ export type TokenResponse = {
 export type CustomerSummary = {
   id: number
   full_name?: string | null
+  fullName?: string | null
+  displayName?: string | null
   name?: string | null
   surname?: string | null
   first_name?: string | null
   last_name?: string | null
   firstName?: string | null
   lastName?: string | null
+  display_name?: string | null
+  customer_name?: string | null
+  customerName?: string | null
+  contact_name?: string | null
+  full?: string | null
+  client_name?: string | null
+  lead_name?: string | null
+  user_name?: string | null
+  fio?: string | null
   platform?: string | null
   platform_name?: string | null
   source_platform?: string | null
@@ -85,6 +96,12 @@ export type CustomerSummary = {
   lead_source?: string | null
   channel?: string | null
   platforms?: Array<string | null> | null
+  customer?: Record<string, unknown> | null
+  client?: Record<string, unknown> | null
+  lead?: Record<string, unknown> | null
+  contact?: Record<string, unknown> | null
+  profile?: Record<string, unknown> | null
+  details?: Record<string, unknown> | null
   username?: string | null
   phone_number?: string | null
   phone?: string | null

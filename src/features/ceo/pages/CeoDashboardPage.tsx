@@ -46,6 +46,20 @@ const emptyPayments: PaymentItem[] = []
 const emptyCompanyPayments: CompanyPaymentRecord[] = []
 const emptyMessages: CeoMessageRecord[] = []
 const emptyCustomers: CustomerSummary[] = []
+const showRecurringPayments = false
+
+function normalizeCustomerId(value: CustomerSummary['id']) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) && value > 0 ? value : null
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value.trim())
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }
+
+  return null
+}
 
 function mergeCustomerSummary(base: CustomerSummary, detail?: CustomerSummary | null): CustomerSummary {
   if (!detail) {
@@ -56,15 +70,32 @@ function mergeCustomerSummary(base: CustomerSummary, detail?: CustomerSummary | 
     ...detail,
     ...base,
     full_name: detail.full_name ?? base.full_name,
+    fullName: detail.fullName ?? base.fullName,
+    displayName: detail.displayName ?? base.displayName,
     name: detail.name ?? base.name,
     surname: detail.surname ?? base.surname,
     first_name: detail.first_name ?? base.first_name,
     last_name: detail.last_name ?? base.last_name,
     firstName: detail.firstName ?? base.firstName,
     lastName: detail.lastName ?? base.lastName,
+    display_name: detail.display_name ?? base.display_name,
+    customer_name: detail.customer_name ?? base.customer_name,
+    customerName: detail.customerName ?? base.customerName,
+    contact_name: detail.contact_name ?? base.contact_name,
+    full: detail.full ?? base.full,
+    client_name: detail.client_name ?? base.client_name,
+    lead_name: detail.lead_name ?? base.lead_name,
+    user_name: detail.user_name ?? base.user_name,
+    fio: detail.fio ?? base.fio,
     username: detail.username ?? base.username,
     phone_number: detail.phone_number ?? base.phone_number,
     phone: detail.phone ?? base.phone,
+    customer: detail.customer ?? base.customer,
+    client: detail.client ?? base.client,
+    lead: detail.lead ?? base.lead,
+    contact: detail.contact ?? base.contact,
+    profile: detail.profile ?? base.profile,
+    details: detail.details ?? base.details,
     platform: detail.platform ?? base.platform,
     platform_name: detail.platform_name ?? base.platform_name,
     source_platform: detail.source_platform ?? base.source_platform,
@@ -73,6 +104,7 @@ function mergeCustomerSummary(base: CustomerSummary, detail?: CustomerSummary | 
     lead_source: detail.lead_source ?? base.lead_source,
     channel: detail.channel ?? base.channel,
     platforms: detail.platforms ?? base.platforms,
+    assistant_name: detail.assistant_name ?? base.assistant_name,
   }
 }
 
@@ -135,7 +167,9 @@ export function CeoDashboardPage() {
         return rows
       }
 
-      const uniqueIds = Array.from(new Set(rows.map((row) => row.id).filter((id) => Number.isFinite(id) && id > 0)))
+      const uniqueIds = Array.from(
+        new Set(rows.map((row) => normalizeCustomerId(row.id)).filter((id): id is number => id !== null)),
+      )
 
       const detailResults = await Promise.all(
         uniqueIds.map(async (customerId) => {
@@ -152,10 +186,9 @@ export function CeoDashboardPage() {
         detailResults.filter((entry): entry is readonly [number, CustomerSummary] => Boolean(entry)),
       )
 
-      return rows.map((row) => mergeCustomerSummary(row, detailMap.get(row.id)))
+      return rows.map((row) => mergeCustomerSummary(row, detailMap.get(normalizeCustomerId(row.id) ?? -1)))
     },
     [todayMetricsQuery.data],
-    { enabled: Boolean(todayMetricsQuery.data?.today_customers?.length) },
   )
   const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
@@ -200,7 +233,10 @@ export function CeoDashboardPage() {
 
   const statistics = dashboardQuery.data?.statistics
   const metrics = todayMetricsQuery.data
-  const todayCustomers = todayCustomerDetailsQuery.data?.length ? todayCustomerDetailsQuery.data : (metrics?.today_customers ?? emptyCustomers)
+  const hasTodayCustomers = (metrics?.today_customers?.length ?? 0) > 0
+  const todayCustomers = hasTodayCustomers
+    ? (todayCustomerDetailsQuery.data?.length ? todayCustomerDetailsQuery.data : (metrics?.today_customers ?? emptyCustomers))
+    : emptyCustomers
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data ?? emptyCompanyPayments
@@ -929,7 +965,7 @@ export function CeoDashboardPage() {
         </Card>
       </div>
 
-      {false && (
+      {showRecurringPayments && (
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
