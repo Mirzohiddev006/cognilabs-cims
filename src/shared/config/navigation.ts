@@ -100,7 +100,7 @@ export const navigationItems: readonly NavigationItem[] = [
     label: 'Projects',
     description: 'Manage projects, boards, and kanban workflows.',
     group: 'Work',
-    permissionKey: 'projects',
+    permissionKey: undefined,
     sidebar: true,
     defaultRedirect: false,
   },

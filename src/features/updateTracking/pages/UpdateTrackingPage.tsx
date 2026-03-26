@@ -2,6 +2,7 @@ import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -58,6 +59,7 @@ type RecentUpdate = {
   message?: string
   text?: string
   update_text?: string
+  owner_name?: string
   [key: string]: unknown
 }
 
@@ -84,6 +86,69 @@ const emptyStats: UpdateTrackingStats = {
   percentage_this_month: 0,
   percentage_last_3_months: 0,
   expected_updates_per_week: 0,
+}
+
+type UpdateTrackingPageData = {
+  stats: UpdateTrackingStats
+  calendarPayload: unknown
+  trendsPayload: unknown
+  recentPayload: unknown
+  errors: {
+    stats: string | null
+    calendar: string | null
+    trends: string | null
+    recent: string | null
+  }
+}
+
+const updateTrackingPageCache = new Map<string, UpdateTrackingPageData>()
+
+function getUpdateTrackingCacheKey(month: number, year: number) {
+  return `${year}-${month}`
+}
+
+async function loadUpdateTrackingPageData(month: number, year: number, force = false): Promise<UpdateTrackingPageData> {
+  const cacheKey = getUpdateTrackingCacheKey(month, year)
+
+  if (!force) {
+    const cached = updateTrackingPageCache.get(cacheKey)
+
+    if (cached) {
+      return cached
+    }
+  }
+
+  const [statsResult, calendarResult, trendsResult, recentResult] = await Promise.allSettled([
+    updateTrackingService.myStats(),
+    updateTrackingService.calendar(month, year),
+    updateTrackingService.trends(),
+    updateTrackingService.recent(20),
+  ])
+
+  if (
+    statsResult.status === 'rejected' &&
+    calendarResult.status === 'rejected' &&
+    trendsResult.status === 'rejected' &&
+    recentResult.status === 'rejected'
+  ) {
+    throw new Error(getApiErrorMessage(calendarResult.reason))
+  }
+
+  const result: UpdateTrackingPageData = {
+    stats: statsResult.status === 'fulfilled' ? statsResult.value : emptyStats,
+    calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
+    trendsPayload: trendsResult.status === 'fulfilled' ? trendsResult.value : null,
+    recentPayload: recentResult.status === 'fulfilled' ? recentResult.value : null,
+    errors: {
+      stats: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
+      calendar: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
+      trends: trendsResult.status === 'rejected' ? getApiErrorMessage(trendsResult.reason) : null,
+      recent: recentResult.status === 'rejected' ? getApiErrorMessage(recentResult.reason) : null,
+    },
+  }
+
+  updateTrackingPageCache.set(cacheKey, result)
+  return result
 }
 
 function parsePayload(payload: unknown): unknown {
@@ -570,6 +635,57 @@ function extractRecentText(source: UnknownRecord) {
   return typeof fallbackText?.[1] === 'string' ? fallbackText[1] : ''
 }
 
+function joinRecentNameParts(...parts: Array<string | undefined>) {
+  const value = parts.filter(Boolean).join(' ').trim()
+  return value || undefined
+}
+
+function extractRecentOwner(source: UnknownRecord) {
+  const directName = findFirstString(source, [
+    'full_name',
+    'user_name',
+    'employee_name',
+    'member_name',
+    'display_name',
+    'owner_name',
+    'author_name',
+  ])
+
+  if (directName) {
+    return directName
+  }
+
+  const nestedSources = [
+    isRecord(source.user) ? source.user : null,
+    isRecord(source.member) ? source.member : null,
+    isRecord(source.employee) ? source.employee : null,
+    isRecord(source.author) ? source.author : null,
+    isRecord(source.created_by_user) ? source.created_by_user : null,
+  ].filter((entry): entry is UnknownRecord => Boolean(entry))
+
+  for (const nestedSource of nestedSources) {
+    const nestedName =
+      findFirstString(nestedSource, ['full_name', 'user_name', 'employee_name', 'member_name', 'display_name']) ??
+      joinRecentNameParts(
+        findFirstString(nestedSource, ['name', 'first_name', 'firstName']),
+        findFirstString(nestedSource, ['surname', 'last_name', 'lastName']),
+      ) ??
+      findFirstString(nestedSource, ['telegram_username', 'email'])
+
+    if (nestedName) {
+      return nestedName
+    }
+  }
+
+  return (
+    joinRecentNameParts(
+      findFirstString(source, ['name', 'first_name', 'firstName']),
+      findFirstString(source, ['surname', 'last_name', 'lastName']),
+    ) ??
+    findFirstString(source, ['telegram_username', 'email'])
+  )
+}
+
 function normalizeRecentUpdate(source: UnknownRecord, index: number): RecentUpdate {
   return {
     ...source,
@@ -580,6 +696,7 @@ function normalizeRecentUpdate(source: UnknownRecord, index: number): RecentUpda
       index,
     update_date: extractRecentDate(source),
     update_text: extractRecentText(source),
+    owner_name: extractRecentOwner(source),
   }
 }
 
@@ -655,7 +772,7 @@ function formatRecentDate(value?: string) {
 
 function getCalendarCounts(calendar: CalendarData | null) {
   if (!calendar) {
-    return { submitted: 0, missing: 0, sunday: 0, upcoming: 0, open: 0 }
+    return { submitted: 0, missing: 0, offDay: 0, holiday: 0, upcoming: 0, open: 0 }
   }
 
   return calendar.days.reduce(
@@ -665,7 +782,11 @@ function getCalendarCounts(calendar: CalendarData | null) {
       } else if (day.status === 'missing') {
         counts.missing += 1
       } else if (day.status === 'sunday') {
-        counts.sunday += 1
+        if (isHolidayCalendarDay(day)) {
+          counts.holiday += 1
+        } else {
+          counts.offDay += 1
+        }
       } else if (day.status === 'future') {
         counts.upcoming += 1
       } else if (day.status === 'neutral') {
@@ -674,7 +795,7 @@ function getCalendarCounts(calendar: CalendarData | null) {
 
       return counts
     },
-    { submitted: 0, missing: 0, sunday: 0, upcoming: 0, open: 0 },
+    { submitted: 0, missing: 0, offDay: 0, holiday: 0, upcoming: 0, open: 0 },
   )
 }
 
@@ -729,19 +850,76 @@ function getSpecialDayLabel(day: CalendarDay | null | undefined) {
   return day.workdayOverride.day_type === 'short_day' ? 'Short Day' : 'Holiday'
 }
 
+function isHolidayCalendarDay(day: CalendarDay | null | undefined) {
+  return day?.status === 'sunday' && day.workdayOverride?.day_type === 'holiday'
+}
+
+function getCalendarDaySurfaceClass(day: CalendarDay) {
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-day-holiday'
+  }
+
+  return dayStyle[day.status]
+}
+
+function getCalendarDayAccentClass(day: CalendarDay) {
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-accent-holiday'
+  }
+
+  return dayAccentStyle[day.status]
+}
+
+function getCalendarDayPillClass(day: CalendarDay) {
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-pill-holiday'
+  }
+
+  return dayPillStyle[day.status]
+}
+
+function getCalendarDayDotClass(day: CalendarDay) {
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-dot-holiday'
+  }
+
+  return dayDotStyle[day.status]
+}
+
+function getCalendarDayTextClass(day: CalendarDay) {
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-text-holiday'
+  }
+
+  return dayStatusTextStyle[day.status]
+}
+
+function getCalendarDayFocusClass(day: CalendarDay | null) {
+  if (!day) {
+    return dayFocusStyle.neutral
+  }
+
+  if (isHolidayCalendarDay(day)) {
+    return 'cal-focus-holiday'
+  }
+
+  return dayFocusStyle[day.status]
+}
+
 function getCalendarStatusLabel(status: DayStatus, day?: CalendarDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
   if (status === 'submitted') return 'Submitted'
   if (status === 'missing') return 'Missing'
-  if (status === 'sunday') return specialLabel ?? 'Sunday'
+  if (status === 'sunday') return specialLabel ?? 'Off Day'
   if (status === 'future') return 'Upcoming'
   return 'No status'
 }
 
-function getCalendarStatusVariant(status: DayStatus) {
+function getCalendarStatusVariant(status: DayStatus, day?: CalendarDay | null) {
   if (status === 'submitted') return 'success'
   if (status === 'missing') return 'danger'
+  if (isHolidayCalendarDay(day)) return 'blue'
   if (status === 'sunday') return 'warning'
   return 'secondary'
 }
@@ -767,7 +945,7 @@ function getCalendarDetailText(day: CalendarDay | null) {
   }
 
   if (day.status === 'sunday') {
-    return 'This day is marked as Sunday.'
+    return isHolidayCalendarDay(day) ? 'This date is marked as a holiday.' : 'This date is an off day.'
   }
 
   if (day.status === 'future') {
@@ -853,7 +1031,7 @@ function getCalendarCellHint(day: CalendarDay) {
   }
 
   if (day.status === 'sunday') {
-    return 'Recovery day'
+    return isHolidayCalendarDay(day) ? 'Holiday schedule' : 'Weekend / off day'
   }
 
   if (day.status === 'future') {
@@ -1052,16 +1230,21 @@ export function UpdateTrackingPage() {
   const [yearInput, setYearInput] = useState(String(now.getFullYear()))
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const todayKey = formatDateKey(todayStart)
+  const cacheKey = getUpdateTrackingCacheKey(month, year)
+  const cachedPageData = updateTrackingPageCache.get(cacheKey)
+  const pageQuery = useAsyncData(
+    () => loadUpdateTrackingPageData(month, year),
+    [month, year],
+    { initialData: cachedPageData },
+  )
 
-  const statsQuery = useAsyncData(() => updateTrackingService.myStats(), [], { initialData: emptyStats })
-  const calendarQuery = useAsyncData(() => updateTrackingService.calendar(month, year), [month, year])
-  const trendsQuery = useAsyncData(() => updateTrackingService.trends(), [])
-  const recentQuery = useAsyncData(() => updateTrackingService.recent(20), [])
-
-  const stats = statsQuery.data
-  const calendar = useMemo(() => parseCalendar(calendarQuery.data, month, year), [calendarQuery.data, month, year])
-  const trends = useMemo(() => parseTrends(trendsQuery.data), [trendsQuery.data])
-  const recent = useMemo(() => parseRecent(recentQuery.data), [recentQuery.data])
+  const stats = pageQuery.data?.stats ?? emptyStats
+  const calendar = useMemo(
+    () => parseCalendar(pageQuery.data?.calendarPayload, month, year),
+    [month, pageQuery.data?.calendarPayload, year],
+  )
+  const trends = useMemo(() => parseTrends(pageQuery.data?.trendsPayload), [pageQuery.data?.trendsPayload])
+  const recent = useMemo(() => parseRecent(pageQuery.data?.recentPayload), [pageQuery.data?.recentPayload])
   const calendarCounts = useMemo(() => getCalendarCounts(calendar), [calendar])
   const selectedCalendarDay = useMemo(() => getSelectedCalendarDay(calendar, selectedDate), [calendar, selectedDate])
   const selectedCalendarDayLabel = useMemo(() => formatCalendarDayLabel(selectedCalendarDay), [selectedCalendarDay])
@@ -1075,13 +1258,13 @@ export function UpdateTrackingPage() {
   const nextUpcomingDay = useMemo(() => calendar?.days.find((day) => day.status === 'future') ?? null, [calendar])
 
   async function handleRefresh() {
-    await Promise.all([
-      statsQuery.refetch(),
-      calendarQuery.refetch(),
-      trendsQuery.refetch(),
-      recentQuery.refetch(),
-    ])
-    showToast({ title: 'Refreshed', description: 'Your update data has been reloaded.', tone: 'success' })
+    try {
+      const nextData = await loadUpdateTrackingPageData(month, year, true)
+      pageQuery.setData(nextData)
+      showToast({ title: 'Refreshed', description: 'Your update data has been reloaded.', tone: 'success' })
+    } catch (error) {
+      showToast({ title: 'Refresh failed', description: getApiErrorMessage(error), tone: 'error' })
+    }
   }
 
   function applyYearInput() {
@@ -1124,14 +1307,14 @@ export function UpdateTrackingPage() {
     setSelectedDate(todayKey)
   }
 
-  if (statsQuery.isError && !stats && calendarQuery.isError && trendsQuery.isError && recentQuery.isError) {
+  if (pageQuery.isError && !pageQuery.data) {
     return (
       <ErrorStateBlock
         eyebrow="Updates"
         title="Updates unavailable"
         description="Could not load your update statistics."
         actionLabel="Retry"
-        onAction={() => void statsQuery.refetch()}
+        onAction={() => void pageQuery.refetch()}
       />
     )
   }
@@ -1153,17 +1336,23 @@ export function UpdateTrackingPage() {
   const monthProgressPct = elapsedWorkingDays > 0
     ? (calendarCounts.submitted / elapsedWorkingDays) * 100
     : 0
+  const shouldShowFocusContent = Boolean(
+    selectedCalendarDay?.hasUpdate ||
+    selectedCalendarDay?.updateContent?.trim() ||
+    selectedCalendarDay?.workdayOverride,
+  )
 
   return (
     <section className="space-y-6 page-enter">
       <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(99,102,241,0.15),transparent_70%)]" />
-          <div className="pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-violet-400/8 blur-3xl" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
+          <div className="pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 top-6 h-28 w-28 rounded-full bg-cyan-400/8 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-violet-400/80">
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--blue-text)]">
                 Personal
               </p>
               <h1 className="page-header-title mt-1 text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
@@ -1217,7 +1406,7 @@ export function UpdateTrackingPage() {
             </div>
           </div>
 
-          {statsQuery.isError ? (
+          {pageQuery.data?.errors.stats ? (
             <div className="relative z-10 mt-4 rounded-[18px] border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/82">
               Stats API unavailable. Calendar and other sections continue loading independently.
             </div>
@@ -1288,7 +1477,10 @@ export function UpdateTrackingPage() {
                   {calendarCounts.open > 0 ? (
                     <Badge variant="secondary">{calendarCounts.open} open</Badge>
                   ) : null}
-                  <Badge variant="warning" dot>{calendarCounts.sunday} sundays</Badge>
+                  {calendarCounts.holiday > 0 ? (
+                    <Badge variant="blue" dot>{calendarCounts.holiday} holidays</Badge>
+                  ) : null}
+                  <Badge variant="warning" dot>{calendarCounts.offDay} off days</Badge>
                   {calendarCounts.upcoming > 0 ? (
                     <Badge variant="secondary">{calendarCounts.upcoming} upcoming</Badge>
                   ) : null}
@@ -1297,7 +1489,7 @@ export function UpdateTrackingPage() {
             </div>
           </div>
           <div className="px-4 py-4 sm:px-5">
-            {calendarQuery.isLoading ? (
+            {pageQuery.isLoading && !calendar ? (
               <div className="py-10 text-center text-sm text-(--muted)">Loading calendar...</div>
             ) : !calendar ? (
               <div className="py-10 text-center text-sm text-(--muted)">No calendar data for this period.</div>
@@ -1401,9 +1593,8 @@ export function UpdateTrackingPage() {
                   </div>
 
                   <div className="calendar-board-scroll mt-4 -mx-2 px-2 pb-3 sm:mx-0 sm:px-0 sm:pb-1">
-                    <div className="min-w-[812px] pr-1 sm:min-w-[860px]">
-                      <div className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
-                        <div aria-hidden="true" />
+                    <div className="min-w-[736px] pr-1 sm:min-w-[768px]">
+                      <div className="grid grid-cols-7 gap-2">
                         {weekdayLabels.map((label) => (
                           <div
                             key={label}
@@ -1416,12 +1607,7 @@ export function UpdateTrackingPage() {
 
                       <div className="mt-2.5 space-y-2.5">
                         {calendarWeeks.map((week, weekIndex) => (
-                          <div key={`week-${weekIndex + 1}`} className="grid grid-cols-[60px_repeat(7,minmax(96px,1fr))] gap-2 sm:grid-cols-[68px_repeat(7,minmax(104px,1fr))]">
-                            <div className="cal-day-neutral flex min-h-28.5 flex-col items-center justify-center rounded-[20px] border px-2 py-3 text-center">
-                              <span className="cal-text-neutral text-[9px] font-bold uppercase tracking-[0.26em] opacity-55">Week</span>
-                              <span className="mt-2 text-base font-semibold tabular-nums opacity-80">{weekIndex + 1}</span>
-                            </div>
-
+                          <div key={`week-${weekIndex + 1}`} className="grid grid-cols-7 gap-2">
                             {week.map((day, dayIndex) => {
                               if (!day) {
                                 return (
@@ -1445,7 +1631,7 @@ export function UpdateTrackingPage() {
                                   aria-pressed={isSelected}
                                   className={cn(
                                     'group relative flex min-h-[114px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3.5 py-2.5 text-left transition-all duration-200',
-                                    dayStyle[day.status],
+                                    getCalendarDaySurfaceClass(day),
                                     isSelected
                                       ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
                                       : 'hover:-translate-y-[1px] hover:border-(--border-hover)',
@@ -1453,12 +1639,12 @@ export function UpdateTrackingPage() {
                                   )}
                                   title={`${isSelected ? 'Selected: ' : ''}${formatCalendarDayLabel(day) || `Day ${day.day}`}: ${getCalendarStatusLabel(day.status, day)}`}
                                 >
-                                  <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', dayAccentStyle[day.status])} />
+                                  <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', getCalendarDayAccentClass(day))} />
                                   <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
 
                                   <div className="relative flex items-start justify-between gap-3">
                                     <div>
-                                      <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-40', dayStatusTextStyle[day.status])}>
+                                      <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-40', getCalendarDayTextClass(day))}>
                                         {getCalendarBoardWeekday(day)}
                                       </p>
                                       <p className="mt-1.5 text-[1.75rem] font-semibold leading-none tabular-nums tracking-tight opacity-90">
@@ -1483,12 +1669,12 @@ export function UpdateTrackingPage() {
                                   <div className="relative mt-auto">
                                     <span className={cn(
                                       'inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 text-[9px] font-semibold uppercase tracking-[0.14em]',
-                                      dayPillStyle[day.status],
+                                      getCalendarDayPillClass(day),
                                     )}>
-                                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', dayDotStyle[day.status])} />
+                                      <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', getCalendarDayDotClass(day))} />
                                       {getCalendarCellStatusLabel(day.status, day)}
                                     </span>
-                                    <p className={cn('mt-1.5 text-[9px] leading-3.5', dayStatusTextStyle[day.status])}>
+                                    <p className={cn('mt-1.5 text-[9px] leading-3.5', getCalendarDayTextClass(day))}>
                                       {getCalendarCellHint(day)}
                                     </p>
                                   </div>
@@ -1524,15 +1710,6 @@ export function UpdateTrackingPage() {
                     </span>
                   </div>
                 </div>
-
-                <div className="mt-4 rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3.5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
-                    Right rail inspector
-                  </p>
-                  <p className="mt-1 text-[12px] leading-5 text-(--muted)">
-                    Pick any card in the board to inspect returned content, validation and queue priority without losing monthly context.
-                  </p>
-                </div>
               </>
             )}
           </div>
@@ -1550,11 +1727,22 @@ export function UpdateTrackingPage() {
                 recent.slice(0, 10).map((item, index) => {
                   const dateLabel = formatRecentDate(item.update_date ?? item.date)
                   const text = item.update_text ?? item.message ?? item.text ?? ''
+                  const ownerName =
+                    typeof item.owner_name === 'string' && item.owner_name.trim()
+                      ? item.owner_name.trim()
+                      : null
 
                   return (
                     <div key={String(item.id ?? index)} className="px-5 py-3">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="line-clamp-2 text-[13px] text-(--foreground)">{text || 'No description returned by API.'}</p>
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-[13px] text-(--foreground)">{text || 'No description returned by API.'}</p>
+                          {ownerName ? (
+                            <p className="mt-1 text-xs text-(--muted-strong)">
+                              {ownerName}
+                            </p>
+                          ) : null}
+                        </div>
                         {dateLabel && (
                           <span className="shrink-0 text-[11px] tabular-nums text-(--muted)">
                             {dateLabel}
@@ -1581,7 +1769,7 @@ export function UpdateTrackingPage() {
               <div className="flex items-start gap-4">
                 <div className={cn(
                   'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-                  selectedCalendarDay ? dayFocusStyle[selectedCalendarDay.status] : dayFocusStyle.neutral,
+                  getCalendarDayFocusClass(selectedCalendarDay),
                 )}>
                   {selectedCalendarDay?.day ?? '--'}
                 </div>
@@ -1595,7 +1783,7 @@ export function UpdateTrackingPage() {
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {selectedCalendarDay ? (
-                      <Badge variant={getCalendarStatusVariant(selectedCalendarDay.status)} dot>
+                      <Badge variant={getCalendarStatusVariant(selectedCalendarDay.status, selectedCalendarDay)} dot>
                         {getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay)}
                       </Badge>
                     ) : null}
@@ -1607,6 +1795,9 @@ export function UpdateTrackingPage() {
                     ) : null}
                     {selectedCalendarDay?.hasUpdate ? (
                       <Badge variant="violet">Payload available</Badge>
+                    ) : null}
+                    {isHolidayCalendarDay(selectedCalendarDay) ? (
+                      <Badge variant="blue">Holiday</Badge>
                     ) : null}
                   </div>
                 </div>
@@ -1646,33 +1837,39 @@ export function UpdateTrackingPage() {
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col rounded-[20px] border border-(--border) bg-(--surface) p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
-                      {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Day Note'}
-                    </p>
-                    <h3 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
-                      {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'No returned content for this date'}
-                    </h3>
+              {shouldShowFocusContent ? (
+                <div className="flex flex-1 flex-col rounded-[20px] border border-(--border) bg-(--surface) p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
+                        {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Special Day'}
+                      </p>
+                      <h3 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
+                        {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'Details for this date'}
+                      </h3>
+                    </div>
+                    {selectedCalendarDay?.hasUpdate ? (
+                      <Badge variant="blue">API payload</Badge>
+                    ) : selectedCalendarDay?.workdayOverride ? (
+                      <Badge variant={isHolidayCalendarDay(selectedCalendarDay) ? 'blue' : 'warning'}>
+                        {getSpecialDayLabel(selectedCalendarDay) ?? 'Special day'}
+                      </Badge>
+                    ) : null}
                   </div>
-                  {selectedCalendarDay?.hasUpdate ? (
-                    <Badge variant="blue">API payload</Badge>
+
+                  <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                    <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
+                      {getCalendarDetailText(selectedCalendarDay)}
+                    </p>
+                  </div>
+
+                  {selectedCalendarDay?.isValid === false ? (
+                    <p className="mt-3 text-xs text-amber-300">
+                      This update was returned with an invalid flag by the API.
+                    </p>
                   ) : null}
                 </div>
-
-                <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
-                  <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
-                    {getCalendarDetailText(selectedCalendarDay)}
-                  </p>
-                </div>
-
-                {selectedCalendarDay?.isValid === false ? (
-                  <p className="mt-3 text-xs text-amber-300">
-                    This update was returned with an invalid flag by the API.
-                  </p>
-                ) : null}
-              </div>
+              ) : null}
             </div>
           </Card>
 
@@ -1704,7 +1901,7 @@ export function UpdateTrackingPage() {
                       <p className="mt-1 text-sm font-semibold tracking-tight text-(--foreground)">
                         {formatCalendarDayLabel(day) || `Day ${day.day}`}
                       </p>
-                      <p className={cn('mt-1 text-[11px] leading-5', dayStatusTextStyle[day.status])}>
+                      <p className={cn('mt-1 text-[11px] leading-5', getCalendarDayTextClass(day))}>
                         {getCalendarCellHint(day)}
                       </p>
                     </div>

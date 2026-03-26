@@ -1,20 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { projectsService, type ProjectRecord } from '../../../shared/api/services/projects.service'
+import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
+import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { Card } from '../../../shared/ui/card'
+import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
+import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { StateBlock } from '../../../shared/ui/state-block'
-import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { Avatar } from '../components/Avatar'
 import { ProjectCard, ProjectCardSkeleton } from '../components/ProjectCard'
 import { ProjectFormModal } from '../components/ProjectFormModal'
-import { PRIORITY_CONFIG, formatProjectDate, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { buildMemberProjectOverview } from '../lib/memberOverview'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 
@@ -30,10 +31,31 @@ function parseMemberId(rawValue: string | null) {
 export function ProjectsListPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const { user, hasPermission } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const projectsQuery = useAsyncData(() => projectsService.listProjects(), [])
-  const membersQuery = useAsyncData(() => projectsService.getAllUsers(), [])
+  const canManageProjects = hasPermission('projects')
+  const priorityConfigMap = getPriorityConfig()
+
+  const projectsQuery = useAsyncData(
+    async () => {
+      if (!user) {
+        throw new Error('User session is unavailable')
+      }
+
+      return canManageProjects
+        ? projectsService.listProjects()
+        : projectsService.listUserOpenProjects(user.id)
+    },
+    [canManageProjects, user?.id],
+    { enabled: Boolean(user) },
+  )
+
+  const membersQuery = useAsyncData(
+    () => projectsService.getAllUsers(),
+    [],
+    { enabled: canManageProjects },
+  )
 
   const [search, setSearch] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -42,6 +64,8 @@ export function ProjectsListPage() {
 
   const selectedMemberId = parseMemberId(searchParams.get('member'))
   const projects = projectsQuery.data?.projects ?? []
+  const total = projectsQuery.data?.total_count ?? projects.length
+
   const selectedMemberProjectsQuery = useAsyncData(
     () => projectsService.listUserOpenProjects(selectedMemberId ?? 0),
     [selectedMemberId],
@@ -52,33 +76,44 @@ export function ProjectsListPage() {
     [selectedMemberId],
     { enabled: selectedMemberId !== null },
   )
+
   const selectedMemberProjects = selectedMemberProjectsQuery.data?.projects ?? []
   const selectedMemberCards = selectedMemberCardsQuery.data?.cards ?? []
-  const total = projectsQuery.data?.total_count ?? projects.length
+
   const projectIdsKey = useMemo(
     () => projects.map((project) => project.id).sort((left, right) => left - right).join(','),
     [projects],
   )
+
   const projectDetailsQuery = useAsyncData(
     async () => {
+      if (!user) {
+        return []
+      }
+
       const details = await Promise.allSettled(
-        projects.map((project) => projectsService.getProject(project.id)),
+        projects.map((project) => (
+          canManageProjects
+            ? projectsService.getProject(project.id)
+            : projectsService.getUserOpenProjectDetail(project.id, user.id)
+        )),
       )
 
       return details.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
     },
-    [projectIdsKey],
-    { enabled: projects.length > 0 },
+    [projectIdsKey, canManageProjects, user?.id],
+    { enabled: projects.length > 0 && Boolean(user) },
   )
+
   const detailedProjectsMap = useMemo(
     () => new Map((projectDetailsQuery.data ?? []).map((project) => [project.id, project])),
     [projectDetailsQuery.data],
   )
+
   const detailedProjects = useMemo(
     () => projects.map((project) => detailedProjectsMap.get(project.id) ?? project),
     [detailedProjectsMap, projects],
   )
-  const membersPanelLoading = membersQuery.isLoading || projectsQuery.isLoading || (projects.length > 0 && projectDetailsQuery.isLoading)
 
   const memberProjectCounts = useMemo(() => {
     const counts = new Map<number, number>()
@@ -122,10 +157,41 @@ export function ProjectsListPage() {
     return ids
   }, [detailedProjects])
 
+  const derivedMembers = useMemo(() => {
+    const entries = new Map<number, UserSummary>()
+
+    for (const project of detailedProjects) {
+      const participants = [project.created_by, ...project.members]
+
+      for (const participant of participants) {
+        if (participant.id > 0 && !entries.has(participant.id)) {
+          entries.set(participant.id, participant)
+        }
+      }
+    }
+
+    return Array.from(entries.values())
+  }, [detailedProjects])
+
   const members = useMemo(() => {
-    const allUsers = membersQuery.data ?? []
-    const relatedUsers = allUsers.filter((user) => projectParticipantIds.has(user.id))
-    const source = relatedUsers.length > 0 ? relatedUsers : allUsers
+    const source = (() => {
+      if (!canManageProjects) {
+        return derivedMembers
+      }
+
+      const allUsers = membersQuery.data ?? []
+      const relatedUsers = allUsers.filter((member) => projectParticipantIds.has(member.id))
+
+      if (relatedUsers.length > 0) {
+        return relatedUsers
+      }
+
+      if (allUsers.length > 0) {
+        return allUsers
+      }
+
+      return derivedMembers
+    })()
 
     return [...source].sort((left, right) => {
       const leftCount = memberProjectCounts.get(left.id) ?? 0
@@ -137,11 +203,11 @@ export function ProjectsListPage() {
 
       return `${left.name} ${left.surname}`.localeCompare(`${right.name} ${right.surname}`)
     })
-  }, [memberProjectCounts, membersQuery.data, projectParticipantIds])
+  }, [canManageProjects, derivedMembers, memberProjectCounts, membersQuery.data, projectParticipantIds])
 
   const selectedMember = useMemo(
-    () => (membersQuery.data ?? members).find((member) => member.id === selectedMemberId) ?? null,
-    [members, membersQuery.data, selectedMemberId],
+    () => members.find((member) => member.id === selectedMemberId) ?? null,
+    [members, selectedMemberId],
   )
 
   const scopedProjects = selectedMemberId !== null ? selectedMemberProjects : detailedProjects
@@ -149,10 +215,18 @@ export function ProjectsListPage() {
     () => (selectedMemberId !== null ? buildMemberProjectOverview(selectedMemberProjects, selectedMemberCards) : null),
     [selectedMemberCards, selectedMemberId, selectedMemberProjects],
   )
+
+  const membersPanelLoading =
+    projectsQuery.isLoading ||
+    (projects.length > 0 && projectDetailsQuery.isLoading) ||
+    (canManageProjects && membersQuery.isLoading)
+
   const isSelectedMemberProjectsLoading = selectedMemberId !== null && selectedMemberProjectsQuery.isLoading
   const isSelectedMemberProjectsError = selectedMemberId !== null && selectedMemberProjectsQuery.isError
-  const isSelectedMemberOverviewLoading = selectedMemberId !== null && (selectedMemberProjectsQuery.isLoading || selectedMemberCardsQuery.isLoading)
-  const isSelectedMemberOverviewError = selectedMemberId !== null && (selectedMemberProjectsQuery.isError || selectedMemberCardsQuery.isError)
+  const isSelectedMemberOverviewLoading =
+    selectedMemberId !== null && (selectedMemberProjectsQuery.isLoading || selectedMemberCardsQuery.isLoading)
+  const isSelectedMemberOverviewError =
+    selectedMemberId !== null && (selectedMemberProjectsQuery.isError || selectedMemberCardsQuery.isError)
 
   const filteredProjects = useMemo(() => {
     if (!search.trim()) {
@@ -186,6 +260,10 @@ export function ProjectsListPage() {
   }, [filteredProjects.length, memberOverview, members.length, selectedMember, selectedMemberId, total])
 
   async function handleCreate(fd: FormData) {
+    if (!canManageProjects) {
+      return
+    }
+
     setIsSubmitting(true)
     try {
       await projectsService.createProject(fd)
@@ -202,7 +280,7 @@ export function ProjectsListPage() {
   }
 
   async function handleUpdate(fd: FormData) {
-    if (!editProject) {
+    if (!canManageProjects || !editProject) {
       return
     }
 
@@ -223,6 +301,10 @@ export function ProjectsListPage() {
   }
 
   async function handleDelete(project: ProjectRecord) {
+    if (!canManageProjects) {
+      return
+    }
+
     const ok = await confirm({
       title: 'Delete project?',
       description: `"${project.project_name}" and all its boards will be permanently deleted. This cannot be undone.`,
@@ -270,6 +352,10 @@ export function ProjectsListPage() {
   }
 
   async function handleOpenEdit(project: ProjectRecord) {
+    if (!canManageProjects) {
+      return
+    }
+
     try {
       const detail = await projectsService.getProject(project.id)
       setEditProject(detail)
@@ -284,7 +370,7 @@ export function ProjectsListPage() {
         <PageHeader
           title="Projects"
           meta={headerMeta}
-          actions={(
+          actions={canManageProjects ? (
             <Button
               variant="primary"
               size="md"
@@ -297,7 +383,7 @@ export function ProjectsListPage() {
             >
               New project
             </Button>
-          )}
+          ) : undefined}
         />
 
         <Card variant="glass" className="rounded-[28px]">
@@ -481,7 +567,7 @@ export function ProjectsListPage() {
                       ) : (
                         <div className="mt-4 space-y-3">
                           {project.tasks.map((task) => {
-                            const priorityConfig = task.priority ? PRIORITY_CONFIG[task.priority] : null
+                            const priorityConfig = task.priority ? priorityConfigMap[task.priority] : null
                             const dueVariant = task.dueDate
                               ? isDueDateOverdue(task.dueDate)
                                 ? 'danger'
@@ -493,7 +579,7 @@ export function ProjectsListPage() {
                             return (
                               <Link
                                 key={task.cardId}
-                                to={`/boards/${task.boardId}`}
+                                to={`/boards/${task.boardId}?project=${task.projectId}`}
                                 className="block rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
                               >
                                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -598,10 +684,12 @@ export function ProjectsListPage() {
                 ? 'Try a different search term.'
                 : selectedMember
                   ? 'Choose another member or clear the filter to see all projects.'
-                  : 'Create your first project to get started organizing your work.'
+                  : canManageProjects
+                    ? 'Create your first project to get started organizing your work.'
+                    : 'No projects are visible for this account yet.'
             }
-            actionLabel={!search && !selectedMember ? 'Create project' : undefined}
-            onAction={!search && !selectedMember ? () => setIsCreateOpen(true) : undefined}
+            actionLabel={!search && !selectedMember && canManageProjects ? 'Create project' : undefined}
+            onAction={!search && !selectedMember && canManageProjects ? () => setIsCreateOpen(true) : undefined}
           />
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -611,30 +699,35 @@ export function ProjectsListPage() {
                 project={project}
                 onEdit={(nextProject) => void handleOpenEdit(nextProject)}
                 onDelete={handleDelete}
+                canManage={canManageProjects}
               />
             ))}
           </div>
         )}
       </div>
 
-      <ProjectFormModal
-        open={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        onSubmit={handleCreate}
-        title="Create project"
-        submitLabel="Create"
-        isSubmitting={isSubmitting}
-      />
+      {canManageProjects ? (
+        <>
+          <ProjectFormModal
+            open={isCreateOpen}
+            onClose={() => setIsCreateOpen(false)}
+            onSubmit={handleCreate}
+            title="Create project"
+            submitLabel="Create"
+            isSubmitting={isSubmitting}
+          />
 
-      <ProjectFormModal
-        open={editProject !== null}
-        onClose={() => setEditProject(null)}
-        onSubmit={handleUpdate}
-        initial={editProject}
-        title="Edit project"
-        submitLabel="Save changes"
-        isSubmitting={isSubmitting}
-      />
+          <ProjectFormModal
+            open={editProject !== null}
+            onClose={() => setEditProject(null)}
+            onSubmit={handleUpdate}
+            initial={editProject}
+            title="Edit project"
+            submitLabel="Save changes"
+            isSubmitting={isSubmitting}
+          />
+        </>
+      ) : null}
     </>
   )
 }

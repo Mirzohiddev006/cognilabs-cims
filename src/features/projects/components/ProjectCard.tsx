@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { Badge } from '../../../shared/ui/badge'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ProjectRecord } from '../../../shared/api/services/projects.service'
@@ -10,9 +11,14 @@ type ProjectCardProps = {
   project: ProjectRecord
   onEdit: (project: ProjectRecord) => void
   onDelete: (project: ProjectRecord) => void
+  canManage?: boolean
 }
 
-export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
+export function ProjectCard({ project, onEdit, onDelete, canManage = true }: ProjectCardProps) {
+  const { t } = useLocale()
+  const boardCount = project.boards_count ?? 0
+  const memberCount = (project.members ?? []).length
+
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.24)] hover:border-[var(--border-hover)]">
       {/* Image / placeholder */}
@@ -40,15 +46,17 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--surface-elevated)]/60 to-transparent" />
 
         {/* Actions menu overlay */}
-        <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
-          <ActionsMenu
-            label="Project actions"
-            items={[
-              { label: 'Edit project', onSelect: () => onEdit(project) },
-              { label: 'Delete project', tone: 'danger', onSelect: () => onDelete(project) },
-            ]}
-          />
-        </div>
+        {canManage ? (
+          <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
+            <ActionsMenu
+              label={t('projects.project_actions', 'Project actions')}
+              items={[
+                { label: t('projects.edit_project_action', 'Edit project'), onSelect: () => onEdit(project) },
+                { label: t('projects.delete_project_action', 'Delete project'), tone: 'danger', onSelect: () => onDelete(project) },
+              ]}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* Content */}
@@ -87,11 +95,15 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
         {/* Stats row */}
         <div className="flex items-center gap-2 flex-wrap">
           <Badge variant="secondary" size="sm">
-            {project.boards_count ?? 0} board{(project.boards_count ?? 0) !== 1 ? 's' : ''}
+            {boardCount === 1
+              ? t('projects.board_count_short', '{count} board', { count: boardCount })
+              : t('projects.board_count_plural', '{count} boards', { count: boardCount })}
           </Badge>
-          {(project.members ?? []).length > 0 && (
+          {memberCount > 0 && (
             <Badge variant="outline" size="sm">
-              {project.members.length} member{project.members.length !== 1 ? 's' : ''}
+              {memberCount === 1
+                ? t('projects.member_count_short', '{count} member', { count: memberCount })
+                : t('projects.member_count_plural', '{count} members', { count: memberCount })}
             </Badge>
           )}
         </div>
@@ -105,7 +117,9 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
                   name={project.created_by.name}
                   surname={project.created_by.surname}
                   size="xs"
-                  title={`Created by ${project.created_by.name} ${project.created_by.surname}`}
+                  title={t('projects.created_by_person', 'Created by {name}', {
+                    name: `${project.created_by.name} ${project.created_by.surname}`,
+                  })}
                 />
                 <span className="text-[10px] text-[var(--muted)] truncate max-w-[100px]">
                   {project.created_by.name}
@@ -129,7 +143,7 @@ export function ProjectCard({ project, onEdit, onDelete }: ProjectCardProps) {
       <Link
         to={`/projects/${project.id}`}
         className="absolute inset-0"
-        aria-label={`Open ${project.project_name}`}
+        aria-label={t('projects.open_project', 'Open {name}', { name: project.project_name })}
         tabIndex={-1}
       />
     </div>

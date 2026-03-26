@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { Badge } from '../../../shared/ui/badge'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { BoardRecord } from '../../../shared/api/services/projects.service'
@@ -9,9 +10,13 @@ type BoardCardProps = {
   board: BoardRecord
   onEdit: (board: BoardRecord) => void
   onArchive: (board: BoardRecord) => void
+  canManage?: boolean
 }
 
-export function BoardCard({ board, onEdit, onArchive }: BoardCardProps) {
+export function BoardCard({ board, onEdit, onArchive, canManage = true }: BoardCardProps) {
+  const { t } = useLocale()
+  const boardUrl = `/boards/${board.id}?project=${board.project_id}`
+
   return (
     <div className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
       {/* Gradient accent top */}
@@ -33,7 +38,7 @@ export function BoardCard({ board, onEdit, onArchive }: BoardCardProps) {
               <p className="truncate text-sm font-semibold text-[var(--muted)]">{board.name}</p>
             ) : (
               <Link
-                to={`/boards/${board.id}`}
+                to={boardUrl}
                 className="block truncate text-sm font-semibold text-[var(--foreground)] hover:text-white transition-colors"
               >
                 {board.name}
@@ -49,20 +54,24 @@ export function BoardCard({ board, onEdit, onArchive }: BoardCardProps) {
         <div className="shrink-0 flex items-center gap-2">
           {board.is_archived && (
             <Badge variant="secondary" size="sm" dot>
-              Archived
+              {t('projects.archived', 'Archived')}
             </Badge>
           )}
-          <ActionsMenu
-            label="Board actions"
-            items={[
-              ...(board.is_archived ? [] : [{ label: 'Edit board', onSelect: () => onEdit(board) }]),
-              {
-                label: board.is_archived ? 'Already archived' : 'Archive board',
-                tone: 'danger' as const,
-                onSelect: () => !board.is_archived && onArchive(board),
-              },
-            ]}
-          />
+          {canManage ? (
+            <ActionsMenu
+              label={t('projects.board_actions', 'Board actions')}
+              items={[
+                ...(board.is_archived ? [] : [{ label: t('projects.edit_board_action', 'Edit board'), onSelect: () => onEdit(board) }]),
+                {
+                  label: board.is_archived
+                    ? t('projects.already_archived', 'Already archived')
+                    : t('projects.archive_board_action', 'Archive board'),
+                  tone: 'danger' as const,
+                  onSelect: () => !board.is_archived && onArchive(board),
+                },
+              ]}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -86,9 +95,9 @@ export function BoardCard({ board, onEdit, onArchive }: BoardCardProps) {
       {/* Navigate overlay for non-archived */}
       {!board.is_archived && (
         <Link
-          to={`/boards/${board.id}`}
+          to={boardUrl}
           className="absolute inset-0"
-          aria-label={`Open ${board.name}`}
+          aria-label={t('projects.open_board', 'Open {name}', { name: board.name })}
           tabIndex={-1}
         />
       )}

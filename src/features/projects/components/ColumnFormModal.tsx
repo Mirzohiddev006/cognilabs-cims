@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { cn } from '../../../shared/lib/cn'
 import type { ColumnRecord } from '../../../shared/api/services/projects.service'
-import { COLUMN_COLORS } from '../lib/format'
+import { getColumnColors } from '../lib/format'
 
 type ColumnFormValues = {
   name: string
@@ -21,8 +22,6 @@ type ColumnFormModalProps = {
   isSubmitting: boolean
 }
 
-const empty: ColumnFormValues = { name: '', color: COLUMN_COLORS[0].value }
-
 export function ColumnFormModal({
   open,
   onClose,
@@ -32,26 +31,32 @@ export function ColumnFormModal({
   submitLabel,
   isSubmitting,
 }: ColumnFormModalProps) {
-  const [values, setValues] = useState<ColumnFormValues>(empty)
+  const { t } = useLocale()
+  const columnColors = useMemo(() => getColumnColors(), [])
+  const defaultColor = columnColors[0]?.value ?? '#3b82f6'
+
+  const [values, setValues] = useState<ColumnFormValues>({ name: '', color: defaultColor })
   const [nameError, setNameError] = useState('')
 
   useEffect(() => {
     if (open) {
       setValues(
         initial
-          ? { name: initial.name, color: initial.color ?? COLUMN_COLORS[0].value }
-          : empty,
+          ? { name: initial.name, color: initial.color ?? defaultColor }
+          : { name: '', color: defaultColor },
       )
       setNameError('')
     }
-  }, [open, initial])
+  }, [defaultColor, open, initial])
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+
     if (!values.name.trim()) {
-      setNameError('Column name is required')
+      setNameError(t('projects.column_name_required', 'Column name is required'))
       return
     }
+
     await onSubmit({ name: values.name.trim(), color: values.color })
   }
 
@@ -60,11 +65,11 @@ export function ColumnFormModal({
       open={open}
       onClose={onClose}
       title={title}
-      eyebrow="Columns"
-      footer={
+      eyebrow={t('projects.form_eyebrow_columns', 'Columns')}
+      footer={(
         <>
           <Button variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('projects.cancel', 'Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -75,47 +80,47 @@ export function ColumnFormModal({
             {submitLabel}
           </Button>
         </>
-      }
+      )}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Column Name <span className="text-red-400">*</span>
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.column_name', 'Column Name')} <span className="text-red-400">*</span>
           </label>
           <Input
             value={values.name}
-            onChange={(e) => {
-              setValues((p) => ({ ...p, name: e.target.value }))
+            onChange={(event) => {
+              setValues((prev) => ({ ...prev, name: event.target.value }))
               setNameError('')
             }}
-            placeholder="To Do, In Progress, Done…"
+            placeholder={t('projects.column_name_placeholder', 'To Do, In Progress, Done...')}
             autoFocus
           />
-          {nameError && <p className="text-xs text-[var(--danger-text)]">{nameError}</p>}
+          {nameError ? <p className="text-xs text-[var(--danger-text)]">{nameError}</p> : null}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Accent Color
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.accent_color', 'Accent Color')}
           </label>
           <div className="flex flex-wrap gap-2">
-            {COLUMN_COLORS.map((c) => (
+            {columnColors.map((colorOption) => (
               <button
-                key={c.value}
+                key={colorOption.value}
                 type="button"
-                title={c.label}
-                onClick={() => setValues((p) => ({ ...p, color: c.value }))}
+                title={colorOption.label}
+                onClick={() => setValues((prev) => ({ ...prev, color: colorOption.value }))}
                 className={cn(
                   'h-8 w-8 rounded-full border-2 transition-transform hover:scale-110',
-                  values.color === c.value
-                    ? 'border-white scale-110'
+                  values.color === colorOption.value
+                    ? 'scale-110 border-white'
                     : 'border-transparent',
                 )}
-                style={{ background: c.value }}
+                style={{ background: colorOption.value }}
               />
             ))}
           </div>
-          {/* Preview strip */}
+
           <div
             className="h-1 w-full rounded-full opacity-70"
             style={{ background: values.color }}

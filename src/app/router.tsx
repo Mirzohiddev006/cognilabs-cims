@@ -21,6 +21,7 @@ import { FaultsMemberDetailPage } from '../features/faults/pages/FaultsMemberDet
 import { FaultsPage } from '../features/faults/pages/FaultsPage'
 import { MemberDashboardPage } from '../features/member/pages/MemberDashboardPage'
 import { NotFoundPage } from '../features/errors/pages/NotFoundPage'
+import { MemberUpdatesDetailPage } from '../features/updateTracking/pages/MemberUpdatesDetailPage'
 import { UpdateTrackingPage } from '../features/updateTracking/pages/UpdateTrackingPage'
 import { ProjectsListPage } from '../features/projects/pages/ProjectsListPage'
 import { ProjectDetailPage } from '../features/projects/pages/ProjectDetailPage'
@@ -169,9 +170,17 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: 'updates/detail',
+                element: (
+                  <ProtectedRoute permissionKey="update_list" audience="member">
+                    <MemberUpdatesDetailPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
                 path: 'projects',
                 element: (
-                  <ProtectedRoute permissionKey="projects">
+                  <ProtectedRoute>
                     <ProjectsListPage />
                   </ProtectedRoute>
                 ),
@@ -179,7 +188,7 @@ export const router = createBrowserRouter([
               {
                 path: 'projects/:projectId',
                 element: (
-                  <ProtectedRoute permissionKey="projects">
+                  <ProtectedRoute>
                     <ProjectDetailPage />
                   </ProtectedRoute>
                 ),
@@ -187,7 +196,7 @@ export const router = createBrowserRouter([
               {
                 path: 'boards/:boardId',
                 element: (
-                  <ProtectedRoute permissionKey="projects">
+                  <ProtectedRoute>
                     <BoardDetailPage />
                   </ProtectedRoute>
                 ),

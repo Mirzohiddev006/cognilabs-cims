@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { cn } from '../../../shared/lib/cn'
 import { Input } from '../../../shared/ui/input'
 import type { UserSummary } from '../../../shared/api/services/projects.service'
@@ -12,6 +13,7 @@ type MemberSelectorProps = {
 }
 
 export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: MemberSelectorProps) {
+  const { t } = useLocale()
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -59,7 +61,7 @@ export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: Me
                   type="button"
                   onClick={() => remove(user.id)}
                   className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-                  aria-label={`Remove ${user.name}`}
+                  aria-label={t('projects.remove_member', 'Remove {name}', { name: user.name })}
                 >
                   <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
@@ -75,7 +77,7 @@ export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: Me
       <Input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search members..."
+        placeholder={t('projects.search_members', 'Search members...')}
         disabled={disabled}
         className="min-h-9 text-sm"
       />
@@ -83,7 +85,9 @@ export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: Me
       {/* User list */}
       <div className="max-h-48 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--input-surface)]">
         {filtered.length === 0 ? (
-          <p className="px-4 py-6 text-center text-xs text-[var(--muted)]">No users found</p>
+          <p className="px-4 py-6 text-center text-xs text-[var(--muted)]">
+            {t('projects.no_users_found', 'No users found')}
+          </p>
         ) : (
           filtered.map((user) => {
             const selected = selectedIds.includes(user.id)

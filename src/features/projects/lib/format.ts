@@ -1,4 +1,5 @@
 import type { CardPriority } from '../../../shared/api/services/projects.service'
+import { getStoredLocale, translateCurrent } from '../../../shared/i18n/translations'
 
 function parseProjectDate(value?: string | null): Date | null {
   if (typeof value !== 'string') {
@@ -20,10 +21,10 @@ export function formatProjectDate(date?: string | null): string {
   const parsed = parseProjectDate(date)
 
   if (!parsed) {
-    return 'Unknown date'
+    return translateCurrent('projects.unknown_date', 'Unknown date')
   }
 
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(getStoredLocale(), {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
@@ -43,13 +44,13 @@ export function formatRelativeDate(date?: string | null): string {
   const diffMs = now - then
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays < 0) return 'Upcoming'
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  if (diffDays < 7) return `${diffDays}d ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`
-  return `${Math.floor(diffDays / 365)}y ago`
+  if (diffDays < 0) return translateCurrent('projects.relative.upcoming', 'Upcoming')
+  if (diffDays === 0) return translateCurrent('projects.relative.today', 'Today')
+  if (diffDays === 1) return translateCurrent('projects.relative.yesterday', 'Yesterday')
+  if (diffDays < 7) return translateCurrent('projects.relative.days_ago', '{count}d ago', { count: diffDays })
+  if (diffDays < 30) return translateCurrent('projects.relative.weeks_ago', '{count}w ago', { count: Math.floor(diffDays / 7) })
+  if (diffDays < 365) return translateCurrent('projects.relative.months_ago', '{count}mo ago', { count: Math.floor(diffDays / 30) })
+  return translateCurrent('projects.relative.years_ago', '{count}y ago', { count: Math.floor(diffDays / 365) })
 }
 
 /** Check if a due date is overdue */
@@ -70,28 +71,35 @@ export function isDueDateSoon(dueDate?: string | null): boolean {
   return diff > 0 && diff < 2 * 24 * 60 * 60 * 1000
 }
 
+export type PriorityDisplayConfig = {
+  label: string
+  color: string
+  badgeVariant: 'danger' | 'warning' | 'blue' | 'secondary'
+}
+
 /** Priority display config */
-export const PRIORITY_CONFIG: Record<
-  CardPriority,
-  { label: string; color: string; badgeVariant: 'danger' | 'warning' | 'blue' | 'secondary' }
-> = {
-  urgent: { label: 'Urgent', color: '#f87171', badgeVariant: 'danger' },
-  high:   { label: 'High',   color: '#fb923c', badgeVariant: 'warning' },
-  medium: { label: 'Medium', color: '#60a5fa', badgeVariant: 'blue' },
-  low:    { label: 'Low',    color: '#71717a', badgeVariant: 'secondary' },
+export function getPriorityConfig(): Record<CardPriority, PriorityDisplayConfig> {
+  return {
+    urgent: { label: translateCurrent('projects.priority.urgent', 'Urgent'), color: '#f87171', badgeVariant: 'danger' },
+    high: { label: translateCurrent('projects.priority.high', 'High'), color: '#fb923c', badgeVariant: 'warning' },
+    medium: { label: translateCurrent('projects.priority.medium', 'Medium'), color: '#60a5fa', badgeVariant: 'blue' },
+    low: { label: translateCurrent('projects.priority.low', 'Low'), color: '#71717a', badgeVariant: 'secondary' },
+  }
 }
 
 /** Column preset colours */
-export const COLUMN_COLORS: { label: string; value: string }[] = [
-  { label: 'Blue',    value: '#3b82f6' },
-  { label: 'Violet',  value: '#8b5cf6' },
-  { label: 'Green',   value: '#22c55e' },
-  { label: 'Amber',   value: '#f59e0b' },
-  { label: 'Red',     value: '#ef4444' },
-  { label: 'Pink',    value: '#ec4899' },
-  { label: 'Cyan',    value: '#06b6d4' },
-  { label: 'Slate',   value: '#64748b' },
-]
+export function getColumnColors(): { label: string; value: string }[] {
+  return [
+    { label: translateCurrent('projects.color.blue', 'Blue'), value: '#3b82f6' },
+    { label: translateCurrent('projects.color.violet', 'Violet'), value: '#8b5cf6' },
+    { label: translateCurrent('projects.color.green', 'Green'), value: '#22c55e' },
+    { label: translateCurrent('projects.color.amber', 'Amber'), value: '#f59e0b' },
+    { label: translateCurrent('projects.color.red', 'Red'), value: '#ef4444' },
+    { label: translateCurrent('projects.color.pink', 'Pink'), value: '#ec4899' },
+    { label: translateCurrent('projects.color.cyan', 'Cyan'), value: '#06b6d4' },
+    { label: translateCurrent('projects.color.slate', 'Slate'), value: '#64748b' },
+  ]
+}
 
 /** Get initials from name + surname */
 export function getInitials(name?: string | null, surname?: string | null): string {
@@ -134,8 +142,8 @@ export function getSnoozePresets(): { label: string; date: Date }[] {
   nextWeek.setHours(9, 0, 0, 0)
 
   return [
-    { label: 'Later today', date: laterToday },
-    { label: 'Tomorrow',    date: tomorrow },
-    { label: 'Next week',   date: nextWeek },
+    { label: translateCurrent('projects.snooze.later_today', 'Later today'), date: laterToday },
+    { label: translateCurrent('projects.snooze.tomorrow', 'Tomorrow'), date: tomorrow },
+    { label: translateCurrent('projects.snooze.next_week', 'Next week'), date: nextWeek },
   ]
 }

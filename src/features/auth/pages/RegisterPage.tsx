@@ -1,5 +1,6 @@
 import { startTransition, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import type { RegisterPayload } from '../../../shared/api/services/auth.service'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
@@ -22,9 +23,8 @@ const initialValues: RegisterPayload = {
   role: 'Customer',
 }
 
-const roleOptions = ['Customer', 'SalesManager', 'Finance', 'CEO']
-
 export function RegisterPage() {
+  const { t } = useLocale()
   const navigate = useNavigate()
   const [values, setValues] = useState<RegisterPayload>(initialValues)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -54,27 +54,34 @@ export function RegisterPage() {
       startTransition(() =>
         navigate(`/auth/verify-email?email=${encodeURIComponent(values.email)}`, {
           replace: true,
-          state: {
-            statusMessage: 'Registration successful. Please enter the code sent to your email.',
+            state: {
+            statusMessage: t('auth.register.success', 'Registration successful. Please enter the code sent to your email.'),
           },
         }),
       )
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Registration failed.'))
+      setSubmitError(getErrorMessage(error, t('auth.register.failed', 'Registration failed.')))
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const roleOptions = [
+    { value: 'Customer', label: t('auth.role.customer', 'Customer') },
+    { value: 'SalesManager', label: t('auth.role.sales_manager', 'Sales Manager') },
+    { value: 'Finance', label: t('auth.role.finance', 'Finance') },
+    { value: 'CEO', label: t('auth.role.ceo', 'CEO') },
+  ]
+
   return (
     <AuthFormShell
-      eyebrow="Auth / Register"
-      title="Create new account"
-      description="Register with your email, company code, and role to join the workspace."
+      eyebrow={t('auth.register.eyebrow', 'Auth / Register')}
+      title={t('auth.register.title', 'Create new account')}
+      description={t('auth.register.description', 'Register with your email, company code, and role to join the workspace.')}
       footerLinks={[
-        { label: 'Login', to: '/auth/login' },
-        { label: 'Verify email', to: '/auth/verify-email' },
+        { label: t('auth.login_button', 'Login'), to: '/auth/login' },
+        { label: t('auth.verify_email', 'Verify email'), to: '/auth/verify-email' },
       ]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
@@ -82,7 +89,7 @@ export function RegisterPage() {
 
         <div className="grid gap-5 md:grid-cols-2">
           <AuthField
-            label="Email"
+            label={t('auth.email', 'Email')}
             name="email"
             type="email"
             autoComplete="email"
@@ -92,7 +99,7 @@ export function RegisterPage() {
             onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
           />
           <AuthField
-            label="Company code"
+            label={t('auth.register.company_code', 'Company code')}
             name="company_code"
             placeholder="oddiy"
             value={values.company_code}
@@ -103,7 +110,7 @@ export function RegisterPage() {
 
         <div className="grid gap-5 md:grid-cols-2">
           <AuthField
-            label="Name"
+            label={t('auth.register.name', 'Name')}
             name="name"
             autoComplete="given-name"
             placeholder="Ibrohim"
@@ -112,7 +119,7 @@ export function RegisterPage() {
             onChange={(event) => setValues((current) => ({ ...current, name: event.target.value }))}
           />
           <AuthField
-            label="Surname"
+            label={t('auth.register.surname', 'Surname')}
             name="surname"
             autoComplete="family-name"
             placeholder="Ibrohimjonov"
@@ -123,10 +130,10 @@ export function RegisterPage() {
         </div>
 
         <PasswordField
-          label="Password"
+          label={t('auth.password', 'Password')}
           name="password"
           autoComplete="new-password"
-          placeholder="Minimum 6 characters"
+          placeholder={t('auth.register.password_placeholder', 'Minimum 6 characters')}
           value={values.password}
           error={errors.password}
           onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
@@ -134,35 +141,35 @@ export function RegisterPage() {
 
         <div className="grid gap-5 md:grid-cols-3">
           <AuthField
-            label="Telegram ID"
+            label={t('auth.register.telegram_id', 'Telegram ID')}
             name="telegram_id"
-            placeholder="@username or ID"
+            placeholder={t('auth.register.telegram_placeholder', '@username or ID')}
             value={values.telegram_id}
             error={errors.telegram_id}
             onChange={(event) => setValues((current) => ({ ...current, telegram_id: event.target.value }))}
           />
           <AuthField
-            label="Job title"
+            label={t('auth.register.job_title', 'Job title')}
             name="job_title"
-            placeholder="Sales Manager"
+            placeholder={t('auth.register.job_title_placeholder', 'Sales Manager')}
             value={values.job_title ?? ''}
             error={errors.job_title}
             onChange={(event) => setValues((current) => ({ ...current, job_title: event.target.value }))}
           />
 
           <label className="grid gap-2">
-            <span className="text-xs font-bold text-white tracking-tight">Role</span>
+            <span className="text-xs font-bold text-white tracking-tight">{t('auth.register.role', 'Role')}</span>
             <SelectField
               value={values.role}
               onValueChange={(value) => setValues((current) => ({ ...current, role: value }))}
-              options={roleOptions.map((role) => ({ value: role, label: role }))}
+              options={roleOptions}
               className="min-h-12 rounded-xl px-4"
             />
           </label>
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Processing...' : 'Register'}
+          {isSubmitting ? t('auth.register.processing', 'Processing...') : t('auth.register.button', 'Register')}
         </Button>
       </form>
     </AuthFormShell>

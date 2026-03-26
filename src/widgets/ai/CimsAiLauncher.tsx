@@ -46,10 +46,6 @@ export function CimsAiLauncher() {
     }
   }, [isOpen])
 
-  useEffect(() => {
-    setIsOpen(false)
-  }, [location.pathname])
-
   if (!canUseAi || isAiPage) {
     return null
   }
@@ -77,7 +73,7 @@ export function CimsAiLauncher() {
             : 'pointer-events-none translate-y-3 opacity-0',
         )}
       >
-        <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(7,11,18,0.96),rgba(7,11,18,0.99))] shadow-[0_32px_140px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+        <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] shadow-[var(--shadow-xl)] backdrop-blur-2xl">
           <div className="h-[min(84vh,780px)]">
             <CimsAiWorkspace mode="dialog" />
           </div>

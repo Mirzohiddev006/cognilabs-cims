@@ -62,7 +62,7 @@ export function DataTable<T>({
   rows,
   getRowKey,
   emptyState,
-  pageSize = 10,
+  pageSize = 75,
   zebra = false,
   compact = false,
   onRowClick,

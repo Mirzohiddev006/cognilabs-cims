@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
@@ -31,6 +32,7 @@ export function BoardFormModal({
   submitLabel,
   isSubmitting,
 }: BoardFormModalProps) {
+  const { t } = useLocale()
   const [values, setValues] = useState<BoardFormValues>(empty)
   const [nameError, setNameError] = useState('')
 
@@ -41,17 +43,22 @@ export function BoardFormModal({
     }
   }, [open, initial])
 
-  function set<K extends keyof BoardFormValues>(key: K, val: string) {
-    setValues((prev) => ({ ...prev, [key]: val }))
-    if (key === 'name') setNameError('')
+  function set<K extends keyof BoardFormValues>(key: K, value: string) {
+    setValues((prev) => ({ ...prev, [key]: value }))
+
+    if (key === 'name') {
+      setNameError('')
+    }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+
     if (!values.name.trim()) {
-      setNameError('Board name is required')
+      setNameError(t('projects.board_name_required', 'Board name is required'))
       return
     }
+
     await onSubmit({
       name: values.name.trim(),
       description: values.description.trim() || undefined as unknown as string,
@@ -63,11 +70,11 @@ export function BoardFormModal({
       open={open}
       onClose={onClose}
       title={title}
-      eyebrow="Boards"
-      footer={
+      eyebrow={t('projects.form_eyebrow_boards', 'Boards')}
+      footer={(
         <>
           <Button variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('projects.cancel', 'Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -78,30 +85,30 @@ export function BoardFormModal({
             {submitLabel}
           </Button>
         </>
-      }
+      )}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Board Name <span className="text-red-400">*</span>
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.board_name', 'Board Name')} <span className="text-red-400">*</span>
           </label>
           <Input
             value={values.name}
-            onChange={(e) => set('name', e.target.value)}
-            placeholder="Sprint backlog, Design review…"
+            onChange={(event) => set('name', event.target.value)}
+            placeholder={t('projects.board_name_placeholder', 'Sprint backlog, Design review...')}
             autoFocus
           />
-          {nameError && <p className="text-xs text-[var(--danger-text)]">{nameError}</p>}
+          {nameError ? <p className="text-xs text-[var(--danger-text)]">{nameError}</p> : null}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Description
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.description', 'Description')}
           </label>
           <Textarea
             value={values.description}
-            onChange={(e) => set('description', e.target.value)}
-            placeholder="What is this board for?"
+            onChange={(event) => set('description', event.target.value)}
+            placeholder={t('projects.board_description_placeholder', 'What is this board for?')}
             rows={3}
           />
         </div>

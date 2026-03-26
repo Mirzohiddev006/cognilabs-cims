@@ -1,5 +1,6 @@
 import { startTransition, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -10,6 +11,7 @@ import { extractFieldErrors, getErrorMessage } from '../lib/formErrors'
 import { validateVerification } from '../lib/validators'
 
 export function VerifyEmailPage() {
+  const { t } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const { acceptTokens } = useAuth()
@@ -67,7 +69,7 @@ export function VerifyEmailPage() {
       startTransition(() => navigate('/', { replace: true }))
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Email verification failed.'))
+      setSubmitError(getErrorMessage(error, t('auth.verify.failed', 'Email verification failed.')))
     } finally {
       setIsSubmitting(false)
     }
@@ -89,10 +91,10 @@ export function VerifyEmailPage() {
 
     try {
       const response = await authService.resendVerification(values.email)
-      setStatusMessage(response.message || 'Verification code has been resent.')
+      setStatusMessage(response.message || t('auth.verify.resent', 'Verification code has been resent.'))
       setTimeLeft(1800)
     } catch (error) {
-      setSubmitError(getErrorMessage(error, 'Failed to resend code.'))
+      setSubmitError(getErrorMessage(error, t('auth.verify.resend_failed', 'Failed to resend code.')))
     } finally {
       setIsResending(false)
     }
@@ -100,24 +102,24 @@ export function VerifyEmailPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Email Verification"
-      title="Verify your email"
-      description="We sent a verification code to your email. Enter it below before the timer expires."
-      footerLinks={[{ label: 'Login', to: '/auth/login' }]}
+      eyebrow={t('auth.verify.eyebrow', 'Email Verification')}
+      title={t('auth.verify.title', 'Verify your email')}
+      description={t('auth.verify.description', 'We sent a verification code to your email. Enter it below before the timer expires.')}
+      footerLinks={[{ label: t('auth.verify.login_link', 'Login'), to: '/auth/login' }]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
         <AuthFeedback tone="success" message={statusMessage} />
         <AuthFeedback tone="error" message={submitError} />
 
         <div className="flex items-center justify-center gap-2 text-xs text-[var(--muted)]">
-          <span>Code expires in</span>
+          <span>{t('auth.verify.expires_in', 'Code expires in')}</span>
           <span className="rounded-md border border-[var(--border)] bg-[var(--muted-surface)] px-2.5 py-1 font-mono text-[var(--muted-strong)]">
-            {isExpired ? 'Expired' : `${minutes}:${seconds}`}
+            {isExpired ? t('auth.verify.expired', 'Expired') : `${minutes}:${seconds}`}
           </span>
         </div>
 
         <AuthField
-          label="Email"
+          label={t('auth.email', 'Email')}
           name="email"
           type="email"
           placeholder="user@example.com"
@@ -127,9 +129,9 @@ export function VerifyEmailPage() {
         />
 
         <AuthField
-          label="Verification code"
+          label={t('auth.verify.code_label', 'Verification code')}
           name="code"
-          placeholder="Code from email"
+          placeholder={t('auth.reset.code_placeholder', 'Code from email')}
           value={values.code}
           error={errors.code}
           className="min-h-12 text-center font-mono tracking-[0.35em] uppercase"
@@ -138,15 +140,15 @@ export function VerifyEmailPage() {
 
         <div className="flex flex-wrap gap-3">
           <Button size="lg" type="submit" disabled={isSubmitting || isExpired} className="flex-1">
-            {isSubmitting ? 'Verifying...' : 'Verify email'}
+            {isSubmitting ? t('auth.verify.verifying', 'Verifying...') : t('auth.verify.button', 'Verify email')}
           </Button>
           <Button type="button" variant="secondary" disabled={isResending} onClick={handleResend} className="flex-1">
-            {isResending ? 'Resending...' : 'Resend code'}
+            {isResending ? t('auth.verify.resending', 'Resending...') : t('auth.verify.resend', 'Resend code')}
           </Button>
         </div>
 
         {isExpired ? (
-          <AuthFeedback tone="info" message="Your verification code has expired. Please request a new one." />
+          <AuthFeedback tone="info" message={t('auth.verify.expired_message', 'Your verification code has expired. Please request a new one.')} />
         ) : null}
       </form>
     </AuthFormShell>

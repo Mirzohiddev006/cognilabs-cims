@@ -62,6 +62,57 @@ function createMemberUser(user: CurrentUser): CeoUserRecord {
   }
 }
 
+type MemberDashboardData = {
+  detail: ReturnType<typeof buildEmployeeSalaryDetail>
+  stats: Awaited<ReturnType<typeof updateTrackingService.myStats>> | null
+  statsError: string | null
+}
+
+const memberDashboardCache = new Map<string, MemberDashboardData>()
+
+function getMemberDashboardCacheKey(userId: number, year: number, month: number) {
+  return `${userId}:${year}:${month}`
+}
+
+async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number, force = false): Promise<MemberDashboardData> {
+  const cacheKey = getMemberDashboardCacheKey(memberUser.id, year, month)
+
+  if (!force) {
+    const cached = memberDashboardCache.get(cacheKey)
+
+    if (cached) {
+      return cached
+    }
+  }
+
+  const [estimateResult, updatesResult, calendarResult, statsResult] = await Promise.allSettled([
+    membersService.mySalaryEstimate(year, month),
+    membersService.updatesStatistics({ year, month, employeeIds: [memberUser.id] }),
+    updateTrackingService.employeeMonthlyUpdates(year, month, memberUser.id),
+    updateTrackingService.myStats(),
+  ])
+
+  const result: MemberDashboardData = {
+    detail: buildEmployeeSalaryDetail({
+      report: buildReportFromUser(memberUser),
+      user: memberUser,
+      estimatePayload: estimateResult.status === 'fulfilled' ? estimateResult.value : null,
+      updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
+      calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
+      estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
+      updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
+      calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
+      year,
+      month,
+    }),
+    stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
+    statsError: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
+  }
+
+  memberDashboardCache.set(cacheKey, result)
+  return result
+}
+
 function ProgressBar({
   value,
   tone = 'violet',
@@ -121,6 +172,8 @@ export function MemberDashboardPage() {
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberUser = user ? createMemberUser(user) : null
+  const cacheKey = memberUser ? getMemberDashboardCacheKey(memberUser.id, year, month) : null
+  const cachedDashboardData = cacheKey ? memberDashboardCache.get(cacheKey) : undefined
 
   const dashboardQuery = useAsyncData(
     async () => {
@@ -128,34 +181,10 @@ export function MemberDashboardPage() {
         throw new Error('Authenticated member not found.')
       }
 
-      const [estimateResult, updatesResult, calendarResult, statsResult] = await Promise.allSettled([
-        membersService.salaryEstimate(memberUser.id, year, month),
-        membersService.updatesStatistics({ year, month, employeeIds: [memberUser.id] }),
-        updateTrackingService.employeeMonthlyUpdates(year, month, memberUser.id),
-        updateTrackingService.myStats(),
-      ])
-
-      const detail = buildEmployeeSalaryDetail({
-        report: buildReportFromUser(memberUser),
-        user: memberUser,
-        estimatePayload: estimateResult.status === 'fulfilled' ? estimateResult.value : null,
-        updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
-        calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
-        estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
-        updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
-        calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
-        year,
-        month,
-      })
-
-      return {
-        detail,
-        stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
-        statsError: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
-      }
+      return loadMemberDashboardData(memberUser, year, month)
     },
     [memberUser?.id, month, year],
-    { enabled: Boolean(memberUser) },
+    { enabled: Boolean(memberUser), initialData: cachedDashboardData },
   )
 
   const data = dashboardQuery.data
@@ -211,7 +240,12 @@ export function MemberDashboardPage() {
 
   async function handleRefresh() {
     try {
-      await dashboardQuery.refetch()
+      if (!memberUser) {
+        return
+      }
+
+      const nextData = await loadMemberDashboardData(memberUser, year, month, true)
+      dashboardQuery.setData(nextData)
       showToast({
         title: 'Member dashboard refreshed',
         description: `${memberUser?.name ?? 'Your'} dashboard synced for ${getMonthName(month)} ${year}.`,

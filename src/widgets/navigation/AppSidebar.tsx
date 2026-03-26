@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
+import { useLocale } from '../../app/hooks/useLocale'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
+import { authService } from '../../shared/api/services/auth.service'
 import { projectsService } from '../../shared/api/services/projects.service'
 import { env } from '../../shared/config/env'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
 import { getAccessibleNavigation } from '../../shared/lib/permissions'
+import { getApiErrorMessage } from '../../shared/lib/api-error'
+import { resolveMediaUrl } from '../../shared/lib/media-url'
+import { useToast } from '../../shared/toast/useToast'
 import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
 import { Dialog } from '../../shared/ui/dialog'
+import { Input } from '../../shared/ui/input'
 import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
@@ -27,18 +33,38 @@ function humanizePermissionKey(value: string) {
     .join(' ')
 }
 
+type MemberProfileFormState = {
+  name: string
+  surname: string
+  current_password: string
+  new_password: string
+}
+
 export function AppSidebar() {
   const location = useLocation()
   const { closeSidebar, isSidebarOpen } = useAppShell()
+  const { t } = useLocale()
   const { theme } = useTheme()
-  const { user } = useAuth()
+  const { showToast } = useToast()
+  const { user, hasPermission, refreshUser } = useAuth()
   const isLight = theme === 'light'
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
   const hasProjectsAccess = visibleNavigation.some((item) => item.to === '/projects')
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
+  const canManageProjects = hasPermission('projects')
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
+  const [isEditingMember, setIsEditingMember] = useState(false)
+  const [memberForm, setMemberForm] = useState<MemberProfileFormState>({
+    name: '',
+    surname: '',
+    current_password: '',
+    new_password: '',
+  })
+  const [isSavingMember, setIsSavingMember] = useState(false)
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(isProjectsRoute)
   const [projectsRefreshKey, setProjectsRefreshKey] = useState(0)
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
+  const profileImageInputRef = useRef<HTMLInputElement>(null)
   const activePermissions = useMemo(
     () =>
       Object.entries(user?.permissions ?? {})
@@ -46,15 +72,29 @@ export function AppSidebar() {
         .map(([key]) => humanizePermissionKey(key)),
     [user?.permissions],
   )
+  const getNavigationLabel = (path: string, fallback: string) => t(`nav.${path}.label`, fallback)
+  const getNavigationGroup = (path: string, fallback: string) => t(`nav.${path}.group`, fallback)
   const projectsQuery = useAsyncData(
-    () => projectsService.listProjects(),
-    [hasProjectsAccess, projectsRefreshKey],
-    { enabled: hasProjectsAccess },
+    () => (
+      canManageProjects || !user
+        ? projectsService.listProjects()
+        : projectsService.listUserOpenProjects(user.id)
+    ),
+    [hasProjectsAccess, projectsRefreshKey, canManageProjects, user?.id],
+    { enabled: hasProjectsAccess && Boolean(user) },
   )
   const sidebarProjects = useMemo(
     () => [...(projectsQuery.data?.projects ?? [])].sort((left, right) => left.project_name.localeCompare(right.project_name)),
     [projectsQuery.data?.projects],
   )
+  const resolvedUserProfileImage = resolveMediaUrl(user?.profile_image) ?? user?.profile_image ?? null
+  const profilePreviewUrl = useMemo(() => {
+    if (!profileImageFile) {
+      return resolvedUserProfileImage
+    }
+
+    return URL.createObjectURL(profileImageFile)
+  }, [profileImageFile, resolvedUserProfileImage])
 
   useEffect(() => {
     closeSidebar()
@@ -82,11 +122,29 @@ export function AppSidebar() {
     }
   }, [hasProjectsAccess])
 
+  useEffect(() => {
+    if (!profileImageFile || !profilePreviewUrl?.startsWith('blob:')) {
+      return
+    }
+
+    return () => {
+      URL.revokeObjectURL(profilePreviewUrl)
+    }
+  }, [profileImageFile, profilePreviewUrl])
+
   function openMemberDialog() {
     if (!user) {
       return
     }
 
+    setMemberForm({
+      name: user.name ?? '',
+      surname: user.surname ?? '',
+      current_password: '',
+      new_password: '',
+    })
+    setProfileImageFile(null)
+    setIsEditingMember(false)
     setIsMemberDialogOpen(true)
   }
 
@@ -94,11 +152,96 @@ export function AppSidebar() {
     setIsProjectsExpanded((current) => !current)
   }
 
+  function closeMemberDialog() {
+    setIsMemberDialogOpen(false)
+    setIsEditingMember(false)
+    setProfileImageFile(null)
+  }
+
+  function updateMemberForm<K extends keyof MemberProfileFormState>(key: K, value: MemberProfileFormState[K]) {
+    setMemberForm((current) => ({
+      ...current,
+      [key]: value,
+    }))
+  }
+
+  async function handleSaveMemberProfile() {
+    if (!user) {
+      return
+    }
+
+    const nextName = memberForm.name.trim()
+    const nextSurname = memberForm.surname.trim()
+    const currentPassword = memberForm.current_password.trim()
+    const newPassword = memberForm.new_password.trim()
+
+    if (!nextName || !nextSurname) {
+      showToast({
+        title: t('profile.update_failed'),
+        description: 'Name and surname are required.',
+        tone: 'error',
+      })
+      return
+    }
+
+    if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
+      showToast({
+        title: t('profile.update_failed'),
+        description: 'Current password and new password must both be filled to change password.',
+        tone: 'error',
+      })
+      return
+    }
+
+    const hasNameChange = nextName !== (user.name ?? '') || nextSurname !== (user.surname ?? '')
+    const hasPasswordChange = Boolean(currentPassword || newPassword)
+    const hasImageChange = profileImageFile instanceof File
+
+    if (!hasNameChange && !hasPasswordChange && !hasImageChange) {
+      showToast({
+        title: 'No profile changes',
+        description: 'Update a field, password, or photo before saving.',
+        tone: 'error',
+      })
+      return
+    }
+
+    setIsSavingMember(true)
+
+    try {
+      await authService.updateProfile({
+        name: nextName,
+        surname: nextSurname,
+        current_password: currentPassword || undefined,
+        new_password: newPassword || undefined,
+        image: profileImageFile,
+      })
+      await refreshUser()
+      setMemberForm({
+        name: nextName,
+        surname: nextSurname,
+        current_password: '',
+        new_password: '',
+      })
+      setProfileImageFile(null)
+      setIsEditingMember(false)
+      showToast({ title: t('profile.updated'), tone: 'success' })
+    } catch (error) {
+      showToast({
+        title: t('profile.update_failed'),
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsSavingMember(false)
+    }
+  }
+
   return (
     <>
       <button
         type="button"
-        aria-label="Close navigation overlay"
+        aria-label={t('shell.close_navigation_overlay')}
         onClick={closeSidebar}
         className={cn(
           'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] min-[961px]:hidden',
@@ -117,7 +260,7 @@ export function AppSidebar() {
               <button
                 type="button"
                 onClick={closeSidebar}
-                aria-label="Close navigation"
+                aria-label={t('shell.close_navigation')}
                 className="absolute right-0 top-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:hidden"
               >
                 <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -131,26 +274,29 @@ export function AppSidebar() {
                 </div>
                 <div className="min-w-0 overflow-hidden">
                   <h2 className="text-sm font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">Management System</p>
+                  <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mt-6 flex items-center justify-between px-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Menu</p>
-            <Badge>{visibleNavigation.length} modules</Badge>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">{t('shell.menu')}</p>
+            <Badge>{visibleNavigation.length} {t('shell.modules')}</Badge>
           </div>
 
           <nav className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
             {visibleNavigation.map((item) => {
+              const itemLabel = getNavigationLabel(item.to, item.label)
+              const itemGroup = getNavigationGroup(item.to, item.group)
+
               if (item.to === '/projects') {
                 return (
                   <div key={item.to} className="space-y-1">
                     <div className="relative">
                       <NavLink
                         to={item.to}
-                        aria-label={item.label}
+                        aria-label={itemLabel}
                         className={({ isActive }) =>
                           cn(
                             'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 pr-12 text-sm transition-all duration-200',
@@ -172,7 +318,7 @@ export function AppSidebar() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="truncate text-[13px] font-semibold">{item.label}</p>
+                            <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
                             {sidebarProjects.length > 0 ? (
                               <Badge
                                 size="sm"
@@ -183,14 +329,14 @@ export function AppSidebar() {
                               </Badge>
                             ) : null}
                           </div>
-                          <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
+                          <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
                         </div>
                       </NavLink>
 
                       <button
                         type="button"
                         onClick={toggleProjectsExpanded}
-                        aria-label={isProjectsExpanded ? 'Collapse projects' : 'Expand projects'}
+                        aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
                         className={cn(
                           'absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border transition-colors',
                           isProjectsRoute
@@ -229,11 +375,11 @@ export function AppSidebar() {
                             onClick={() => void projectsQuery.refetch()}
                             className="w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[11px] text-[var(--danger-text)] transition hover:bg-red-500/10"
                           >
-                            Failed to load projects. Retry
+                            {t('shell.failed_load_projects')} {t('shell.retry')}
                           </button>
                         ) : sidebarProjects.length === 0 ? (
                           <p className="rounded-lg px-3 py-2 text-[11px] text-[var(--muted)]">
-                            No projects yet.
+                            {t('shell.no_projects')}
                           </p>
                         ) : (
                           sidebarProjects.map((project) => {
@@ -274,7 +420,7 @@ export function AppSidebar() {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  aria-label={item.label}
+                  aria-label={itemLabel}
                   className={({ isActive }) =>
                     cn(
                       'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm transition-all duration-200',
@@ -294,8 +440,8 @@ export function AppSidebar() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold">{item.label}</p>
-                    <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{item.group}</p>
+                    <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
+                    <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
                   </div>
                 </NavLink>
               )
@@ -307,24 +453,32 @@ export function AppSidebar() {
             onClick={openMemberDialog}
             disabled={!user}
             className="mt-4 w-full rounded-[22px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
-            aria-label="Open member details"
+            aria-label={t('profile.member_details')}
           >
             <div className="flex items-start gap-3">
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30">
-                {getInitials(user?.name, user?.surname)}
-              </div>
+              {resolvedUserProfileImage ? (
+                <img
+                  src={resolvedUserProfileImage}
+                  alt={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
+                  className="h-12 w-12 shrink-0 rounded-full border border-blue-400/30 object-cover shadow-lg shadow-blue-900/30"
+                />
+              ) : (
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30">
+                  {getInitials(user?.name, user?.surname)}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <p
                   className="text-xs font-bold leading-4 text-(--shell-text-primary) wrap-anywhere"
-                  title={user ? `${user.name} ${user.surname}` : 'Authenticated user'}
+                  title={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
                 >
-                  {user ? `${user.name} ${user.surname}` : 'Authenticated user'}
+                  {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
                 </p>
                 <p
                   className="mt-1 truncate text-[10px] text-[var(--muted)]"
-                  title={user?.email ?? user?.role ?? 'User'}
+                  title={user?.email ?? user?.role ?? t('shell.user')}
                 >
-                  {user?.email ?? user?.role ?? 'User'}
+                  {user?.email ?? user?.role ?? t('shell.user')}
                 </p>
                 {user?.job_title?.trim() ? (
                   <p className={cn('mt-1 truncate text-[10px] font-medium', isLight ? 'text-blue-700/75' : 'text-blue-100/75')} title={user.job_title}>
@@ -339,47 +493,151 @@ export function AppSidebar() {
 
       <Dialog
         open={isMemberDialogOpen}
-        onClose={() => setIsMemberDialogOpen(false)}
-        title={user ? `${user.name} ${user.surname}` : 'Member details'}
-        description={user?.email ?? 'Current authenticated user'}
+        onClose={closeMemberDialog}
+        title={user ? `${user.name} ${user.surname}` : t('profile.member_details')}
+        description={user?.email ?? t('profile.current_user')}
         size="lg"
         footer={
-          <Button variant="secondary" onClick={() => setIsMemberDialogOpen(false)}>
-            Close
-          </Button>
+          isEditingMember ? (
+            <>
+              <Button variant="secondary" onClick={() => setIsEditingMember(false)} disabled={isSavingMember}>
+                {t('shell.cancel')}
+              </Button>
+              <Button onClick={() => void handleSaveMemberProfile()} disabled={isSavingMember}>
+                {isSavingMember ? `${t('shell.save_changes')}...` : t('shell.save_changes')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={closeMemberDialog}>
+                {t('shell.close')}
+              </Button>
+              <Button onClick={() => setIsEditingMember(true)}>
+                {t('shell.edit')}
+              </Button>
+            </>
+          )
         }
       >
+        <input
+          ref={profileImageInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => {
+            const file = event.target.files?.[0] ?? null
+            setProfileImageFile(file)
+            event.target.value = ''
+          }}
+        />
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+          <div className="flex min-w-0 items-center gap-4">
+            {profilePreviewUrl ? (
+              <img
+                src={profilePreviewUrl}
+                alt={user ? `${user.name} ${user.surname}` : t('profile.member_details')}
+                className="h-20 w-20 shrink-0 rounded-full border border-[var(--border)] object-cover"
+              />
+            ) : (
+              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-xl font-bold text-white shadow-lg shadow-blue-900/30">
+                {getInitials(user?.name, user?.surname)}
+              </div>
+            )}
+
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--foreground)]">
+                {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
+              </p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {profileImageFile ? profileImageFile.name : 'Upload a new profile photo if needed.'}
+              </p>
+            </div>
+          </div>
+
+          {isEditingMember ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => profileImageInputRef.current?.click()}
+              disabled={isSavingMember}
+            >
+              {resolvedUserProfileImage || profileImageFile ? 'Change photo' : 'Upload photo'}
+            </Button>
+          ) : null}
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Role</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? 'User'}</p>
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? t('shell.user')}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Company code</p>
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Job title</p>
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Email</p>
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Status</p>
+            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? 'Active' : 'Inactive'}</p>
+              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? t('profile.active') : t('profile.inactive')}</p>
             </div>
           </div>
+          {isEditingMember ? (
+            <>
+              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
+                <Input
+                  value={memberForm.name}
+                  onChange={(event) => updateMemberForm('name', event.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
+                <Input
+                  value={memberForm.surname}
+                  onChange={(event) => updateMemberForm('surname', event.target.value)}
+                  className="mt-2"
+                />
+              </div>
+              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Current password</p>
+                <Input
+                  type="password"
+                  value={memberForm.current_password}
+                  onChange={(event) => updateMemberForm('current_password', event.target.value)}
+                  className="mt-2"
+                  placeholder="Fill only if changing password"
+                />
+              </div>
+              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>New password</p>
+                <Input
+                  type="password"
+                  value={memberForm.new_password}
+                  onChange={(event) => updateMemberForm('new_password', event.target.value)}
+                  className="mt-2"
+                  placeholder="Leave blank to keep current password"
+                />
+              </div>
+            </>
+          ) : null}
         </div>
 
         <div className="mt-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Permissions</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{activePermissions.length} enabled</p>
+              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>
+              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{activePermissions.length} {t('profile.enabled')}</p>
             </div>
             <Badge className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
               {env.appEnv}
@@ -398,7 +656,7 @@ export function AppSidebar() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-[var(--muted)]">No active permissions available.</p>
+            <p className="mt-4 text-sm text-[var(--muted)]">{t('profile.no_active_permissions')}</p>
           )}
         </div>
       </Dialog>

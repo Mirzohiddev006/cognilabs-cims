@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '../../../shared/lib/cn'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
-import { PRIORITY_CONFIG, formatProjectDate, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 
 type KanbanCardProps = {
   card: CardRecord
@@ -11,9 +11,10 @@ type KanbanCardProps = {
   onDelete: (cardId: number) => void
   onClick: (card: CardRecord) => void
   isOverlay?: boolean
+  readOnly?: boolean
 }
 
-export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: KanbanCardProps) {
+export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnly = false }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -24,6 +25,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
   } = useSortable({
     id: `card-${card.id}`,
     data: { type: 'card', card },
+    disabled: readOnly,
   })
 
   const style = {
@@ -31,7 +33,8 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
     transition,
   }
 
-  const priority = card.priority ? PRIORITY_CONFIG[card.priority] : null
+  const priorityConfig = getPriorityConfig()
+  const priority = card.priority ? priorityConfig[card.priority] : null
   const overdue  = card.due_date ? isDueDateOverdue(card.due_date) : false
   const soon     = card.due_date ? isDueDateSoon(card.due_date) : false
   const images = Array.isArray(card.images)
@@ -59,8 +62,8 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(!readOnly ? attributes : {})}
+      {...(!readOnly ? listeners : {})}
       onClick={() => onClick(card)}
       className={cn(
         'group relative flex flex-col gap-2.5 rounded-lg p-3 cursor-pointer select-none',
@@ -137,38 +140,40 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay }: Kanba
       </div>
 
       {/* Hover quick-action icons (top-right) */}
-      <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-        <button
-          type="button"
-          onPointerDown={stopCardAction}
-          onMouseDown={stopCardAction}
-          onClick={(event) => {
-            stopCardAction(event)
-            onEdit(card)
-          }}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-          aria-label="Edit card"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="m9.5 2.5 1 1L4 10H3v-1l6.5-6.5Z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <button
-          type="button"
-          onPointerDown={stopCardAction}
-          onMouseDown={stopCardAction}
-          onClick={(event) => {
-            stopCardAction(event)
-            onDelete(card.id)
-          }}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/15 bg-red-500/10 text-red-400/75 shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-red-500/30 hover:bg-red-500/25 hover:text-red-300"
-          aria-label="Delete card"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      {!readOnly ? (
+        <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+          <button
+            type="button"
+            onPointerDown={stopCardAction}
+            onMouseDown={stopCardAction}
+            onClick={(event) => {
+              stopCardAction(event)
+              onEdit(card)
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
+            aria-label="Edit card"
+          >
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="m9.5 2.5 1 1L4 10H3v-1l6.5-6.5Z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onPointerDown={stopCardAction}
+            onMouseDown={stopCardAction}
+            onClick={(event) => {
+              stopCardAction(event)
+              onDelete(card.id)
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/15 bg-red-500/10 text-red-400/75 shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-red-500/30 hover:bg-red-500/25 hover:text-red-300"
+            aria-label="Delete card"
+          >
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

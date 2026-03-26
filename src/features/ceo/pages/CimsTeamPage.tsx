@@ -1,4 +1,5 @@
 import { ArrowUpRight, Bot, Copy, Instagram, Send, Sparkles } from 'lucide-react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -7,42 +8,42 @@ import { cn } from '../../../shared/lib/cn'
 
 const teamLinks = [
   {
-    title: 'Instagram',
-    eyebrow: 'Social presence',
+    titleKey: 'cims.instagram.title',
+    eyebrowKey: 'cims.instagram.eyebrow',
     handle: '@cognilabs_uz',
     href: 'https://www.instagram.com/cognilabs_uz',
-    note: 'Public-facing brand page for visibility, trust, and first-touch discovery.',
-    category: 'Official',
+    noteKey: 'cims.instagram.note',
+    categoryKey: 'cims.category.official',
     accent: 'blue',
     icon: Instagram,
   },
   {
-    title: 'Telegram Channel',
-    eyebrow: 'Community line',
+    titleKey: 'cims.telegram.title',
+    eyebrowKey: 'cims.telegram.eyebrow',
     handle: '@cognilabs_software',
     href: 'https://t.me/cognilabs_software',
-    note: 'Primary Telegram touchpoint for updates, fast reach, and lightweight company communication.',
-    category: 'Channel',
+    noteKey: 'cims.telegram.note',
+    categoryKey: 'cims.category.channel',
     accent: 'violet',
     icon: Send,
   },
   {
-    title: 'Recall Bot',
-    eyebrow: 'Automation',
+    titleKey: 'cims.recall.title',
+    eyebrowKey: 'cims.recall.eyebrow',
     handle: '@cognilabsrecallbot',
     href: 'https://t.me/cognilabsrecallbot',
-    note: 'Bot surface for reminder and recall workflows. Normalized from the malformed URL you sent.',
-    category: 'Bot',
+    noteKey: 'cims.recall.note',
+    categoryKey: 'cims.category.bot',
     accent: 'amber',
     icon: Bot,
   },
   {
-    title: 'Update Bot',
-    eyebrow: 'Operations',
+    titleKey: 'cims.update.title',
+    eyebrowKey: 'cims.update.eyebrow',
     handle: '@cognilabsupdatebot',
     href: 'https://t.me/cognilabsupdatebot',
-    note: 'Dedicated update-tracking entry point for daily operational usage.',
-    category: 'Bot',
+    noteKey: 'cims.update.note',
+    categoryKey: 'cims.category.bot',
     accent: 'emerald',
     icon: Sparkles,
   },
@@ -88,20 +89,21 @@ const accentClasses = {
 } as const
 
 export function CimsTeamPage() {
+  const { t } = useLocale()
   const { showToast } = useToast()
 
   async function handleCopyLink(link: string, label: string) {
     try {
       await navigator.clipboard.writeText(link)
       showToast({
-        title: 'Link copied',
-        description: `${label} link copied to clipboard.`,
+        title: t('cims.link_copied'),
+        description: `${label} ${t('cims.link_copied_desc')}`,
         tone: 'success',
       })
     } catch {
       showToast({
-        title: 'Copy failed',
-        description: 'Clipboard access is not available in this browser.',
+        title: t('cims.copy_failed'),
+        description: t('cims.copy_failed_desc'),
         tone: 'error',
       })
     }
@@ -113,6 +115,10 @@ export function CimsTeamPage() {
         {teamLinks.map((link) => {
           const Icon = link.icon
           const accent = accentClasses[link.accent]
+          const title = t(link.titleKey)
+          const eyebrow = t(link.eyebrowKey)
+          const note = t(link.noteKey)
+          const category = t(link.categoryKey)
 
           return (
             <Card
@@ -131,18 +137,18 @@ export function CimsTeamPage() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className={cn('text-[10px] font-semibold uppercase tracking-[0.24em]', accent.label)}>{link.eyebrow}</p>
-                    <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">{link.title}</h3>
+                    <p className={cn('text-[10px] font-semibold uppercase tracking-[0.24em]', accent.label)}>{eyebrow}</p>
+                    <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">{title}</h3>
                   </div>
                 </div>
 
-                <Badge variant={accent.badge}>{link.category}</Badge>
+                <Badge variant={accent.badge}>{category}</Badge>
               </div>
 
               <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">Handle</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">{t('cims.handle')}</p>
                 <p className="mt-2 break-all font-mono text-[15px] text-white/92">{link.handle}</p>
-                <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">{link.note}</p>
+                <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">{note}</p>
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
@@ -155,7 +161,7 @@ export function CimsTeamPage() {
                     accent.button,
                   )}
                 >
-                  Open link
+                  {t('cims.open_link')}
                   <ArrowUpRight className="h-4 w-4" />
                 </a>
 
@@ -164,9 +170,9 @@ export function CimsTeamPage() {
                   size="lg"
                   className="justify-center rounded-[16px] border border-white/10 bg-white/[0.03] text-white/78 hover:border-white/14 hover:bg-white/[0.06] hover:text-white"
                   leftIcon={<Copy className="h-4 w-4" />}
-                  onClick={() => void handleCopyLink(link.href, link.title)}
+                  onClick={() => void handleCopyLink(link.href, title)}
                 >
-                  Copy
+                  {t('cims.copy')}
                 </Button>
               </div>
             </Card>

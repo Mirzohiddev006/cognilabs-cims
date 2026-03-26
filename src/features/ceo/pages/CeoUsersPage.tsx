@@ -85,6 +85,61 @@ const emptyConversationSummary: UserConversationSummary = {
   totalCount: 0,
 }
 
+type MessagePresentation = {
+  headline: string
+  preview: string | null
+  hasHiddenPayload: boolean
+}
+
+function normalizeMessageText(value: string) {
+  return value.replace(/\r/g, '').trim()
+}
+
+function isOpaquePayloadLine(value: string) {
+  const normalized = value.trim()
+
+  if (!normalized || normalized.includes(' ')) {
+    return false
+  }
+
+  if (/^https?:\/\//i.test(normalized)) {
+    return false
+  }
+
+  if (normalized.length < 32) {
+    return false
+  }
+
+  return /^[A-Za-z0-9:_-]+$/.test(normalized)
+}
+
+function stripOpaquePayload(value: string) {
+  const lines = normalizeMessageText(value)
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  const visibleLines = lines.filter((line) => !isOpaquePayloadLine(line))
+
+  return {
+    text: visibleLines.join('\n').trim(),
+    hasHiddenPayload: visibleLines.length !== lines.length,
+  }
+}
+
+function getMessagePresentation(entry: UserConversationEntry): MessagePresentation {
+  const subject = stripOpaquePayload(entry.subject)
+  const body = stripOpaquePayload(entry.body)
+  const headline = subject.text || body.text || (subject.hasHiddenPayload || body.hasHiddenPayload ? 'Media attachment' : 'Untitled message')
+  const preview = body.text && body.text !== headline ? body.text : null
+
+  return {
+    headline,
+    preview,
+    hasHiddenPayload: subject.hasHiddenPayload || body.hasHiddenPayload,
+  }
+}
+
 function formatSalary(value?: number | null) {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return '-'
@@ -170,19 +225,6 @@ function UserAvatar({
       {getUserInitials(user)}
     </div>
   )
-}
-
-function getMessageHeadline(entry: UserConversationEntry) {
-  const headline = entry.subject.trim() || entry.body.trim()
-  return headline || 'Untitled message'
-}
-
-function getMessagePreview(entry: UserConversationEntry) {
-  if (entry.subject.trim() && entry.body.trim()) {
-    return entry.body.trim()
-  }
-
-  return entry.subject.trim() || entry.body.trim() || 'No message preview'
 }
 
 function formatMessageTimestamp(sentAt?: string | null) {
@@ -1019,18 +1061,18 @@ export function CeoUsersPage() {
         title={messageThreadUser ? `Messages with ${getUserDisplayName(messageThreadUser)}` : 'Message thread'}
         description={
           messageThreadUser
-            ? `${activeConversation.outgoingCount} sent • ${activeConversation.incomingCount} incoming`
+            ? `${activeConversation.outgoingCount} sent / ${activeConversation.incomingCount} incoming`
             : 'Review prior conversation and send a new message.'
         }
         size="xl"
       >
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-[24px] border border-white/10 bg-black/10 p-4">
+          <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-4">
               <div>
                 <p className="text-sm font-semibold text-white">Conversation</p>
                 <p className="mt-1 text-xs text-zinc-500">
-                  Oldingi yozishmalar va oxirgi activity shu yerda ko‘rinadi.
+                  Oldingi yozishmalar va oxirgi activity shu yerda korinadi.
                 </p>
               </div>
               <Badge variant="outline">{activeConversation.totalCount} entries</Badge>
@@ -1038,45 +1080,62 @@ export function CeoUsersPage() {
 
             <div className="mt-4 max-h-[440px] space-y-3 overflow-y-auto pr-1">
               {activeConversation.totalCount > 0 ? (
-                activeConversation.entries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className={cn(
-                      'max-w-[88%] rounded-[22px] border px-4 py-3',
-                      entry.direction === 'outgoing'
-                        ? 'ml-auto border-violet-500/20 bg-violet-500/[0.12]'
-                        : 'border-blue-500/20 bg-blue-500/[0.10]',
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Badge
-                        variant={entry.direction === 'incoming' ? 'blue' : 'violet'}
-                        size="sm"
-                      >
-                        {entry.direction === 'incoming' ? 'From user' : 'From CEO'}
-                      </Badge>
-                      <span className="text-[11px] text-white/45">
-                        {formatMessageTimestamp(entry.sentAt)}
-                      </span>
+                activeConversation.entries.map((entry) => {
+                  const presentation = getMessagePresentation(entry)
+
+                  return (
+                    <div
+                      key={entry.id}
+                      className={cn(
+                        'relative min-w-0 max-w-[90%] overflow-hidden rounded-[24px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+                        entry.direction === 'outgoing'
+                          ? 'ml-auto border-violet-500/24 bg-[linear-gradient(180deg,rgba(139,92,246,0.16),rgba(139,92,246,0.08))]'
+                          : 'border-blue-500/22 bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(59,130,246,0.07))]',
+                      )}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <Badge
+                          variant={entry.direction === 'incoming' ? 'blue' : 'violet'}
+                          size="sm"
+                        >
+                          {entry.direction === 'incoming' ? 'From user' : 'From CEO'}
+                        </Badge>
+                        <span className="text-[11px] text-white/45">
+                          {formatMessageTimestamp(entry.sentAt)}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 min-w-0 space-y-2">
+                        <p className="break-words text-[15px] font-semibold text-white">
+                          {presentation.headline}
+                        </p>
+                        {presentation.preview ? (
+                          <p className="break-words whitespace-pre-wrap text-[13px] leading-6 text-white/72">
+                            {presentation.preview}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      {presentation.hasHiddenPayload ? (
+                        <div className="mt-3">
+                          <Badge variant="outline" size="sm" className="border-white/10 bg-white/[0.03] text-white/60">
+                            Attachment payload hidden
+                          </Badge>
+                        </div>
+                      ) : null}
                     </div>
-                    <p className="mt-3 text-sm font-semibold text-white">
-                      {getMessageHeadline(entry)}
-                    </p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-white/72">
-                      {getMessagePreview(entry)}
-                    </p>
-                  </div>
-                ))
+                  )
+                })
               ) : (
                 <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-zinc-500">
-                  Hali shu user bilan yozishma yo‘q. O‘ng paneldan birinchi message yuborsangiz, thread shu yerda chiqadi.
+                  Hali shu user bilan yozishma yoq. Ong paneldan birinchi message yuborsangiz, thread shu yerda chiqadi.
                 </div>
               )}
             </div>
           </div>
 
           <div className="space-y-4">
-            <Card variant="glass" className="space-y-4 p-5">
+            <Card variant="glass" className="space-y-4 rounded-[26px] border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="flex items-center gap-3">
                 {messageThreadUser ? <UserAvatar user={messageThreadUser} size="md" /> : null}
                 <div className="min-w-0">
@@ -1090,15 +1149,15 @@ export function CeoUsersPage() {
               </div>
 
               <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Sent</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
                 </div>
-                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Incoming</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
                 </div>
-                <div className="rounded-[18px] border border-white/10 bg-black/10 px-3 py-3">
+                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Latest</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {activeConversation.entries.length > 0
@@ -1109,7 +1168,7 @@ export function CeoUsersPage() {
               </div>
             </Card>
 
-            <Card className="space-y-4 p-5">
+            <Card className="space-y-4 rounded-[26px] border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div>
                 <p className="text-sm font-semibold text-white">Write new message</p>
                 <p className="mt-1 text-xs text-zinc-500">

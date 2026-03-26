@@ -298,7 +298,7 @@ export function FaultsPage() {
         reason: penaltyReason.trim() || undefined,
       })
 
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch()])
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
       setPenaltyTarget(null)
       showToast({
         title: 'Penalty added',
@@ -343,7 +343,7 @@ export function FaultsPage() {
         reason: bonusReason.trim() || undefined,
       })
 
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch()])
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
       setBonusTarget(null)
       showToast({
         title: 'Bonus added',
@@ -397,20 +397,22 @@ export function FaultsPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-orange-500/20">
+      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.16),transparent_38%),radial-gradient(circle_at_right,rgba(34,197,94,0.10),transparent_26%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
+          <div className="pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 top-6 h-28 w-28 rounded-full bg-cyan-400/8 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <p className="text-[11px] font-semibold tracking-[0.02em] text-orange-200/80">
+                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
                   CEO Salary Estimates
                 </p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                <h1 className="page-header-title mt-2 text-3xl font-semibold tracking-tight">
                   Salary Estimates, Penalties and Bonuses
                 </h1>
-                <p className="mt-3 max-w-3xl text-sm text-[var(--muted-strong)]">
+                <p className="mt-3 max-w-3xl text-sm text-[var(--muted)]">
                   Monthly breakdown for active employees. Open a member to inspect the full salary detail on its own page.
                 </p>
               </div>
@@ -437,24 +439,24 @@ export function FaultsPage() {
 
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Year</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Year</label>
                 <Input
                   type="number"
                   min="2020"
                   max="2035"
                   value={year}
                   onChange={(event) => updatePeriod({ year: clampNumber(Number(event.target.value) || defaultYear, 2020, 2035) })}
-                  className="rounded-xl border-white/10 bg-white/[0.03]"
+                  className="rounded-xl"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Month</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Month</label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
                   onValueChange={(value) => updatePeriod({ month: clampNumber(Number(value), 1, 12) })}
-                  className="rounded-xl border-white/10 bg-white/[0.03]"
+                  className="rounded-xl"
                 />
               </div>
 
@@ -464,7 +466,7 @@ export function FaultsPage() {
                   size="lg"
                   leftIcon={<RefreshIcon />}
                   onClick={() => void handleRefresh()}
-                  className="w-full justify-center rounded-xl border-white/10 bg-white/[0.03] md:w-auto"
+                  className="w-full justify-center rounded-xl md:w-auto"
                 >
                   Refresh
                 </Button>
@@ -485,7 +487,7 @@ export function FaultsPage() {
         <DataTable
           caption="Salary estimate breakdown"
           rows={reports}
-          pageSize={8}
+          pageSize={75}
           compact
           zebra
           getRowKey={(row) => `${row.id}-${row.fullName}`}

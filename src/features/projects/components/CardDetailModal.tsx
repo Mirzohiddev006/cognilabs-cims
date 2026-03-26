@@ -4,7 +4,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
-import { PRIORITY_CONFIG, formatProjectDate, isDueDateOverdue, isDueDateSoon, getSnoozePresets } from '../lib/format'
+import { formatProjectDate, getPriorityConfig, getSnoozePresets, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { cn } from '../../../shared/lib/cn'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
@@ -16,6 +16,7 @@ type CardDetailModalProps = {
   onDelete: () => void
   boardName?: string
   projectName?: string
+  canManage?: boolean
 }
 
 function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
@@ -27,7 +28,7 @@ function SnoozeMenu({ disabled }: { disabled?: boolean }) {
   const presets = getSnoozePresets()
   return (
     <div className="flex flex-col gap-1">
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-1">
+      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
         Snooze until
       </p>
       {presets.map((p) => (
@@ -35,7 +36,7 @@ function SnoozeMenu({ disabled }: { disabled?: boolean }) {
           key={p.label}
           disabled={disabled}
           title="Coming soon — backend not yet connected"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
         >
           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
             <circle cx="8" cy="8" r="6" />
@@ -47,7 +48,7 @@ function SnoozeMenu({ disabled }: { disabled?: boolean }) {
       <button
         disabled={disabled}
         title="Coming soon — backend not yet connected"
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
           <rect x="2" y="2" width="12" height="12" rx="2" />
@@ -70,6 +71,7 @@ export function CardDetailModal({
   onDelete,
   boardName,
   projectName,
+  canManage = true,
 }: CardDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
@@ -93,7 +95,8 @@ export function CardDetailModal({
 
   if (!open || !card) return null
 
-  const priority = card.priority ? PRIORITY_CONFIG[card.priority] : null
+  const priorityConfig = getPriorityConfig()
+  const priority = card.priority ? priorityConfig[card.priority] : null
   const overdue = card.due_date ? isDueDateOverdue(card.due_date) : false
   const soon = card.due_date ? isDueDateSoon(card.due_date) : false
   const images = Array.isArray(card.images)
@@ -124,7 +127,7 @@ export function CardDetailModal({
           <div className="flex-1 min-w-0">
             {/* Breadcrumb context */}
             {(projectName || boardName) && (
-              <p className="mb-2 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/70">
+              <p className="mb-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-blue-300/70">
                 {projectName && <span>{projectName}</span>}
                 {projectName && boardName && (
                   <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -134,7 +137,7 @@ export function CardDetailModal({
                 {boardName && <span>{boardName}</span>}
               </p>
             )}
-            <h2 className="text-lg font-semibold tracking-tight text-[var(--foreground)]">{card.title}</h2>
+            <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">{card.title}</h2>
 
             {/* Priority + due date row */}
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -156,12 +159,16 @@ export function CardDetailModal({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Button variant="secondary" size="sm" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button variant="danger" size="sm" onClick={onDelete}>
-              Delete
-            </Button>
+            {canManage ? (
+              <Button variant="secondary" size="sm" onClick={onEdit}>
+                Edit
+              </Button>
+            ) : null}
+            {canManage ? (
+              <Button variant="danger" size="sm" onClick={onDelete}>
+                Delete
+              </Button>
+            ) : null}
             <button
               type="button"
               onClick={onClose}
@@ -194,8 +201,8 @@ export function CardDetailModal({
                     />
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4">
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{selectedImage.filename}</p>
-                        <p className="mt-1 text-xs text-white/70">Open full size</p>
+                        <p className="truncate text-base font-semibold text-white">{selectedImage.filename}</p>
+                        <p className="mt-1 text-sm text-white/70">Open full size</p>
                       </div>
                       <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-medium text-white/80">
                         {selectedImageIndex + 1} / {images.length}
@@ -207,22 +214,22 @@ export function CardDetailModal({
 
               {/* Description */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                   Description
                 </p>
                 {card.description ? (
-                  <p className="text-sm leading-6 text-[var(--foreground)] whitespace-pre-wrap">
+                  <p className="text-base leading-7 text-[var(--foreground)] whitespace-pre-wrap">
                     {card.description}
                   </p>
                 ) : (
-                  <p className="text-sm text-[var(--muted)] italic">No description</p>
+                  <p className="text-base text-[var(--muted)] italic">No description</p>
                 )}
               </div>
 
               {/* Attachments */}
               {images.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                     Attachments ({images.length})
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -242,7 +249,7 @@ export function CardDetailModal({
                           className="h-28 w-full object-cover transition group-hover:scale-105"
                         />
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left">
-                          <span className="block truncate text-[10px] text-white">
+                          <span className="block truncate text-xs text-white">
                             {img.filename}
                           </span>
                         </div>
@@ -257,34 +264,34 @@ export function CardDetailModal({
             <div className="flex flex-col gap-5 p-6">
               {/* Assignee */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                   Assignee
                 </p>
                 {card.assignee ? (
                   <div className="flex items-center gap-2">
                     <Avatar name={card.assignee.name} surname={card.assignee.surname} size="sm" />
                     <div>
-                      <p className="text-xs font-medium text-[var(--foreground)]">
+                      <p className="text-sm font-medium text-[var(--foreground)]">
                         {card.assignee.name} {card.assignee.surname}
                       </p>
                       {card.assignee.job_title && (
-                        <p className="text-[10px] text-[var(--muted)]">{card.assignee.job_title}</p>
+                        <p className="text-xs text-[var(--muted)]">{card.assignee.job_title}</p>
                       )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-[var(--muted)]">Unassigned</p>
+                  <p className="text-sm text-[var(--muted)]">Unassigned</p>
                 )}
               </div>
 
               {/* Created by */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                   Created by
                 </p>
                 <div className="flex items-center gap-2">
                   <Avatar name={card.created_by.name} surname={card.created_by.surname} size="sm" />
-                  <p className="text-xs font-medium text-[var(--foreground)]">
+                  <p className="text-sm font-medium text-[var(--foreground)]">
                     {card.created_by.name} {card.created_by.surname}
                   </p>
                 </div>
@@ -292,20 +299,20 @@ export function CardDetailModal({
 
               {/* Dates */}
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                   Dates
                 </p>
                 <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-[var(--muted)]">Created</span>
                     <span className="text-[var(--foreground)]">{formatProjectDate(card.created_at)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-[var(--muted)]">Updated</span>
                     <span className="text-[var(--foreground)]">{formatProjectDate(card.updated_at)}</span>
                   </div>
                   {card.due_date && (
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-[var(--muted)]">Due</span>
                       <span className={cn(
                         overdue ? 'text-[var(--danger-text)]' : soon ? 'text-[var(--warning-text)]' : 'text-[var(--foreground)]'

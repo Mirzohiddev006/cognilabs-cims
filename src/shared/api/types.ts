@@ -53,6 +53,7 @@ export type CurrentUser = {
   email: string
   name: string
   surname: string
+  profile_image?: string | null
   company_code: string
   role: UserRole
   job_title?: string | null

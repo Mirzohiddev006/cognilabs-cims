@@ -1,5 +1,6 @@
 import { startTransition, useMemo, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -16,6 +17,7 @@ type LoginValues = {
 }
 
 export function LoginPage() {
+  const { t } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const { acceptTokens } = useAuth()
@@ -53,7 +55,7 @@ export function LoginPage() {
       startTransition(() => navigate('/', { replace: true }))
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, "Login bajarilmadi. Email yoki parolni tekshirib qayta urinib ko'ring."))
+      setSubmitError(getErrorMessage(error, t('auth.login_failed', 'Login failed. Check your email or password and try again.')))
     } finally {
       setIsSubmitting(false)
     }
@@ -61,9 +63,9 @@ export function LoginPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Login"
-      title="Login to your account"
-      description="Enter your email below to login to your account."
+      eyebrow={t('auth.login.eyebrow', 'Login')}
+      title={t('auth.login.title', 'Login to your account')}
+      description={t('auth.login.description', 'Enter your email below to login to your account.')}
       footerLinks={[]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
@@ -71,7 +73,7 @@ export function LoginPage() {
         <AuthFeedback tone="error" message={submitError} />
 
         <AuthField
-          label="Email"
+          label={t('auth.email', 'Email')}
           name="username"
           type="email"
           autoComplete="email"
@@ -89,9 +91,9 @@ export function LoginPage() {
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">Password</span>
+            <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{t('auth.password', 'Password')}</span>
             <Link className="text-xs text-[var(--muted)] transition hover:text-[var(--foreground)]" to="/auth/forgot-password">
-              Forgot password?
+              {t('auth.forgot_password', 'Forgot password?')}
             </Link>
           </div>
 
@@ -99,7 +101,7 @@ export function LoginPage() {
             label=""
             name="password"
             autoComplete="current-password"
-            placeholder="Enter your password"
+            placeholder={t('auth.password.enter', 'Enter your password')}
             value={values.password}
             error={errors.password}
             className="min-h-11"
@@ -113,13 +115,13 @@ export function LoginPage() {
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Signing in...' : 'Login'}
+          {isSubmitting ? t('auth.signing_in', 'Signing in...') : t('auth.login_button', 'Login')}
         </Button>
 
         <div className="text-center text-xs text-[var(--muted)]">
-          Email not verified?{' '}
+          {t('auth.verify_prompt', 'Email not verified?')}{' '}
           <Link className="underline underline-offset-4 transition hover:text-[var(--foreground)]" to="/auth/verify-email">
-            Verify email
+            {t('auth.verify_email', 'Verify email')}
           </Link>
         </div>
       </form>

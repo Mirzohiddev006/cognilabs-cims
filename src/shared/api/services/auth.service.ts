@@ -31,6 +31,24 @@ export type ResetPasswordPayload = {
   new_password: string
 }
 
+export type UpdateMyProfileInfoPayload = {
+  name: string
+  surname: string
+}
+
+export type UpdateMyPasswordPayload = {
+  current_password: string
+  new_password: string
+}
+
+export type UpdateMyProfilePayload = {
+  name?: string | null
+  surname?: string | null
+  current_password?: string | null
+  new_password?: string | null
+  image?: File | null
+}
+
 export const authService = {
   register(payload: RegisterPayload) {
     return request<SuccessResponse>({
@@ -99,6 +117,63 @@ export const authService = {
   me() {
     return request<CurrentUser>({
       path: '/auth/me',
+    })
+  },
+
+  updateProfileImage(image: File) {
+    const formData = new FormData()
+    formData.append('image', image)
+
+    return request<SuccessResponse>({
+      path: '/auth/me/profile-image',
+      method: 'POST',
+      body: formData,
+    })
+  },
+
+  updateProfileInfo(payload: UpdateMyProfileInfoPayload) {
+    return request<SuccessResponse>({
+      path: '/auth/me/profile-info',
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  updatePassword(payload: UpdateMyPasswordPayload) {
+    return request<SuccessResponse>({
+      path: '/auth/me/password',
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  updateProfile(payload: UpdateMyProfilePayload) {
+    const formData = new FormData()
+
+    if (typeof payload.name === 'string') {
+      formData.append('name', payload.name)
+    }
+
+    if (typeof payload.surname === 'string') {
+      formData.append('surname', payload.surname)
+    }
+
+    if (typeof payload.current_password === 'string' && payload.current_password.length > 0) {
+      formData.append('current_password', payload.current_password)
+    }
+
+    if (typeof payload.new_password === 'string' && payload.new_password.length > 0) {
+      formData.append('new_password', payload.new_password)
+    }
+
+    if (payload.image instanceof File) {
+      formData.append('image', payload.image)
+    }
+
+    return request<SuccessResponse>({
+      path: '/auth/me/profile',
+      method: 'PATCH',
+      body: formData,
     })
   },
 

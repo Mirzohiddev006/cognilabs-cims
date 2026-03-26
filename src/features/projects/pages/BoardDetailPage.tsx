@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { StateBlock } from '../../../shared/ui/state-block'
@@ -9,14 +9,15 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
   projectsService,
   type BoardDetail,
-  type ColumnRecord,
   type CardRecord,
+  type ColumnRecord,
 } from '../../../shared/api/services/projects.service'
-import { KanbanBoard } from '../components/KanbanBoard'
-import { ColumnFormModal } from '../components/ColumnFormModal'
-import { CardFormModal } from '../components/CardFormModal'
-import { CardDetailModal } from '../components/CardDetailModal'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { BoardFormModal } from '../components/BoardFormModal'
+import { CardDetailModal } from '../components/CardDetailModal'
+import { CardFormModal } from '../components/CardFormModal'
+import { ColumnFormModal } from '../components/ColumnFormModal'
+import { KanbanBoard } from '../components/KanbanBoard'
 import { formatProjectDate } from '../lib/format'
 
 type AddCardState = { columnId: number } | null
@@ -93,27 +94,47 @@ function moveColumnInBoard(board: BoardDetail, columnId: number, order: number):
   }
 }
 
+function parseProjectId(rawValue: string | null) {
+  if (!rawValue) {
+    return null
+  }
+
+  const parsed = Number(rawValue)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
 export function BoardDetailPage() {
   const { boardId } = useParams<{ boardId: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const { user, hasPermission } = useAuth()
 
   const id = Number(boardId)
+  const canManageProjects = hasPermission('projects')
+  const openProjectId = useMemo(() => parseProjectId(searchParams.get('project')), [searchParams])
 
   const boardQuery = useAsyncData(
-    () => projectsService.getBoard(id),
-    [id],
-    { enabled: !Number.isNaN(id) },
+    async () => {
+      if (!user) {
+        throw new Error('User session is unavailable')
+      }
+
+      return canManageProjects
+        ? projectsService.getBoard(id)
+        : projectsService.getUserOpenBoardDetail(id, user.id, openProjectId)
+    },
+    [id, canManageProjects, openProjectId, user?.id],
+    { enabled: !Number.isNaN(id) && Boolean(user) },
   )
 
-  // Fetch ALL users for the assignee picker — not just board participants
   const usersQuery = useAsyncData(
     () => projectsService.getAllUsers(),
     [],
+    { enabled: canManageProjects },
   )
 
-  // Modals state
   const [isEditBoardOpen, setIsEditBoardOpen] = useState(false)
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false)
   const [editColumnState, setEditColumnState] = useState<EditColumnState>(null)
@@ -121,18 +142,18 @@ export function BoardDetailPage() {
   const [editCardState, setEditCardState] = useState<EditCardState>(null)
   const [detailCard, setDetailCard] = useState<CardRecord | null>(null)
 
-  // Submission flags
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
   const [isColumnSubmitting, setIsColumnSubmitting] = useState(false)
   const [isCardSubmitting, setIsCardSubmitting] = useState(false)
 
   const board = boardQuery.data
-  const allUsers = usersQuery.data ?? []
-
-  // ─── Board actions ──────────────────────────────────────────────────────────
+  const allUsers = canManageProjects ? usersQuery.data ?? [] : []
 
   async function handleUpdateBoard(values: { name: string; description?: string }) {
-    if (!board) return
+    if (!canManageProjects || !board) {
+      return
+    }
+
     setIsBoardSubmitting(true)
     try {
       await projectsService.updateBoard(board.id, values)
@@ -147,13 +168,20 @@ export function BoardDetailPage() {
   }
 
   async function handleArchiveBoard() {
-    if (!board) return
+    if (!canManageProjects || !board) {
+      return
+    }
+
     const ok = await confirm({
       title: 'Archive board?',
       description: `"${board.name}" will be archived. All data is preserved.`,
       tone: 'danger',
     })
-    if (!ok) return
+
+    if (!ok) {
+      return
+    }
+
     try {
       await projectsService.deleteBoard(board.id)
       showToast({ title: 'Board archived', tone: 'success' })
@@ -163,10 +191,11 @@ export function BoardDetailPage() {
     }
   }
 
-  // ─── Column actions ─────────────────────────────────────────────────────────
-
   async function handleCreateColumn(values: { name: string; color: string }) {
-    if (!board) return
+    if (!canManageProjects || !board) {
+      return
+    }
+
     setIsColumnSubmitting(true)
     try {
       await projectsService.createColumn(board.id, values)
@@ -181,7 +210,10 @@ export function BoardDetailPage() {
   }
 
   async function handleUpdateColumn(values: { name: string; color: string }) {
-    if (!editColumnState) return
+    if (!canManageProjects || !editColumnState) {
+      return
+    }
+
     setIsColumnSubmitting(true)
     try {
       await projectsService.updateColumn(editColumnState.column.id, values)
@@ -196,12 +228,20 @@ export function BoardDetailPage() {
   }
 
   async function handleDeleteColumn(columnId: number) {
+    if (!canManageProjects) {
+      return
+    }
+
     const ok = await confirm({
       title: 'Delete column?',
       description: 'All cards in this column will also be deleted.',
       tone: 'danger',
     })
-    if (!ok) return
+
+    if (!ok) {
+      return
+    }
+
     try {
       await projectsService.deleteColumn(columnId)
       showToast({ title: 'Column deleted', tone: 'success' })
@@ -211,10 +251,11 @@ export function BoardDetailPage() {
     }
   }
 
-  // ─── Card actions ───────────────────────────────────────────────────────────
-
   async function handleCreateCard(fd: FormData) {
-    if (!addCardState) return
+    if (!canManageProjects || !addCardState) {
+      return
+    }
+
     setIsCardSubmitting(true)
     try {
       await projectsService.createCard(addCardState.columnId, fd)
@@ -229,13 +270,18 @@ export function BoardDetailPage() {
   }
 
   async function handleUpdateCard(fd: FormData) {
-    if (!editCardState) return
+    if (!canManageProjects || !editCardState) {
+      return
+    }
+
     setIsCardSubmitting(true)
     try {
       await projectsService.updateCard(editCardState.card.id, fd)
       showToast({ title: 'Card updated', tone: 'success' })
       setEditCardState(null)
-      if (detailCard?.id === editCardState.card.id) setDetailCard(null)
+      if (detailCard?.id === editCardState.card.id) {
+        setDetailCard(null)
+      }
       await boardQuery.refetch()
     } catch {
       showToast({ title: 'Failed to update card', tone: 'error' })
@@ -245,56 +291,70 @@ export function BoardDetailPage() {
   }
 
   async function handleDeleteCard(cardId: number) {
+    if (!canManageProjects) {
+      return
+    }
+
     const ok = await confirm({
       title: 'Delete card?',
       description: 'This card will be permanently removed.',
       tone: 'danger',
     })
-    if (!ok) return
+
+    if (!ok) {
+      return
+    }
+
     try {
       await projectsService.deleteCard(cardId)
       showToast({ title: 'Card deleted', tone: 'success' })
-      if (detailCard?.id === cardId) setDetailCard(null)
+      if (detailCard?.id === cardId) {
+        setDetailCard(null)
+      }
       await boardQuery.refetch()
     } catch {
       showToast({ title: 'Failed to delete card', tone: 'error' })
     }
   }
 
-  // ─── DnD callbacks ──────────────────────────────────────────────────────────
-
   async function handleMoveCard(cardId: number, columnId: number, order: number) {
+    if (!canManageProjects) {
+      return
+    }
+
     try {
       await projectsService.moveCard(cardId, columnId, order)
       boardQuery.setData((current) => (current ? moveCardInBoard(current, cardId, columnId, order) : current))
     } catch {
-      showToast({ title: 'Failed to move card — changes reverted.', tone: 'error' })
+      showToast({ title: 'Failed to move card, changes reverted.', tone: 'error' })
       await boardQuery.refetch()
       throw new Error('moveCard failed')
     }
   }
 
   async function handleMoveColumn(columnId: number, order: number) {
+    if (!canManageProjects) {
+      return
+    }
+
     try {
       await projectsService.moveColumn(columnId, order)
       boardQuery.setData((current) => (current ? moveColumnInBoard(current, columnId, order) : current))
     } catch {
-      showToast({ title: 'Failed to reorder column — changes reverted.', tone: 'error' })
+      showToast({ title: 'Failed to reorder column, changes reverted.', tone: 'error' })
       await boardQuery.refetch()
       throw new Error('moveColumn failed')
     }
   }
-
-  // ─── Render ─────────────────────────────────────────────────────────────────
 
   if (boardQuery.isLoading) {
     return (
       <div className="flex flex-col gap-4">
         <div className="h-14 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]" />
         <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, index) => (
             <div
-              key={i}
+              key={index}
               className="h-[calc(100vh-200px)] w-72 shrink-0 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]"
             />
           ))}
@@ -318,18 +378,9 @@ export function BoardDetailPage() {
 
   return (
     <>
-      {/*
-        The board page breaks out of the standard page padding intentionally —
-        it needs edge-to-edge horizontal scroll like a real kanban board.
-        We use negative margins to cancel out the parent padding.
-      */}
-      <div
-        className="flex flex-col md:-mx-6 lg:-mx-8"
-        style={{ height: 'calc(100dvh - 88px)' }}
-      >
-        {/* ── Board header ─────────────────────────────────────────────────── */}
+      <div className="flex flex-col md:-mx-6 lg:-mx-8" style={{ height: 'calc(100dvh - 88px)' }}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--shell-header-bg)] px-4 py-3 backdrop-blur-xl sm:px-6">
-          <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="min-w-0 flex flex-col gap-0.5">
             <Link
               to={`/projects/${board.project_id}`}
               className="inline-flex w-fit items-center gap-1 text-[10px] text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
@@ -340,61 +391,68 @@ export function BoardDetailPage() {
               Back to project
             </Link>
 
-            <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="flex flex-wrap items-center gap-2.5">
               <h1 className="text-sm font-semibold tracking-tight text-[var(--foreground)]">
                 {board.name}
               </h1>
-              {board.is_archived && (
-                <Badge variant="secondary" size="sm" dot>Archived</Badge>
-              )}
-              {board.description && (
-                <span className="hidden text-xs text-[var(--muted)] sm:block truncate max-w-xs">
+              {board.is_archived ? (
+                <Badge variant="secondary" size="sm" dot>
+                  Archived
+                </Badge>
+              ) : null}
+              {board.description ? (
+                <span className="hidden max-w-xs truncate text-xs text-[var(--muted)] sm:block">
                   {board.description}
                 </span>
-              )}
+              ) : null}
             </div>
 
             <p className="text-[10px] text-[var(--muted)]">
-              {board.columns.length} columns · {board.columns.reduce((s, c) => s + c.cards.length, 0)} cards · Updated {formatProjectDate(board.updated_at)}
+              {board.columns.length} columns · {board.columns.reduce((sum, column) => sum + column.cards.length, 0)} cards · Updated {formatProjectDate(board.updated_at)}
             </p>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsAddColumnOpen(true)}
-              leftIcon={
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                </svg>
-              }
-            >
-              Add column
-            </Button>
-            {!board.is_archived && (
-              <Button variant="ghost" size="sm" onClick={() => setIsEditBoardOpen(true)}>
-                Edit
+          {canManageProjects ? (
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsAddColumnOpen(true)}
+                leftIcon={(
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                  </svg>
+                )}
+              >
+                Add column
               </Button>
-            )}
-            {!board.is_archived && (
-              <Button variant="danger" size="sm" onClick={handleArchiveBoard}>
-                Archive
-              </Button>
-            )}
-          </div>
+              {!board.is_archived ? (
+                <Button variant="ghost" size="sm" onClick={() => setIsEditBoardOpen(true)}>
+                  Edit
+                </Button>
+              ) : null}
+              {!board.is_archived ? (
+                <Button variant="danger" size="sm" onClick={handleArchiveBoard}>
+                  Archive
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-        {/* ── Board canvas ──────────────────────────────────────────────────── */}
         {board.columns.length === 0 ? (
           <div className="flex flex-1 items-center justify-center">
             <StateBlock
               tone="empty"
               eyebrow="Empty board"
               title="No columns yet"
-              description="Add your first column to start organizing cards."
-              actionLabel="Add column"
-              onAction={() => setIsAddColumnOpen(true)}
+              description={
+                canManageProjects
+                  ? 'Add your first column to start organizing cards.'
+                  : 'This board has no visible columns yet.'
+              }
+              actionLabel={canManageProjects ? 'Add column' : undefined}
+              onAction={canManageProjects ? () => setIsAddColumnOpen(true) : undefined}
             />
           </div>
         ) : (
@@ -408,82 +466,87 @@ export function BoardDetailPage() {
               onEditCard={(card) => setEditCardState({ card })}
               onDeleteCard={handleDeleteCard}
               onClickCard={(card) => setDetailCard(card)}
-              onEditColumn={(col) => setEditColumnState({ column: col })}
+              onEditColumn={(column) => setEditColumnState({ column })}
               onDeleteColumn={handleDeleteColumn}
               onAddColumn={() => setIsAddColumnOpen(true)}
+              readOnly={!canManageProjects}
             />
           </div>
         )}
       </div>
 
-      {/* ── Modals ────────────────────────────────────────────────────────── */}
-      <BoardFormModal
-        open={isEditBoardOpen}
-        onClose={() => setIsEditBoardOpen(false)}
-        onSubmit={handleUpdateBoard}
-        initial={board}
-        title="Edit board"
-        submitLabel="Save changes"
-        isSubmitting={isBoardSubmitting}
-      />
+      {canManageProjects ? (
+        <>
+          <BoardFormModal
+            open={isEditBoardOpen}
+            onClose={() => setIsEditBoardOpen(false)}
+            onSubmit={handleUpdateBoard}
+            initial={board}
+            title="Edit board"
+            submitLabel="Save changes"
+            isSubmitting={isBoardSubmitting}
+          />
 
-      <ColumnFormModal
-        open={isAddColumnOpen}
-        onClose={() => setIsAddColumnOpen(false)}
-        onSubmit={handleCreateColumn}
-        title="Add column"
-        submitLabel="Add column"
-        isSubmitting={isColumnSubmitting}
-      />
+          <ColumnFormModal
+            open={isAddColumnOpen}
+            onClose={() => setIsAddColumnOpen(false)}
+            onSubmit={handleCreateColumn}
+            title="Add column"
+            submitLabel="Add column"
+            isSubmitting={isColumnSubmitting}
+          />
 
-      <ColumnFormModal
-        open={editColumnState !== null}
-        onClose={() => setEditColumnState(null)}
-        onSubmit={handleUpdateColumn}
-        initial={editColumnState?.column ?? null}
-        title="Edit column"
-        submitLabel="Save changes"
-        isSubmitting={isColumnSubmitting}
-      />
+          <ColumnFormModal
+            open={editColumnState !== null}
+            onClose={() => setEditColumnState(null)}
+            onSubmit={handleUpdateColumn}
+            initial={editColumnState?.column ?? null}
+            title="Edit column"
+            submitLabel="Save changes"
+            isSubmitting={isColumnSubmitting}
+          />
 
-      <CardFormModal
-        open={addCardState !== null}
-        onClose={() => setAddCardState(null)}
-        onSubmit={handleCreateCard}
-        members={allUsers}
-        title="Create card"
-        submitLabel="Create card"
-        isSubmitting={isCardSubmitting}
-      />
+          <CardFormModal
+            open={addCardState !== null}
+            onClose={() => setAddCardState(null)}
+            onSubmit={handleCreateCard}
+            members={allUsers}
+            title="Create card"
+            submitLabel="Create card"
+            isSubmitting={isCardSubmitting}
+          />
 
-      <CardFormModal
-        open={editCardState !== null}
-        onClose={() => setEditCardState(null)}
-        onSubmit={handleUpdateCard}
-        initial={editCardState?.card ?? null}
-        members={allUsers}
-        title="Edit card"
-        submitLabel="Save changes"
-        isSubmitting={isCardSubmitting}
-      />
+          <CardFormModal
+            open={editCardState !== null}
+            onClose={() => setEditCardState(null)}
+            onSubmit={handleUpdateCard}
+            initial={editCardState?.card ?? null}
+            members={allUsers}
+            title="Edit card"
+            submitLabel="Save changes"
+            isSubmitting={isCardSubmitting}
+          />
+        </>
+      ) : null}
 
       <CardDetailModal
         card={detailCard}
         open={detailCard !== null}
         onClose={() => setDetailCard(null)}
         onEdit={() => {
-          if (detailCard) {
+          if (detailCard && canManageProjects) {
             setEditCardState({ card: detailCard })
             setDetailCard(null)
           }
         }}
         onDelete={() => {
-          if (detailCard) {
+          if (detailCard && canManageProjects) {
             setDetailCard(null)
-            handleDeleteCard(detailCard.id)
+            void handleDeleteCard(detailCard.id)
           }
         }}
         boardName={board.name}
+        canManage={canManageProjects}
       />
     </>
   )

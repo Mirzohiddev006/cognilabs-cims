@@ -1376,7 +1376,7 @@ export function CeoManagementPage() {
                   caption="Management images"
                   rows={filteredImages}
                   getRowKey={(row) => row.path}
-                  pageSize={12}
+                  pageSize={75}
                   zebra
                   emptyState={(
                     <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">

@@ -1,5 +1,6 @@
 import { startTransition, useMemo, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -17,6 +18,7 @@ type ResetValues = {
 }
 
 export function ResetPasswordPage() {
+  const { t } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -60,14 +62,14 @@ export function ResetPasswordPage() {
       startTransition(() =>
         navigate('/auth/login', {
           replace: true,
-          state: {
-            statusMessage: response.message || 'Password successfully updated. You can now log in.',
+            state: {
+            statusMessage: response.message || t('auth.reset.success', 'Password successfully updated. You can now log in.'),
           },
         }),
       )
     } catch (error) {
       setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, 'Failed to update password.'))
+      setSubmitError(getErrorMessage(error, t('auth.reset.failed', 'Failed to update password.')))
     } finally {
       setIsSubmitting(false)
     }
@@ -75,10 +77,10 @@ export function ResetPasswordPage() {
 
   return (
     <AuthFormShell
-      eyebrow="Account Recovery"
-      title="Reset your password"
-      description="Enter the verification code from your email and set a new password."
-      footerLinks={[{ label: 'Back to login', to: '/auth/login' }]}
+      eyebrow={t('auth.recovery.eyebrow', 'Account Recovery')}
+      title={t('auth.reset.title', 'Reset your password')}
+      description={t('auth.reset.description', 'Enter the verification code from your email and set a new password.')}
+      footerLinks={[{ label: t('auth.back_to_login', 'Back to login'), to: '/auth/login' }]}
     >
       <form className="grid gap-5" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
@@ -86,10 +88,10 @@ export function ResetPasswordPage() {
             to="/auth/forgot-password"
             className="rounded-md px-3 py-1.5 text-center text-xs font-medium text-[var(--muted)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
-            Forgot Password
+            {t('auth.forgot_password_tab', 'Forgot Password')}
           </Link>
           <span className="rounded-md bg-[var(--card)] px-3 py-1.5 text-center text-xs font-medium text-[var(--foreground)]">
-            Reset Password
+            {t('auth.reset_password_tab', 'Reset Password')}
           </span>
         </div>
 
@@ -97,7 +99,7 @@ export function ResetPasswordPage() {
         <AuthFeedback tone="error" message={submitError} />
 
         <AuthField
-          label="Email"
+          label={t('auth.email', 'Email')}
           name="email"
           type="email"
           placeholder="user@example.com"
@@ -107,9 +109,9 @@ export function ResetPasswordPage() {
         />
 
         <AuthField
-          label="Reset code"
+          label={t('auth.reset.code', 'Reset code')}
           name="code"
-          placeholder="Code from email"
+          placeholder={t('auth.reset.code_placeholder', 'Code from email')}
           value={values.code}
           error={errors.code}
           onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
@@ -117,19 +119,19 @@ export function ResetPasswordPage() {
 
         <div className="grid gap-5 md:grid-cols-2">
           <PasswordField
-            label="New password"
+            label={t('auth.reset.new_password', 'New password')}
             name="new_password"
             autoComplete="new-password"
-            placeholder="New password"
+            placeholder={t('auth.reset.new_password_placeholder', 'New password')}
             value={values.new_password}
             error={errors.new_password}
             onChange={(event) => setValues((current) => ({ ...current, new_password: event.target.value }))}
           />
           <PasswordField
-            label="Confirm password"
+            label={t('auth.reset.confirm_password', 'Confirm password')}
             name="confirm_password"
             autoComplete="new-password"
-            placeholder="Confirm password"
+            placeholder={t('auth.reset.confirm_password_placeholder', 'Confirm password')}
             value={values.confirm_password}
             error={errors.confirm_password}
             onChange={(event) => setValues((current) => ({ ...current, confirm_password: event.target.value }))}
@@ -137,7 +139,7 @@ export function ResetPasswordPage() {
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Updating...' : 'Reset password'}
+          {isSubmitting ? t('auth.reset.updating', 'Updating...') : t('auth.reset.button', 'Reset password')}
         </Button>
       </form>
     </AuthFormShell>

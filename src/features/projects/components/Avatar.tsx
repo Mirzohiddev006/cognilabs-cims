@@ -1,4 +1,5 @@
 import { cn } from '../../../shared/lib/cn'
+import { translateCurrent } from '../../../shared/i18n/translations'
 import { getInitials, stringToHue } from '../lib/format'
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
@@ -22,7 +23,7 @@ const sizeClasses: Record<AvatarSize, string> = {
 export function Avatar({ name, surname, imageUrl, size = 'md', className, title }: AvatarProps) {
   const displayName = [name, surname]
     .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
-    .join(' ') || 'Unknown user'
+    .join(' ') || translateCurrent('projects.unknown_user', 'Unknown user')
   const initials = getInitials(name, surname)
   const hue = stringToHue(displayName)
 

@@ -1,10 +1,12 @@
 import { startTransition, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
+import { useLocale } from '../../app/hooks/useLocale'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { env } from '../../shared/config/env'
 import { navigationItems } from '../../shared/config/navigation'
+import { type AppLocale, localeLabels } from '../../shared/i18n/translations'
 import { useToast } from '../../shared/toast/useToast'
 import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
@@ -36,6 +38,7 @@ export function AppHeader() {
   const navigate = useNavigate()
   const location = useLocation()
   const { openSidebar } = useAppShell()
+  const { locale, setLocale, t } = useLocale()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -54,15 +57,15 @@ export function AppHeader() {
     try {
       await logout()
       showToast({
-        title: 'Logged out',
-        description: 'Your current session has been closed.',
+        title: t('shell.logged_out'),
+        description: t('shell.session_closed'),
         tone: 'success',
       })
       startTransition(() =>
         navigate('/auth/login', {
           replace: true,
           state: {
-            statusMessage: 'Session closed. You can log in again.',
+            statusMessage: t('shell.session_closed'),
           },
         }),
       )
@@ -72,20 +75,21 @@ export function AppHeader() {
   }
 
   const { theme, toggleTheme } = useTheme()
+  const routeLabel = currentItem ? t(`nav.${currentItem.to}.label`, currentItem.label) : env.appName
 
   return (
     <header className="relative z-10 border-b border-(--border) bg-(--shell-header-bg) px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-start gap-3">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={openSidebar}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--border) bg-(--accent-soft) text-(--foreground) shadow-lg min-[961px]:hidden"
-              aria-label="Toggle navigation"
-            >
-              <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
-            </button>
+              <button
+                type="button"
+                onClick={openSidebar}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--border) bg-(--accent-soft) text-(--foreground) shadow-lg min-[961px]:hidden"
+                aria-label={t('shell.toggle_navigation')}
+              >
+                <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
+              </button>
             <div className={cn('hidden h-10 w-px bg-(--border) min-[961px]:block', hideRouteContext && 'md:hidden')} />
           </div>
           <div className="min-w-0">
@@ -96,7 +100,7 @@ export function AppHeader() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate text-base font-bold text-(--foreground) tracking-tight">
-                    {currentItem?.label ?? env.appName}
+                    {routeLabel}
                   </p>
                 </div>
               </div>
@@ -118,10 +122,28 @@ export function AppHeader() {
                 {user.job_title}
               </Badge>
             ) : null}
+            <div className="flex items-center rounded-xl border border-(--border) bg-(--muted-surface) p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
+              {(Object.keys(localeLabels) as AppLocale[]).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setLocale(value)}
+                  aria-label={`${t('shell.language')}: ${localeLabels[value]}`}
+                  className={cn(
+                    'inline-flex min-h-8 min-w-9 items-center justify-center rounded-lg px-2 text-[11px] font-semibold tracking-[0.08em] transition-colors',
+                    locale === value
+                      ? 'bg-white text-black shadow-[0_1px_2px_rgba(0,0,0,0.20)]'
+                      : 'text-(--muted) hover:bg-(--accent-soft) hover:text-(--foreground)',
+                  )}
+                >
+                  {localeLabels[value]}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={toggleTheme}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? t('shell.switch_to_light') : t('shell.switch_to_dark')}
               className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--border) bg-(--muted-surface) text-(--muted) transition-colors hover:bg-(--accent-soft) hover:text-(--foreground)"
             >
               {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
@@ -133,7 +155,7 @@ export function AppHeader() {
               disabled={isSubmitting}
               onClick={() => void handleLogout()}
             >
-              {isSubmitting ? 'Logging out...' : 'Logout'}
+              {isSubmitting ? t('shell.logging_out') : t('shell.logout')}
             </Button>
           </div>
         </div>

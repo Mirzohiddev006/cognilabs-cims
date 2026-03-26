@@ -27,8 +27,8 @@ import {
   formatCount,
   formatDetailDate,
   formatPercent,
+  getEstimateRecordForMember,
   getMonthName,
-  getPrimaryEstimateRecord,
   getSuccessMessage,
   isRecord,
   monthOptions,
@@ -36,6 +36,13 @@ import {
   parseMaybeJson,
   resolveRecordDisplayName,
 } from '../lib/salaryEstimates'
+
+type FaultsMemberDetailPageMode = 'salary-detail' | 'member-updates'
+
+type FaultsMemberDetailPageProps = {
+  memberIdOverride?: number
+  mode?: FaultsMemberDetailPageMode
+}
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
@@ -127,7 +134,10 @@ function resolveMemberDisplayName(...sources: Array<unknown>) {
   return null
 }
 
-export function FaultsMemberDetailPage() {
+export function FaultsMemberDetailPage({
+  memberIdOverride,
+  mode = 'salary-detail',
+}: FaultsMemberDetailPageProps = {}) {
   const navigate = useNavigate()
   const params = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -141,14 +151,24 @@ export function FaultsMemberDetailPage() {
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
 
-  const memberId = Number(params.memberId)
+  const isMemberUpdatesMode = mode === 'member-updates'
+  const memberId = memberIdOverride ?? Number(params.memberId)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
+  const pageEyebrow = isMemberUpdatesMode ? 'Updates / My Detail' : 'CEO / Salary / Detail'
+  const loadingTitle = isMemberUpdatesMode ? 'Loading your update detail' : 'Loading member salary detail'
+  const loadingDescription = isMemberUpdatesMode
+    ? 'Retrieving your monthly update context, estimate snapshot and activity details.'
+    : 'Retrieving member estimate, penalties, bonuses, and monthly update context.'
+  const errorActionLabel = isMemberUpdatesMode ? 'Back to dashboard' : 'Back to salary estimates'
+  const backTarget = isMemberUpdatesMode ? '/member/dashboard' : `/faults?year=${year}&month=${month}`
+  const topHeaderEyebrow = isMemberUpdatesMode ? 'My Update Detail' : 'CEO Salary Detail'
+  const showCompensationActions = !isMemberUpdatesMode
 
   const detailQuery = useAsyncData(
     async () => {
       const [estimateResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
-        membersService.salaryEstimate(memberId, year, month),
+        membersService.salaryEstimates({ year, month, employeeIds: [memberId] }),
         membersService.updatesStatistics({ year, month, employeeIds: [memberId] }),
         updateTrackingService.employeeMonthlyUpdates(year, month, memberId),
         membersService.updatesAll({ year, month, employeeIds: [memberId] }),
@@ -161,7 +181,7 @@ export function FaultsMemberDetailPage() {
       const historyEmployeeRecord = findHistoryEmployeeRecord(historyPayload, memberId)
       const historyPeriodRecord = findHistoryPeriodRecord(historyEmployeeRecord, year, month)
       const effectiveEstimatePayload = estimatePayload ?? historyPeriodRecord ?? historyEmployeeRecord
-      const estimateRecord = getPrimaryEstimateRecord(effectiveEstimatePayload)
+      const estimateRecord = getEstimateRecordForMember(effectiveEstimatePayload, memberId)
       const snapshot = estimateRecord ? normalizeEstimateEntry(estimateRecord) : null
       const historyReport = historyPayload
         ? buildEmployeeReports([], historyPayload, { includeFallbackUsers: false }).find((entry) => entry.id === memberId) ?? null
@@ -382,11 +402,11 @@ export function FaultsMemberDetailPage() {
   if (!Number.isFinite(memberId) || memberId <= 0) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Salary / Detail"
+        eyebrow={pageEyebrow}
         title="Invalid member ID"
         description="The member identifier in the route is invalid."
-        actionLabel="Back to salary estimates"
-        onAction={() => navigate('/faults')}
+        actionLabel={errorActionLabel}
+        onAction={() => navigate(backTarget)}
       />
     )
   }
@@ -394,9 +414,9 @@ export function FaultsMemberDetailPage() {
   if (detailQuery.isLoading && !detail) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Salary / Detail"
-        title="Loading member salary detail"
-        description="Retrieving member estimate, penalties, bonuses, and monthly update context."
+        eyebrow={pageEyebrow}
+        title={loadingTitle}
+        description={loadingDescription}
       />
     )
   }
@@ -404,11 +424,11 @@ export function FaultsMemberDetailPage() {
   if (detailQuery.isError || !detail) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Salary / Detail"
+        eyebrow={pageEyebrow}
         title="Member detail unavailable"
         description="Could not build a salary detail page for this member."
-        actionLabel="Back to salary estimates"
-        onAction={() => navigate('/faults')}
+        actionLabel={errorActionLabel}
+        onAction={() => navigate(backTarget)}
       />
     )
   }
@@ -421,29 +441,31 @@ export function FaultsMemberDetailPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate(`/faults?year=${year}&month=${month}`)}
-          className="min-h-8 rounded-xl border border-white/8 bg-white/[0.03] px-3 text-[11px] text-white/78 hover:border-white/12 hover:bg-white/[0.05] hover:text-white"
-        >
-          <svg viewBox="0 0 16 16" className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M10 3.5 5.5 8 10 12.5" />
-          </svg>
-          Back to salary estimates
-        </Button>
-      </div>
+      {!isMemberUpdatesMode ? (
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(backTarget)}
+            className="min-h-8 rounded-xl border border-white/8 bg-white/[0.03] px-3 text-[11px] text-white/78 hover:border-white/12 hover:bg-white/[0.05] hover:text-white"
+          >
+            <svg viewBox="0 0 16 16" className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M10 3.5 5.5 8 10 12.5" />
+            </svg>
+            {errorActionLabel}
+          </Button>
+        </div>
+      ) : null}
 
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-orange-500/20">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--blue-border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.16),transparent_38%),radial-gradient(circle_at_right,rgba(34,197,94,0.10),transparent_26%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_38%),radial-gradient(circle_at_right,rgba(34,211,238,0.12),transparent_26%)]" />
 
           <div className="relative z-10 flex flex-col gap-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold tracking-[0.02em] text-orange-200/80">
-                  CEO Salary Detail
+                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
+                  {topHeaderEyebrow}
                 </p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
                   {detail.report.fullName}
@@ -453,11 +475,11 @@ export function FaultsMemberDetailPage() {
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge variant="success">Employee API detail</Badge>
+                  <Badge variant="blue">Employee API detail</Badge>
                   <Badge variant={detail.report.hasPenalty ? 'danger' : 'outline'}>
                     {detail.report.hasPenalty ? 'Penalty applied' : 'No penalties'}
                   </Badge>
-                  <Badge variant={detail.report.hasBonus ? 'success' : 'outline'}>
+                  <Badge variant={detail.report.hasBonus ? 'blue' : 'outline'}>
                     {detail.report.hasBonus ? 'Bonus applied' : 'No bonuses'}
                   </Badge>
                   <Badge variant="outline">{detail.report.label}</Badge>
@@ -481,12 +503,21 @@ export function FaultsMemberDetailPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                <Button variant="ghost" size="sm" onClick={openPenaltyDialog} className="rounded-xl">
-                  Add penalty
-                </Button>
-                <Button variant="success" size="sm" onClick={openBonusDialog} className="rounded-xl">
-                  Add bonus
-                </Button>
+                {showCompensationActions ? (
+                  <Button variant="ghost" size="sm" onClick={openPenaltyDialog} className="rounded-xl">
+                    Add penalty
+                  </Button>
+                ) : null}
+                {showCompensationActions ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={openBonusDialog}
+                    className="rounded-xl border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)]"
+                  >
+                    Add bonus
+                  </Button>
+                ) : null}
                 <Button
                   variant="secondary"
                   size="sm"
@@ -537,7 +568,7 @@ export function FaultsMemberDetailPage() {
         <DetailStatTile label="Final salary" value={formatAmount(detail.report.finalSalary)} />
         <DetailStatTile label="Estimated salary" value={formatAmount(detail.report.estimatedSalary)} />
         <DetailStatTile label="Deduction" value={formatAmount(detail.report.deductionAmount)} tone="danger" />
-        <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="success" />
+        <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="blue" />
       </div>
 
       <Card className="rounded-[24px] border-white/10 p-6">
@@ -559,7 +590,7 @@ export function FaultsMemberDetailPage() {
           <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
           <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
-          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="success" />
+          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="blue" />
         </div>
 
         <div className="mt-5 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
@@ -568,7 +599,7 @@ export function FaultsMemberDetailPage() {
             <span className="text-white/25">-</span>
             <span className="font-semibold text-rose-400">{formatAmount(detail.report.deductionAmount)}</span>
             <span className="text-white/25">+</span>
-            <span className="font-semibold text-emerald-400">{formatAmount(detail.report.bonusAmount)}</span>
+            <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
             <span className="text-white/25">=</span>
             <span className="text-base font-semibold tracking-tight text-white">
               {formatAmount(detail.report.finalSalary)}
@@ -594,13 +625,7 @@ export function FaultsMemberDetailPage() {
             </h2>
           </div>
           <Badge
-            variant={
-              (updatesCompletion ?? 0) >= 80
-                ? 'success'
-                : (updatesCompletion ?? 0) > 0
-                  ? 'warning'
-                  : 'outline'
-            }
+            variant={updatesSummary ? 'blue' : 'outline'}
           >
             {updatesSummary
               ? `${formatPercent(updatesSummary.completionPercentage)} completion`
@@ -617,7 +642,7 @@ export function FaultsMemberDetailPage() {
               <DetailStatTile
                 label="Update percentage"
                 value={formatPercent(updatesCompletion)}
-                tone={(updatesCompletion ?? 0) >= 80 ? 'success' : 'default'}
+                tone={updatesSummary ? 'blue' : 'default'}
               />
             </div>
 
@@ -780,101 +805,110 @@ export function FaultsMemberDetailPage() {
         </Card>
       </div>
 
-      <Dialog
-        open={isPenaltyDialogOpen}
-        onClose={() => setIsPenaltyDialogOpen(false)}
-        title={`Add penalty for ${detail.report.fullName}`}
-        description={`${getMonthName(month)} ${year} monthly penalty entry.`}
-        footer={
-          <>
+      {showCompensationActions ? (
+        <Dialog
+          open={isPenaltyDialogOpen}
+          onClose={() => setIsPenaltyDialogOpen(false)}
+          title={`Add penalty for ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} monthly penalty entry.`}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setIsPenaltyDialogOpen(false)}
+                disabled={isPenaltySubmitting}
+              >
+                Cancel
+              </Button>
+              <Button onClick={() => void handleSubmitPenalty()} loading={isPenaltySubmitting}>
+                Save penalty
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Penalty points</label>
+              <Input
+                type="number"
+                min="1"
+                max="100"
+                value={penaltyPoints}
+                onChange={(event) => setPenaltyPoints(event.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
+              <Textarea
+                value={penaltyReason}
+                onChange={(event) => setPenaltyReason(event.target.value)}
+                placeholder="Optional penalty reason"
+              />
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={isBonusDialogOpen}
+          onClose={() => setIsBonusDialogOpen(false)}
+          title={`Add bonus for ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} monthly bonus entry.`}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setIsBonusDialogOpen(false)}
+                disabled={isBonusSubmitting}
+              >
+                Cancel
+              </Button>
             <Button
               variant="secondary"
-              onClick={() => setIsPenaltyDialogOpen(false)}
-              disabled={isPenaltySubmitting}
+              onClick={() => void handleSubmitBonus()}
+              loading={isBonusSubmitting}
+              className="border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)]"
             >
-              Cancel
-            </Button>
-            <Button onClick={() => void handleSubmitPenalty()} loading={isPenaltySubmitting}>
-              Save penalty
-            </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-            <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Penalty points</label>
-            <Input
-              type="number"
-              min="1"
-              max="100"
-              value={penaltyPoints}
-              onChange={(event) => setPenaltyPoints(event.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-            <Textarea
-              value={penaltyReason}
-              onChange={(event) => setPenaltyReason(event.target.value)}
-              placeholder="Optional penalty reason"
-            />
-          </div>
-        </div>
-      </Dialog>
-
-      <Dialog
-        open={isBonusDialogOpen}
-        onClose={() => setIsBonusDialogOpen(false)}
-        title={`Add bonus for ${detail.report.fullName}`}
-        description={`${getMonthName(month)} ${year} monthly bonus entry.`}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setIsBonusDialogOpen(false)}
-              disabled={isBonusSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button variant="success" onClick={() => void handleSubmitBonus()} loading={isBonusSubmitting}>
               Save bonus
             </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-            <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
-          </div>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Bonus amount</label>
-            <Input
-              type="number"
-              min="1"
-              value={bonusAmount}
-              onChange={(event) => setBonusAmount(event.target.value)}
-              placeholder="Enter bonus amount"
-            />
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Bonus amount</label>
+              <Input
+                type="number"
+                min="1"
+                value={bonusAmount}
+                onChange={(event) => setBonusAmount(event.target.value)}
+                placeholder="Enter bonus amount"
+              />
+            </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-            <Textarea
-              value={bonusReason}
-              onChange={(event) => setBonusReason(event.target.value)}
-              placeholder="Optional bonus reason"
-            />
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
+              <Textarea
+                value={bonusReason}
+                onChange={(event) => setBonusReason(event.target.value)}
+                placeholder="Optional bonus reason"
+              />
+            </div>
           </div>
-        </div>
-      </Dialog>
+        </Dialog>
+      ) : null}
     </section>
   )
 }

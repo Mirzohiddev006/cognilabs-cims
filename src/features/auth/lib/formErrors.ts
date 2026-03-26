@@ -1,4 +1,5 @@
 import type { ApiResponseError } from '../../../shared/api/types'
+import { translateCurrent } from '../../../shared/i18n/translations'
 
 export type FieldErrors = Record<string, string>
 
@@ -28,7 +29,7 @@ export function extractFieldErrors(error: unknown): FieldErrors {
   }, {})
 }
 
-export function getErrorMessage(error: unknown, fallback = "So'rov bajarilmadi. Qayta urinib ko'ring.") {
+export function getErrorMessage(error: unknown, fallback = 'Request failed. Please try again.') {
   const apiError = error as ApiResponseError | undefined
   const details = apiError?.details as
     | string
@@ -59,5 +60,5 @@ export function getErrorMessage(error: unknown, fallback = "So'rov bajarilmadi. 
     return apiError.message
   }
 
-  return fallback
+  return translateCurrent('common.request_failed', fallback)
 }

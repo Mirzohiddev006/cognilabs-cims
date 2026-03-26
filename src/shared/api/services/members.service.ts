@@ -82,6 +82,16 @@ export const membersService = {
     })
   },
 
+  mySalaryEstimate(year: number, month: number) {
+    return request<unknown>({
+      path: '/members/member/my-salary-estimate',
+      query: {
+        year,
+        month,
+      },
+    })
+  },
+
   salaryEstimates({ year, month, employeeIds }: MemberSalaryEstimateParams) {
     return request<unknown>({
       path: '/members/member/salary-estimates',

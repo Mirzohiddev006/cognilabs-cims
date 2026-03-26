@@ -367,7 +367,7 @@ export function CrmDashboardPage() {
   const [platformFilter, setPlatformFilter] = useState('')
   const [dateStart, setDateStart] = useState('')
   const [dateEnd, setDateEnd] = useState('')
-  const [pageSize, setPageSize] = useState('10')
+  const [pageSize, setPageSize] = useState('75')
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
@@ -377,9 +377,9 @@ export function CrmDashboardPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
 
-  const pageSizeValue = Number(pageSize) || 10
+  const pageSizeValue = Number(pageSize) || 75
 
-  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(pageSizeValue), [pageSizeValue])
+  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
   const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
 

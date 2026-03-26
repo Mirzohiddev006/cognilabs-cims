@@ -391,6 +391,23 @@ export const projectsService = {
     }))
   },
 
+  async getUserOpenBoardDetail(boardId: number, userId: number, projectId?: number | null) {
+    const scopedProjectIds = typeof projectId === 'number' && Number.isFinite(projectId) && projectId > 0
+      ? [projectId]
+      : (await this.listUserOpenProjects(userId)).projects.map((project) => project.id)
+
+    for (const nextProjectId of scopedProjectIds) {
+      const response = await this.listUserOpenProjectBoards(nextProjectId, userId)
+      const matchedBoard = response.boards.find((board) => board.id === boardId)
+
+      if (matchedBoard) {
+        return matchedBoard
+      }
+    }
+
+    throw new Error('Board not found in open user projects')
+  },
+
   createBoard(projectId: number, payload: { name: string; description?: string }) {
     return request<CreateResponse>({
       path: `/projects/${projectId}/boards`,

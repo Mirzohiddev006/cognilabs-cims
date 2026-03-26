@@ -28,6 +28,7 @@ type KanbanBoardProps = {
   onEditColumn: (column: ColumnRecord) => void
   onDeleteColumn: (columnId: number) => void
   onAddColumn: () => void
+  readOnly?: boolean
 }
 
 type ActiveDragState =
@@ -46,6 +47,7 @@ export function KanbanBoard({
   onEditColumn,
   onDeleteColumn,
   onAddColumn,
+  readOnly = false,
 }: KanbanBoardProps) {
   const [localColumns, setLocalColumns] = useState<ColumnRecord[]>([])
   const [activeDrag, setActiveDrag] = useState<ActiveDragState>(null)
@@ -225,21 +227,24 @@ export function KanbanBoard({
                 onEditCard={onEditCard}
                 onDeleteCard={onDeleteCard}
                 onClickCard={onClickCard}
+                readOnly={readOnly}
               />
             ))}
           </SortableContext>
 
           {/* Add column ghost button */}
-          <button
-            type="button"
-            onClick={onAddColumn}
-            className="flex h-10 w-64 shrink-0 items-center gap-2 self-start rounded-xl border border-dashed border-white/10 bg-white/5 px-4 text-xs font-medium text-white/40 transition hover:border-white/20 hover:bg-white/8 hover:text-white/70"
-          >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-            </svg>
-            Add another list
-          </button>
+          {!readOnly ? (
+            <button
+              type="button"
+              onClick={onAddColumn}
+              className="flex h-10 w-64 shrink-0 items-center gap-2 self-start rounded-xl border border-dashed border-white/10 bg-white/5 px-4 text-xs font-medium text-white/40 transition hover:border-white/20 hover:bg-white/8 hover:text-white/70"
+            >
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+              </svg>
+              Add another list
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -252,6 +257,7 @@ export function KanbanBoard({
               onDelete={() => {}}
               onClick={() => {}}
               isOverlay
+              readOnly
             />
           )}
           {activeDrag?.type === 'column' && (
@@ -264,6 +270,7 @@ export function KanbanBoard({
               onDeleteCard={() => {}}
               onClickCard={() => {}}
               isOverlay
+              readOnly
             />
           )}
         </DragOverlay>,

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
@@ -44,6 +45,7 @@ export function ProjectFormModal({
   submitLabel,
   isSubmitting,
 }: ProjectFormModalProps) {
+  const { t } = useLocale()
   const [values, setValues] = useState<ProjectFormValues>(empty)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormValues, string>>>({})
@@ -55,7 +57,6 @@ export function ProjectFormModal({
     { enabled: open },
   )
 
-  // Initialise form with existing values
   useEffect(() => {
     if (open) {
       if (initial) {
@@ -63,7 +64,7 @@ export function ProjectFormModal({
           project_name: initial.project_name,
           project_description: initial.project_description ?? '',
           project_url: initial.project_url ?? '',
-          member_ids: initial.members.map((m) => m.id),
+          member_ids: initial.members.map((member) => member.id),
           image: null,
         })
         setPreviewUrl(resolveMediaUrl(initial.image) ?? initial.image ?? null)
@@ -71,11 +72,11 @@ export function ProjectFormModal({
         setValues(empty)
         setPreviewUrl(null)
       }
+
       setErrors({})
     }
   }, [open, initial])
 
-  // Object-URL cleanup
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl.startsWith('blob:')) {
@@ -84,32 +85,48 @@ export function ProjectFormModal({
     }
   }, [previewUrl])
 
-  function set<K extends keyof ProjectFormValues>(key: K, val: ProjectFormValues[K]) {
-    setValues((prev) => ({ ...prev, [key]: val }))
+  function set<K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) {
+    setValues((prev) => ({ ...prev, [key]: value }))
     setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null
-    if (!file) return
+  function handleImageChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null
+
+    if (!file) {
+      return
+    }
+
     set('image', file)
     const url = URL.createObjectURL(file)
-    setPreviewUrl((old) => {
-      if (old?.startsWith('blob:')) URL.revokeObjectURL(old)
+
+    setPreviewUrl((oldValue) => {
+      if (oldValue?.startsWith('blob:')) {
+        URL.revokeObjectURL(oldValue)
+      }
+
       return url
     })
   }
 
-  function validate(): boolean {
+  function validate() {
     const next: typeof errors = {}
-    if (!values.project_name.trim()) next.project_name = 'Project name is required'
+
+    if (!values.project_name.trim()) {
+      next.project_name = t('projects.project_name_required', 'Project name is required')
+    }
+
     setErrors(next)
     return Object.keys(next).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!validate()) return
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+
+    if (!validate()) {
+      return
+    }
+
     const fd = buildFormData({
       project_name: values.project_name.trim(),
       project_description: values.project_description.trim() || undefined,
@@ -117,6 +134,7 @@ export function ProjectFormModal({
       member_ids: values.member_ids,
       image: values.image ?? undefined,
     })
+
     await onSubmit(fd)
   }
 
@@ -127,12 +145,12 @@ export function ProjectFormModal({
       open={open}
       onClose={onClose}
       title={title}
-      eyebrow="Projects"
+      eyebrow={t('projects.form_eyebrow_projects', 'Projects')}
       size="lg"
-      footer={
+      footer={(
         <>
           <Button variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t('projects.cancel', 'Cancel')}
           </Button>
           <Button
             variant="primary"
@@ -143,13 +161,12 @@ export function ProjectFormModal({
             {submitLabel}
           </Button>
         </>
-      }
+      )}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        {/* Image upload */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Project Image
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.project_image', 'Project Image')}
           </label>
           <div className="flex items-center gap-4">
             <div
@@ -157,7 +174,11 @@ export function ProjectFormModal({
               onClick={() => fileRef.current?.click()}
             >
               {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                <img
+                  src={previewUrl}
+                  alt={t('projects.preview_image', 'Preview')}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <svg viewBox="0 0 24 24" className="h-6 w-6 text-[var(--muted)]" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path d="M3 9a2 2 0 0 1 2-2h.93a2 2 0 0 0 1.664-.89l.812-1.22A2 2 0 0 1 10.07 4h3.86a2 2 0 0 1 1.664.89l.812 1.22A2 2 0 0 0 18.07 7H19a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" strokeLinecap="round" strokeLinejoin="round" />
@@ -165,11 +186,15 @@ export function ProjectFormModal({
                 </svg>
               )}
             </div>
+
             <div className="flex flex-col gap-1.5">
               <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>
-                {previewUrl ? 'Change image' : 'Upload image'}
+                {previewUrl
+                  ? t('projects.change_image', 'Change image')
+                  : t('projects.upload_image', 'Upload image')}
               </Button>
-              {previewUrl && (
+
+              {previewUrl ? (
                 <Button
                   type="button"
                   variant="ghost"
@@ -177,15 +202,22 @@ export function ProjectFormModal({
                   onClick={() => {
                     set('image', null)
                     setPreviewUrl(null)
-                    if (fileRef.current) fileRef.current.value = ''
+
+                    if (fileRef.current) {
+                      fileRef.current.value = ''
+                    }
                   }}
                 >
-                  Remove
+                  {t('projects.remove', 'Remove')}
                 </Button>
-              )}
-              <p className="text-[10px] text-[var(--muted)]">PNG, JPG up to 5 MB</p>
+              ) : null}
+
+              <p className="text-[10px] text-[var(--muted)]">
+                {t('projects.image_hint', 'PNG, JPG up to 5 MB')}
+              </p>
             </div>
           </div>
+
           <input
             ref={fileRef}
             type="file"
@@ -195,54 +227,52 @@ export function ProjectFormModal({
           />
         </div>
 
-        {/* Project name */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Project Name <span className="text-red-400">*</span>
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.project_name', 'Project Name')} <span className="text-red-400">*</span>
           </label>
           <Input
             value={values.project_name}
-            onChange={(e) => set('project_name', e.target.value)}
-            placeholder="My awesome project"
+            onChange={(event) => set('project_name', event.target.value)}
+            placeholder={t('projects.project_name_placeholder', 'My awesome project')}
           />
-          {errors.project_name && (
+          {errors.project_name ? (
             <p className="text-xs text-[var(--danger-text)]">{errors.project_name}</p>
-          )}
+          ) : null}
         </div>
 
-        {/* Description */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Description
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.description', 'Description')}
           </label>
           <Textarea
             value={values.project_description}
-            onChange={(e) => set('project_description', e.target.value)}
-            placeholder="Describe the project goals and scope..."
+            onChange={(event) => set('project_description', event.target.value)}
+            placeholder={t('projects.description_placeholder', 'Describe the project goals and scope...')}
             rows={3}
           />
         </div>
 
-        {/* URL */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Project URL
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.project_url', 'Project URL')}
           </label>
           <Input
             type="url"
             value={values.project_url}
-            onChange={(e) => set('project_url', e.target.value)}
+            onChange={(event) => set('project_url', event.target.value)}
             placeholder="https://example.com"
           />
         </div>
 
-        {/* Members */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-[var(--muted-strong)] uppercase tracking-wide">
-            Members ({values.member_ids.length} selected)
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.members_selected', 'Members ({count} selected)', { count: values.member_ids.length })}
           </label>
           {usersQuery.isLoading ? (
-            <p className="text-xs text-[var(--muted)] py-2">Loading members…</p>
+            <p className="py-2 text-xs text-[var(--muted)]">
+              {t('projects.loading_members', 'Loading members...')}
+            </p>
           ) : (
             <MemberSelector
               allUsers={allUsers}

@@ -15,6 +15,7 @@ type KanbanColumnProps = {
   onDeleteCard: (cardId: number) => void
   onClickCard: (card: CardRecord) => void
   isOverlay?: boolean
+  readOnly?: boolean
 }
 
 export function KanbanColumn({
@@ -26,6 +27,7 @@ export function KanbanColumn({
   onDeleteCard,
   onClickCard,
   isOverlay,
+  readOnly = false,
 }: KanbanColumnProps) {
   const cardIds = useMemo(() => column.cards.map((c) => `card-${c.id}`), [column.cards])
 
@@ -39,6 +41,7 @@ export function KanbanColumn({
   } = useSortable({
     id: `col-${column.id}`,
     data: { type: 'column', column },
+    disabled: readOnly,
   })
 
   const style = {
@@ -71,10 +74,10 @@ export function KanbanColumn({
       <div
         className={cn(
           'flex items-center justify-between gap-2 px-3 py-2.5',
-          'cursor-grab active:cursor-grabbing select-none',
+          readOnly ? 'select-none' : 'cursor-grab active:cursor-grabbing select-none',
         )}
-        {...attributes}
-        {...listeners}
+        {...(!readOnly ? attributes : {})}
+        {...(!readOnly ? listeners : {})}
       >
         <div className="flex items-center gap-2 min-w-0">
           {column.color && (
@@ -91,15 +94,17 @@ export function KanbanColumn({
           </span>
         </div>
 
-        <div onClick={(e) => e.stopPropagation()}>
-          <ActionsMenu
-            label="Column actions"
-            items={[
-              { label: 'Edit column', onSelect: () => onEditColumn(column) },
-              { label: 'Delete column', tone: 'danger', onSelect: () => onDeleteColumn(column.id) },
-            ]}
-          />
-        </div>
+        {!readOnly ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            <ActionsMenu
+              label="Column actions"
+              items={[
+                { label: 'Edit column', onSelect: () => onEditColumn(column) },
+                { label: 'Delete column', tone: 'danger', onSelect: () => onDeleteColumn(column.id) },
+              ]}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* Cards scroll area */}
@@ -118,6 +123,7 @@ export function KanbanColumn({
                   onEdit={onEditCard}
                   onDelete={onDeleteCard}
                   onClick={onClickCard}
+                  readOnly={readOnly}
                 />
               ))
             )}
@@ -126,18 +132,20 @@ export function KanbanColumn({
       </div>
 
       {/* Add card button */}
-      <div className="px-2 pb-2 pt-1">
-        <button
-          type="button"
-          onClick={() => onAddCard(column.id)}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-white/40 transition hover:bg-white/8 hover:text-white/80"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-          </svg>
-          Add a card
-        </button>
-      </div>
+      {!readOnly ? (
+        <div className="px-2 pb-2 pt-1">
+          <button
+            type="button"
+            onClick={() => onAddCard(column.id)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-white/40 transition hover:bg-white/8 hover:text-white/80"
+          >
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+            </svg>
+            Add a card
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }

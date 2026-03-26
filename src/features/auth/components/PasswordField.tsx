@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
 import { useState } from 'react'
+import { useLocale } from '../../../app/hooks/useLocale'
 import { cn } from '../../../shared/lib/cn'
 import { Input } from '../../../shared/ui/input'
 
@@ -11,6 +12,7 @@ type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & 
 }
 
 export function PasswordField({ label, error, hint, id, className, leadingIcon, ...props }: PasswordFieldProps) {
+  const { t } = useLocale()
   const [visible, setVisible] = useState(false)
   const inputId = id ?? props.name
 
@@ -32,7 +34,7 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-label={visible ? t('auth.password.hide', 'Hide password') : t('auth.password.show', 'Show password')}
           aria-pressed={visible}
           className={cn(
             'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 transition-all',

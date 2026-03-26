@@ -48,18 +48,20 @@ export function DetailStatTile({
 }: {
   label: string
   value: string | number
-  tone?: 'default' | 'danger' | 'success'
+  tone?: 'default' | 'danger' | 'success' | 'blue'
 }) {
   const toneClassName = {
     default: 'border-white/10 bg-white/[0.025]',
     danger: 'border-rose-500/35 bg-rose-500/8',
     success: 'border-emerald-500/35 bg-emerald-500/8',
+    blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)]',
   } as const
 
   const valueClassName = {
     default: 'text-white',
     danger: 'text-rose-400',
     success: 'text-emerald-400',
+    blue: 'text-[var(--blue-text)]',
   } as const
 
   return (

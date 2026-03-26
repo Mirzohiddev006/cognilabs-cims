@@ -926,12 +926,45 @@ export function getPrimaryEstimateRecord(payload: unknown) {
   return isRecord(parsedPayload) ? parsedPayload : null
 }
 
+export function getEstimateRecordForMember(
+  payload: unknown,
+  memberId?: number | null,
+  memberName?: string | null,
+) {
+  const parsedPayload = parseMaybeJson(payload)
+  const entries = extractEstimateEntries(parsedPayload)
+
+  if (entries.length === 0) {
+    return isRecord(parsedPayload) ? parsedPayload : null
+  }
+
+  if (typeof memberId === 'number' && Number.isFinite(memberId) && memberId > 0) {
+    const matchedById = entries.find((entry) => normalizeEstimateEntry(entry).userId === memberId)
+
+    if (matchedById) {
+      return matchedById
+    }
+  }
+
+  const normalizedMemberName = memberName?.trim().toLowerCase()
+
+  if (normalizedMemberName) {
+    const matchedByName = entries.find((entry) => normalizeEstimateEntry(entry).userName?.trim().toLowerCase() === normalizedMemberName)
+
+    if (matchedByName) {
+      return matchedByName
+    }
+  }
+
+  return entries[0]
+}
+
 export function buildSalaryLedgerItems(
   payload: unknown,
   kind: 'penalty' | 'bonus',
-  _report: EmployeeSalaryReport,
+  report: EmployeeSalaryReport,
 ) {
-  const root = getPrimaryEstimateRecord(payload)
+  const root = getEstimateRecordForMember(payload, report.id, report.fullName)
 
   if (!root) {
     return []
@@ -1546,7 +1579,7 @@ export function buildEmployeeSalaryDetail({
   year: number
   month: number
 }): EmployeeSalaryDetail {
-  const estimateRecord = getPrimaryEstimateRecord(estimatePayload)
+  const estimateRecord = getEstimateRecordForMember(estimatePayload, report.id, report.fullName)
   const snapshot = estimateRecord ? normalizeEstimateEntry(estimateRecord) : null
   const mergedReport = mergeReportWithSnapshot(report, user, snapshot)
   const updateCalendar = calendarError
