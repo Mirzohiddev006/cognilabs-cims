@@ -7,7 +7,7 @@ import {
 } from '../../../shared/api/services/updateTracking.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getIntlLocale } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
@@ -131,6 +131,9 @@ function SummaryCard({
   hint?: string
   accent?: 'default' | 'warning' | 'blue' | 'success'
 }) {
+  const localizedLabel = translateCurrentLiteral(label)
+  const localizedHint = hint ? translateCurrentLiteral(hint) : null
+
   const accentClassName = {
     default: 'border-white/8 bg-white/[0.03]',
     warning: 'border-amber-500/18 bg-amber-500/[0.06]',
@@ -140,9 +143,9 @@ function SummaryCard({
 
   return (
     <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{label}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
       <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-white">{value}</p>
-      {hint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{hint}</p> : null}
+      {localizedHint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{localizedHint}</p> : null}
     </div>
   )
 }

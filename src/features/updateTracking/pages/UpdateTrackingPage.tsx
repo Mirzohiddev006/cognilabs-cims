@@ -2,7 +2,7 @@ import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getIntlLocale } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
@@ -1193,13 +1193,15 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
   value: ReactNode
   accent?: AccentKey
 }) {
+  const localizedLabel = translateCurrentLiteral(label)
+
   return (
     <div className={cn('card-base flex items-center gap-4 px-5 py-4', cardBorder[accent])}>
       <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', cardIcon[accent])}>
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{label}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
         <p className="mt-1 truncate text-xl font-semibold leading-none text-white">{value}</p>
       </div>
     </div>

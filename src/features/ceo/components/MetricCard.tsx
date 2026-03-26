@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 
 type TrendDirection = 'up' | 'down' | 'flat'
@@ -117,6 +118,9 @@ export function MetricCard({
   children,
 }: MetricCardProps) {
   const config = accentConfig[accent]
+  const localizedLabel = translateCurrentLiteral(label)
+  const localizedCaption = caption ? translateCurrentLiteral(caption) : null
+  const localizedDeltaLabel = deltaLabel ? translateCurrentLiteral(deltaLabel) : null
 
   const trendColor =
     trend === 'up'   ? 'text-emerald-400' :
@@ -142,7 +146,7 @@ export function MetricCard({
             config.label,
           )}
         >
-          {label}
+          {localizedLabel}
         </p>
 
         {sparkBars && sparkBars.length > 0 ? (
@@ -159,12 +163,12 @@ export function MetricCard({
           <div className={cn('mt-2 flex items-center gap-1 text-[11px] font-medium', trendColor)}>
             <TrendArrow trend={trend} />
             <span>{delta}</span>
-            {deltaLabel ? (
-              <span className="text-[var(--caption)] font-normal">{deltaLabel}</span>
+            {localizedDeltaLabel ? (
+              <span className="text-[var(--caption)] font-normal">{localizedDeltaLabel}</span>
             ) : null}
           </div>
-        ) : caption ? (
-          <p className="mt-2 text-[11px] text-[var(--muted)] leading-4">{caption}</p>
+        ) : localizedCaption ? (
+          <p className="mt-2 text-[11px] text-[var(--muted)] leading-4">{localizedCaption}</p>
           ) : null}
       </div>
 

@@ -534,6 +534,242 @@ function withLocalePrefix(locale: AppLocale, prefix: string, subject: string) {
   return `${prefix} ${subject}`
 }
 
+function translateCountPhrase(locale: AppLocale, amount: string, subject: string) {
+  const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+  return `${amount} ${localizedSubject}`
+}
+
+function translatePrefixedSubject(locale: AppLocale, prefix: string, subject: string) {
+  const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+  if (locale === 'uz') {
+    const uzPrefixMap: Record<string, string> = {
+      'back to': `${localizedSubject}ga qaytish`,
+      create: `${localizedSubject} yaratish`,
+      add: `${localizedSubject} qo'shish`,
+      save: `${localizedSubject} saqlash`,
+      search: `${localizedSubject} qidirish`,
+      all: `Barcha ${localizedSubject}`,
+      selected: `Tanlangan ${localizedSubject}`,
+      active: `Faol ${localizedSubject}`,
+      current: `Joriy ${localizedSubject}`,
+      total: `Jami ${localizedSubject}`,
+      close: `${localizedSubject}ni yopish`,
+      view: `${localizedSubject}ni ko'rish`,
+      edit: `${localizedSubject}ni tahrirlash`,
+      delete: `${localizedSubject}ni o'chirish`,
+      remove: `${localizedSubject}ni olib tashlash`,
+      open: `${localizedSubject}ni ochish`,
+      refresh: `${localizedSubject}ni yangilash`,
+      retry: `${localizedSubject}ni qayta urinish`,
+      change: `${localizedSubject}ni almashtirish`,
+      upload: `${localizedSubject}ni yuklash`,
+      send: `${localizedSubject}ni yuborish`,
+      archive: `${localizedSubject}ni arxivlash`,
+      activate: `${localizedSubject}ni faollashtirish`,
+      deactivate: `${localizedSubject}ni nofaol qilish`,
+      enter: `${localizedSubject}ni kiriting`,
+      choose: `${localizedSubject}ni tanlang`,
+      select: `${localizedSubject}ni tanlang`,
+      clear: `${localizedSubject}ni tozalash`,
+      'switch to': `${localizedSubject}ga o'tish`,
+      resend: `${localizedSubject}ni qayta yuborish`,
+      verify: `${localizedSubject}ni tasdiqlash`,
+      copy: `${localizedSubject}ni nusxalash`,
+    }
+
+    return uzPrefixMap[prefix] ?? `${localizedSubject} ${prefix}`
+  }
+
+  if (locale === 'ru') {
+    const ruPrefixMap: Record<string, string> = {
+      'back to': `Назад к ${localizedSubject}`,
+      create: `Создать ${localizedSubject}`,
+      add: `Добавить ${localizedSubject}`,
+      save: `Сохранить ${localizedSubject}`,
+      search: `Поиск ${localizedSubject}`,
+      all: `Все ${localizedSubject}`,
+      selected: `Выбранные ${localizedSubject}`,
+      active: `Активные ${localizedSubject}`,
+      current: `Текущие ${localizedSubject}`,
+      total: `Всего ${localizedSubject}`,
+      close: `Закрыть ${localizedSubject}`,
+      view: `Посмотреть ${localizedSubject}`,
+      edit: `Редактировать ${localizedSubject}`,
+      delete: `Удалить ${localizedSubject}`,
+      remove: `Убрать ${localizedSubject}`,
+      open: `Открыть ${localizedSubject}`,
+      refresh: `Обновить ${localizedSubject}`,
+      retry: `Повторить ${localizedSubject}`,
+      change: `Изменить ${localizedSubject}`,
+      upload: `Загрузить ${localizedSubject}`,
+      send: `Отправить ${localizedSubject}`,
+      archive: `Архивировать ${localizedSubject}`,
+      activate: `Активировать ${localizedSubject}`,
+      deactivate: `Деактивировать ${localizedSubject}`,
+      enter: `Введите ${localizedSubject}`,
+      choose: `Выберите ${localizedSubject}`,
+      select: `Выберите ${localizedSubject}`,
+      clear: `Очистить ${localizedSubject}`,
+      'switch to': `Переключить на ${localizedSubject}`,
+      resend: `Отправить повторно ${localizedSubject}`,
+      verify: `Подтвердить ${localizedSubject}`,
+      copy: `Копировать ${localizedSubject}`,
+    }
+
+    return ruPrefixMap[prefix] ?? `${prefix} ${localizedSubject}`
+  }
+
+  return `${prefix} ${localizedSubject}`
+}
+
+function translateLooseWords(locale: AppLocale, value: string): string | null {
+  const tokenPattern = /([A-Za-zА-Яа-яЁё]+(?:[-'][A-Za-zА-Яа-яЁё]+)*)|([^A-Za-zА-Яа-яЁё]+)/g
+  const tokens: Array<{ value: string; isWord: boolean }> = []
+  let match: RegExpExecArray | null
+
+  while ((match = tokenPattern.exec(value)) !== null) {
+    tokens.push({
+      value: match[1] ?? match[2] ?? '',
+      isWord: Boolean(match[1]),
+    })
+  }
+
+  if (tokens.length === 0) {
+    return null
+  }
+
+  let changed = false
+  let result = ''
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const current = tokens[index]
+
+    if (!current.isWord) {
+      result += current.value
+      continue
+    }
+
+    let translatedChunk: string | null = null
+    let consumedUntil = index
+
+    for (let end = Math.min(tokens.length - 1, index + 10); end >= index; end -= 1) {
+      const slice = tokens.slice(index, end + 1)
+
+      if (!slice.at(-1)?.isWord) {
+        continue
+      }
+
+      let valid = true
+
+      for (let inner = 1; inner < slice.length; inner += 1) {
+        if (!slice[inner].isWord && !/^\s+$/.test(slice[inner].value)) {
+          valid = false
+          break
+        }
+      }
+
+      if (!valid) {
+        continue
+      }
+
+      const phrase = slice.map((part) => part.value).join('')
+      const resolved = resolveLiteral(locale, phrase)
+
+      if (resolved) {
+        translatedChunk = preserveCase(phrase, resolved)
+        consumedUntil = end
+        break
+      }
+    }
+
+    if (translatedChunk) {
+      result += translatedChunk
+      index = consumedUntil
+      changed = true
+      continue
+    }
+
+    const resolvedWord = resolveLiteral(locale, current.value)
+
+    if (resolvedWord) {
+      result += preserveCase(current.value, resolvedWord)
+      changed = true
+      continue
+    }
+
+    result += current.value
+  }
+
+  return changed ? result : null
+}
+
+function translateLiteralInternal(locale: AppLocale, value: string, depth = 0): string {
+  const direct = resolveLiteral(locale, value)
+
+  if (direct) {
+    return preserveCase(value, direct)
+  }
+
+  const patterned = translatePattern(locale, value)
+
+  if (patterned) {
+    return preserveCase(value, patterned)
+  }
+
+  const composite = translateCompositeLiteral(locale, value, depth)
+
+  if (composite) {
+    return composite
+  }
+
+  return value
+}
+
+function translateCompositeLiteral(locale: AppLocale, value: string, depth = 0): string | null {
+  if (depth > 2) {
+    return null
+  }
+
+  for (const separator of [' / ', ' | ', ' • ', ' > ', ' → ']) {
+    if (!value.includes(separator)) {
+      continue
+    }
+
+    const parts = value.split(separator)
+    let changed = false
+    const translatedParts = parts.map((part) => {
+      const trimmedPart = part.trim()
+      const translatedPart = translateLiteralInternal(locale, trimmedPart, depth + 1)
+
+      if (translatedPart !== trimmedPart) {
+        changed = true
+      }
+
+      return translatedPart
+    })
+
+    if (changed) {
+      return translatedParts.join(separator)
+    }
+  }
+
+  const colonIndex = value.indexOf(':')
+
+  if (colonIndex > 0 && colonIndex < value.length - 1) {
+    const prefix = value.slice(0, colonIndex).trim()
+    const suffix = value.slice(colonIndex + 1)
+    const translatedPrefix = translateLiteralInternal(locale, prefix, depth + 1)
+
+    if (translatedPrefix !== prefix) {
+      return `${translatedPrefix}:${suffix}`
+    }
+  }
+
+  return translateLooseWords(locale, value)
+}
+
 function translatePattern(locale: AppLocale, value: string): string | null {
   const normalized = normalizeTranslationSource(value)
 
@@ -573,6 +809,224 @@ function translatePattern(locale: AppLocale, value: string): string | null {
     return locale === 'uz' ? `${amount} bonusli` : locale === 'ru' ? `${amount} с бонусами` : `${amount} with bonuses`
   }
 
+  const messagesWithMatch = normalized.match(/^messages\s+with\s+(.+?)([.!?…]+)?$/)
+
+  if (messagesWithMatch) {
+    const [, subject] = messagesWithMatch
+    return locale === 'uz'
+      ? `${subject} bilan xabarlar`
+      : locale === 'ru'
+        ? `Сообщения с ${subject}`
+        : `Messages with ${subject}`
+  }
+
+  const permissionsForMatch = normalized.match(/^permissions\s+for\s+(.+?)([.!?…]+)?$/)
+
+  if (permissionsForMatch) {
+    const [, subject] = permissionsForMatch
+    return locale === 'uz'
+      ? `${subject} uchun ruxsatlar`
+      : locale === 'ru'
+        ? `Разрешения для ${subject}`
+        : `Permissions for ${subject}`
+  }
+
+  const overridesForMatch = normalized.match(/^overrides\s+for\s+(.+?)([.!?…]+)?$/)
+
+  if (overridesForMatch) {
+    const [, subject] = overridesForMatch
+    return locale === 'uz'
+      ? `${subject} uchun override lar`
+      : locale === 'ru'
+        ? `Правила для ${subject}`
+        : `Overrides for ${subject}`
+  }
+
+  const calendarSuffixMatch = normalized.match(/^(.+?)\s+calendar([.!?…]+)?$/)
+
+  if (calendarSuffixMatch) {
+    const [, subject] = calendarSuffixMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    return locale === 'uz'
+      ? `${localizedSubject} kalendari`
+      : locale === 'ru'
+        ? `${localizedSubject} календарь`
+        : `${localizedSubject} Calendar`
+  }
+
+  const selectedPrefixMatch = normalized.match(/^selected:\s+(.+?)([.!?…]+)?$/)
+
+  if (selectedPrefixMatch) {
+    const [, subject] = selectedPrefixMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    return locale === 'uz'
+      ? `Tanlangan: ${localizedSubject}`
+      : locale === 'ru'
+        ? `Выбрано: ${localizedSubject}`
+        : `Selected: ${localizedSubject}`
+  }
+
+  const dayNumberMatch = normalized.match(/^day\s+(\d+)([.!?…]+)?$/)
+
+  if (dayNumberMatch) {
+    const [, day] = dayNumberMatch
+    return locale === 'uz' ? `${day}-kun` : locale === 'ru' ? `День ${day}` : `Day ${day}`
+  }
+
+  const genericCountMatch = normalized.match(/^(\d+)\s+(.+)$/)
+
+  if (genericCountMatch) {
+    const [, amount, subject] = genericCountMatch
+
+    if (resolveLiteral(locale, subject) || subject.includes(' ')) {
+      return translateCountPhrase(locale, amount, subject)
+    }
+  }
+
+  const loadingPrefixMatch = normalized.match(/^loading\s+(.+?)([.!?…]+)?$/)
+
+  if (loadingPrefixMatch) {
+    const [, subject] = loadingPrefixMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} yuklanmoqda`
+      : locale === 'ru'
+        ? `Загрузка ${localizedSubject}`
+        : `Loading ${localizedSubject}`
+  }
+
+  const unavailableSuffixMatch = normalized.match(/^(.+?)\s+unavailable([.!?…]+)?$/)
+
+  if (unavailableSuffixMatch) {
+    const [, subject] = unavailableSuffixMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} mavjud emas`
+      : locale === 'ru'
+        ? `${localizedSubject} недоступно`
+        : `${localizedSubject} unavailable`
+  }
+
+  const requiredMatch = normalized.match(/^(.+?)\s+is\s+required([.!?…]+)?$/)
+
+  if (requiredMatch) {
+    const [, subject] = requiredMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} majburiy`
+      : locale === 'ru'
+        ? `${localizedSubject} обязательно`
+        : `${localizedSubject} is required`
+  }
+
+  const invalidMatch = normalized.match(/^invalid\s+(.+?)([.!?…]+)?$/)
+
+  if (invalidMatch) {
+    const [, subject] = invalidMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `Noto'g'ri ${localizedSubject}`
+      : locale === 'ru'
+        ? `Некорректный ${localizedSubject}`
+        : `Invalid ${localizedSubject}`
+  }
+
+  const notFoundMatch = normalized.match(/^(.+?)\s+not\s+found([.!?…]+)?$/)
+
+  if (notFoundMatch) {
+    const [, subject] = notFoundMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} topilmadi`
+      : locale === 'ru'
+        ? `${localizedSubject} не найдено`
+        : `${localizedSubject} not found`
+  }
+
+  const noFoundMatch = normalized.match(/^no\s+(.+?)\s+found([.!?…]+)?$/)
+
+  if (noFoundMatch) {
+    const [, subject] = noFoundMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} topilmadi`
+      : locale === 'ru'
+        ? `${localizedSubject} не найдено`
+        : `No ${localizedSubject} found`
+  }
+
+  const failedToMatch = normalized.match(/^failed\s+to\s+(.+?)([.!?…]+)?$/)
+
+  if (failedToMatch) {
+    const [, subject] = failedToMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    return locale === 'uz'
+      ? `${localizedSubject} bo'yicha amal bajarilmadi`
+      : locale === 'ru'
+        ? `Не удалось ${localizedSubject}`
+        : `Failed to ${localizedSubject}`
+  }
+
+  const couldNotMatch = normalized.match(/^could\s+not\s+(load|retrieve|fetch|create|update|delete|build|resolve|move|archive|send|refresh|reorder|verify)\s+(.+?)([.!?…]+)?$/)
+
+  if (couldNotMatch) {
+    const [, action, subject] = couldNotMatch
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+
+    if (locale === 'uz') {
+      const uzActionMap: Record<string, string> = {
+        load: 'yuklab bo`lmadi',
+        retrieve: 'olib bo`lmadi',
+        fetch: 'yuklab bo`lmadi',
+        create: 'yaratib bo`lmadi',
+        update: 'yangilab bo`lmadi',
+        delete: 'o`chirib bo`lmadi',
+        build: 'qurib bo`lmadi',
+        resolve: 'aniqlab bo`lmadi',
+        move: 'ko`chirib bo`lmadi',
+        archive: 'arxivlab bo`lmadi',
+        send: 'yuborib bo`lmadi',
+        refresh: 'yangilab bo`lmadi',
+        reorder: 'qayta tartiblab bo`lmadi',
+        verify: 'tasdiqlab bo`lmadi',
+      }
+
+      return `${localizedSubject} ${uzActionMap[action]}`
+    }
+
+    if (locale === 'ru') {
+      const ruActionMap: Record<string, string> = {
+        load: 'загрузить',
+        retrieve: 'получить',
+        fetch: 'получить',
+        create: 'создать',
+        update: 'обновить',
+        delete: 'удалить',
+        build: 'собрать',
+        resolve: 'определить',
+        move: 'переместить',
+        archive: 'архивировать',
+        send: 'отправить',
+        refresh: 'обновить',
+        reorder: 'переупорядочить',
+        verify: 'подтвердить',
+      }
+
+      return `Не удалось ${ruActionMap[action]} ${localizedSubject}`
+    }
+
+    return `Could not ${action} ${localizedSubject}`
+  }
+
   const stateMatch = normalized.match(/^(.+)\s+(created|updated|deleted|refreshed|loading|unavailable|failed)$/)
 
   if (stateMatch) {
@@ -610,11 +1064,130 @@ function translatePattern(locale: AppLocale, value: string): string | null {
     return `${localizedSubject} ${state}`
   }
 
-  const prefixedMatch = normalized.match(/^(back to|create|add|save|search|all|selected|active|current|total|close|view)\s+(.+)$/)
+  const reloadedMatch = normalized.match(/^(.+?)\s+reloaded([.!?…]+)?$/)
+
+  if (reloadedMatch) {
+    const [, subject] = reloadedMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    return locale === 'uz'
+      ? `${localizedSubject} qayta yuklandi`
+      : locale === 'ru'
+        ? `${localizedSubject} перезагружено`
+        : `${localizedSubject} reloaded`
+  }
+
+  const updatedCreatedSuccessfullyMatch = normalized.match(/^(.+?)\s+was\s+(created|updated)\s+successfully([.!?…]+)?$/)
+
+  if (updatedCreatedSuccessfullyMatch) {
+    const [, subject, action] = updatedCreatedSuccessfullyMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    if (locale === 'uz') {
+      return action === 'created'
+        ? `${localizedSubject} muvaffaqiyatli yaratildi`
+        : `${localizedSubject} muvaffaqiyatli yangilandi`
+    }
+
+    if (locale === 'ru') {
+      return action === 'created'
+        ? `${localizedSubject} успешно создано`
+        : `${localizedSubject} успешно обновлено`
+    }
+
+    return `${localizedSubject} was ${action} successfully`
+  }
+
+  const removedSuccessfullyMatch = normalized.match(/^(.+?)\s+removed\s+successfully([.!?…]+)?$/)
+
+  if (removedSuccessfullyMatch) {
+    const [, subject] = removedSuccessfullyMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    return locale === 'uz'
+      ? `${localizedSubject} muvaffaqiyatli o'chirildi`
+      : locale === 'ru'
+        ? `${localizedSubject} успешно удалено`
+        : `${localizedSubject} removed successfully`
+  }
+
+  const permanentlyRemovedMatch = normalized.match(/^(.+?)\s+will\s+be\s+permanently\s+removed([.!?…]+)?$/)
+
+  if (permanentlyRemovedMatch) {
+    const [, subject] = permanentlyRemovedMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+
+    return locale === 'uz'
+      ? `${localizedSubject} butunlay o'chiriladi`
+      : locale === 'ru'
+        ? `${localizedSubject} будет удалено навсегда`
+        : `${localizedSubject} will be permanently removed`
+  }
+
+  const removedFromSystemMatch = normalized.match(/^(.+?)\s+has\s+been\s+removed\s+from\s+the\s+system([.!?…]+)?$/)
+
+  if (removedFromSystemMatch) {
+    const [, subject] = removedFromSystemMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+    return locale === 'uz'
+      ? `${localizedSubject} tizimdan olib tashlandi`
+      : locale === 'ru'
+        ? `${localizedSubject} удален из системы`
+        : `${localizedSubject} has been removed from the system`
+  }
+
+  const markedAsMatch = normalized.match(/^(.+?)\s+is\s+now\s+marked\s+as\s+(active|inactive)([.!?…]+)?$/)
+
+  if (markedAsMatch) {
+    const [, subject, state] = markedAsMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+    const localizedState = resolveLiteral(locale, state) ?? translateLooseWords(locale, state) ?? state
+
+    return locale === 'uz'
+      ? `${localizedSubject} endi ${localizedState} deb belgilandi`
+      : locale === 'ru'
+        ? `${localizedSubject} теперь помечен как ${localizedState}`
+        : `${localizedSubject} is now marked as ${localizedState}`
+  }
+
+  const checkboxSavedMatch = normalized.match(/^checkbox\s+values\s+saved\s+for\s+(.+?)([.!?…]+)?$/)
+
+  if (checkboxSavedMatch) {
+    const [, subject] = checkboxSavedMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+    return locale === 'uz'
+      ? `${localizedSubject} uchun checkbox qiymatlari saqlandi`
+      : locale === 'ru'
+        ? `Значения флажков сохранены для ${localizedSubject}`
+        : `Checkbox values saved for ${localizedSubject}`
+  }
+
+  if (/^selected\s+permissions\s+have\s+been\s+added\s+to\s+the\s+user([.!?…]+)?$/.test(normalized)) {
+    return locale === 'uz'
+      ? `Tanlangan ruxsatlar foydalanuvchiga qo'shildi`
+      : locale === 'ru'
+        ? `Выбранные разрешения добавлены пользователю`
+        : 'Selected permissions have been added to the user'
+  }
+
+  const removedFromUserMatch = normalized.match(/^(.+?)\s+has\s+been\s+removed\s+from\s+the\s+user([.!?…]+)?$/)
+
+  if (removedFromUserMatch) {
+    const [, subject] = removedFromUserMatch
+    const localizedSubject = translateLiteralInternal(locale, subject, 1)
+    return locale === 'uz'
+      ? `${localizedSubject} foydalanuvchidan olib tashlandi`
+      : locale === 'ru'
+        ? `${localizedSubject} удалено у пользователя`
+        : `${localizedSubject} has been removed from the user`
+  }
+
+  const prefixedMatch = normalized.match(/^(back to|create|add|save|search|all|selected|active|current|total|close|view|edit|delete|remove|open|refresh|retry|change|upload|send|archive|activate|deactivate|enter|choose|select|clear|switch to|resend|verify|copy)\s+(.+?)([.!?…]+)?$/)
 
   if (prefixedMatch) {
     const [, prefix, subject] = prefixedMatch
-    const localizedSubject = resolveLiteral(locale, subject) ?? subject
+    const localizedSubject = resolveLiteral(locale, subject) ?? translateLooseWords(locale, subject) ?? subject
+    return translatePrefixedSubject(locale, prefix, subject)
 
     if (locale === 'uz') {
       const uzPrefixMap: Record<string, string> = {
@@ -682,19 +1255,7 @@ function translatePattern(locale: AppLocale, value: string): string | null {
 }
 
 export function translateLiteral(locale: AppLocale, value: string) {
-  const direct = resolveLiteral(locale, value)
-
-  if (direct) {
-    return preserveCase(value, direct)
-  }
-
-  const patterned = translatePattern(locale, value)
-
-  if (patterned) {
-    return preserveCase(value, patterned)
-  }
-
-  return value
+  return translateLiteralInternal(locale, value)
 }
 
 export function translateCurrentLiteral(value: string) {

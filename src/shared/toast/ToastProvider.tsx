@@ -1,5 +1,6 @@
 import { useState, type PropsWithChildren } from 'react'
 import { createPortal } from 'react-dom'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { ToastContext, type ToastInput } from './ToastContext'
 
 type ToastItem = ToastInput & {
@@ -71,35 +72,45 @@ export function ToastProvider({ children }: PropsWithChildren) {
       {createPortal(
         <div className="pointer-events-none fixed right-4 top-4 z-[90] flex w-[min(92vw,420px)] flex-col gap-3">
           {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`pointer-events-auto relative overflow-hidden rounded-2xl border px-4 py-4 backdrop-blur-xl ${toneStyles[toast.tone ?? 'info'].shell}`}
-            >
-              <span className={`absolute inset-y-0 left-0 w-1 ${toneStyles[toast.tone ?? 'info'].rail}`} aria-hidden="true" />
-              <div className="flex items-start gap-3">
-                <div className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${toneStyles[toast.tone ?? 'info'].iconWrap}`}>
-                  {toneStyles[toast.tone ?? 'info'].icon}
-                </div>
+            (() => {
+              const tone = toast.tone ?? 'info'
+              const toneStyle = toneStyles[tone]
+              const localizedTone = translateCurrentLiteral(tone)
+              const localizedTitle = translateCurrentLiteral(toast.title)
+              const localizedDescription = toast.description ? translateCurrentLiteral(toast.description) : null
 
-                <div className="min-w-0 flex-1">
-                  <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${toneStyles[toast.tone ?? 'info'].eyebrow}`}>
-                    {toast.tone ?? 'info'}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold tracking-tight">{toast.title}</p>
-                  {toast.description ? (
-                    <p className={`mt-1 text-[12px] leading-5 ${toneStyles[toast.tone ?? 'info'].description}`}>{toast.description}</p>
-                  ) : null}
-                </div>
-
-                <button
-                  type="button"
-                  className={`inline-flex h-9 shrink-0 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors ${toneStyles[toast.tone ?? 'info'].close}`}
-                  onClick={() => removeToast(toast.id)}
+              return (
+                <div
+                  key={toast.id}
+                  className={`pointer-events-auto relative overflow-hidden rounded-2xl border px-4 py-4 backdrop-blur-xl ${toneStyle.shell}`}
                 >
-                  Close
-                </button>
-              </div>
-            </div>
+                  <span className={`absolute inset-y-0 left-0 w-1 ${toneStyle.rail}`} aria-hidden="true" />
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${toneStyle.iconWrap}`}>
+                      {toneStyle.icon}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-[10px] font-semibold uppercase tracking-[0.22em] ${toneStyle.eyebrow}`}>
+                        {localizedTone}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold tracking-tight">{localizedTitle}</p>
+                      {localizedDescription ? (
+                        <p className={`mt-1 text-[12px] leading-5 ${toneStyle.description}`}>{localizedDescription}</p>
+                      ) : null}
+                    </div>
+
+                    <button
+                      type="button"
+                      className={`inline-flex h-9 shrink-0 items-center justify-center rounded-xl border px-3 text-xs font-medium transition-colors ${toneStyle.close}`}
+                      onClick={() => removeToast(toast.id)}
+                    >
+                      {translateCurrentLiteral('Close')}
+                    </button>
+                  </div>
+                </div>
+              )
+            })()
           ))}
         </div>,
         document.body,

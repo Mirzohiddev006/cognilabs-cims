@@ -616,7 +616,7 @@ export function AppSidebar() {
                   value={memberForm.current_password}
                   onChange={(event) => updateMemberForm('current_password', event.target.value)}
                   className="mt-2"
-                  placeholder="Fill only if changing password"
+                  placeholder={t('profile.current_password_hint', 'Fill only if changing password')}
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
@@ -626,7 +626,7 @@ export function AppSidebar() {
                   value={memberForm.new_password}
                   onChange={(event) => updateMemberForm('new_password', event.target.value)}
                   className="mt-2"
-                  placeholder="Leave blank to keep current password"
+                  placeholder={t('profile.new_password_hint', 'Leave blank to keep current password')}
                 />
               </div>
             </>

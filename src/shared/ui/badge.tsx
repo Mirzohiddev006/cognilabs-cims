@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from 'react'
+import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
 
 type BadgeVariant =
@@ -76,6 +77,8 @@ export function Badge({
   dot = false,
   pulse = false,
 }: BadgeProps) {
+  const localizedChildren = typeof children === 'string' ? translateCurrentLiteral(children) : children
+
   return (
     <span
       className={cn(
@@ -95,7 +98,7 @@ export function Badge({
           )}
         />
       ) : null}
-      {children}
+      {localizedChildren}
     </span>
   )
 }
