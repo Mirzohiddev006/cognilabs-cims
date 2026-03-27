@@ -162,7 +162,7 @@ export function CustomerDetailDrawer({
 }) {
   const detailQuery = useAsyncData(
     () => crmService.detail(customerId ?? 0),
-    [customerId, open, initialCustomer?.created_at ?? ''],
+    [customerId, open],
     { enabled: open && Boolean(customerId && customerId > 0) },
   )
 
@@ -188,7 +188,7 @@ export function CustomerDetailDrawer({
     }
   }, [onClose, open])
 
-  const customer = detailQuery.data ?? initialCustomer ?? null
+  const customer = detailQuery.data?.id === customerId ? detailQuery.data : initialCustomer ?? null
   const audioSource = useMemo(
     () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url),
     [customer?.audio_file_id, customer?.audio_url],
