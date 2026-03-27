@@ -68,6 +68,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: false,
   },
   {
+    to: '/ceo/website-stats',
+    label: 'Website Stats',
+    description: 'Website admin auth, blog CRUD and publishing stats.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/ceo/workday-overrides',
     label: 'Workday Overrides',
     description: 'Create holidays and short working days for update tracking.',

@@ -237,6 +237,7 @@ export function CeoDashboardPage() {
   const todayCustomers = hasTodayCustomers
     ? (todayCustomerDetailsQuery.data?.length ? todayCustomerDetailsQuery.data : (metrics?.today_customers ?? emptyCustomers))
     : emptyCustomers
+  const users = dashboardQuery.data?.users ?? []
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data ?? emptyCompanyPayments
@@ -557,25 +558,27 @@ export function CeoDashboardPage() {
         eyebrow="CEO / Day 6"
         title="Dashboard, messages va payments"
         actions={
-          <>
-            <Button variant="secondary" onClick={() => void refreshAll()}>
+          <div className="grid w-full gap-2 sm:grid-cols-2 xl:w-[28rem]">
+            <Button className="w-full justify-center" variant="secondary" onClick={() => void refreshAll()}>
               Refresh
             </Button>
-            <Button variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
+            <Button className="w-full justify-center" variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
               Send message all
             </Button>
-            <Button variant="ghost" onClick={openCreateCompanyPaymentModal}>
+            <Button className="w-full justify-center" variant="ghost" onClick={openCreateCompanyPaymentModal}>
               Add recurring payment
             </Button>
-            <Button onClick={openCreatePaymentModal}>Create payment</Button>
-          </>
+            <Button className="w-full justify-center" onClick={openCreatePaymentModal}>
+              Create payment
+            </Button>
+          </div>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard
           label="Users"
-          value={formatCompactNumber(statistics?.user_count ?? 0)}
+          value={formatCompactNumber(statistics?.user_count ?? users.length)}
           caption="Platformadagi jami foydalanuvchilar"
           delta={`${messages.length} sent`}
           deltaLabel="message activity"
@@ -620,7 +623,6 @@ export function CeoDashboardPage() {
           <SectionTitle
             eyebrow="Recurring payments"
             title="Company payment reminders"
-            description="GET/POST/PUT/DELETE /ceo/company-payments endpointlari shu sectionga ulandi."
           />
           <div className="flex flex-wrap gap-2">
             <Badge variant="success" dot>
@@ -971,7 +973,6 @@ export function CeoDashboardPage() {
           <SectionTitle
             eyebrow="Recurring payments"
             title="Company payment reminders"
-            description="GET/POST/PUT/DELETE /ceo/company-payments endpointlari shu sectionga ulandi."
           />
           <div className="flex flex-wrap gap-2">
             <Badge variant="success" dot>

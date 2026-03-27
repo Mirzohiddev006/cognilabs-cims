@@ -1,4 +1,4 @@
-import { useDeferredValue, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
@@ -110,12 +110,12 @@ function buildCustomerFormData(
   audioFile: File | null,
 ) {
   const formData = new FormData()
+  const normalizedStatus = values.status.trim()
 
   const mappedFields: Array<[string, string]> = [
     ['full_name', values.full_name.trim()],
     ['platform', values.platform.trim()],
     ['phone_number', values.phone_number.trim()],
-    [mode === 'create' ? 'status' : 'customer_status', values.status.trim()],
     ['username', values.username.trim()],
     ['assistant_name', values.assistant_name.trim()],
     ['notes', values.notes.trim()],
@@ -128,6 +128,15 @@ function buildCustomerFormData(
       formData.append(key, value)
     }
   })
+
+  if (normalizedStatus) {
+    formData.append('status', normalizedStatus)
+
+    // Some CRM update endpoints still expect the legacy field name on edit.
+    if (mode === 'edit') {
+      formData.append('customer_status', normalizedStatus)
+    }
+  }
 
   if (values.recall_time) {
     formData.append('recall_time', toApiDateTimeWithOffset(values.recall_time))
@@ -315,6 +324,79 @@ function StatusBadge({
   )
 }
 
+function TableAudioControl({ src }: { src: string }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  useEffect(() => {
+    const audio = audioRef.current
+
+    if (!audio) {
+      return
+    }
+
+    const handlePlay = () => setIsPlaying(true)
+    const handlePause = () => setIsPlaying(false)
+    const handleEnded = () => setIsPlaying(false)
+
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('ended', handleEnded)
+
+    return () => {
+      audio.pause()
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('ended', handleEnded)
+    }
+  }, [])
+
+  function togglePlayback() {
+    const audio = audioRef.current
+
+    if (!audio) {
+      return
+    }
+
+    if (audio.paused) {
+      void audio.play()
+      return
+    }
+
+    audio.pause()
+  }
+
+  return (
+    <div className="flex items-center" onClick={(event) => event.stopPropagation()}>
+      <audio ref={audioRef} preload="none" src={src} className="hidden" />
+      <button
+        type="button"
+        onClick={togglePlayback}
+        className={cn(
+          'inline-flex min-h-9 items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition',
+          isPlaying
+            ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+            : 'border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
+        )}
+        aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+      >
+        <span className="grid h-5 w-5 place-items-center rounded-full bg-white/8">
+          {isPlaying ? (
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 fill-current" aria-hidden="true">
+              <path d="M4.5 3.5h2v9h-2zm5 0h2v9h-2z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 16 16" className="ml-0.5 h-3.5 w-3.5 fill-current" aria-hidden="true">
+              <path d="M5 3.8v8.4a.6.6 0 0 0 .93.5l6.2-4.2a.6.6 0 0 0 0-1L5.93 3.3A.6.6 0 0 0 5 3.8Z" />
+            </svg>
+          )}
+        </span>
+        {isPlaying ? 'Pause' : 'Play'}
+      </button>
+    </div>
+  )
+}
+
 function MetricCard({
   label,
   value,
@@ -446,7 +528,7 @@ export function CrmDashboardPage() {
 
       return matchesSearch && matchesPhone && matchesStatus && matchesPlatform && matchesStart && matchesEnd
     })
-  }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter])
+  }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter, statusMetaMap])
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -483,6 +565,24 @@ export function CrmDashboardPage() {
 
   function openCustomerDrawer(customer: CustomerSummary) {
     setDetailCustomer(customer)
+  }
+
+  function syncCustomerInUi(nextCustomer: CustomerSummary) {
+    dashboardQuery.setData((current) => {
+      if (!current) {
+        return current
+      }
+
+      return {
+        ...current,
+        customers: current.customers.map((customer) =>
+          customer.id === nextCustomer.id ? { ...customer, ...nextCustomer } : customer,
+        ),
+      }
+    })
+
+    setSelectedCustomer((current) => (current?.id === nextCustomer.id ? nextCustomer : current))
+    setDetailCustomer((current) => (current?.id === nextCustomer.id ? nextCustomer : current))
   }
 
   async function handleDeleteCustomer(customer: CustomerSummary) {
@@ -535,19 +635,28 @@ export function CrmDashboardPage() {
 
     try {
       const formData = buildCustomerFormData(formValues, modalMode, audioFile)
+      let updatedCustomer: CustomerSummary | null = null
 
       if (modalMode === 'create') {
         await crmService.createCustomer(formData)
       } else if (selectedCustomer) {
-        await crmService.updateCustomer(selectedCustomer.id, formData)
+        await crmService.patchCustomer(selectedCustomer.id, formData)
+        updatedCustomer = await crmService.detail(selectedCustomer.id)
+        syncCustomerInUi(updatedCustomer)
       }
 
       setIsFormOpen(false)
       setAudioFile(null)
-      await Promise.allSettled([dashboardQuery.refetch(), summaryQuery.refetch()])
+      await Promise.allSettled([
+        dashboardQuery.refetch(),
+        summaryQuery.refetch(),
+        statusesQuery.refetch(),
+      ])
       showToast({
         title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
-        description: 'The CRM list has been refreshed.',
+        description: updatedCustomer
+          ? 'Customer row and detail panel were refreshed.'
+          : 'The CRM list has been refreshed.',
         tone: 'success',
       })
     } catch (error) {
@@ -711,6 +820,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Status</label>
               <SelectField
+                key={`crm-status-filter-${statusFilter || 'all'}`}
                 value={statusFilter}
                 options={statusFilterOptions}
                 onValueChange={setStatusFilter}
@@ -720,6 +830,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Platform</label>
               <SelectField
+                key={`crm-platform-filter-${platformFilter || 'all'}`}
                 value={platformFilter}
                 options={platformFilterOptions}
                 onValueChange={setPlatformFilter}
@@ -749,6 +860,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Pagination</label>
               <SelectField
+                key={`crm-page-size-${pageSize}`}
                 value={pageSize}
                 options={pageSizeOptions}
                 onValueChange={setPageSize}
@@ -764,6 +876,7 @@ export function CrmDashboardPage() {
           )}
         >
           <DataTable
+            key={`crm-table-${pageSizeValue}`}
             caption="CRM customers table"
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
@@ -837,6 +950,7 @@ export function CrmDashboardPage() {
               {
                 key: 'audio',
                 header: 'Audio',
+                width: '140px',
                 render: (row) => {
                   const audioSource = resolveAudioUrl(row)
 
@@ -844,36 +958,15 @@ export function CrmDashboardPage() {
                     return '-'
                   }
 
-                  return (
-                    <div
-                      className="flex min-w-[220px] max-w-[260px] flex-col gap-2"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <audio
-                        controls
-                        preload="none"
-                        src={audioSource}
-                        className="h-10 w-full"
-                      >
-                        Your browser does not support audio playback.
-                      </audio>
-                      <a
-                        href={audioSource}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-[var(--muted-strong)] underline underline-offset-4 hover:text-white"
-                      >
-                        Open in new tab
-                      </a>
-                    </div>
-                  )
+                  return <TableAudioControl src={audioSource} />
                 },
               },
               {
                 key: 'notes',
                 header: 'Notes',
+                width: '320px',
                 render: (row) => (
-                  <span className="block max-w-[280px] truncate text-sm text-(--muted-strong) sm:text-[15px]">
+                  <span className="block max-w-[320px] truncate text-sm text-(--muted-strong) sm:text-[15px]">
                     {row.notes || '-'}
                   </span>
                 ),

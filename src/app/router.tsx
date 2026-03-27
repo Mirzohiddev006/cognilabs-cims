@@ -14,6 +14,7 @@ import { CimsTeamPage } from '../features/ceo/pages/CimsTeamPage'
 import { CeoManagementPage } from '../features/ceo/pages/CeoManagementPage'
 import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
 import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
+import { WebsiteStatsPage } from '../features/ceo/pages/WebsiteStatsPage'
 import { CeoWorkdayOverridesPage } from '../features/ceo/pages/CeoWorkdayOverridesPage'
 import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
 import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
@@ -118,6 +119,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     <CeoTeamUpdatesPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/website-stats',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    <WebsiteStatsPage />
                   </ProtectedRoute>
                 ),
               },

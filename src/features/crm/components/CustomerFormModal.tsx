@@ -94,6 +94,7 @@ export function CustomerFormModal({
         <label className="grid gap-2">
           <span className="text-xs font-medium text-[var(--foreground)]">Status</span>
           <SelectField
+            key={`customer-status-${values.status || 'empty'}`}
             value={values.status}
             onValueChange={(value) => onChange('status', value)}
             options={[{ value: '', label: 'Status tanlang' }, ...statusOptions]}

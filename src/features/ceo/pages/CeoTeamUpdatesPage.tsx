@@ -59,7 +59,7 @@ type TeamSalaryEntry = {
   bonusesCount: number | null
 }
 
-/* ─── Month name helper ───────────────────────────────────── */
+/* Month Name Helper */
 function getMonthName(month: number): string {
   return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
@@ -67,7 +67,7 @@ function getMonthName(month: number): string {
 const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
 const MONTH_OPTIONS = ALL_MONTHS.map(({ value, label }) => ({ value: String(value), label }))
 
-/* ─── Dot activity strip ──────────────────────────────────── */
+/* Dot Activity Strip */
 const dotStatusStyle = {
   submitted: 'bg-emerald-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]',
   missing:   'bg-rose-500/80',
@@ -76,7 +76,7 @@ const dotStatusStyle = {
   neutral:   'bg-white/18',
 } as const satisfies Record<DayStatus, string>
 
-/* ─── SummaryCard accent maps (module-scope, not recreated per render) ─ */
+/* SummaryCard Accent Maps */
 type AccentKey = 'default' | 'success' | 'warning' | 'blue' | 'violet'
 
 const summaryCardBorder = {
@@ -97,7 +97,7 @@ const summaryCardIcon = {
 
 function ActivityStrip({ statuses }: { statuses: EmployeeMonthlyStats['daily_statuses'] }) {
   if (!statuses || statuses.length === 0) {
-    return <span className="text-xs text-(--muted)">—</span>
+    return <span className="text-xs text-(--muted)">-</span>
   }
 
   return (
@@ -186,7 +186,7 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-/* ─── Parse all-users-updates response ───────────────────── */
+/* Parse All Users Updates Response */
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
@@ -1051,7 +1051,7 @@ function mergeEmployeeStats(
   }
 }
 
-/* ─── Sort & Filter ───────────────────────────────────────── */
+/* Sort and Filter */
 type SortKey = 'submitted' | 'missing' | 'completion' | 'name'
 type StatusFilter = 'all' | 'on_track' | 'needs_attention'
 
@@ -1097,7 +1097,7 @@ function filterAndSort(
   return list
 }
 
-/* ─── Page ────────────────────────────────────────────────── */
+/* Page */
 export function CeoTeamUpdatesPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -1179,20 +1179,22 @@ export function CeoTeamUpdatesPage() {
     () => parseSalarySummary(salaryQuery.data),
     [salaryQuery.data],
   )
+  const trackingEmployees = useMemo(
+    () => parseAllUsersUpdates(trackingMonthlyQuery.data, month, year),
+    [month, trackingMonthlyQuery.data, year],
+  )
   const rawEmployees = useMemo(
     () => {
-      const parsedEmployees = parseAllUsersUpdates(trackingMonthlyQuery.data, month, year)
-
-      if (parsedEmployees.length === 0) {
+      if (trackingEmployees.length === 0) {
         return rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
       }
 
-      const parsedById = new Map(parsedEmployees.map((employee) => [employee.user_id, employee]))
+      const parsedById = new Map(trackingEmployees.map((employee) => [employee.user_id, employee]))
       const fallbackEmployees = rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
 
       return fallbackEmployees.map((employee) => parsedById.get(employee.user_id) ?? employee)
     },
-    [historyEmployees, month, rosterEmployees, trackingMonthlyQuery.data, year],
+    [historyEmployees, rosterEmployees, trackingEmployees],
   )
   const salaryByEmployee = useMemo(
     () => parseSalaryEstimatesByEmployee(salaryQuery.data),
@@ -1250,6 +1252,17 @@ export function CeoTeamUpdatesPage() {
   }
 
   const sourceEmployees = mergedEmployees.length > 0 ? mergedEmployees : rawEmployees
+  const statsEmployees = useMemo(() => {
+    if (teamEmployees.length > 0) {
+      return teamEmployees
+    }
+
+    if (trackingEmployees.length > 0) {
+      return trackingEmployees
+    }
+
+    return sourceEmployees
+  }, [sourceEmployees, teamEmployees, trackingEmployees])
   const employees = useMemo(
     () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
     [sourceEmployees, search, sortKey, statusFilter],
@@ -1289,16 +1302,32 @@ export function CeoTeamUpdatesPage() {
     )
   }
 
-  const totalEmployees = rosterEmployees.length || sourceEmployees.length || teamSummary?.totalEmployees || salarySummary?.employeesCount || 0
-  const totalSubmitted = sourceEmployees.reduce((s, e) => s + e.submitted_count, 0)
-  const totalMissing   = sourceEmployees.reduce((s, e) => s + e.missing_count, 0)
+  const totalEmployees =
+    (typeof teamSummary?.totalEmployees === 'number' && teamSummary.totalEmployees > 0
+      ? teamSummary.totalEmployees
+      : 0) ||
+    statsEmployees.length ||
+    sourceEmployees.length ||
+    rosterEmployees.length ||
+    salarySummary?.employeesCount ||
+    0
+  const totalSubmitted =
+    (typeof teamSummary?.totalReports === 'number' && teamSummary.totalReports > 0
+      ? teamSummary.totalReports
+      : 0) ||
+    statsEmployees.reduce((s, e) => s + e.submitted_count, 0)
+  const totalMissing = statsEmployees.reduce((s, e) => s + e.missing_count, 0)
   const totalEstimatedSalary = salarySummary?.totalEstimatedSalary ??
     sourceEmployees.reduce((sum, employee) => sum + (employee.estimated_salary ?? 0), 0)
-  const avgCompletion  = sourceEmployees.length
-    ? sourceEmployees.reduce((s, e) => s + e.completion_percentage, 0) / sourceEmployees.length
-    : (teamSummary?.averageCompletion ?? 0)
-  const topPerformer   = sourceEmployees.length
-    ? sourceEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, sourceEmployees[0])
+  const avgCompletion =
+    (typeof teamSummary?.averageCompletion === 'number' && teamSummary.averageCompletion > 0
+      ? teamSummary.averageCompletion
+      : 0) ||
+    (statsEmployees.length
+      ? statsEmployees.reduce((s, e) => s + e.completion_percentage, 0) / statsEmployees.length
+      : 0)
+  const topPerformer = statsEmployees.length
+    ? statsEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, statsEmployees[0])
     : null
   const selectedMonthName = getMonthName(month)
   const holidayOverrides = workdayOverrides.filter((item) => normalizeOverrideDayType(item.day_type) === 'holiday')
@@ -1308,7 +1337,7 @@ export function CeoTeamUpdatesPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      {/* ── Header ─────────────────────────────── */}
+      {/* Header */}
       <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_70%)]" />
@@ -1380,7 +1409,7 @@ export function CeoTeamUpdatesPage() {
         </div>
       </Card>
 
-      {/* ── Metric cards ───────────────────────── */}
+      {/* Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6 stagger-children">
         <SummaryCard
           accent="blue"
@@ -1448,7 +1477,7 @@ export function CeoTeamUpdatesPage() {
           value={
             topPerformer
               ? <span className="text-sm leading-snug">{topPerformer.user_name}<span className="ml-1.5 text-[11px] font-normal text-emerald-400">({topPerformer.completion_percentage.toFixed(1)}%)</span></span>
-              : '—'
+              : '-'
           }
           icon={
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -1458,12 +1487,12 @@ export function CeoTeamUpdatesPage() {
         />
       </div>
 
-      {/* ── Filters ─────────────────────────────── */}
+      {/* Filters */}
       <Card variant="glass" className="p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
             title="Workday Overrides"
-            description="Holiday va short day yozuvlari monthly update expectation bilan birga ko‘rinadi."
+            description="Holiday va short day yozuvlari monthly update expectation bilan birga ko'rinadi."
           />
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="blue">{workdayOverrides.length} entries</Badge>
@@ -1533,7 +1562,7 @@ export function CeoTeamUpdatesPage() {
         <div className="mt-5">
           {workdayOverridesQuery.isError ? (
             <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.08] px-4 py-4 text-sm text-amber-100/82">
-              Workday overrides endpointdan ma'lumot olinmadi. Team table ishlashda davom etadi, lekin override section bo‘sh qoladi.
+              Workday overrides endpointdan ma'lumot olinmadi. Team table ishlashda davom etadi, lekin override section bo'sh qoladi.
             </div>
           ) : workdayOverrides.length > 0 ? (
             <div className="grid gap-3 xl:grid-cols-2">
@@ -1576,7 +1605,7 @@ export function CeoTeamUpdatesPage() {
         <div className="mb-3 flex items-center justify-between gap-3">
           <SectionTitle title="Filters and Comparison Controls" />
           <Badge variant="blue">
-            Showing {employees.length} of {sourceEmployees.length} employees
+            Showing {employees.length} of {totalEmployees} employees
           </Badge>
         </div>
 
@@ -1612,7 +1641,7 @@ export function CeoTeamUpdatesPage() {
               <option value="submitted">Most updates</option>
               <option value="missing">Most missing</option>
               <option value="completion">Completion rate</option>
-              <option value="name">Name A–Z</option>
+              <option value="name">Name A-Z</option>
             </SelectField>
           </div>
 
@@ -1634,7 +1663,7 @@ export function CeoTeamUpdatesPage() {
         </div>
       </Card>
 
-      {/* ── Table ───────────────────────────────── */}
+      {/* Table */}
       <div className="overflow-hidden rounded-2xl border-(--border) bg-(--card) shadow-(--shadow-sm)">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse">
@@ -1691,7 +1720,7 @@ export function CeoTeamUpdatesPage() {
                       <CompletionPill pct={emp.completion_percentage} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-3.5 text-sm text-(--muted-strong)">
-                      {emp.last_update_date ? formatShortDate(emp.last_update_date) : '—'}
+                      {emp.last_update_date ? formatShortDate(emp.last_update_date) : '-'}
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="w-50">

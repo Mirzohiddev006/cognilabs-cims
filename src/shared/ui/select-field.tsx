@@ -23,8 +23,11 @@ type MenuPosition = {
   width: number
 }
 
-function normalizeOptionValue(value: string) {
-  return value.trim().toLowerCase()
+function normalizeOptionValue(value?: string | null) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
 }
 
 function getMenuPosition(trigger: HTMLButtonElement, optionCount: number): MenuPosition {
@@ -49,7 +52,6 @@ export function SelectField({
   placeholder = 'Select option',
   className,
   disabled = false,
-  children: _children,
 }: SelectFieldProps) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -58,7 +60,10 @@ export function SelectField({
   const normalizedValue = normalizeOptionValue(value)
   const selectedOption =
     options.find((option) => option.value === value) ??
-    options.find((option) => normalizeOptionValue(option.value) === normalizedValue)
+    options.find((option) =>
+      normalizeOptionValue(option.value) === normalizedValue ||
+      normalizeOptionValue(option.label) === normalizedValue,
+    )
 
   useEffect(() => {
     if (!isOpen || !triggerRef.current) {
@@ -142,7 +147,8 @@ export function SelectField({
                 {options.map((option) => {
                   const isSelected =
                     option.value === value ||
-                    normalizeOptionValue(option.value) === normalizedValue
+                    normalizeOptionValue(option.value) === normalizedValue ||
+                    normalizeOptionValue(option.label) === normalizedValue
 
                   return (
                     <button
