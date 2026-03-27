@@ -31,6 +31,7 @@ const currentDateKey = [
 
 const COMPLETION_ON_TRACK = 80
 const recentTextKeys = ['update_content', 'update_text', 'message', 'text', 'summary', 'description', 'content', 'body', 'note', 'comment', 'remarks', 'title']
+const recentDateKeys = ['update_date', 'date', 'created_at', 'submitted_at', 'updated_at', 'timestamp']
 
 type UnknownRecord = Record<string, unknown>
 type TeamUpdatesSummary = {
@@ -67,6 +68,28 @@ function getMonthName(month: number): string {
 const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
 const MONTH_OPTIONS = ALL_MONTHS.map(({ value, label }) => ({ value: String(value), label }))
 
+function getDaysInMonth(month: number, year: number) {
+  return new Date(year, month, 0).getDate()
+}
+
+function hasUsefulMonthlyStats(employee: Pick<EmployeeMonthlyStats, 'submitted_count' | 'missing_count' | 'completion_percentage' | 'last_update_date' | 'daily_statuses'>) {
+  return (
+    employee.submitted_count > 0 ||
+    employee.missing_count > 0 ||
+    employee.completion_percentage > 0 ||
+    Boolean(employee.last_update_date) ||
+    Boolean(employee.daily_statuses?.length)
+  )
+}
+
+function hasUsefulMonthlyNumericStats(employee: Pick<EmployeeMonthlyStats, 'submitted_count' | 'missing_count' | 'completion_percentage'>) {
+  return (
+    employee.submitted_count > 0 ||
+    employee.missing_count > 0 ||
+    employee.completion_percentage > 0
+  )
+}
+
 /* Dot Activity Strip */
 const dotStatusStyle = {
   submitted: 'bg-emerald-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]',
@@ -75,6 +98,96 @@ const dotStatusStyle = {
   future:    'bg-white/12',
   neutral:   'bg-white/18',
 } as const satisfies Record<DayStatus, string>
+
+function buildMonthlyActivityStatuses(
+  employee: Pick<EmployeeMonthlyStats, 'daily_statuses' | 'submitted_count' | 'missing_count' | 'completion_percentage' | 'last_update_date'>,
+  month: number,
+  year: number,
+) {
+  if (!hasUsefulMonthlyStats(employee)) {
+    return null
+  }
+
+  const daysInMonth = getDaysInMonth(month, year)
+  const statusesByDay = new Map<number, EmployeeDayStatus>()
+
+  employee.daily_statuses?.forEach((entry) => {
+    if (entry.day < 1 || entry.day > daysInMonth) {
+      return
+    }
+
+    const current = statusesByDay.get(entry.day)
+
+    if (!current || (current.status !== 'submitted' && entry.status === 'submitted')) {
+      statusesByDay.set(entry.day, entry)
+    }
+  })
+
+  return Array.from({ length: daysInMonth }, (_, index) => {
+    const day = index + 1
+    const existing = statusesByDay.get(day)
+
+    if (existing) {
+      return existing
+    }
+
+    return {
+      day,
+      status: getFallbackDayStatus(new Date(year, month - 1, day)),
+    } satisfies EmployeeDayStatus
+  })
+}
+
+function deriveMonthlyStatsFromActivity(
+  employee: Pick<EmployeeMonthlyStats, 'daily_statuses' | 'submitted_count' | 'missing_count' | 'completion_percentage' | 'last_update_date'>,
+  month: number,
+  year: number,
+) {
+  const statuses = buildMonthlyActivityStatuses(employee, month, year)
+
+  if (!statuses || statuses.length === 0) {
+    return null
+  }
+
+  const submittedCount = statuses.filter((entry) => entry.status === 'submitted').length
+  const missingCount = statuses.filter((entry) => entry.status === 'missing').length
+  const trackedDays = submittedCount + missingCount
+
+  if (trackedDays === 0) {
+    return null
+  }
+
+  return {
+    submitted_count: submittedCount,
+    missing_count: missingCount,
+    completion_percentage: Math.round((submittedCount / trackedDays) * 1000) / 10,
+    last_update_date: getLatestDateFromDayStatuses(statuses, month, year),
+  }
+}
+
+function reconcileEmployeeMonthlyStats(
+  employee: EmployeeMonthlyStats,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats {
+  const derivedStats = deriveMonthlyStatsFromActivity(employee, month, year)
+
+  if (!derivedStats) {
+    return employee
+  }
+
+  const employeeHasUsefulNumericStats = hasUsefulMonthlyNumericStats(employee)
+  const derivedHasUsefulNumericStats = hasUsefulMonthlyNumericStats(derivedStats)
+  const shouldUseDerivedNumericStats = derivedHasUsefulNumericStats && !employeeHasUsefulNumericStats
+
+  return {
+    ...employee,
+    submitted_count: shouldUseDerivedNumericStats ? derivedStats.submitted_count : employee.submitted_count,
+    missing_count: shouldUseDerivedNumericStats ? derivedStats.missing_count : employee.missing_count,
+    completion_percentage: shouldUseDerivedNumericStats ? derivedStats.completion_percentage : employee.completion_percentage,
+    last_update_date: employee.last_update_date ?? derivedStats.last_update_date,
+  }
+}
 
 /* SummaryCard Accent Maps */
 type AccentKey = 'default' | 'success' | 'warning' | 'blue' | 'violet'
@@ -95,7 +208,9 @@ const summaryCardIcon = {
   violet:  'border-violet-500/20 bg-violet-500/10 text-violet-300',
 } as const satisfies Record<AccentKey, string>
 
-function ActivityStrip({ statuses }: { statuses: EmployeeMonthlyStats['daily_statuses'] }) {
+function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlyStats, month: number, year: number }) {
+  const statuses = buildMonthlyActivityStatuses(employee, month, year)
+
   if (!statuses || statuses.length === 0) {
     return <span className="text-xs text-(--muted)">-</span>
   }
@@ -105,7 +220,7 @@ function ActivityStrip({ statuses }: { statuses: EmployeeMonthlyStats['daily_sta
       {statuses.map((entry) => (
         <span
           key={entry.day}
-          title={`${entry.label ?? `Slot ${entry.day}`}: ${entry.status}`}
+          title={entry.label ?? `Day ${entry.day}: ${entry.status}`}
           className={cn('inline-block h-2 w-2 rounded-full shrink-0', dotStatusStyle[entry.status])}
         />
       ))}
@@ -260,6 +375,139 @@ function findFirstString(source: UnknownRecord, keys: string[]) {
   return undefined
 }
 
+function findFirstNumber(source: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = toNumber(source[key])
+
+    if (value !== null) {
+      return value
+    }
+  }
+
+  return undefined
+}
+
+function findFirstRecord(source: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = source[key]
+
+    if (isRecord(value)) {
+      return value
+    }
+  }
+
+  return undefined
+}
+
+function findFirstArray(source: UnknownRecord, keys: string[]) {
+  for (const key of keys) {
+    const value = source[key]
+
+    if (Array.isArray(value)) {
+      return value
+    }
+  }
+
+  return undefined
+}
+
+const employeeCollectionKeys = ['employees', 'users', 'data', 'results', 'items', 'team', 'members', 'team_updates', 'all_users', 'monthly_updates', 'rows'] as const
+const employeeNestedKeys = ['data', 'summary', 'statistics', 'result', 'payload', 'monthly_summary', 'team', 'employee', 'member'] as const
+const employeeIdKeys = ['user_id', 'employee_id', 'member_id', 'id'] as const
+
+function normalizeLookupKey(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/\s+/g, ' ') ?? ''
+}
+
+function looksLikeEmployeeRecord(source: UnknownRecord) {
+  return [
+    ...employeeIdKeys,
+    'submitted_count',
+    'update_days',
+    'updates_count',
+    'working_days',
+    'missing_count',
+    'missing_days',
+    'completion_percentage',
+    'percentage',
+    'daily_statuses',
+    'day_statuses',
+    'updates',
+    'reports',
+    'periods',
+    'calendar',
+    'summary',
+    'statistics',
+    'user',
+    'employee',
+    'member',
+  ].some((key) => key in source)
+}
+
+function extractEmployeeRecords(data: unknown): UnknownRecord[] {
+  const parsed = parsePayload(data)
+
+  if (Array.isArray(parsed)) {
+    return parsed.filter(isRecord)
+  }
+
+  if (!isRecord(parsed)) {
+    return []
+  }
+
+  const directEntries = findFirstArray(parsed, [...employeeCollectionKeys])
+
+  if (directEntries) {
+    return directEntries.filter(isRecord)
+  }
+
+  for (const key of employeeNestedKeys) {
+    const nested = parsed[key]
+
+    if (!isRecord(nested)) {
+      continue
+    }
+
+    const nestedEntries = findFirstArray(nested, [...employeeCollectionKeys])
+
+    if (nestedEntries) {
+      return nestedEntries.filter(isRecord)
+    }
+
+    const nestedValues = Object.values(nested).filter(isRecord).filter(looksLikeEmployeeRecord)
+
+    if (nestedValues.length > 0) {
+      return nestedValues
+    }
+
+    if (looksLikeEmployeeRecord(nested)) {
+      return [nested]
+    }
+  }
+
+  if (looksLikeEmployeeRecord(parsed)) {
+    return [parsed]
+  }
+
+  return Object.values(parsed).filter(isRecord).filter(looksLikeEmployeeRecord)
+}
+
+function resolveEmployeeUserId(...sources: Array<UnknownRecord | null | undefined>) {
+  for (const source of sources) {
+    if (!source) {
+      continue
+    }
+
+    const userId = findFirstNumber(source, [...employeeIdKeys])
+
+    if (typeof userId === 'number' && userId > 0) {
+      return userId
+    }
+  }
+
+  return 0
+}
+
 const unknownNameLabels = new Set(['unknown', 'unknown member', 'unknown user', 'member unknown'])
 
 function joinNameParts(...parts: Array<string | undefined>) {
@@ -309,6 +557,64 @@ function parseDateValue(value: string) {
   }
 
   return new Date(value)
+}
+
+function getLatestDateValue(values: Array<string | null | undefined>) {
+  return values.reduce<string | null>((latest, current) => {
+    if (!current) {
+      return latest
+    }
+
+    const currentDate = new Date(current)
+
+    if (Number.isNaN(currentDate.getTime())) {
+      return latest
+    }
+
+    if (!latest) {
+      return current
+    }
+
+    const latestDate = new Date(latest)
+
+    if (Number.isNaN(latestDate.getTime()) || currentDate > latestDate) {
+      return current
+    }
+
+    return latest
+  }, null)
+}
+
+function getLatestDateFromEntries(entries: unknown[] | null | undefined) {
+  if (!entries || entries.length === 0) {
+    return null
+  }
+
+  return getLatestDateValue(
+    entries
+      .map((entry) => (isRecord(entry) ? findFirstString(entry, recentDateKeys) : undefined))
+      .filter((value): value is string => Boolean(value)),
+  )
+}
+
+function getLatestDateFromDayStatuses(
+  dayStatuses: EmployeeDayStatus[] | null | undefined,
+  month: number,
+  year: number,
+) {
+  if (!dayStatuses || dayStatuses.length === 0) {
+    return null
+  }
+
+  const latestSubmittedDay = [...dayStatuses]
+    .filter((entry) => entry.status === 'submitted')
+    .sort((left, right) => right.day - left.day)[0]
+
+  if (!latestSubmittedDay) {
+    return null
+  }
+
+  return new Date(year, month - 1, latestSubmittedDay.day).toISOString()
 }
 
 function normalizeOverrideDayType(value: unknown): WorkdayOverrideRecord['day_type'] {
@@ -508,7 +814,7 @@ function normalizeDayStatusEntry(
     return null
   }
 
-  const dateValue = findFirstString(raw, ['date', 'full_date', 'calendar_date', 'day_date'])
+  const dateValue = findFirstString(raw, ['date', 'full_date', 'calendar_date', 'day_date', ...recentDateKeys])
   const numericDay = toNumber(raw.day ?? raw.day_of_month ?? raw.day_number)
   const date = dateValue
     ? parseDateValue(dateValue)
@@ -567,10 +873,25 @@ function parseDayStatuses(
         .map(([key, value]) => (isDateKey(key) ? { date: key, status: value } : { day: Number(key), status: value }))
       : []
 
-  const parsed = entries
+  const parsedEntries = entries
     .map((entry) => normalizeDayStatusEntry(entry, month, year))
     .filter((entry): entry is EmployeeDayStatus => Boolean(entry))
-    .sort((left, right) => left.day - right.day)
+  const parsedByDay = new Map<number, EmployeeDayStatus>()
+
+  parsedEntries.forEach((entry) => {
+    const current = parsedByDay.get(entry.day)
+
+    if (!current) {
+      parsedByDay.set(entry.day, entry)
+      return
+    }
+
+    if (current.status !== 'submitted' && entry.status === 'submitted') {
+      parsedByDay.set(entry.day, entry)
+    }
+  })
+
+  const parsed = Array.from(parsedByDay.values()).sort((left, right) => left.day - right.day)
 
   return parsed.length > 0 ? parsed : null
 }
@@ -580,16 +901,29 @@ function normalizeEmployee(
   month: number,
   year: number,
 ): EmployeeMonthlyStats {
-  const userRecord = isRecord(raw.user) ? raw.user : null
-  const summaryRecord = isRecord(raw.summary) ? raw.summary : null
+  const userRecord =
+    findFirstRecord(raw, ['user', 'employee', 'member']) ??
+    findFirstRecord(raw, ['member_data', 'user_data']) ??
+    null
+  const summaryRecord =
+    findFirstRecord(raw, ['summary', 'statistics', 'monthly_stats', 'update_stats', 'salary_update']) ??
+    null
   const name = resolveDisplayName(raw, userRecord, summaryRecord) ?? 'Unknown'
+  const sources = [raw, userRecord, summaryRecord].filter(Boolean) as UnknownRecord[]
 
   const dayStatuses = parseDayStatuses(
     raw.daily_statuses ??
     summaryRecord?.daily_statuses ??
+    userRecord?.daily_statuses ??
     raw.day_statuses ??
     summaryRecord?.day_statuses ??
+    userRecord?.day_statuses ??
+    raw.updates ??
+    summaryRecord?.updates ??
+    userRecord?.updates ??
+    raw.reports ??
     raw.daily_updates ??
+    summaryRecord?.daily_updates ??
     raw.statuses ??
     raw.days ??
     raw.calendar ??
@@ -599,39 +933,61 @@ function normalizeEmployee(
     month,
     year,
   )
+  const updatesList = sources
+    .map((source) => findFirstArray(source, ['updates', 'reports', 'entries', 'items']))
+    .find((value): value is unknown[] => Array.isArray(value))
+  const derivedSubmitted = dayStatuses ? dayStatuses.filter((entry) => entry.status === 'submitted').length : 0
+  const derivedMissing = dayStatuses ? dayStatuses.filter((entry) => entry.status === 'missing').length : 0
 
-  const submitted =
-    toNumber(raw.submitted_count ?? raw.updates_count ?? raw.total_submitted ?? raw.logged_count ?? raw.submitted ?? raw.total_reports ?? raw.report_count ?? raw.reports_count ?? summaryRecord?.submitted_count ?? summaryRecord?.updates_count ?? summaryRecord?.total_reports ?? summaryRecord?.report_count ?? summaryRecord?.reports_count) ??
-    (Array.isArray(raw.updates) ? raw.updates.length : null) ??
-    (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'submitted').length : 0)
+  const directSubmitted =
+    sources
+      .map((source) => findFirstNumber(source, ['update_days', 'submitted_count', 'updates_count', 'total_submitted', 'logged_count', 'submitted', 'total_reports', 'report_count', 'reports_count']))
+      .find((value): value is number => value !== undefined) ??
+    (updatesList ? updatesList.length : null) ??
+    derivedSubmitted
+  const submitted = directSubmitted === 0 && derivedSubmitted > 0 ? derivedSubmitted : directSubmitted
 
+  const directMissing = sources
+    .map((source) => findFirstNumber(source, ['missing_days', 'missing_count', 'total_missing', 'missed_count', 'absent_count', 'missing']))
+    .find((value): value is number => value !== undefined)
+  const workingDays = sources
+    .map((source) => findFirstNumber(source, ['working_days', 'work_days', 'expected_updates', 'expected_working_days']))
+    .find((value): value is number => value !== undefined)
   const missing =
-    toNumber(raw.missing_count ?? raw.total_missing ?? raw.missing_days ?? raw.missed_count ?? raw.absent_count ?? raw.missing ?? summaryRecord?.missing_count ?? summaryRecord?.total_missing ?? summaryRecord?.missing_days) ??
-    (dayStatuses ? dayStatuses.filter((entry) => entry.status === 'missing').length : 0)
+    directMissing ??
+    (typeof workingDays === 'number' ? Math.max(workingDays - submitted, 0) : undefined) ??
+    derivedMissing
+  const resolvedMissing =
+    missing === 0 && derivedMissing > 0 && typeof workingDays !== 'number'
+      ? derivedMissing
+      : missing
 
-  const rawCompletion =
-    toNumber(raw.completion_percentage ?? raw.completion_rate ?? raw.percentage ?? raw.percent ?? raw.avg_percentage ?? raw.update_percentage ?? raw.average_update_percentage ?? raw.salary_update_percentage ?? summaryRecord?.completion_percentage ?? summaryRecord?.completion_rate ?? summaryRecord?.percentage ?? summaryRecord?.avg_percentage ?? summaryRecord?.average_update_percentage)
+  const rawCompletion = sources
+    .map((source) => findFirstNumber(source, ['percentage', 'completion_percentage', 'completion_rate', 'percent', 'avg_percentage', 'update_percentage', 'average_update_percentage', 'salary_update_percentage']))
+    .find((value): value is number => value !== undefined)
   const completion =
-    rawCompletion !== null
+    rawCompletion !== undefined && rawCompletion > 0
       ? rawCompletion <= 1 ? rawCompletion * 100 : rawCompletion
-      : submitted + missing > 0
-        ? Math.round((submitted / (submitted + missing)) * 100)
+      : submitted + resolvedMissing > 0
+        ? Math.round((submitted / (submitted + resolvedMissing)) * 100)
         : 0
 
-  const lastDate =
-    findFirstString(raw, ['last_update_date', 'last_update', 'updated_at', 'submitted_at', 'last_report_date']) ??
-    findFirstString(summaryRecord ?? {}, ['last_update_date', 'last_update', 'updated_at', 'submitted_at', 'last_report_date']) ??
+  const lastDate = getLatestDateValue(
+    sources.map((source) => findFirstString(source, ['last_update_date', 'last_update', 'updated_at', 'submitted_at', 'last_report_date', 'latest_report_date'])),
+  ) ??
+    getLatestDateFromEntries(updatesList) ??
+    getLatestDateFromDayStatuses(dayStatuses, month, year) ??
     null
 
   return {
-    user_id: toNumber(raw.user_id ?? raw.id ?? raw.employee_id ?? raw.member_id ?? userRecord?.id) ?? 0,
+    user_id: resolveEmployeeUserId(raw, userRecord, summaryRecord),
     user_name: name,
     telegram_username:
       findFirstString(raw, ['telegram_username', 'telegram_id']) ??
       findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
       null,
     submitted_count: submitted,
-    missing_count: missing,
+    missing_count: resolvedMissing,
     completion_percentage: completion,
     last_update_date: lastDate,
     daily_statuses: dayStatuses,
@@ -643,23 +999,7 @@ function parseAllUsersUpdates(
   month: number,
   year: number,
 ): EmployeeMonthlyStats[] {
-  const parsed = parsePayload(data)
-
-  if (!parsed) return []
-
-  const list: Record<string, unknown>[] = Array.isArray(parsed)
-    ? parsed as Record<string, unknown>[]
-    : (() => {
-        const obj = parsed as Record<string, unknown>
-        for (const key of ['employees', 'users', 'data', 'results', 'items', 'team', 'members', 'team_updates', 'all_users', 'monthly_updates']) {
-          if (Array.isArray(obj[key])) return obj[key] as Record<string, unknown>[]
-        }
-        return []
-      })()
-
-  return list
-    .filter((d): d is Record<string, unknown> => typeof d === 'object' && d !== null)
-    .map((entry) => normalizeEmployee(entry, month, year))
+  return extractEmployeeRecords(data).map((entry) => normalizeEmployee(entry, month, year))
 }
 
 function buildEmployeesFromRoster(memberOptions: WorkdayOverrideMemberOption[]): EmployeeMonthlyStats[] {
@@ -779,23 +1119,14 @@ function mergeEmployeeHistory(
     return fallbackEmployee
   }
 
-  const summary = isRecord(rawHistory.summary) ? rawHistory.summary : null
+  const normalizedHistory = normalizeEmployee(rawHistory, month, year)
   const periods = getEmployeePeriods(rawHistory)
   const selectedPeriod = getSelectedPeriod(periods, month, year)
-  const historySubmittedCount =
-    toNumber(selectedPeriod?.reports_count ?? selectedPeriod?.total_reports ?? selectedPeriod?.submitted_count) ??
-    toNumber(summary?.total_reports ?? summary?.reports_count ?? summary?.submitted_count) ??
-    null
-  const historyCompletion =
-    normalizePercentage(
-      selectedPeriod?.average_update_percentage ??
-      selectedPeriod?.completion_percentage ??
-      selectedPeriod?.percentage ??
-      summary?.average_update_percentage ??
-      summary?.completion_percentage ??
-      summary?.percentage,
-    )
+  const historySubmittedCount = normalizedHistory.submitted_count
+  const historyMissingCount = normalizedHistory.missing_count
+  const historyCompletion = normalizedHistory.completion_percentage
   const lastUpdateDate =
+    normalizedHistory.last_update_date ??
     findFirstString(selectedPeriod ?? {}, ['latest_report_date', 'last_update_date', 'last_report_date', 'updated_at']) ??
     getLatestReportDate(periods) ??
     fallbackEmployee.last_update_date
@@ -804,22 +1135,36 @@ function mergeEmployeeHistory(
     fallbackEmployee.missing_count > 0 ||
     fallbackEmployee.completion_percentage > 0
   const fallbackHasDayStatuses = Boolean(fallbackEmployee.daily_statuses?.length)
+  const historyHasUsefulNumericStats =
+    historySubmittedCount > 0 ||
+    historyMissingCount > 0 ||
+    historyCompletion > 0
   const historyHasUsefulStats =
-    (typeof historySubmittedCount === 'number' && historySubmittedCount > 0) ||
-    (typeof historyCompletion === 'number' && historyCompletion > 0)
+    historyHasUsefulNumericStats ||
+    Boolean(normalizedHistory.last_update_date) ||
+    Boolean(normalizedHistory.daily_statuses?.length)
+  const shouldUseHistoryNumericStats = historyHasUsefulNumericStats || !fallbackHasLiveStats
   const historyActivity = buildMonthlyActivityFromPeriods(periods, year)
 
   return {
-    user_id: toNumber(rawHistory.user_id ?? fallbackEmployee.user_id) ?? fallbackEmployee.user_id,
-    user_name: resolveDisplayName(rawHistory, summary, selectedPeriod) ?? fallbackEmployee.user_name,
+    user_id: normalizedHistory.user_id || fallbackEmployee.user_id,
+    user_name: normalizedHistory.user_name || fallbackEmployee.user_name,
     telegram_username:
-      findFirstString(rawHistory, ['telegram_username', 'telegram_id']) ??
+      normalizedHistory.telegram_username ??
       fallbackEmployee.telegram_username,
-    submitted_count: historyHasUsefulStats ? (historySubmittedCount ?? fallbackEmployee.submitted_count) : fallbackEmployee.submitted_count,
-    missing_count: fallbackEmployee.missing_count,
-    completion_percentage: historyHasUsefulStats ? (historyCompletion ?? fallbackEmployee.completion_percentage) : fallbackEmployee.completion_percentage,
-    last_update_date: lastUpdateDate,
-    daily_statuses: fallbackHasDayStatuses || fallbackHasLiveStats ? fallbackEmployee.daily_statuses : historyActivity,
+    submitted_count: shouldUseHistoryNumericStats ? historySubmittedCount : fallbackEmployee.submitted_count,
+    missing_count: shouldUseHistoryNumericStats ? historyMissingCount : fallbackEmployee.missing_count,
+    completion_percentage: shouldUseHistoryNumericStats ? historyCompletion : fallbackEmployee.completion_percentage,
+    last_update_date:
+      fallbackEmployee.last_update_date && fallbackHasLiveStats
+        ? fallbackEmployee.last_update_date
+        : lastUpdateDate,
+    daily_statuses:
+      !fallbackHasDayStatuses && historyHasUsefulStats && normalizedHistory.daily_statuses && normalizedHistory.daily_statuses.length > 0
+        ? normalizedHistory.daily_statuses
+        : fallbackHasDayStatuses || fallbackHasLiveStats
+          ? fallbackEmployee.daily_statuses
+          : historyActivity,
     base_salary: fallbackEmployee.base_salary ?? null,
     estimated_salary: fallbackEmployee.estimated_salary ?? null,
     final_salary: fallbackEmployee.final_salary ?? null,
@@ -832,17 +1177,20 @@ function mergeEmployeeHistory(
 }
 
 function parseUpdatesAllByEmployee(data: unknown) {
-  const parsed = parsePayload(data)
-
-  if (!isRecord(parsed) || !Array.isArray(parsed.employees)) {
-    return new Map<number, UnknownRecord>()
-  }
-
   return new Map(
-    parsed.employees
-      .filter(isRecord)
-      .map((employee) => [toNumber(employee.user_id) ?? 0, employee] satisfies [number, UnknownRecord])
-      .filter(([userId]) => userId > 0),
+    extractEmployeeRecords(data)
+      .map((employee) => {
+        const userRecord =
+          findFirstRecord(employee, ['user', 'employee', 'member']) ??
+          findFirstRecord(employee, ['member_data', 'user_data']) ??
+          null
+        const summaryRecord =
+          findFirstRecord(employee, ['summary', 'statistics', 'monthly_stats', 'update_stats', 'salary_update']) ??
+          null
+        const userId = resolveEmployeeUserId(employee, userRecord, summaryRecord)
+        return userId > 0 ? [userId, employee] : null
+      })
+      .filter((entry): entry is [number, UnknownRecord] => Boolean(entry)),
   )
 }
 
@@ -851,18 +1199,26 @@ function buildEmployeesFromHistoryRecords(
   month: number,
   year: number,
 ): EmployeeMonthlyStats[] {
-  return Array.from(historyByEmployee.values()).map((record) => (
-    mergeEmployeeHistory(
+  return Array.from(historyByEmployee.values()).map((record) => {
+    const userRecord =
+      findFirstRecord(record, ['user', 'employee', 'member']) ??
+      findFirstRecord(record, ['member_data', 'user_data']) ??
+      null
+    const summaryRecord =
+      findFirstRecord(record, ['summary', 'statistics', 'monthly_stats', 'update_stats', 'salary_update']) ??
+      null
+    const userId = resolveEmployeeUserId(record, userRecord, summaryRecord)
+
+    return mergeEmployeeHistory(
       {
-        user_id: toNumber(record.user_id ?? record.id ?? record.employee_id ?? record.member_id) ?? 0,
+        user_id: userId,
         user_name:
-          resolveDisplayName(
-            record,
-            isRecord(record.user) ? record.user : null,
-            isRecord(record.summary) ? record.summary : null,
-          ) ??
-          `Member #${toNumber(record.user_id ?? record.id ?? record.employee_id ?? record.member_id) ?? 0}`,
-        telegram_username: findFirstString(record, ['telegram_username', 'telegram_id']) ?? null,
+          resolveDisplayName(record, userRecord, summaryRecord) ??
+          `Member #${userId}`,
+        telegram_username:
+          findFirstString(record, ['telegram_username', 'telegram_id']) ??
+          findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
+          null,
         submitted_count: 0,
         missing_count: 0,
         completion_percentage: 0,
@@ -881,7 +1237,7 @@ function buildEmployeesFromHistoryRecords(
       month,
       year,
     )
-  )).filter((employee) => employee.user_id > 0)
+  }).filter((employee) => employee.user_id > 0)
 }
 
 function parseTeamUpdatesSummary(data: unknown): TeamUpdatesSummary | null {
@@ -1028,27 +1384,74 @@ function mergeEmployeeStats(
     return employee
   }
 
-  const statsHasUsefulValues =
-    statsEntry.submitted_count > 0 ||
-    statsEntry.missing_count > 0 ||
-    statsEntry.completion_percentage > 0 ||
-    Boolean(statsEntry.last_update_date) ||
-    Boolean(statsEntry.daily_statuses?.length)
+  const statsHasUsefulNumericValues = hasUsefulMonthlyNumericStats(statsEntry)
+  const employeeHasUsefulNumericValues = hasUsefulMonthlyNumericStats(employee)
+  const shouldUseStatsNumericValues = statsHasUsefulNumericValues && !employeeHasUsefulNumericValues
+  const shouldUseStatsDailyStatuses = Boolean(statsEntry.daily_statuses?.length) && !Boolean(employee.daily_statuses?.length)
 
   return {
     ...employee,
     user_id: statsEntry.user_id || employee.user_id,
     user_name: statsEntry.user_name || employee.user_name,
     telegram_username: statsEntry.telegram_username ?? employee.telegram_username,
-    submitted_count: statsHasUsefulValues ? statsEntry.submitted_count : employee.submitted_count,
-    missing_count: statsHasUsefulValues ? statsEntry.missing_count : employee.missing_count,
-    completion_percentage: statsHasUsefulValues ? statsEntry.completion_percentage : employee.completion_percentage,
-    last_update_date: statsHasUsefulValues ? (statsEntry.last_update_date ?? employee.last_update_date) : employee.last_update_date,
+    submitted_count: shouldUseStatsNumericValues ? statsEntry.submitted_count : employee.submitted_count,
+    missing_count: shouldUseStatsNumericValues ? statsEntry.missing_count : employee.missing_count,
+    completion_percentage: shouldUseStatsNumericValues ? statsEntry.completion_percentage : employee.completion_percentage,
+    last_update_date: employee.last_update_date ?? statsEntry.last_update_date ?? null,
     daily_statuses:
-      statsHasUsefulValues && statsEntry.daily_statuses && statsEntry.daily_statuses.length > 0
+      shouldUseStatsDailyStatuses && statsEntry.daily_statuses && statsEntry.daily_statuses.length > 0
         ? statsEntry.daily_statuses
         : employee.daily_statuses,
   }
+}
+
+type EmployeeStatsLookup = {
+  byId: Map<number, EmployeeMonthlyStats>
+  byName: Map<string, EmployeeMonthlyStats>
+}
+
+function buildEmployeeStatsLookup(employees: EmployeeMonthlyStats[]): EmployeeStatsLookup {
+  const byId = new Map<number, EmployeeMonthlyStats>()
+  const byName = new Map<string, EmployeeMonthlyStats>()
+
+  employees.forEach((employee) => {
+    if (employee.user_id > 0 && !byId.has(employee.user_id)) {
+      byId.set(employee.user_id, employee)
+    }
+
+    const nameKey = normalizeLookupKey(employee.user_name)
+
+    if (nameKey && !byName.has(nameKey)) {
+      byName.set(nameKey, employee)
+    }
+  })
+
+  return { byId, byName }
+}
+
+function matchEmployeeFromLookup(lookup: EmployeeStatsLookup, employee: EmployeeMonthlyStats) {
+  return lookup.byId.get(employee.user_id) ?? lookup.byName.get(normalizeLookupKey(employee.user_name))
+}
+
+function buildRecordLookupByName(records: Iterable<UnknownRecord>) {
+  const byName = new Map<string, UnknownRecord>()
+
+  for (const record of records) {
+    const userRecord =
+      findFirstRecord(record, ['user', 'employee', 'member']) ??
+      findFirstRecord(record, ['member_data', 'user_data']) ??
+      null
+    const summaryRecord =
+      findFirstRecord(record, ['summary', 'statistics', 'monthly_stats', 'update_stats', 'salary_update']) ??
+      null
+    const nameKey = normalizeLookupKey(resolveDisplayName(record, userRecord, summaryRecord))
+
+    if (nameKey && !byName.has(nameKey)) {
+      byName.set(nameKey, record)
+    }
+  }
+
+  return byName
 }
 
 /* Sort and Filter */
@@ -1128,6 +1531,10 @@ export function CeoTeamUpdatesPage() {
     () => parseUpdatesAllByEmployee(historyQuery.data),
     [historyQuery.data],
   )
+  const historyByName = useMemo(
+    () => buildRecordLookupByName(historyByEmployee.values()),
+    [historyByEmployee],
+  )
   const historyEmployees = useMemo(
     () => buildEmployeesFromHistoryRecords(historyByEmployee, month, year),
     [historyByEmployee, month, year],
@@ -1167,9 +1574,13 @@ export function CeoTeamUpdatesPage() {
     () => parseAllUsersUpdates(teamQuery.data, month, year),
     [teamQuery.data, month, year],
   )
-  const teamEmployeesById = useMemo(
-    () => new Map(teamEmployees.map((employee) => [employee.user_id, employee])),
-    [teamEmployees],
+  const reconciledTeamEmployees = useMemo(
+    () => teamEmployees.map((employee) => reconcileEmployeeMonthlyStats(employee, month, year)),
+    [month, teamEmployees, year],
+  )
+  const teamEmployeesLookup = useMemo(
+    () => buildEmployeeStatsLookup(reconciledTeamEmployees),
+    [reconciledTeamEmployees],
   )
   const missingTodayCount = useMemo(
     () => parseMissingEmployeesCount(missingTodayQuery.data),
@@ -1183,18 +1594,47 @@ export function CeoTeamUpdatesPage() {
     () => parseAllUsersUpdates(trackingMonthlyQuery.data, month, year),
     [month, trackingMonthlyQuery.data, year],
   )
+  const reconciledTrackingEmployees = useMemo(
+    () => trackingEmployees.map((employee) => reconcileEmployeeMonthlyStats(employee, month, year)),
+    [month, trackingEmployees, year],
+  )
+  const trackingEmployeesLookup = useMemo(
+    () => buildEmployeeStatsLookup(reconciledTrackingEmployees),
+    [reconciledTrackingEmployees],
+  )
   const rawEmployees = useMemo(
     () => {
-      if (trackingEmployees.length === 0) {
+      if (reconciledTrackingEmployees.length === 0) {
         return rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
       }
 
-      const parsedById = new Map(trackingEmployees.map((employee) => [employee.user_id, employee]))
       const fallbackEmployees = rosterEmployees.length > 0 ? rosterEmployees : historyEmployees
 
-      return fallbackEmployees.map((employee) => parsedById.get(employee.user_id) ?? employee)
+      const fallbackIds = new Set(
+        fallbackEmployees
+          .map((employee) => employee.user_id)
+          .filter((userId) => userId > 0),
+      )
+      const fallbackNames = new Set(
+        fallbackEmployees
+          .map((employee) => normalizeLookupKey(employee.user_name))
+          .filter(Boolean),
+      )
+      const merged = fallbackEmployees.map((employee) => (
+        matchEmployeeFromLookup(trackingEmployeesLookup, employee) ?? employee
+      ))
+      const extras = reconciledTrackingEmployees.filter((employee) => {
+        if (employee.user_id > 0 && fallbackIds.has(employee.user_id)) {
+          return false
+        }
+
+        const nameKey = normalizeLookupKey(employee.user_name)
+        return !nameKey || !fallbackNames.has(nameKey)
+      })
+
+      return [...merged, ...extras]
     },
-    [historyEmployees, rosterEmployees, trackingEmployees],
+    [historyEmployees, reconciledTrackingEmployees, rosterEmployees, trackingEmployeesLookup],
   )
   const salaryByEmployee = useMemo(
     () => parseSalaryEstimatesByEmployee(salaryQuery.data),
@@ -1204,14 +1644,54 @@ export function CeoTeamUpdatesPage() {
     () => rawEmployees.map((employee) => (
       mergeEmployeeSalary(
         mergeEmployeeStats(
-          mergeEmployeeHistory(employee, historyByEmployee.get(employee.user_id), month, year),
-          teamEmployeesById.get(employee.user_id),
+          mergeEmployeeHistory(
+            employee,
+            historyByEmployee.get(employee.user_id) ?? historyByName.get(normalizeLookupKey(employee.user_name)),
+            month,
+            year,
+          ),
+          matchEmployeeFromLookup(teamEmployeesLookup, employee),
         ),
         salaryByEmployee.get(employee.user_id),
       )
     )),
-    [historyByEmployee, month, rawEmployees, salaryByEmployee, teamEmployeesById, year],
+    [historyByEmployee, historyByName, month, rawEmployees, salaryByEmployee, teamEmployeesLookup, year],
   )
+  const sourceEmployees = useMemo(() => {
+    if (reconciledTrackingEmployees.length > 0) {
+      const trackedIds = new Set(
+        reconciledTrackingEmployees
+          .map((employee) => employee.user_id)
+          .filter((userId) => userId > 0),
+      )
+      const trackedNames = new Set(
+        reconciledTrackingEmployees
+          .map((employee) => normalizeLookupKey(employee.user_name))
+          .filter(Boolean),
+      )
+      const trackedEmployees = reconciledTrackingEmployees.map((employee) => (
+        reconcileEmployeeMonthlyStats(
+          mergeEmployeeSalary(employee, salaryByEmployee.get(employee.user_id)),
+          month,
+          year,
+        )
+      ))
+      const extras = mergedEmployees
+        .filter((employee) => {
+          if (employee.user_id > 0 && trackedIds.has(employee.user_id)) {
+            return false
+          }
+
+          const nameKey = normalizeLookupKey(employee.user_name)
+          return !nameKey || !trackedNames.has(nameKey)
+        })
+        .map((employee) => reconcileEmployeeMonthlyStats(employee, month, year))
+
+      return [...trackedEmployees, ...extras]
+    }
+
+    return (mergedEmployees.length > 0 ? mergedEmployees : rawEmployees).map((employee) => reconcileEmployeeMonthlyStats(employee, month, year))
+  }, [mergedEmployees, month, rawEmployees, reconciledTrackingEmployees, salaryByEmployee, year])
 
   async function handleRefresh() {
     const results = await Promise.allSettled([
@@ -1251,18 +1731,23 @@ export function CeoTeamUpdatesPage() {
     navigate(`/faults/members/${employee.user_id}?year=${year}&month=${month}`)
   }
 
-  const sourceEmployees = mergedEmployees.length > 0 ? mergedEmployees : rawEmployees
   const statsEmployees = useMemo(() => {
-    if (teamEmployees.length > 0) {
-      return teamEmployees
+    const hasUsefulStats = (employeesList: EmployeeMonthlyStats[]) => employeesList.some((employee) => hasUsefulMonthlyStats(employee))
+
+    if (hasUsefulStats(sourceEmployees)) {
+      return sourceEmployees
     }
 
-    if (trackingEmployees.length > 0) {
-      return trackingEmployees
+    if (hasUsefulStats(reconciledTrackingEmployees)) {
+      return reconciledTrackingEmployees
+    }
+
+    if (hasUsefulStats(reconciledTeamEmployees)) {
+      return reconciledTeamEmployees
     }
 
     return sourceEmployees
-  }, [sourceEmployees, teamEmployees, trackingEmployees])
+  }, [reconciledTeamEmployees, reconciledTrackingEmployees, sourceEmployees])
   const employees = useMemo(
     () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
     [sourceEmployees, search, sortKey, statusFilter],
@@ -1724,7 +2209,7 @@ export function CeoTeamUpdatesPage() {
                     </td>
                     <td className="px-4 py-3.5">
                       <div className="w-50">
-                        <ActivityStrip statuses={emp.daily_statuses} />
+                        <ActivityStrip employee={emp} month={month} year={year} />
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
