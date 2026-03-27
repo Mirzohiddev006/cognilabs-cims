@@ -1,5 +1,6 @@
-import { useState, type PropsWithChildren } from 'react'
+import { useState, type PropsWithChildren, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useTheme } from '../../app/hooks/useTheme'
 import { translateCurrentLiteral } from '../i18n/translations'
 import { ToastContext, type ToastInput } from './ToastContext'
 
@@ -7,15 +8,40 @@ type ToastItem = ToastInput & {
   id: number
 }
 
-const toneStyles = {
+type ToneStyle = {
+  shell: string
+  iconWrap: string
+  icon: ReactNode
+  eyebrow: string
+  description: string
+  close: string
+  rail: string
+}
+
+const toneIcons = {
+  success: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
+      <path d="m5 10 3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  error: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
+      <path d="M10 6v4m0 4h.01M10 2.5l7 12.5H3l7-12.5Z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  info: (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
+      <path d="M10 6.75h.01M9.25 9.5h.75v3h.75" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="10" cy="10" r="7" />
+    </svg>
+  ),
+} as const
+
+const darkToneStyles: Record<'success' | 'error' | 'info', ToneStyle> = {
   success: {
     shell: 'border-emerald-500/20 bg-[linear-gradient(180deg,rgba(6,78,59,0.94),rgba(20,83,45,0.96))] text-emerald-50 shadow-[0_22px_48px_rgba(6,78,59,0.26)]',
     iconWrap: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
-        <path d="m5 10 3 3 7-7" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: toneIcons.success,
     eyebrow: 'text-emerald-200/80',
     description: 'text-emerald-50/72',
     close: 'border-emerald-100/18 bg-emerald-50/8 text-emerald-50 hover:bg-emerald-50/14',
@@ -24,11 +50,7 @@ const toneStyles = {
   error: {
     shell: 'border-red-500/20 bg-[linear-gradient(180deg,rgba(127,29,29,0.96),rgba(69,10,10,0.96))] text-red-50 shadow-[0_22px_48px_rgba(127,29,29,0.26)]',
     iconWrap: 'border-red-300/20 bg-red-300/10 text-red-100',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
-        <path d="M10 6v4m0 4h.01M10 2.5l7 12.5H3l7-12.5Z" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: toneIcons.error,
     eyebrow: 'text-red-100/80',
     description: 'text-red-50/72',
     close: 'border-red-100/18 bg-red-50/8 text-red-50 hover:bg-red-50/14',
@@ -37,12 +59,7 @@ const toneStyles = {
   info: {
     shell: 'border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] text-[var(--foreground)] shadow-[0_18px_40px_rgba(15,23,42,0.12)]',
     iconWrap: 'border-blue-500/15 bg-blue-500/8 text-blue-500',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-4.5 w-4.5" aria-hidden="true">
-        <path d="M10 6.75h.01M9.25 9.5h.75v3h.75" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="10" cy="10" r="7" />
-      </svg>
-    ),
+    icon: toneIcons.info,
     eyebrow: 'text-[var(--muted)]',
     description: 'text-[var(--muted-strong)]',
     close: 'border-[var(--border)] bg-[var(--muted-surface)] text-[var(--foreground)] hover:bg-[var(--accent-soft)]',
@@ -50,8 +67,40 @@ const toneStyles = {
   },
 }
 
+const lightToneStyles: Record<'success' | 'error' | 'info', ToneStyle> = {
+  success: {
+    shell: 'border-[color:var(--success-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,253,244,0.98))] text-emerald-950 shadow-[0_18px_40px_rgba(21,128,61,0.10)]',
+    iconWrap: 'border-[color:var(--success-border)] bg-[color:var(--success-dim)] text-[color:var(--success-text)]',
+    icon: toneIcons.success,
+    eyebrow: 'text-[color:var(--success-text)]',
+    description: 'text-emerald-800',
+    close: 'border-[color:var(--success-border)] bg-white text-emerald-800 hover:bg-[color:var(--success-dim)]',
+    rail: 'bg-[color:var(--success)]',
+  },
+  error: {
+    shell: 'border-[color:var(--danger-border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(254,242,242,0.98))] text-red-950 shadow-[0_18px_40px_rgba(185,28,28,0.10)]',
+    iconWrap: 'border-[color:var(--danger-border)] bg-[color:var(--danger-dim)] text-[color:var(--danger-text)]',
+    icon: toneIcons.error,
+    eyebrow: 'text-[color:var(--danger-text)]',
+    description: 'text-red-800',
+    close: 'border-[color:var(--danger-border)] bg-white text-red-800 hover:bg-[color:var(--danger-dim)]',
+    rail: 'bg-[color:var(--danger)]',
+  },
+  info: {
+    shell: 'border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] text-[var(--foreground)] shadow-[0_18px_40px_rgba(15,23,42,0.08)]',
+    iconWrap: 'border-[color:var(--blue-border)] bg-[color:var(--blue-dim)] text-[color:var(--blue-text)]',
+    icon: toneIcons.info,
+    eyebrow: 'text-[var(--muted)]',
+    description: 'text-[var(--muted-strong)]',
+    close: 'border-[var(--border)] bg-white text-[var(--foreground)] hover:bg-[var(--accent-soft)]',
+    rail: 'bg-[color:var(--blue-text)]',
+  },
+}
+
 export function ToastProvider({ children }: PropsWithChildren) {
+  const { theme } = useTheme()
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const toneStyles = theme === 'light' ? lightToneStyles : darkToneStyles
 
   function removeToast(id: number) {
     setToasts((current) => current.filter((toast) => toast.id !== id))
