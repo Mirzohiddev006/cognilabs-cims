@@ -53,11 +53,11 @@ export function UserFormModal({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Email</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Email</span>
           <Input value={values.email} placeholder="user@example.com" onChange={(event) => onChange('email', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Company code</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Company code</span>
           <Input
             value={values.company_code}
             placeholder="e.g. oddiy"
@@ -65,15 +65,15 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Name</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Name</span>
           <Input value={values.name} placeholder="First name" onChange={(event) => onChange('name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Surname</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Surname</span>
           <Input value={values.surname} placeholder="Last name" onChange={(event) => onChange('surname', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Job title</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Job title</span>
           <Input
             value={values.job_title ?? ''}
             placeholder="Sales Manager"
@@ -81,7 +81,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">
             Password {mode === 'edit' ? '(optional)' : ''}
           </span>
           <Input
@@ -92,7 +92,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Telegram ID</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Telegram ID</span>
           <Input
             value={values.telegram_id ?? ''}
             placeholder="@username or ID"
@@ -100,7 +100,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Default salary</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Default salary</span>
           <Input
             type="number"
             min="0"
@@ -109,7 +109,7 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Role</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Role</span>
           <SelectField
             value={values.role}
             onValueChange={(value) => onChange('role', value)}
@@ -124,9 +124,9 @@ export function UserFormModal({
           type="checkbox"
           checked={values.is_active}
           onChange={(event) => onChange('is_active', event.target.checked)}
-          className="h-4 w-4 rounded border border-white/10 accent-blue-500"
+          className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
         />
-        <span className="text-xs font-bold text-white">Active user</span>
+        <span className="text-xs font-bold text-[var(--foreground)] dark:text-white">Active user</span>
       </label>
     </Modal>
   )

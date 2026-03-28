@@ -136,16 +136,16 @@ function SummaryCard({
   const localizedHint = hint ? translateCurrentLiteral(hint) : null
 
   const accentClassName = {
-    default: 'border-white/8 bg-white/[0.03]',
-    warning: 'border-amber-500/18 bg-amber-500/[0.06]',
-    blue: 'border-blue-500/18 bg-blue-500/[0.06]',
-    success: 'border-emerald-500/18 bg-emerald-500/[0.06]',
+    default: 'border-[var(--border)] bg-white dark:border-white/8 dark:bg-white/[0.03]',
+    warning: 'border-amber-500/18 bg-amber-50 dark:bg-amber-500/[0.06]',
+    blue: 'border-blue-500/18 bg-blue-50 dark:bg-blue-500/[0.06]',
+    success: 'border-emerald-500/18 bg-emerald-50 dark:bg-emerald-500/[0.06]',
   } as const
 
   return (
     <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
-      <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-white">{value}</p>
+      <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
       {localizedHint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{localizedHint}</p> : null}
     </div>
   )
@@ -214,7 +214,7 @@ function MemberPicker({
               key={`chip-${member.id}`}
               type="button"
               onClick={() => toggle(member.id)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] text-white/78 transition hover:border-white/15 hover:bg-white/[0.08]"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-2.5 py-1 text-[11px] text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.05] dark:text-white/78 dark:hover:border-white/15 dark:hover:bg-white/[0.08]"
             >
               <MemberAvatar member={member} />
               <span>{member.full_name || `${member.name} ${member.surname}`}</span>
@@ -229,7 +229,7 @@ function MemberPicker({
         placeholder={multiple ? 'Search members to include' : 'Search member'}
       />
 
-      <div className="max-h-56 overflow-y-auto rounded-[18px] border border-white/10 bg-black/20">
+      <div className="max-h-56 overflow-y-auto rounded-[18px] border border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/20">
         {filteredMembers.length > 0 ? filteredMembers.map((member) => {
           const selected = selectedIds.includes(member.id)
 
@@ -240,12 +240,12 @@ function MemberPicker({
               onClick={() => toggle(member.id)}
               className={cn(
                 'flex w-full items-center gap-3 border-b border-white/6 px-3 py-2.5 text-left transition last:border-b-0',
-                selected ? 'bg-blue-500/10' : 'hover:bg-white/[0.04]',
+                selected ? 'bg-blue-50 dark:bg-blue-500/10' : 'hover:bg-[var(--card-hover)] dark:hover:bg-white/[0.04]',
               )}
             >
               <MemberAvatar member={member} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
+                <p className="truncate text-sm font-medium text-[var(--foreground)] dark:text-white">
                   {member.full_name || `${member.name} ${member.surname}`}
                 </p>
                 <p className="truncate text-[11px] text-[var(--muted)]">

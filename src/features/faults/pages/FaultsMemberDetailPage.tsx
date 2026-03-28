@@ -1131,14 +1131,14 @@ export function FaultsMemberDetailPage({
           }
         >
           <div className="grid gap-4">
-            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+              <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Reviewer</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Reviewer</label>
                 {reviewerOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.reviewerId}
@@ -1158,7 +1158,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
                 {projectOptions.length > 1 ? (
                   <SelectField
                     value={mistakeDraft.projectId}
@@ -1180,7 +1180,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Category</label>
                 {mistakeCategoryOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.category}
@@ -1198,7 +1198,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Severity</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Severity</label>
                 {severityOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.severity}
@@ -1218,7 +1218,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_180px]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
                 <Input
                   value={mistakeDraft.title}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
@@ -1227,7 +1227,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Incident date</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Incident date</label>
                 <Input
                   type="date"
                   value={mistakeDraft.incidentDate}
@@ -1237,7 +1237,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
               <Textarea
                 value={mistakeDraft.description}
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
@@ -1246,22 +1246,22 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+              <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.reachedClient}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
-                  className="h-4 w-4 rounded border-white/15 bg-transparent"
+                  className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
                 Reached client
               </label>
 
-              <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+              <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.unclearTask}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
-                  className="h-4 w-4 rounded border-white/15 bg-transparent"
+                  className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
                 Unclear task
               </label>
@@ -1288,14 +1288,14 @@ export function FaultsMemberDetailPage({
           }
         >
           <div className="grid gap-4">
-            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+              <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Bonus type</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Bonus type</label>
                 {deliveryBonusTypeOptions.length > 0 ? (
                   <SelectField
                     value={deliveryBonusDraft.bonusType}
@@ -1313,7 +1313,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Award date</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Award date</label>
                 <Input
                   type="date"
                   value={deliveryBonusDraft.awardDate}
@@ -1323,7 +1323,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
               <Input
                 value={deliveryBonusDraft.title}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
@@ -1332,7 +1332,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
               {projectOptions.length > 1 ? (
                 <SelectField
                   value={deliveryBonusDraft.projectId}
@@ -1352,7 +1352,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
               <Textarea
                 value={deliveryBonusDraft.description}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
@@ -1381,9 +1381,9 @@ export function FaultsMemberDetailPage({
             </>
           }
         >
-          <div className="rounded-[18px] border border-red-500/16 bg-red-500/8 px-4 py-4 text-sm text-white/84">
-            <p className="font-semibold text-white">{deleteTarget?.record.title}</p>
-            <p className="mt-2 text-sm text-white/72">
+          <div className="rounded-[18px] border border-red-500/20 bg-red-50 px-4 py-4 text-sm text-[var(--muted-strong)] dark:bg-red-500/8 dark:text-white/84">
+            <p className="font-semibold text-[var(--foreground)] dark:text-white">{deleteTarget?.record.title}</p>
+            <p className="mt-2 text-sm text-[var(--muted-strong)] dark:text-white/72">
               {deleteTarget?.kind === 'mistake'
                 ? 'The mistake incident entry will be permanently removed from this employee history.'
                 : 'The delivery bonus record will be permanently removed from this employee history.'}

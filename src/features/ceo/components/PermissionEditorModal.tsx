@@ -59,8 +59,8 @@ export function PermissionEditorModal({
       }
     >
       <div className="flex flex-wrap gap-3">
-        <Badge className="bg-blue-600/10 text-blue-400 border-blue-500/20">{`Active ${activePermissionsCount}`}</Badge>
-        <Badge className="bg-white/5 text-white border-white/10">{`Available ${totalAvailablePages}`}</Badge>
+        <Badge className="border-blue-500/20 bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400">{`Active ${activePermissionsCount}`}</Badge>
+        <Badge className="border-[var(--border)] bg-white text-[var(--foreground)] dark:border-white/10 dark:bg-white/5 dark:text-white">{`Available ${totalAvailablePages}`}</Badge>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -71,7 +71,7 @@ export function PermissionEditorModal({
             return (
               <label
                 key={permissionKey}
-                className="flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-white/5 px-4 py-4 transition-colors hover:bg-white/10 cursor-pointer"
+                className="flex cursor-pointer items-start gap-4 rounded-2xl border border-[var(--border)] bg-white px-4 py-4 transition-colors hover:bg-[var(--card-hover)] dark:bg-white/5 dark:hover:bg-white/10"
               >
                 <input
                   type="checkbox"
@@ -80,7 +80,7 @@ export function PermissionEditorModal({
                   onChange={(event) => onToggle(permissionKey, event.target.checked)}
                 />
                 <div>
-                  <p className="text-[15px] font-semibold text-white">{meta.label}</p>
+                  <p className="text-[15px] font-semibold text-[var(--foreground)] dark:text-white">{meta.label}</p>
                   <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{meta.description}</p>
                   <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-blue-500 opacity-70">{permissionKey}</p>
                 </div>
@@ -89,7 +89,7 @@ export function PermissionEditorModal({
           })}
         </div>
 
-        <div className="rounded-2xl border border-[var(--border)] bg-white/5 p-6 h-fit sticky top-0">
+        <div className="sticky top-0 h-fit rounded-2xl border border-[var(--border)] bg-white p-6 dark:bg-white/5">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Active now</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {activePermissionKeys.length > 0 ? (

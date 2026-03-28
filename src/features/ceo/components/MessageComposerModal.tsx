@@ -51,13 +51,13 @@ export function MessageComposerModal({
       }
     >
       {!isBroadcast ? (
-        <div className="rounded-[20px] border border-blue-500/15 bg-blue-600/10 px-4 py-3 text-xs text-[var(--muted)]">
-          Receiver: <span className="ml-2 font-bold text-white">{values.receiver_label}</span>
+        <div className="rounded-[20px] border border-blue-500/15 bg-blue-50 px-4 py-3 text-xs text-[var(--muted-strong)] dark:bg-blue-600/10 dark:text-[var(--muted)]">
+          Receiver: <span className="ml-2 font-bold text-[var(--foreground)] dark:text-white">{values.receiver_label}</span>
         </div>
       ) : null}
       <div className="mt-4 grid gap-4">
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Subject</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Subject</span>
           <Input
             value={values.subject}
             placeholder="Enter message subject"
@@ -65,7 +65,7 @@ export function MessageComposerModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold text-white tracking-tight">Body</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Body</span>
           <Textarea
             rows={7}
             value={values.body}

@@ -518,13 +518,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                 </div>
 
                 <div className="flex flex-col gap-3 md:items-end">
-                  <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-white/10 bg-black/18 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                  <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-[var(--border)] bg-white p-1.5 shadow-[0_10px_24px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <Button
                       variant="secondary"
                       size="sm"
                       onClick={() => onMonthShift?.(-1)}
                       disabled={!onMonthShift}
-                      className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0 disabled:opacity-50"
+                      className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                     >
                       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M10 3.5 5.5 8 10 12.5" />
@@ -535,7 +535,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       size="sm"
                       onClick={() => onJumpToToday?.()}
                       disabled={!onJumpToToday}
-                      className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14 disabled:opacity-50"
+                      className="min-h-11 rounded-[14px] border-emerald-500/20 bg-emerald-50 px-5 text-emerald-700 hover:border-emerald-500/30 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
                     >
                       {selectedMonthName} {calendar.year}
                     </Button>
@@ -544,7 +544,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       size="sm"
                       onClick={() => onMonthShift?.(1)}
                       disabled={!onMonthShift}
-                      className="min-h-11 min-w-11 rounded-[14px] border-white/10 bg-white/[0.03] px-0 disabled:opacity-50"
+                      className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                     >
                       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M6 3.5 10.5 8 6 12.5" />
@@ -552,22 +552,22 @@ export function MemberMonthlyUpdateCalendarBoard({
                     </Button>
                   </div>
 
-                  <div className="hidden rounded-[20px] border border-emerald-400/14 bg-emerald-400/[0.05] px-4 py-3 md:block md:min-w-[290px]">
+                  <div className="hidden rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 md:block md:min-w-[290px] dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/40">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
                           Completion To Date
                         </p>
-                        <p className="mt-2 text-sm font-medium text-white/86">
+                        <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
                           {completionSummaryText}
                         </p>
                       </div>
 
                       <div className="shrink-0 text-right">
-                        <p className="text-[11px] font-semibold tabular-nums text-white/72">
+                        <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
                           {counts.submitted}/{elapsedWorkingDays || 0}
                         </p>
-                        <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-300">
+                        <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
                           {monthProgressPct.toFixed(0)}%
                         </p>
                       </div>
@@ -596,22 +596,22 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </Badge>
                 </div>
 
-                <div className="rounded-[20px] border border-emerald-400/14 bg-emerald-400/[0.05] px-4 py-3 md:hidden">
+                <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 md:hidden dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/40">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
                         Completion To Date
                       </p>
-                      <p className="mt-2 text-sm font-medium text-white/86">
+                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
                         {completionSummaryText}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-[11px] font-semibold tabular-nums text-white/72">
+                      <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
                         {counts.submitted}/{elapsedWorkingDays || 0}
                       </p>
-                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-300">
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
                         {monthProgressPct.toFixed(0)}%
                       </p>
                     </div>
@@ -682,7 +682,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <p
                                   className={cn(
                                     'mt-1.5 text-[1.5rem] font-semibold leading-none tabular-nums tracking-tight',
-                                    day.status === 'submitted' || day.status === 'missing' ? 'text-white' : 'text-white/82',
+                                    day.status === 'submitted' || day.status === 'missing' ? 'text-[var(--foreground)] dark:text-white' : 'text-[var(--foreground)]/82 dark:text-white/82',
                                   )}
                                 >
                                   {day.day}
@@ -691,7 +691,7 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                               <div className="flex flex-col items-end gap-1.5">
                                 {entryCount > 0 ? (
-                                  <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.75 text-[9px] font-semibold tabular-nums text-white/72">
+                                  <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 text-[9px] font-semibold tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72">
                                     {entryCount}x
                                   </span>
                                 ) : null}
@@ -706,24 +706,24 @@ export function MemberMonthlyUpdateCalendarBoard({
                             {shouldShowTimePanel(day) ? (
                               <div className="relative mt-2.5 space-y-1.5">
                                 <div className="grid grid-cols-2 gap-1.5">
-                                  <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
-                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                  <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
                                       In
                                     </p>
-                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkInTime)}
                                     </p>
                                   </div>
-                                  <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
-                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                  <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
                                       Out
                                     </p>
-                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkOutTime)}
                                     </p>
                                   </div>
                                 </div>
-                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-white/76">
+                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white/76">
                                   {getWorkedDurationLabel(day)}
                                 </p>
                               </div>
@@ -739,7 +739,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', getDayDotClass(day))} />
                                 {getCalendarCellStatusLabel(day.status, day)}
                               </span>
-                              <p className="mt-1.5 text-[8px] leading-3 text-white/76">
+                              <p className="mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white/76">
                                 {getCalendarCellHint(day)}
                               </p>
                             </div>
@@ -770,7 +770,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 Missed
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-sm border border-white/10 bg-white/4" />
+                <span className="h-2 w-2 rounded-sm border border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/4" />
                 Open or upcoming
               </span>
             </div>

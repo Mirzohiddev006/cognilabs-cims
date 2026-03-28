@@ -70,7 +70,7 @@ export function PaymentFormModal({
             type="checkbox"
             checked={values.payment}
             onChange={(event) => onChange('payment', event.target.checked)}
-            className="h-4 w-4 rounded border border-white/10 accent-blue-500"
+            className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
           />
           <span className="text-xs text-[var(--muted-strong)]">Already paid</span>
         </label>

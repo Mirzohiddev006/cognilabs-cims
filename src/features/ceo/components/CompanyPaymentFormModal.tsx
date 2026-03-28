@@ -100,7 +100,7 @@ export function CompanyPaymentFormModal({
             type="checkbox"
             checked={values.isActive}
             onChange={(event) => onChange('isActive', event.target.checked)}
-            className="h-4 w-4 rounded border border-white/10 accent-blue-500"
+            className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
           />
           <span className="text-xs text-[var(--muted-strong)]">Reminder active</span>
         </label>

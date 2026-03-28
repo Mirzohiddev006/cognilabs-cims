@@ -1301,6 +1301,35 @@ html.light :is(.card-base, .dialog-content, .page-header-card, .glass-panel, .au
   border-color: var(--border) !important;
 }
 
+html.light :is(.card-base, .dialog-content, .page-header-card, .glass-panel, .cal-container, .cal-inner) :is(
+  [class*="bg-black/10"],
+  [class*="bg-black/15"],
+  [class*="bg-black/18"],
+  [class*="bg-black/20"],
+  [class*="bg-black/30"],
+  [class*="bg-white/[0.03]"],
+  [class*="bg-white/[0.04]"],
+  [class*="bg-white/[0.05]"],
+  [class*="bg-white/[0.06]"],
+  [class*="bg-white/4"],
+  [class*="bg-white/5"],
+  [class*="bg-white/6"],
+  [class*="bg-white/8"]
+):not([data-keep-color="true"]) {
+  background: var(--surface-elevated) !important;
+  box-shadow: none !important;
+}
+
+html.light :is(.card-base, .dialog-content, .page-header-card, .glass-panel, .cal-container, .cal-inner) :is(
+  [class*="bg-black/10"],
+  [class*="bg-black/15"],
+  [class*="bg-black/18"],
+  [class*="bg-black/20"],
+  [class*="bg-black/30"]
+):not([data-keep-color="true"]) {
+  background: #ffffff !important;
+}
+
 /* ─── RESPONSIVE ──────────────────────────────────────────────── */
 @media (max-width: 960px) {
   .app-shell-grid { grid-template-columns: 1fr; }

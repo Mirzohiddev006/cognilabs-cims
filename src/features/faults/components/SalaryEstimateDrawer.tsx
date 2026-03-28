@@ -63,12 +63,12 @@ export function SalaryEstimateDrawer({
       <button
         type="button"
         aria-label="Close salary detail drawer"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_24%),rgba(0,0,0,0.62)] backdrop-blur-md"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_24%),rgba(15,23,42,0.18)] backdrop-blur-md dark:bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_24%),rgba(0,0,0,0.62)]"
         onClick={onClose}
       />
 
       <div className="absolute inset-y-0 right-0 w-full md:w-[min(50vw,760px)] xl:w-[min(46vw,780px)]">
-        <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface)] shadow-[0_20px_80px_rgba(0,0,0,0.46)] dark:bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))]">
+        <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-white shadow-[0_20px_80px_rgba(15,23,42,0.16)] dark:bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] dark:shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
           <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">Salary estimate</p>
@@ -93,7 +93,7 @@ export function SalaryEstimateDrawer({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-            <div className="rounded-[24px] border border-[var(--border)] bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))] p-5 shadow-[0_8px_24px_rgba(148,163,184,0.10)] dark:border-white/10 dark:bg-white/[0.03] dark:shadow-none">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-sm text-[var(--muted-strong)]">{report.label}</p>
