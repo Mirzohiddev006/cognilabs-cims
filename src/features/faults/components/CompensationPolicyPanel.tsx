@@ -18,7 +18,7 @@ export function CompensationPolicyPanel({
 }: CompensationPolicyPanelProps) {
   if (!policy) {
     return (
-      <Card className={className ? `rounded-[24px] border-white/10 p-6 ${className}` : 'rounded-[24px] border-white/10 p-6'}>
+      <Card className={className ? `rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)]'}>
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Compensation policy
@@ -35,7 +35,7 @@ export function CompensationPolicyPanel({
   }
 
   return (
-    <Card className={className ? `rounded-[24px] border-white/10 p-6 ${className}` : 'rounded-[24px] border-white/10 p-6'}>
+    <Card className={className ? `rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)]'}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
@@ -112,7 +112,7 @@ export function CompensationPolicyPanel({
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+        <div className="rounded-[20px] border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Mistake taxonomy</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {policy.mistakeCategories.map((category) => (
@@ -128,11 +128,11 @@ export function CompensationPolicyPanel({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
+        <div className="rounded-[20px] border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Decision tree</p>
           <div className="mt-4 space-y-3">
             {policy.decisionTree.map((step) => (
-              <div key={`${step.step}-${step.question}`} className="rounded-[16px] border border-[var(--border)] bg-[var(--card)] px-4 py-3">
+              <div key={`${step.step}-${step.question}`} className="rounded-[16px] border border-[var(--border)] bg-white px-4 py-3 dark:bg-[var(--card)]">
                 <p className="text-xs font-semibold tracking-[0.18em] text-[var(--blue-text)]">
                   Step {step.step}
                 </p>
