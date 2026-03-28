@@ -395,6 +395,7 @@ export function ProjectDetailPage() {
                   <Avatar
                     name={project.created_by.name}
                     surname={project.created_by.surname}
+                    imageUrl={project.created_by.profile_image}
                     size="sm"
                   />
                   <div>

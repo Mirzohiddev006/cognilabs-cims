@@ -1,5 +1,6 @@
 import { cn } from '../../../shared/lib/cn'
 import { translateCurrent } from '../../../shared/i18n/translations'
+import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { getInitials, stringToHue } from '../lib/format'
 
 type AvatarSize = 'xs' | 'sm' | 'md' | 'lg'
@@ -26,11 +27,12 @@ export function Avatar({ name, surname, imageUrl, size = 'md', className, title 
     .join(' ') || translateCurrent('projects.unknown_user', 'Unknown user')
   const initials = getInitials(name, surname)
   const hue = stringToHue(displayName)
+  const resolvedImageUrl = resolveMediaUrl(imageUrl) ?? imageUrl ?? null
 
-  if (imageUrl) {
+  if (resolvedImageUrl) {
     return (
       <img
-        src={imageUrl}
+        src={resolvedImageUrl}
         alt={title ?? displayName}
         title={title ?? displayName}
         className={cn('rounded-full object-cover', sizeClasses[size], className)}

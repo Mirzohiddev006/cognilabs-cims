@@ -14,10 +14,12 @@ import { Card } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { MemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
+import { SalaryEstimateDrawer } from '../components/SalaryEstimateDrawer'
 import {
   buildEmployeeReports,
   defaultMonth,
@@ -79,6 +81,7 @@ function createRosterUsers(memberOptions: WorkdayOverrideMemberOption[]): CeoUse
     role: member.role,
     job_title: member.role,
     is_active: true,
+    profile_image: member.profile_image ?? null,
   }))
 }
 
@@ -130,6 +133,7 @@ export function FaultsPage() {
   const [bonusTarget, setBonusTarget] = useState<EmployeeSalaryReport | null>(null)
   const [bonusAmount, setBonusAmount] = useState('')
   const [bonusReason, setBonusReason] = useState('')
+  const [activeReportId, setActiveReportId] = useState<number | null>(null)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
@@ -141,6 +145,10 @@ export function FaultsPage() {
   const rosterUsers = useMemo(
     () => createRosterUsers(memberOptionsQuery.data ?? []),
     [memberOptionsQuery.data],
+  )
+  const rosterUsersById = useMemo(
+    () => new Map(rosterUsers.map((user) => [user.id, user] satisfies [number, CeoUserRecord])),
+    [rosterUsers],
   )
   const employeeIds = useMemo(
     () => rosterUsers.map((user) => user.id),
@@ -216,6 +224,10 @@ export function FaultsPage() {
     },
     [reports, salaryEstimatesQuery.data, statisticsQuery.data],
   )
+  const activeDrawerReport = useMemo(
+    () => reports.find((report) => report.id === activeReportId) ?? null,
+    [activeReportId, reports],
+  )
   const hasReports = reports.length > 0
 
   async function handleRefresh() {
@@ -259,6 +271,10 @@ export function FaultsPage() {
     setBonusTarget(report)
     setBonusAmount('')
     setBonusReason('')
+  }
+
+  function openReportDrawer(report: EmployeeSalaryReport) {
+    setActiveReportId(report.id)
   }
 
   function updatePeriod(next: { year?: number; month?: number }) {
@@ -502,97 +518,71 @@ export function FaultsPage() {
           pageSize={75}
           compact
           zebra
+          onRowClick={openReportDrawer}
           getRowKey={(row) => `${row.id}-${row.fullName}`}
           columns={[
             {
               key: 'user',
               header: 'User',
               width: '280px',
-              render: (row) => (
-                <button
-                  type="button"
-                  onClick={() => openDetailPage(row)}
-                  className="text-left transition hover:opacity-90"
-                >
-                  <p className="font-semibold text-white transition-colors hover:text-blue-300">{row.fullName}</p>
-                  <p className="text-xs text-[var(--muted)]">{row.label}</p>
-                </button>
-              ),
-            },
-            {
-              key: 'penalties',
-              header: 'Penalties',
-              align: 'right',
-              render: (row) => <span className="text-rose-400">{formatCount(row.penaltyEntries)}</span>,
-            },
-            {
-              key: 'bonuses',
-              header: 'Bonuses',
-              align: 'right',
-              render: (row) => <span className="text-emerald-400">{formatCount(row.bonusEntries)}</span>,
-            },
-            {
-              key: 'mistakes',
-              header: 'Mistakes',
-              align: 'right',
-              render: (row) => <span className={cn(row.mistakesCount > 0 ? 'text-rose-400' : 'text-white')}>{formatCount(row.mistakesCount)}</span>,
-            },
-            {
-              key: 'deliveryBonusCount',
-              header: 'Delivery bonuses',
-              align: 'right',
-              render: (row) => <span className={cn(row.deliveryBonusCount > 0 ? 'text-emerald-400' : 'text-white')}>{formatCount(row.deliveryBonusCount)}</span>,
+              render: (row) => {
+                const rosterUser = rosterUsersById.get(row.id)
+
+                return (
+                  <button
+                    type="button"
+                    onClick={() => openReportDrawer(row)}
+                    className="flex items-center gap-3 text-left transition hover:opacity-90"
+                  >
+                    <MemberAvatar
+                      name={rosterUser?.name ?? row.fullName}
+                      surname={rosterUser?.surname ?? ''}
+                      imageUrl={rosterUser?.profile_image}
+                      size="sm"
+                      title={row.fullName}
+                    />
+                    <span className="min-w-0">
+                      <p className="truncate font-semibold text-white transition-colors hover:text-blue-300">{row.fullName}</p>
+                      <p className="truncate text-xs text-[var(--muted)]">{row.label}</p>
+                    </span>
+                  </button>
+                )
+              },
+              minWidth: '260px',
             },
             {
               key: 'base',
               header: 'Base',
               align: 'right',
+              minWidth: '120px',
               render: (row) => formatAmount(row.baseSalary),
-            },
-            {
-              key: 'penaltyPct',
-              header: 'Penalty %',
-              align: 'right',
-              render: (row) => (
-                <span className={cn(row.penaltyPercentage > 0 ? 'text-rose-400' : 'text-white')}>
-                  {formatPercent(row.penaltyPercentage)}
-                </span>
-              ),
-            },
-            {
-              key: 'points',
-              header: 'Points',
-              align: 'right',
-              render: (row) => <span className="text-rose-400">{formatCount(row.penaltyPoints)}</span>,
-            },
-            {
-              key: 'deduction',
-              header: 'Deduction',
-              align: 'right',
-              render: (row) => <span className="text-rose-400">{formatAmount(row.deductionAmount)}</span>,
             },
             {
               key: 'afterPenalty',
               header: 'After penalty',
               align: 'right',
+              minWidth: '140px',
               render: (row) => formatAmount(row.afterPenalty),
             },
             {
               key: 'bonusAmount',
               header: 'Bonus amount',
               align: 'right',
+              minWidth: '130px',
               render: (row) => <span className="text-emerald-400">{formatAmount(row.bonusAmount)}</span>,
             },
             {
               key: 'bonusPercent',
               header: 'Bonus %',
               align: 'right',
+              minWidth: '110px',
               render: (row) => <span className={cn(row.totalBonusPercent > 0 ? 'text-emerald-400' : 'text-white')}>{formatPercent(row.totalBonusPercent)}</span>,
             },
             {
               key: 'productivity',
               header: 'Productivity',
               align: 'right',
+              minWidth: '180px',
               render: (row) => (
                 <span className={cn(row.qualifiesProductivityBonus ? 'text-emerald-400' : 'text-white')}>
                   {Number.isFinite(row.productivityPercentage)
@@ -605,14 +595,16 @@ export function FaultsPage() {
               key: 'finalSalary',
               header: 'Final salary',
               align: 'right',
+              minWidth: '130px',
               render: (row) => formatAmount(row.finalSalary),
             },
             {
               key: 'actions',
               header: 'Actions',
               align: 'right',
+              minWidth: '88px',
               render: (row) => (
-                <div className="flex justify-end">
+                <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
                   <ActionsMenu
                     label={`Open actions for ${row.fullName}`}
                     items={[
@@ -638,100 +630,37 @@ export function FaultsPage() {
         />
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        {reports.map((report) => (
-          <Card
-            key={`${report.id}-${report.fullName}`}
-            className="overflow-hidden rounded-[24px] border-white/10 bg-[linear-gradient(180deg,rgba(24,24,28,0.98),rgba(16,16,19,0.98))] p-0"
-          >
-            <div className="border-b border-white/8 px-5 py-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <p className="text-sm text-[var(--muted-strong)]">{report.label}</p>
-                  <h2 className="mt-2 text-[1.9rem] font-semibold tracking-tight text-white">
-                    {report.fullName}
-                  </h2>
-                  <p className="mt-1 text-sm text-[var(--muted)]">{report.roleLabel}</p>
-                </div>
+      <SalaryEstimateDrawer
+        open={Boolean(activeDrawerReport)}
+        report={activeDrawerReport}
+        month={month}
+        year={year}
+        onClose={() => setActiveReportId(null)}
+        onOpenDetail={() => {
+          if (!activeDrawerReport) {
+            return
+          }
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={report.hasPenalty ? 'danger' : 'outline'}>
-                    {report.hasPenalty ? 'Has deduction' : 'Clean'}
-                  </Badge>
-                  <Badge variant={report.hasBonus ? 'success' : 'outline'}>
-                    {report.hasBonus ? 'Has bonus' : 'No bonus'}
-                  </Badge>
-                  <Badge variant={report.qualifiesProductivityBonus ? 'success' : 'outline'}>
-                    {Number.isFinite(report.productivityPercentage)
-                      ? `${formatPercent(report.productivityPercentage)} productivity`
-                      : 'No productivity data'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDetailPage(report)}
-                    className="rounded-xl"
-                  >
-                    View details
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openPenaltyDialog(report)}
-                    className="rounded-xl"
-                  >
-                    Add penalty
-                  </Button>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => openBonusDialog(report)}
-                    className="rounded-xl"
-                  >
-                    Add bonus
-                  </Button>
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-3 px-5 py-5 sm:grid-cols-3 xl:grid-cols-4">
-              <DetailStatTile label="Final salary" value={formatAmount(report.finalSalary)} />
-              <DetailStatTile label="Estimated salary" value={formatAmount(report.estimatedSalary)} />
-              <DetailStatTile label="Deduction" value={formatAmount(report.deductionAmount)} tone="danger" />
-              <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} />
-              <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} />
-              <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" />
-              <DetailStatTile label="Bonus %" value={formatPercent(report.totalBonusPercent)} tone="success" />
-              <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" />
-              <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" />
-              <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" />
-              <DetailStatTile label="Mistakes" value={formatCount(report.mistakesCount)} tone="danger" />
-              <DetailStatTile label="Delivery bonuses" value={formatCount(report.deliveryBonusCount)} tone="success" />
-              <DetailStatTile
-                label="Productivity"
-                value={Number.isFinite(report.productivityPercentage)
-                  ? `${formatCount(report.updateDays)}/${formatCount(report.workingDays)} / ${formatPercent(report.productivityPercentage)}`
-                  : '-'}
-                tone={report.qualifiesProductivityBonus ? 'success' : 'default'}
-              />
-            </div>
+          setActiveReportId(null)
+          openDetailPage(activeDrawerReport)
+        }}
+        onAddPenalty={() => {
+          if (!activeDrawerReport) {
+            return
+          }
 
-            <div className="border-t border-white/8 px-5 py-4">
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-rose-300">Penalty percentage</span>
-                <span className={cn('font-semibold', (report.penaltyPercentage ?? 0) > 0 ? 'text-rose-400' : 'text-white')}>
-                  {formatPercent(report.penaltyPercentage)}
-                </span>
-              </div>
-              <div className="mt-3 h-2 rounded-full bg-white/7">
-                <div
-                  className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
-                  style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(report.penaltyPercentage) ? report.penaltyPercentage : 0))}%` }}
-                />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+          setActiveReportId(null)
+          openPenaltyDialog(activeDrawerReport)
+        }}
+        onAddBonus={() => {
+          if (!activeDrawerReport) {
+            return
+          }
+
+          setActiveReportId(null)
+          openBonusDialog(activeDrawerReport)
+        }}
+      />
 
       <Dialog
         open={Boolean(penaltyTarget)}

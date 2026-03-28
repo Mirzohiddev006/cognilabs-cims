@@ -1,4 +1,8 @@
 import { request } from '../http'
+import type {
+  MemberDeliveryBonusPayload,
+  MemberMistakePayload,
+} from '../types'
 
 function serializeEmployeeIds(employeeIds?: number[]) {
   if (!employeeIds || employeeIds.length === 0) {
@@ -12,6 +16,19 @@ export type MemberSalaryEstimateParams = {
   year: number
   month: number
   employeeIds?: number[]
+}
+
+export type MemberMistakeListParams = {
+  year?: number
+  month?: number
+  employeeId?: number
+  reviewerId?: number
+}
+
+export type MemberDeliveryBonusListParams = {
+  year?: number
+  month?: number
+  employeeId?: number
 }
 
 export type AddMemberPenaltyPayload = {
@@ -75,7 +92,7 @@ export const membersService = {
     return request<unknown>({
       path: '/members/member/salary-estimate',
       query: {
-        user_id: userId,
+        employee_id: userId,
         year,
         month,
       },
@@ -100,6 +117,75 @@ export const membersService = {
         month,
         employee_ids: serializeEmployeeIds(employeeIds),
       },
+    })
+  },
+
+  listMistakes(params?: MemberMistakeListParams) {
+    return request<unknown>({
+      path: '/members/member/mistakes',
+      query: {
+        year: params?.year,
+        month: params?.month,
+        employee_id: params?.employeeId,
+        reviewer_id: params?.reviewerId,
+      },
+    })
+  },
+
+  createMistake(payload: MemberMistakePayload) {
+    return request<unknown>({
+      path: '/members/member/mistakes',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateMistake(mistakeId: number, payload: MemberMistakePayload) {
+    return request<unknown>({
+      path: `/members/member/mistakes/${mistakeId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deleteMistake(mistakeId: number) {
+    return request<unknown>({
+      path: `/members/member/mistakes/${mistakeId}`,
+      method: 'DELETE',
+    })
+  },
+
+  listDeliveryBonuses(params?: MemberDeliveryBonusListParams) {
+    return request<unknown>({
+      path: '/members/member/delivery-bonuses',
+      query: {
+        year: params?.year,
+        month: params?.month,
+        employee_id: params?.employeeId,
+      },
+    })
+  },
+
+  createDeliveryBonus(payload: MemberDeliveryBonusPayload) {
+    return request<unknown>({
+      path: '/members/member/delivery-bonuses',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateDeliveryBonus(bonusId: number, payload: MemberDeliveryBonusPayload) {
+    return request<unknown>({
+      path: `/members/member/delivery-bonuses/${bonusId}`,
+      method: 'PUT',
+      body: payload,
+    })
+  },
+
+  deleteDeliveryBonus(bonusId: number) {
+    return request<unknown>({
+      path: `/members/member/delivery-bonuses/${bonusId}`,
+      method: 'DELETE',
     })
   },
 

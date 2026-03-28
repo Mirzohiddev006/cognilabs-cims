@@ -81,6 +81,7 @@ export function BoardCard({ board, onEdit, onArchive, canManage = true }: BoardC
           <Avatar
             name={board.created_by.name}
             surname={board.created_by.surname}
+            imageUrl={board.created_by.profile_image}
             size="xs"
           />
           <span className="text-[10px] text-[var(--muted)]">

@@ -116,6 +116,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
                 <Avatar
                   name={project.created_by.name}
                   surname={project.created_by.surname}
+                  imageUrl={project.created_by.profile_image}
                   size="xs"
                   title={t('projects.created_by_person', 'Created by {name}', {
                     name: `${project.created_by.name} ${project.created_by.surname}`,

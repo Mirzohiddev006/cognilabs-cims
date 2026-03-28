@@ -38,29 +38,31 @@ function AiGlyph({ className }: { className?: string }) {
 }
 
 function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
+  const isUser = message.role === 'user'
+
   return (
     <article
       className={cn(
-        'group flex w-full gap-3',
-        message.role === 'user' ? 'justify-end' : 'justify-start',
+        'group flex w-full items-start gap-3',
+        isUser ? 'justify-end' : 'justify-start',
       )}
     >
-      {message.role === 'assistant' ? (
+      {!isUser ? (
         <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-2xl" />
       ) : null}
 
       <div
         data-i18n-skip="true"
         className={cn(
-          'max-w-[min(100%,780px)] rounded-[28px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
-          message.role === 'user'
-            ? 'border-[var(--blue-border)] bg-[linear-gradient(180deg,var(--blue-soft),var(--blue-dim))] text-[var(--foreground)]'
+          'min-w-0 w-fit max-w-[min(100%,720px)] rounded-[28px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+          isUser
+            ? 'ml-auto border-[var(--blue-border)] bg-[linear-gradient(180deg,var(--blue-soft),var(--blue-dim))] text-[var(--foreground)]'
             : 'border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] text-[var(--foreground)]',
         )}
       >
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-            {message.role === 'user' ? translateCurrentLiteral('You') : 'CIMS AI'}
+            {isUser ? translateCurrentLiteral('You') : 'CIMS AI'}
           </p>
           <span className="text-[10px] text-[var(--muted)]">{formatMessageTime(message.createdAt)}</span>
         </div>
@@ -68,12 +70,6 @@ function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
           {message.content}
         </div>
       </div>
-
-      {message.role === 'user' ? (
-        <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--muted-surface)] text-[11px] font-semibold text-[var(--foreground)]">
-          {translateCurrentLiteral('You')}
-        </div>
-      ) : null}
     </article>
   )
 }

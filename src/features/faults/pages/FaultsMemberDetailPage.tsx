@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import type {
+  MemberDeliveryBonusPayload,
+  MemberDeliveryBonusRecord,
+  MemberMistakePayload,
+  MemberMistakeRecord,
+} from '../../../shared/api/types'
 import { membersService } from '../../../shared/api/services/members.service'
+import { projectsService } from '../../../shared/api/services/projects.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -13,6 +20,11 @@ import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
+import { useAuth } from '../../auth/hooks/useAuth'
+import {
+  DeliveryBonusSection,
+  MistakeIncidentSection,
+} from '../components/CompensationRecordPanels'
 import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpdateCalendar'
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
@@ -44,6 +56,36 @@ type FaultsMemberDetailPageProps = {
   mode?: FaultsMemberDetailPageMode
 }
 
+type MistakeFormState = {
+  reviewerId: string
+  projectId: string
+  category: string
+  severity: string
+  title: string
+  description: string
+  incidentDate: string
+  reachedClient: boolean
+  unclearTask: boolean
+}
+
+type DeliveryBonusFormState = {
+  projectId: string
+  bonusType: string
+  title: string
+  description: string
+  awardDate: string
+}
+
+type CompensationDeleteTarget =
+  | {
+      kind: 'mistake'
+      record: MemberMistakeRecord
+    }
+  | {
+      kind: 'delivery-bonus'
+      record: MemberDeliveryBonusRecord
+    }
+
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
@@ -60,6 +102,59 @@ function parsePeriodNumber(value: string | null, fallback: number, min: number, 
   }
 
   return clampNumber(parsed, min, max)
+}
+
+function getTodayDateInput() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function normalizeDateInput(value?: string | null) {
+  if (!value) {
+    return getTodayDateInput()
+  }
+
+  const normalized = value.slice(0, 10)
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return normalized
+  }
+
+  const parsed = new Date(value)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return getTodayDateInput()
+  }
+
+  return parsed.toISOString().slice(0, 10)
+}
+
+function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
+  return {
+    reviewerId: defaultReviewerId,
+    projectId: '0',
+    category: 'AI Integration',
+    severity: 'Minor',
+    title: '',
+    description: '',
+    incidentDate: getTodayDateInput(),
+    reachedClient: false,
+    unclearTask: false,
+  }
+}
+
+function createDeliveryBonusFormState(): DeliveryBonusFormState {
+  return {
+    projectId: '0',
+    bonusType: 'early_delivery',
+    title: '',
+    description: '',
+    awardDate: getTodayDateInput(),
+  }
+}
+
+function parsePositiveId(value: string) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
 function findHistoryEmployeeRecord(payload: unknown, memberId: number) {
@@ -141,15 +236,26 @@ export function FaultsMemberDetailPage({
   const navigate = useNavigate()
   const params = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const [penaltyPoints, setPenaltyPoints] = useState('10')
   const [penaltyReason, setPenaltyReason] = useState('')
   const [bonusAmount, setBonusAmount] = useState('')
   const [bonusReason, setBonusReason] = useState('')
+  const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
+  const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
+  const [editingMistake, setEditingMistake] = useState<MemberMistakeRecord | null>(null)
+  const [editingDeliveryBonus, setEditingDeliveryBonus] = useState<MemberDeliveryBonusRecord | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<CompensationDeleteTarget | null>(null)
   const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false)
   const [isBonusDialogOpen, setIsBonusDialogOpen] = useState(false)
+  const [isMistakeDialogOpen, setIsMistakeDialogOpen] = useState(false)
+  const [isDeliveryBonusDialogOpen, setIsDeliveryBonusDialogOpen] = useState(false)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
+  const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
+  const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
+  const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
 
   const isMemberUpdatesMode = mode === 'member-updates'
   const memberId = memberIdOverride ?? Number(params.memberId)
@@ -165,16 +271,46 @@ export function FaultsMemberDetailPage({
   const topHeaderEyebrow = isMemberUpdatesMode ? 'My Update Detail' : 'CEO Salary Detail'
   const showCompensationActions = !isMemberUpdatesMode
 
+  const reviewerOptionsQuery = useAsyncData(
+    () => updateTrackingService.workdayOverrideMemberOptions(),
+    [],
+    { enabled: showCompensationActions },
+  )
+  const projectsQuery = useAsyncData(
+    () => projectsService.listProjects(),
+    [],
+    { enabled: showCompensationActions },
+  )
+  const reviewerOptions = (reviewerOptionsQuery.data ?? []).map((member) => ({
+    value: String(member.id),
+    label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
+  }))
+  const projectOptions = [
+    { value: '0', label: 'No project' },
+    ...((projectsQuery.data?.projects ?? []).map((project) => ({
+      value: String(project.id),
+      label: project.project_name,
+    }))),
+  ]
+  const defaultReviewerId =
+    reviewerOptions.find((option) => Number(option.value) === currentUser?.id)?.value ??
+    reviewerOptions[0]?.value ??
+    ''
+
   const detailQuery = useAsyncData(
     async () => {
-      const [estimateResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
+      const [estimateResult, mistakesResult, deliveryBonusesResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
         membersService.salaryEstimates({ year, month, employeeIds: [memberId] }),
+        membersService.listMistakes({ year, month, employeeId: memberId }),
+        membersService.listDeliveryBonuses({ year, month, employeeId: memberId }),
         membersService.updatesStatistics({ year, month, employeeIds: [memberId] }),
         updateTrackingService.employeeMonthlyUpdates(year, month, memberId),
         membersService.updatesAll({ year, month, employeeIds: [memberId] }),
       ])
 
       const estimatePayload = estimateResult.status === 'fulfilled' ? estimateResult.value : null
+      const mistakesPayload = mistakesResult.status === 'fulfilled' ? mistakesResult.value : null
+      const deliveryBonusesPayload = deliveryBonusesResult.status === 'fulfilled' ? deliveryBonusesResult.value : null
       const updatesPayload = updatesResult.status === 'fulfilled' ? updatesResult.value : null
       const calendarPayload = calendarResult.status === 'fulfilled' ? calendarResult.value : null
       const historyPayload = historyResult.status === 'fulfilled' ? historyResult.value : null
@@ -239,9 +375,13 @@ export function FaultsMemberDetailPage({
         report: fallbackReport,
         user: apiUser,
         estimatePayload: effectiveEstimatePayload,
+        mistakesPayload,
+        deliveryBonusesPayload,
         updatesPayload,
         calendarPayload,
         estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
+        mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
+        deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
         updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
         calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
         year,
@@ -307,6 +447,212 @@ export function FaultsMemberDetailPage({
     setBonusAmount('')
     setBonusReason('')
     setIsBonusDialogOpen(true)
+  }
+
+  function openMistakeDialog(record?: MemberMistakeRecord) {
+    setEditingMistake(record ?? null)
+    setMistakeDraft(
+      record
+        ? {
+            reviewerId: String(record.reviewer_id ?? defaultReviewerId),
+            projectId: String(record.project_id ?? 0),
+            category: record.category,
+            severity: record.severity,
+            title: record.title,
+            description: record.description ?? '',
+            incidentDate: normalizeDateInput(record.incident_date ?? record.created_at),
+            reachedClient: record.reached_client,
+            unclearTask: record.unclear_task,
+          }
+        : createMistakeFormState(defaultReviewerId),
+    )
+    setIsMistakeDialogOpen(true)
+  }
+
+  function openDeliveryBonusDialog(record?: MemberDeliveryBonusRecord) {
+    setEditingDeliveryBonus(record ?? null)
+    setDeliveryBonusDraft(
+      record
+        ? {
+            projectId: String(record.project_id ?? 0),
+            bonusType: record.bonus_type,
+            title: record.title,
+            description: record.description ?? '',
+            awardDate: normalizeDateInput(record.award_date ?? record.created_at),
+          }
+        : createDeliveryBonusFormState(),
+    )
+    setIsDeliveryBonusDialogOpen(true)
+  }
+
+  function closeMistakeDialog() {
+    setIsMistakeDialogOpen(false)
+    setEditingMistake(null)
+    setMistakeDraft(createMistakeFormState(defaultReviewerId))
+  }
+
+  function closeDeliveryBonusDialog() {
+    setIsDeliveryBonusDialogOpen(false)
+    setEditingDeliveryBonus(null)
+    setDeliveryBonusDraft(createDeliveryBonusFormState())
+  }
+
+  function buildMistakePayload(): MemberMistakePayload | null {
+    if (!detail) {
+      return null
+    }
+
+    const reviewerId = parsePositiveId(mistakeDraft.reviewerId)
+
+    if (!reviewerId) {
+      showToast({
+        title: 'Reviewer is required',
+        description: 'Select a valid reviewer before saving this mistake incident.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    if (!mistakeDraft.title.trim() || !mistakeDraft.category.trim() || !mistakeDraft.severity.trim()) {
+      showToast({
+        title: 'Mistake details incomplete',
+        description: 'Title, category, and severity are required.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    return {
+      employee_id: detail.report.id,
+      reviewer_id: reviewerId,
+      project_id: parsePositiveId(mistakeDraft.projectId) ?? 0,
+      category: mistakeDraft.category.trim(),
+      severity: mistakeDraft.severity.trim(),
+      title: mistakeDraft.title.trim(),
+      description: mistakeDraft.description.trim() || undefined,
+      incident_date: mistakeDraft.incidentDate,
+      reached_client: mistakeDraft.reachedClient,
+      unclear_task: mistakeDraft.unclearTask,
+    }
+  }
+
+  function buildDeliveryBonusPayload(): MemberDeliveryBonusPayload | null {
+    if (!detail) {
+      return null
+    }
+
+    if (!deliveryBonusDraft.title.trim() || !deliveryBonusDraft.bonusType.trim()) {
+      showToast({
+        title: 'Delivery bonus details incomplete',
+        description: 'Title and bonus type are required.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    return {
+      employee_id: detail.report.id,
+      bonus_type: deliveryBonusDraft.bonusType.trim(),
+      title: deliveryBonusDraft.title.trim(),
+      description: deliveryBonusDraft.description.trim() || undefined,
+      award_date: deliveryBonusDraft.awardDate,
+      project_id: parsePositiveId(deliveryBonusDraft.projectId) ?? 0,
+    }
+  }
+
+  async function handleSubmitMistake() {
+    const payload = buildMistakePayload()
+
+    if (!payload || !detail) {
+      return
+    }
+
+    setIsMistakeSubmitting(true)
+
+    try {
+      const response = editingMistake
+        ? await membersService.updateMistake(editingMistake.id, payload)
+        : await membersService.createMistake(payload)
+
+      await detailQuery.refetch()
+      closeMistakeDialog()
+      showToast({
+        title: editingMistake ? 'Mistake updated' : 'Mistake added',
+        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: editingMistake ? 'Mistake not updated' : 'Mistake not added',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsMistakeSubmitting(false)
+    }
+  }
+
+  async function handleSubmitDeliveryBonus() {
+    const payload = buildDeliveryBonusPayload()
+
+    if (!payload || !detail) {
+      return
+    }
+
+    setIsDeliveryBonusSubmitting(true)
+
+    try {
+      const response = editingDeliveryBonus
+        ? await membersService.updateDeliveryBonus(editingDeliveryBonus.id, payload)
+        : await membersService.createDeliveryBonus(payload)
+
+      await detailQuery.refetch()
+      closeDeliveryBonusDialog()
+      showToast({
+        title: editingDeliveryBonus ? 'Delivery bonus updated' : 'Delivery bonus added',
+        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: editingDeliveryBonus ? 'Delivery bonus not updated' : 'Delivery bonus not added',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsDeliveryBonusSubmitting(false)
+    }
+  }
+
+  async function handleDeleteCompensationRecord() {
+    if (!deleteTarget) {
+      return
+    }
+
+    setIsDeleteSubmitting(true)
+
+    try {
+      const response =
+        deleteTarget.kind === 'mistake'
+          ? await membersService.deleteMistake(deleteTarget.record.id)
+          : await membersService.deleteDeliveryBonus(deleteTarget.record.id)
+
+      await detailQuery.refetch()
+      showToast({
+        title: deleteTarget.kind === 'mistake' ? 'Mistake deleted' : 'Delivery bonus deleted',
+        description: getSuccessMessage(response, `${deleteTarget.record.title} removed.`),
+        tone: 'success',
+      })
+      setDeleteTarget(null)
+    } catch (error) {
+      showToast({
+        title: deleteTarget.kind === 'mistake' ? 'Mistake not deleted' : 'Delivery bonus not deleted',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsDeleteSubmitting(false)
+    }
   }
 
   async function handleSubmitPenalty() {
@@ -490,6 +836,16 @@ export function FaultsMemberDetailPage({
                     Estimate API unavailable: {detail.estimateError}
                   </p>
                 ) : null}
+                {detail.mistakesError ? (
+                  <p className="mt-2 text-xs leading-5 text-amber-300">
+                    Mistake incidents unavailable: {detail.mistakesError}
+                  </p>
+                ) : null}
+                {detail.deliveryBonusesError ? (
+                  <p className="mt-2 text-xs leading-5 text-amber-300">
+                    Delivery bonuses unavailable: {detail.deliveryBonusesError}
+                  </p>
+                ) : null}
                 {detail.updatesError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
                     Update statistics unavailable: {detail.updatesError}
@@ -516,6 +872,16 @@ export function FaultsMemberDetailPage({
                     className="rounded-xl border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)]"
                   >
                     Add bonus
+                  </Button>
+                ) : null}
+                {showCompensationActions ? (
+                  <Button variant="ghost" size="sm" onClick={() => openMistakeDialog()} className="rounded-xl">
+                    Add mistake
+                  </Button>
+                ) : null}
+                {showCompensationActions ? (
+                  <Button variant="success" size="sm" onClick={() => openDeliveryBonusDialog()} className="rounded-xl">
+                    Add delivery bonus
                   </Button>
                 ) : null}
                 <Button
@@ -820,6 +1186,23 @@ export function FaultsMemberDetailPage({
         </Card>
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-2">
+        <MistakeIncidentSection
+          items={detail.mistakes}
+          editable={showCompensationActions}
+          onAdd={showCompensationActions ? () => openMistakeDialog() : undefined}
+          onEdit={showCompensationActions ? (item) => openMistakeDialog(item) : undefined}
+          onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'mistake', record: item }) : undefined}
+        />
+        <DeliveryBonusSection
+          items={detail.deliveryBonuses}
+          editable={showCompensationActions}
+          onAdd={showCompensationActions ? () => openDeliveryBonusDialog() : undefined}
+          onEdit={showCompensationActions ? (item) => openDeliveryBonusDialog(item) : undefined}
+          onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
+        />
+      </div>
+
       {showCompensationActions ? (
         <Dialog
           open={isPenaltyDialogOpen}
@@ -921,6 +1304,258 @@ export function FaultsMemberDetailPage({
                 placeholder="Optional bonus reason"
               />
             </div>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={isMistakeDialogOpen}
+          onClose={closeMistakeDialog}
+          title={`${editingMistake ? 'Edit' : 'Add'} mistake for ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} compensation mistake incident.`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeMistakeDialog} disabled={isMistakeSubmitting}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={() => void handleSubmitMistake()} loading={isMistakeSubmitting}>
+                {editingMistake ? 'Update mistake' : 'Save mistake'}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Reviewer</label>
+                {reviewerOptions.length > 0 ? (
+                  <SelectField
+                    value={mistakeDraft.reviewerId}
+                    options={reviewerOptions}
+                    onValueChange={(value) => setMistakeDraft((current) => ({ ...current, reviewerId: value }))}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    min="1"
+                    value={mistakeDraft.reviewerId}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
+                    placeholder="Reviewer ID"
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+                {projectOptions.length > 1 ? (
+                  <SelectField
+                    value={mistakeDraft.projectId}
+                    options={projectOptions}
+                    onValueChange={(value) => setMistakeDraft((current) => ({ ...current, projectId: value }))}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    type="number"
+                    min="0"
+                    value={mistakeDraft.projectId}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
+                    placeholder="0 for no project"
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+                <Input
+                  value={mistakeDraft.category}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
+                  placeholder="AI Integration"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Severity</label>
+                <Input
+                  value={mistakeDraft.severity}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
+                  placeholder="Minor"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+                <Input
+                  value={mistakeDraft.title}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="Short mistake title"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Incident date</label>
+                <Input
+                  type="date"
+                  value={mistakeDraft.incidentDate}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, incidentDate: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <Textarea
+                value={mistakeDraft.description}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
+                placeholder="Describe what happened"
+              />
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+                <input
+                  type="checkbox"
+                  checked={mistakeDraft.reachedClient}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
+                  className="h-4 w-4 rounded border-white/15 bg-transparent"
+                />
+                Reached client
+              </label>
+
+              <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+                <input
+                  type="checkbox"
+                  checked={mistakeDraft.unclearTask}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
+                  className="h-4 w-4 rounded border-white/15 bg-transparent"
+                />
+                Unclear task
+              </label>
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={isDeliveryBonusDialogOpen}
+          onClose={closeDeliveryBonusDialog}
+          title={`${editingDeliveryBonus ? 'Edit' : 'Add'} delivery bonus for ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} delivery bonus record.`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeDeliveryBonusDialog} disabled={isDeliveryBonusSubmitting}>
+                Cancel
+              </Button>
+              <Button variant="success" onClick={() => void handleSubmitDeliveryBonus()} loading={isDeliveryBonusSubmitting}>
+                {editingDeliveryBonus ? 'Update delivery bonus' : 'Save delivery bonus'}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Bonus type</label>
+                <Input
+                  value={deliveryBonusDraft.bonusType}
+                  onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
+                  placeholder="early_delivery"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-white">Award date</label>
+                <Input
+                  type="date"
+                  value={deliveryBonusDraft.awardDate}
+                  onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, awardDate: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+              <Input
+                value={deliveryBonusDraft.title}
+                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
+                placeholder="Short bonus title"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+              {projectOptions.length > 1 ? (
+                <SelectField
+                  value={deliveryBonusDraft.projectId}
+                  options={projectOptions}
+                  onValueChange={(value) => setDeliveryBonusDraft((current) => ({ ...current, projectId: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  type="number"
+                  min="0"
+                  value={deliveryBonusDraft.projectId}
+                  onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, projectId: event.target.value }))}
+                  placeholder="0 for no project"
+                />
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <Textarea
+                value={deliveryBonusDraft.description}
+                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
+                placeholder="Describe why this delivery bonus was awarded"
+              />
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={Boolean(deleteTarget)}
+          onClose={() => setDeleteTarget(null)}
+          title={deleteTarget?.kind === 'mistake' ? 'Delete mistake incident' : 'Delete delivery bonus'}
+          description={deleteTarget ? `This will remove "${deleteTarget.record.title}" from the selected month.` : undefined}
+          tone="danger"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleteSubmitting}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={() => void handleDeleteCompensationRecord()} loading={isDeleteSubmitting}>
+                Delete record
+              </Button>
+            </>
+          }
+        >
+          <div className="rounded-[18px] border border-red-500/16 bg-red-500/8 px-4 py-4 text-sm text-white/84">
+            <p className="font-semibold text-white">{deleteTarget?.record.title}</p>
+            <p className="mt-2 text-sm text-white/72">
+              {deleteTarget?.kind === 'mistake'
+                ? 'The mistake incident entry will be permanently removed from this employee history.'
+                : 'The delivery bonus record will be permanently removed from this employee history.'}
+            </p>
           </div>
         </Dialog>
       ) : null}

@@ -1,7 +1,6 @@
 import { startTransition, useMemo, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../app/hooks/useLocale'
-import { clearWebsiteStatsToken, setWebsiteStatsToken, websiteStatsService } from '../../../shared/api/services/website-stats.service'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
@@ -36,23 +35,6 @@ export function LoginPage() {
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function syncWebsiteStatsSession(email: string, password: string) {
-    if (!email.includes('@') || password.trim().length < 6) {
-      return
-    }
-
-    try {
-      const response = await websiteStatsService.login({
-        email,
-        password,
-      })
-
-      setWebsiteStatsToken(response.accessToken)
-    } catch {
-      // Keep the previously synced website token if the secondary login fails.
-    }
-  }
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -69,13 +51,7 @@ export function LoginPage() {
 
     try {
       const response = await authService.login(values)
-      const currentUser = await acceptTokens(response)
-
-      if (currentUser?.role === 'CEO') {
-        void syncWebsiteStatsSession(values.username.trim(), values.password)
-      } else {
-        clearWebsiteStatsToken()
-      }
+      await acceptTokens(response)
 
       startTransition(() => navigate('/', { replace: true }))
     } catch (error) {

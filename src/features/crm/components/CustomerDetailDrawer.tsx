@@ -69,6 +69,36 @@ function formatCustomerNotes(notes?: string | null) {
     .filter(Boolean)
 }
 
+function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
+  return (
+    <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+      <div className="border-b border-[var(--border)] px-6 py-5">
+        <SectionTitle title="Audio" description="Listen to the customer audio attached to this CRM record." />
+      </div>
+      <div className="px-6 py-5">
+        <div className="rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-4">
+          <audio controls preload="none" src={audioSource} className="w-full">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button variant="secondary" size="sm" asChild>
+            <a href={audioSource} target="_blank" rel="noreferrer">
+              Open audio
+            </a>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <a href={audioSource} download>
+              Download
+            </a>
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function CustomerDetailContent({
   customer,
   audioSource,
@@ -81,15 +111,15 @@ export function CustomerDetailContent({
 
   return (
     <section className="space-y-5">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/10">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-7">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_34%),radial-gradient(circle_at_right,rgba(168,85,247,0.12),transparent_28%)]" />
 
           <div className="relative z-10 flex flex-col gap-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-300/72">CRM / Customer</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-[2rem]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">CRM / Customer</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[2rem]">
                   {customerName}
                 </h2>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">
@@ -105,7 +135,7 @@ export function CustomerDetailContent({
 
               <div className="flex flex-wrap gap-2">
                 {audioSource ? (
-                  <Button asChild>
+                  <Button variant="secondary" size="sm" asChild>
                     <a href={audioSource} target="_blank" rel="noreferrer">
                       Open audio
                     </a>
@@ -116,20 +146,20 @@ export function CustomerDetailContent({
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[20px] border border-blue-500/16 bg-blue-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-200/72">Platform</p>
-                <p className="mt-2 text-lg font-semibold text-white">{getCustomerDisplayPlatform(customer) || '-'}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Platform</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{getCustomerDisplayPlatform(customer) || '-'}</p>
               </div>
               <div className="rounded-[20px] border border-violet-500/16 bg-violet-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-200/72">Username</p>
-                <p className="mt-2 text-lg font-semibold text-white">{formatUsernameHandle(customer.username) || '-'}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Username</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatUsernameHandle(customer.username) || '-'}</p>
               </div>
               <div className="rounded-[20px] border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200/72">Recall</p>
-                <p className="mt-2 text-lg font-semibold text-white">{customer.recall_time ? formatShortDate(customer.recall_time) : '-'}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Recall</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{customer.recall_time ? formatShortDate(customer.recall_time) : '-'}</p>
               </div>
               <div className="rounded-[20px] border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-200/72">Created</p>
-                <p className="mt-2 text-lg font-semibold text-white">{formatShortDate(customer.created_at)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Created</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatShortDate(customer.created_at)}</p>
               </div>
             </div>
           </div>
@@ -137,8 +167,8 @@ export function CustomerDetailContent({
       </Card>
 
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card className="overflow-hidden rounded-[24px] border-white/10">
-          <div className="border-b border-(--border) px-6 py-5">
+        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+          <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle title="Profile" description="Core contact and routing metadata returned by the CRM detail endpoint." />
           </div>
           <div className="grid gap-3 px-6 py-5">
@@ -150,17 +180,19 @@ export function CustomerDetailContent({
               ['Conversation language', customer.conversation_language || '-'],
               ['Recall time', customer.recall_time || '-'],
             ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between gap-4 rounded-[18px] border border-white/8 bg-black/12 px-4 py-3">
+              <div key={label} className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
                 <span className="text-sm text-[var(--muted-strong)]">{label}</span>
-                <span className="text-right text-sm font-semibold text-white">{value}</span>
+                <span className="text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
               </div>
             ))}
           </div>
         </Card>
 
         <div className="grid gap-5">
-          <Card className="overflow-hidden rounded-[24px] border-white/10">
-            <div className="border-b border-(--border) px-6 py-5">
+          {audioSource ? <CustomerAudioPanel audioSource={audioSource} /> : null}
+
+          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+            <div className="border-b border-[var(--border)] px-6 py-5">
               <SectionTitle title="Notes" description="Operator notes attached to the customer record." />
             </div>
             <div className="px-6 py-5">
@@ -178,8 +210,8 @@ export function CustomerDetailContent({
             </div>
           </Card>
 
-          <Card className="overflow-hidden rounded-[24px] border-white/10">
-            <div className="border-b border-(--border) px-6 py-5">
+          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+            <div className="border-b border-[var(--border)] px-6 py-5">
               <SectionTitle title="AI Summary" description="CRM-generated summary snapshot for faster context recovery." />
             </div>
             <div className="px-6 py-5">
@@ -255,11 +287,11 @@ export function CustomerDetailDrawer({
       />
 
       <div className="absolute inset-y-0 right-0 w-full md:w-[min(50vw,760px)]">
-        <div className="sheet-enter flex h-full flex-col border-l border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
-          <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+        <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
+          <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-300/72">CRM drawer</p>
-              <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">CRM drawer</p>
+              <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                 {customer ? getCustomerDisplayName(customer) : 'Customer detail'}
               </h2>
             </div>
@@ -267,7 +299,7 @@ export function CustomerDetailDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-white/72 transition hover:border-white/16 hover:bg-white/[0.06] hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
               aria-label="Close detail drawer"
             >
               <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">

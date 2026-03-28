@@ -23,11 +23,11 @@ type PageHeaderProps = {
 
 const metaToneClassNames: Record<PageHeaderTone, string> = {
   neutral: 'meta-neutral',
-  blue:    'border-blue-500/20 bg-blue-600/10 text-blue-50',
-  success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-50',
-  warning: 'border-amber-500/20 bg-amber-500/10 text-amber-50',
-  danger:  'border-rose-500/20 bg-rose-500/10 text-rose-50',
-  violet:  'border-violet-500/20 bg-violet-500/10 text-violet-50',
+  blue: 'meta-blue',
+  success: 'meta-success',
+  warning: 'meta-warning',
+  danger: 'meta-danger',
+  violet: 'meta-violet',
 }
 
 export function PageHeader({

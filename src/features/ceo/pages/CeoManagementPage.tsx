@@ -65,22 +65,11 @@ type RoleFormState = {
   isSystem: boolean
 }
 
-type ImageSingleDeleteFormState = {
-  imagePath: string
-}
-
-type ImageBulkDeleteFormState = {
-  imagePathsText: string
-  category: string
-  deleteAllInCategory: boolean
-  onlyUnreferenced: boolean
-}
-
 const tabOptions: Array<{ key: ManagementTab; label: string; description: string }> = [
   { key: 'pages', label: 'Pages', description: 'Permission pages with live CRUD.' },
   { key: 'statuses', label: 'Statuses', description: 'Dynamic CRM statuses with live CRUD.' },
   { key: 'roles', label: 'Roles', description: 'User roles with live CRUD.' },
-  { key: 'images', label: 'Images Cleanup', description: 'Single image delete and bulk cleanup tools.' },
+  { key: 'images', label: 'Images Cleanup', description: 'Image library, detail view and cleanup actions.' },
 ]
 
 const imageCategoryOptions: SelectFieldOption[] = [
@@ -125,17 +114,6 @@ const initialRoleForm: RoleFormState = {
   description: '',
   isActive: true,
   isSystem: false,
-}
-
-const initialSingleDeleteForm: ImageSingleDeleteFormState = {
-  imagePath: '',
-}
-
-const initialBulkDeleteForm: ImageBulkDeleteFormState = {
-  imagePathsText: '',
-  category: '',
-  deleteAllInCategory: false,
-  onlyUnreferenced: false,
 }
 
 function SummaryCard({
@@ -302,11 +280,8 @@ export function CeoManagementPage() {
   const [editingRole, setEditingRole] = useState<ManagementRoleRecord | null>(null)
   const [isRoleSubmitting, setIsRoleSubmitting] = useState(false)
 
-  const [singleDeleteForm, setSingleDeleteForm] = useState<ImageSingleDeleteFormState>(initialSingleDeleteForm)
-  const [bulkDeleteForm, setBulkDeleteForm] = useState<ImageBulkDeleteFormState>(initialBulkDeleteForm)
   const [isSingleDeleteSubmitting, setIsSingleDeleteSubmitting] = useState(false)
   const [isBulkDeleteSubmitting, setIsBulkDeleteSubmitting] = useState(false)
-  const [imageCleanupResult, setImageCleanupResult] = useState<ManagementImageCleanupResponse | null>(null)
   const [imageCategoryFilter, setImageCategoryFilter] = useState<string>('')
   const [imageReferenceFilter, setImageReferenceFilter] = useState<ImageReferenceFilter>('all')
   const [imageSearch, setImageSearch] = useState('')
@@ -487,12 +462,9 @@ export function CeoManagementPage() {
 
   function openImageDetail(image: Pick<ManagementImageRecord, 'path'>) {
     setImageDetailPath(image.path)
-    setSingleDeleteForm({ imagePath: image.path })
   }
 
   function applyCleanupResult(response: ManagementImageCleanupResponse) {
-    setImageCleanupResult(response)
-
     if (response.deleted_paths.length === 0) {
       return
     }
@@ -504,12 +476,6 @@ export function CeoManagementPage() {
     if (imageDetailPath && deletedPathSet.has(imageDetailPath)) {
       setImageDetailPath(null)
     }
-
-    setSingleDeleteForm((current) => (
-      deletedPathSet.has(current.imagePath.trim())
-        ? initialSingleDeleteForm
-        : current
-    ))
   }
 
   async function refreshImagesAfterCleanup() {
@@ -866,21 +832,6 @@ export function CeoManagementPage() {
     }
   }
 
-  async function handleDeleteSingleImage() {
-    const imagePath = singleDeleteForm.imagePath.trim()
-
-    if (!imagePath) {
-      showToast({
-        title: 'Image path missing',
-        description: 'Delete qilish uchun image path kiriting.',
-        tone: 'error',
-      })
-      return
-    }
-
-    await handleDeleteImageByPath(imagePath)
-  }
-
   async function handleDeleteSelectedImages() {
     if (selectedImagePaths.length === 0) {
       showToast({
@@ -929,6 +880,7 @@ export function CeoManagementPage() {
     }
   }
 
+  /* Legacy bulk cleanup panel removed
   async function handleBulkDeleteImages() {
     const imagePaths = bulkDeleteForm.imagePathsText
       .split('\n')
@@ -993,6 +945,7 @@ export function CeoManagementPage() {
       setIsBulkDeleteSubmitting(false)
     }
   }
+  */
 
   if (isInitialLoading) {
     return (
@@ -1313,7 +1266,7 @@ export function CeoManagementPage() {
         <Card className="p-6">
           <SectionTitle
             title="Images Cleanup"
-            description="Single image delete va bulk cleanup actionlar shu section ichida ishlaydi."
+            description="Image library, detail preview va selection-based cleanup shu section ichida ishlaydi."
           />
 
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -1539,6 +1492,7 @@ export function CeoManagementPage() {
             </div>
           </div>
 
+          {/* Legacy cleanup panel removed
           <div className="mt-5 grid gap-5 xl:grid-cols-2">
             <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
               <div className="flex items-start justify-between gap-3">
@@ -1695,6 +1649,7 @@ export function CeoManagementPage() {
               )}
             </div>
           </div>
+          */}
         </Card>
       ) : null}
 

@@ -18,7 +18,6 @@ import {
   getRefreshToken,
   setSessionTokens,
 } from '../../../shared/lib/session'
-import { clearWebsiteStatsToken } from '../../../shared/api/services/website-stats.service'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 
@@ -108,16 +107,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     try {
       const currentUser = await authService.me()
-      if (currentUser.role !== 'CEO') {
-        clearWebsiteStatsToken()
-      }
       setUser(currentUser)
       setStatus('authenticated')
 
       return currentUser
     } catch {
       clearSession()
-      clearWebsiteStatsToken()
       setUser(null)
       setStatus('anonymous')
       return null
@@ -132,7 +127,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const refreshToken = getRefreshToken()
 
       if (!accessToken && !refreshToken) {
-        clearWebsiteStatsToken()
         setUser(null)
         setStatus('anonymous')
         return
@@ -166,7 +160,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       // Session cleanup still needs to happen locally even if server logout fails.
     } finally {
       clearSession()
-      clearWebsiteStatsToken()
       setUser(null)
       startTransition(() => setStatus('anonymous'))
     }

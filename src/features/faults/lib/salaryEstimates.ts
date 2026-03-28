@@ -1,4 +1,8 @@
-import type { DayStatus } from '../../../shared/api/types'
+import type {
+  DayStatus,
+  MemberDeliveryBonusRecord,
+  MemberMistakeRecord,
+} from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import type { WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
@@ -123,12 +127,16 @@ export type EmployeeSalaryDetail = {
   report: EmployeeSalaryReport
   penalties: SalaryLedgerItem[]
   bonuses: SalaryLedgerItem[]
+  mistakes: MemberMistakeRecord[]
+  deliveryBonuses: MemberDeliveryBonusRecord[]
   updatesSummary: MemberUpdateSummary | null
   updateCalendar: MemberMonthlyUpdateCalendar | null
   estimateSource: 'live' | 'fallback'
   estimateError?: string | null
   updatesError?: string | null
   calendarError?: string | null
+  mistakesError?: string | null
+  deliveryBonusesError?: string | null
 }
 
 export const now = new Date()
@@ -1169,6 +1177,146 @@ export function buildSalaryLedgerItems(
     .filter((item) => item.amount > 0 || (item.points ?? 0) > 0)
 }
 
+function collectNestedRecords(value: unknown, depth = 0): UnknownRecord[] {
+  if (depth > 3) {
+    return []
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectNestedRecords(item, depth + 1))
+  }
+
+  if (!isRecord(value)) {
+    return []
+  }
+
+  return [
+    value,
+    ...Object.values(value).flatMap((entry) => (
+      Array.isArray(entry) || isRecord(entry)
+        ? collectNestedRecords(entry, depth + 1)
+        : []
+    )),
+  ]
+}
+
+function looksLikeMistakeRecord(source: UnknownRecord) {
+  return [
+    'reviewer_id',
+    'incident_date',
+    'reached_client',
+    'unclear_task',
+    'severity',
+    'category',
+  ].some((key) => key in source)
+}
+
+function looksLikeDeliveryBonusRecord(source: UnknownRecord) {
+  return [
+    'bonus_type',
+    'award_date',
+    'project_id',
+    'delivery_bonus_id',
+  ].some((key) => key in source)
+}
+
+function extractCompensationEntries(
+  payload: unknown,
+  looksLike: (source: UnknownRecord) => boolean,
+) {
+  const parsedPayload = parseMaybeJson(payload)
+  return collectNestedRecords(parsedPayload).filter(looksLike)
+}
+
+function matchesEmployeeRecord(source: UnknownRecord, memberId: number) {
+  const sourceMemberId = findFirstNumber(source, ['employee_id', 'user_id', 'member_id'])
+
+  if (!Number.isFinite(memberId) || memberId <= 0 || sourceMemberId === undefined) {
+    return true
+  }
+
+  return sourceMemberId === memberId
+}
+
+function resolveProjectName(source: UnknownRecord) {
+  const projectRecord = findFirstRecord(source, ['project'])
+
+  return (
+    findFirstString(source, ['project_name']) ??
+    findFirstString(projectRecord ?? {}, ['project_name', 'name', 'title'])
+  )
+}
+
+function resolveReviewerName(source: UnknownRecord) {
+  const reviewerRecord = findFirstRecord(source, ['reviewer', 'reviewed_by', 'reviewer_user'])
+
+  return (
+    findFirstString(source, ['reviewer_name']) ??
+    resolveRecordDisplayName(reviewerRecord ?? null)
+  )
+}
+
+function normalizeMistakeRecord(source: UnknownRecord, index: number): MemberMistakeRecord {
+  const employeeRecord = findFirstRecord(source, ['employee', 'member', 'user'])
+
+  return {
+    id: findFirstNumber(source, ['id', 'mistake_id']) ?? index + 1,
+    employee_id: findFirstNumber(source, ['employee_id', 'user_id', 'member_id']) ?? 0,
+    employee_name: resolveRecordDisplayName(source, employeeRecord ?? null) ?? null,
+    reviewer_id: findFirstNumber(source, ['reviewer_id', 'reviewed_by_id']) ?? null,
+    reviewer_name: resolveReviewerName(source) ?? null,
+    project_id: findFirstNumber(source, ['project_id']) ?? null,
+    project_name: resolveProjectName(source) ?? null,
+    category: findFirstString(source, ['category']) ?? 'Mistake',
+    severity: findFirstString(source, ['severity']) ?? 'Unspecified',
+    title: findFirstString(source, ['title', 'name', 'label']) ?? `Mistake #${index + 1}`,
+    description: findFirstString(source, ['description', 'note', 'remarks', 'comment']) ?? null,
+    incident_date: findFirstString(source, ['incident_date', 'date', 'created_at']) ?? null,
+    reached_client: toBoolean(source.reached_client) ?? false,
+    unclear_task: toBoolean(source.unclear_task) ?? false,
+    created_at: findFirstString(source, ['created_at']) ?? null,
+    updated_at: findFirstString(source, ['updated_at']) ?? null,
+  }
+}
+
+function normalizeDeliveryBonusRecord(source: UnknownRecord, index: number): MemberDeliveryBonusRecord {
+  const employeeRecord = findFirstRecord(source, ['employee', 'member', 'user'])
+
+  return {
+    id: findFirstNumber(source, ['id', 'bonus_id', 'delivery_bonus_id']) ?? index + 1,
+    employee_id: findFirstNumber(source, ['employee_id', 'user_id', 'member_id']) ?? 0,
+    employee_name: resolveRecordDisplayName(source, employeeRecord ?? null) ?? null,
+    project_id: findFirstNumber(source, ['project_id']) ?? null,
+    project_name: resolveProjectName(source) ?? null,
+    bonus_type: findFirstString(source, ['bonus_type', 'type', 'category']) ?? 'delivery_bonus',
+    title: findFirstString(source, ['title', 'name', 'label']) ?? `Delivery bonus #${index + 1}`,
+    description: findFirstString(source, ['description', 'note', 'remarks', 'comment']) ?? null,
+    award_date: findFirstString(source, ['award_date', 'date', 'created_at']) ?? null,
+    created_at: findFirstString(source, ['created_at']) ?? null,
+    updated_at: findFirstString(source, ['updated_at']) ?? null,
+  }
+}
+
+function buildMistakeRecords(payload: unknown, memberId: number) {
+  return extractCompensationEntries(payload, looksLikeMistakeRecord)
+    .filter((entry) => matchesEmployeeRecord(entry, memberId))
+    .map((entry, index) => normalizeMistakeRecord(entry, index))
+    .sort((left, right) => (
+      new Date(right.incident_date ?? right.created_at ?? 0).getTime() -
+      new Date(left.incident_date ?? left.created_at ?? 0).getTime()
+    ))
+}
+
+function buildDeliveryBonusRecords(payload: unknown, memberId: number) {
+  return extractCompensationEntries(payload, looksLikeDeliveryBonusRecord)
+    .filter((entry) => matchesEmployeeRecord(entry, memberId))
+    .map((entry, index) => normalizeDeliveryBonusRecord(entry, index))
+    .sort((left, right) => (
+      new Date(right.award_date ?? right.created_at ?? 0).getTime() -
+      new Date(left.award_date ?? left.created_at ?? 0).getTime()
+    ))
+}
+
 function getPrimaryUpdateRecord(payload: unknown) {
   const parsedPayload = parseMaybeJson(payload)
 
@@ -1715,9 +1863,13 @@ export function buildEmployeeSalaryDetail({
   report,
   user,
   estimatePayload,
+  mistakesPayload,
+  deliveryBonusesPayload,
   updatesPayload,
   calendarPayload,
   estimateError,
+  mistakesError,
+  deliveryBonusesError,
   updatesError,
   calendarError,
   year,
@@ -1726,9 +1878,13 @@ export function buildEmployeeSalaryDetail({
   report: EmployeeSalaryReport
   user: CeoUserRecord | null
   estimatePayload: unknown
+  mistakesPayload: unknown
+  deliveryBonusesPayload: unknown
   updatesPayload: unknown
   calendarPayload: unknown
   estimateError?: string | null
+  mistakesError?: string | null
+  deliveryBonusesError?: string | null
   updatesError?: string | null
   calendarError?: string | null
   year: number
@@ -1748,10 +1904,14 @@ export function buildEmployeeSalaryDetail({
     report: mergedReport,
     penalties: buildSalaryLedgerItems(estimatePayload, 'penalty', mergedReport),
     bonuses: buildSalaryLedgerItems(estimatePayload, 'bonus', mergedReport),
+    mistakes: buildMistakeRecords(mistakesPayload, mergedReport.id),
+    deliveryBonuses: buildDeliveryBonusRecords(deliveryBonusesPayload, mergedReport.id),
     updatesSummary: parseMemberUpdateSummary(updatesPayload, updateCalendar),
     updateCalendar,
     estimateSource: estimateRecord ? 'live' : 'fallback',
     estimateError,
+    mistakesError,
+    deliveryBonusesError,
     updatesError,
     calendarError,
   }

@@ -17,6 +17,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
+import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -90,14 +91,39 @@ function hasUsefulMonthlyNumericStats(employee: Pick<EmployeeMonthlyStats, 'subm
   )
 }
 
-/* Dot Activity Strip */
-const dotStatusStyle = {
-  submitted: 'team-activity-dot team-activity-dot-submitted',
-  missing:   'team-activity-dot team-activity-dot-missing',
-  sunday:    'team-activity-dot team-activity-dot-sunday',
-  future:    'team-activity-dot team-activity-dot-future',
-  neutral:   'team-activity-dot team-activity-dot-neutral',
+/* Activity Strip */
+const activitySegmentStyle = {
+  submitted: 'team-activity-segment team-activity-segment-submitted',
+  missing:   'team-activity-segment team-activity-segment-missing',
+  sunday:    'team-activity-segment team-activity-segment-sunday',
+  future:    'team-activity-segment team-activity-segment-future',
+  neutral:   'team-activity-segment team-activity-segment-neutral',
 } as const satisfies Record<DayStatus, string>
+
+function splitStatusesIntoWeeks(entries: EmployeeDayStatus[], chunkSize = 7) {
+  const weeks: EmployeeDayStatus[][] = []
+
+  for (let index = 0; index < entries.length; index += chunkSize) {
+    weeks.push(entries.slice(index, index + chunkSize))
+  }
+
+  return weeks
+}
+
+function getActivityStatusLabel(status: DayStatus) {
+  switch (status) {
+    case 'submitted':
+      return translateCurrentLiteral('Active month')
+    case 'missing':
+      return translateCurrentLiteral('No reports')
+    case 'sunday':
+      return translateCurrentLiteral('Weekend / off day')
+    case 'future':
+      return translateCurrentLiteral('Future month')
+    default:
+      return translateCurrentLiteral('No data')
+  }
+}
 
 function buildMonthlyActivityStatuses(
   employee: Pick<EmployeeMonthlyStats, 'daily_statuses' | 'submitted_count' | 'missing_count' | 'completion_percentage' | 'last_update_date'>,
@@ -215,21 +241,48 @@ function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlySta
     return <span className="text-xs text-(--muted)">-</span>
   }
 
+  const weeks = splitStatusesIntoWeeks(statuses)
+
   return (
     <div
       data-i18n-skip="true"
       data-activity-strip="true"
-      className="flex flex-wrap items-center gap-0.75"
+      className="team-activity-rail w-[18rem] px-2.5 py-2"
       aria-label={translateCurrentLiteral('Monthly activity')}
     >
-      {statuses.map((entry) => (
-        <span
-          key={entry.day}
-          title={entry.label ?? `Day ${entry.day}: ${entry.status}`}
-          className={cn('inline-block h-2.5 w-2.5 rounded-full shrink-0', dotStatusStyle[entry.status])}
-        />
-      ))}
+      <div className="team-activity-rail-inner">
+        {weeks.map((week, weekIndex) => (
+          <div
+            key={`week-${weekIndex + 1}`}
+            className="team-activity-week"
+            style={{ flexGrow: week.length, flexBasis: 0 }}
+          >
+            {week.map((entry) => (
+              <span
+                key={entry.day}
+                title={entry.label ?? `Day ${entry.day}: ${getActivityStatusLabel(entry.status)}`}
+                className={cn('min-w-[0.34rem] flex-1', activitySegmentStyle[entry.status])}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
+  )
+}
+
+function ActivityLegendItem({
+  status,
+  label,
+}: {
+  status: DayStatus
+  label: string
+}) {
+  return (
+    <span className="flex items-center gap-2">
+      <span className={cn('h-2.5 w-4 shrink-0', activitySegmentStyle[status])} />
+      {translateCurrentLiteral(label)}
+    </span>
   )
 }
 
@@ -252,18 +305,18 @@ function CompletionPill({ pct }: { pct: number }) {
   )
 }
 
-function EmployeeAvatar({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .map((w) => w.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+function EmployeeAvatar({ name, imageUrl }: { name: string; imageUrl?: string | null }) {
+  const [firstName = '', ...surnameParts] = name.trim().split(/\s+/)
 
   return (
-    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#3b82f6,#6366f1)] text-[11px] font-bold text-white shadow-md">
-      {initials}
-    </div>
+    <SharedMemberAvatar
+      name={firstName || name}
+      surname={surnameParts.join(' ')}
+      imageUrl={imageUrl}
+      size="md"
+      className="shadow-md"
+      title={name}
+    />
   )
 }
 
@@ -549,6 +602,22 @@ function resolveDisplayName(...sources: Array<UnknownRecord | null | undefined>)
   }
 
   return undefined
+}
+
+function resolveProfileImage(...sources: Array<UnknownRecord | null | undefined>) {
+  for (const source of sources) {
+    if (!source) {
+      continue
+    }
+
+    const image = findFirstString(source, ['profile_image', 'profileImage', 'image', 'avatar', 'photo'])
+
+    if (image) {
+      return image
+    }
+  }
+
+  return null
 }
 
 function isDateKey(value: string) {
@@ -991,6 +1060,7 @@ function normalizeEmployee(
       findFirstString(raw, ['telegram_username', 'telegram_id']) ??
       findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
       null,
+    profile_image: resolveProfileImage(raw, userRecord, summaryRecord),
     submitted_count: submitted,
     missing_count: resolvedMissing,
     completion_percentage: completion,
@@ -1013,6 +1083,13 @@ function parseTrackingMonthlyEmployees(
   year: number,
 ): EmployeeMonthlyStats[] {
   return extractEmployeeRecords(data).map((entry) => {
+    const userRecord =
+      findFirstRecord(entry, ['user', 'employee', 'member']) ??
+      findFirstRecord(entry, ['member_data', 'user_data']) ??
+      null
+    const summaryRecord =
+      findFirstRecord(entry, ['summary', 'statistics', 'monthly_stats', 'update_stats', 'salary_update']) ??
+      null
     const updates = findFirstArray(entry, ['updates', 'entries', 'reports', 'items']) ?? []
     const dayStatuses = parseDayStatuses(updates, month, year)
     const derivedSubmitted = dayStatuses ? dayStatuses.filter((day) => day.status === 'submitted').length : 0
@@ -1031,9 +1108,13 @@ function parseTrackingMonthlyEmployees(
           : 0
 
     return {
-      user_id: resolveEmployeeUserId(entry),
-      user_name: resolveDisplayName(entry) ?? `User #${resolveEmployeeUserId(entry)}`,
-      telegram_username: findFirstString(entry, ['telegram_username', 'telegram_id']) ?? null,
+      user_id: resolveEmployeeUserId(entry, userRecord, summaryRecord),
+      user_name: resolveDisplayName(entry, userRecord, summaryRecord) ?? `User #${resolveEmployeeUserId(entry, userRecord, summaryRecord)}`,
+      telegram_username:
+        findFirstString(entry, ['telegram_username', 'telegram_id']) ??
+        findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
+        null,
+      profile_image: resolveProfileImage(entry, userRecord, summaryRecord),
       submitted_count: submitted,
       missing_count: missing,
       completion_percentage: completion,
@@ -1051,6 +1132,7 @@ function buildEmployeesFromRoster(memberOptions: WorkdayOverrideMemberOption[]):
     user_id: member.id,
     user_name: member.full_name?.trim() || `${member.name ?? ''} ${member.surname ?? ''}`.trim() || `User #${member.id}`,
     telegram_username: member.telegram_id ?? null,
+    profile_image: member.profile_image ?? null,
     submitted_count: 0,
     missing_count: 0,
     completion_percentage: 0,
@@ -1196,6 +1278,10 @@ function mergeEmployeeHistory(
     telegram_username:
       normalizedHistory.telegram_username ??
       fallbackEmployee.telegram_username,
+    profile_image:
+      normalizedHistory.profile_image ??
+      fallbackEmployee.profile_image ??
+      null,
     submitted_count: shouldUseHistoryNumericStats ? historySubmittedCount : fallbackEmployee.submitted_count,
     missing_count: shouldUseHistoryNumericStats ? historyMissingCount : fallbackEmployee.missing_count,
     completion_percentage: shouldUseHistoryNumericStats ? historyCompletion : fallbackEmployee.completion_percentage,
@@ -1263,6 +1349,7 @@ function buildEmployeesFromHistoryRecords(
           findFirstString(record, ['telegram_username', 'telegram_id']) ??
           findFirstString(userRecord ?? {}, ['telegram_username', 'telegram_id']) ??
           null,
+        profile_image: resolveProfileImage(record, userRecord, summaryRecord),
         submitted_count: 0,
         missing_count: 0,
         completion_percentage: 0,
@@ -1439,6 +1526,7 @@ function mergeEmployeeStats(
     user_id: statsEntry.user_id || employee.user_id,
     user_name: statsEntry.user_name || employee.user_name,
     telegram_username: statsEntry.telegram_username ?? employee.telegram_username,
+    profile_image: employee.profile_image ?? statsEntry.profile_image ?? null,
     submitted_count: shouldUseStatsNumericValues ? statsEntry.submitted_count : employee.submitted_count,
     missing_count: shouldUseStatsNumericValues ? statsEntry.missing_count : employee.missing_count,
     completion_percentage: shouldUseStatsNumericValues ? statsEntry.completion_percentage : employee.completion_percentage,
@@ -2229,7 +2317,7 @@ export function CeoTeamUpdatesPage() {
                   >
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
-                        <EmployeeAvatar name={emp.user_name} />
+                        <EmployeeAvatar name={emp.user_name} imageUrl={emp.profile_image} />
                         <div>
                           <span className="text-sm font-semibold text-[var(--foreground)]">{emp.user_name}</span>
                           {typeof emp.estimated_salary === 'number' && emp.estimated_salary > 0 ? (
@@ -2253,7 +2341,7 @@ export function CeoTeamUpdatesPage() {
                       {emp.last_update_date ? formatShortDate(emp.last_update_date) : '-'}
                     </td>
                     <td className="px-4 py-3.5">
-                      <div className="w-50">
+                      <div className="w-[18rem]">
                         <ActivityStrip employee={emp} month={month} year={year} />
                       </div>
                     </td>
@@ -2280,23 +2368,12 @@ export function CeoTeamUpdatesPage() {
 
         {employees.length > 0 && (
           <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface) px-4 py-2.5">
-            <div className="flex gap-3 text-[11px] text-(--muted)" data-i18n-skip="true" data-activity-legend="true">
-              <span className="flex items-center gap-1.5">
-                <span className="team-activity-dot team-activity-dot-submitted h-2.5 w-2.5 rounded-full" />
-                {translateCurrentLiteral('Active month')}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="team-activity-dot team-activity-dot-missing h-2.5 w-2.5 rounded-full" />
-                {translateCurrentLiteral('No reports')}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="team-activity-dot team-activity-dot-neutral h-2.5 w-2.5 rounded-full" />
-                {translateCurrentLiteral('No data')}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="team-activity-dot team-activity-dot-future h-2.5 w-2.5 rounded-full" />
-                {translateCurrentLiteral('Future month')}
-              </span>
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-(--muted)" data-i18n-skip="true" data-activity-legend="true">
+              <ActivityLegendItem status="submitted" label="Active month" />
+              <ActivityLegendItem status="missing" label="No reports" />
+              <ActivityLegendItem status="sunday" label="Weekend / off day" />
+              <ActivityLegendItem status="neutral" label="No data" />
+              <ActivityLegendItem status="future" label="Future month" />
             </div>
             <p className="text-[11px] text-(--muted)">
               {selectedMonthName} {year}

@@ -10,6 +10,7 @@ export type WorkdayOverrideMemberOption = {
   full_name: string
   role: string
   telegram_id?: string | null
+  profile_image?: string | null
 }
 
 export type WorkdayOverrideRecord = {

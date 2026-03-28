@@ -269,7 +269,12 @@ export function CardDetailModal({
                 </p>
                 {card.assignee ? (
                   <div className="flex items-center gap-2">
-                    <Avatar name={card.assignee.name} surname={card.assignee.surname} size="sm" />
+                    <Avatar
+                      name={card.assignee.name}
+                      surname={card.assignee.surname}
+                      imageUrl={card.assignee.profile_image}
+                      size="sm"
+                    />
                     <div>
                       <p className="text-sm font-medium text-[var(--foreground)]">
                         {card.assignee.name} {card.assignee.surname}
@@ -290,7 +295,12 @@ export function CardDetailModal({
                   Created by
                 </p>
                 <div className="flex items-center gap-2">
-                  <Avatar name={card.created_by.name} surname={card.created_by.surname} size="sm" />
+                  <Avatar
+                    name={card.created_by.name}
+                    surname={card.created_by.surname}
+                    imageUrl={card.created_by.profile_image}
+                    size="sm"
+                  />
                   <p className="text-sm font-medium text-[var(--foreground)]">
                     {card.created_by.name} {card.created_by.surname}
                   </p>

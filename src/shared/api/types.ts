@@ -263,6 +263,7 @@ export type EmployeeMonthlyStats = {
   user_id: number
   user_name: string
   telegram_username?: string | null
+  profile_image?: string | null
   submitted_count: number
   missing_count: number
   completion_percentage: number
@@ -276,6 +277,61 @@ export type EmployeeMonthlyStats = {
   penalty_points?: number | null
   penalties_count?: number | null
   bonuses_count?: number | null
+}
+
+export type MemberMistakeRecord = {
+  id: number
+  employee_id: number
+  employee_name?: string | null
+  reviewer_id?: number | null
+  reviewer_name?: string | null
+  project_id?: number | null
+  project_name?: string | null
+  category: string
+  severity: string
+  title: string
+  description?: string | null
+  incident_date?: string | null
+  reached_client: boolean
+  unclear_task: boolean
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type MemberMistakePayload = {
+  employee_id: number
+  reviewer_id: number
+  project_id?: number | null
+  category: string
+  severity: string
+  title: string
+  description?: string
+  incident_date: string
+  reached_client: boolean
+  unclear_task: boolean
+}
+
+export type MemberDeliveryBonusRecord = {
+  id: number
+  employee_id: number
+  employee_name?: string | null
+  project_id?: number | null
+  project_name?: string | null
+  bonus_type: string
+  title: string
+  description?: string | null
+  award_date?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export type MemberDeliveryBonusPayload = {
+  employee_id: number
+  bonus_type: string
+  title: string
+  description?: string
+  award_date: string
+  project_id?: number | null
 }
 
 export type TeamMonthlyResponse = {

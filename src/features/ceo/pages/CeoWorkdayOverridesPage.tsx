@@ -18,6 +18,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -151,17 +152,15 @@ function SummaryCard({
 }
 
 function MemberAvatar({ member }: { member: WorkdayOverrideMemberOption }) {
-  const initials = (member.full_name || `${member.name} ${member.surname}`)
-    .split(' ')
-    .map((part) => part.charAt(0))
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
-
   return (
-    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[linear-gradient(135deg,#3b82f6,#2563eb)] text-[10px] font-bold text-white shadow-md">
-      {initials || 'MB'}
-    </div>
+    <SharedMemberAvatar
+      name={member.name}
+      surname={member.surname}
+      imageUrl={member.profile_image}
+      size="sm"
+      className="shadow-md"
+      title={member.full_name || `${member.name} ${member.surname}`}
+    />
   )
 }
 

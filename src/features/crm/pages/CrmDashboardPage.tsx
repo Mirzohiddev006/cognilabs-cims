@@ -174,20 +174,6 @@ function buildCustomerDraft(customer: CustomerSummary, values: CustomerFormValue
   }
 }
 
-function getInitials(name: string) {
-  return (
-    name
-      .split(' ')
-      .filter(Boolean)
-      .map((part) => part.replace(/^[@+]+/, ''))
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase() || '?'
-  )
-}
-
 function formatDateTime(value?: string | null) {
   if (!value) {
     return '-'
@@ -953,23 +939,18 @@ export function CrmDashboardPage() {
                   const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? 'none'
 
                   return (
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-(--muted-surface) text-sm font-semibold text-white">
-                        {getInitials(displayName)}
-                      </div>
-                      <div className="min-w-0">
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            openCustomerDrawer(row)
-                          }}
-                          className="block truncate text-left text-sm font-semibold text-white transition hover:text-zinc-300 sm:text-[15px]"
-                        >
-                          {displayName}
-                        </button>
-                        <span className="block truncate text-[13px] text-(--muted)">{secondaryLine}</span>
-                      </div>
+                    <div className="min-w-0">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openCustomerDrawer(row)
+                        }}
+                        className="block truncate text-left text-sm font-semibold text-white transition hover:text-zinc-300 sm:text-[15px]"
+                      >
+                        {displayName}
+                      </button>
+                      <span className="block truncate text-[13px] text-(--muted)">{secondaryLine}</span>
                     </div>
                   )
                 },
@@ -993,6 +974,28 @@ export function CrmDashboardPage() {
                 key: 'language',
                 header: 'Language',
                 render: (row) => row.conversation_language || '-',
+              },
+              {
+                key: 'actions',
+                header: 'Actions',
+                render: (row) => (
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <ActionsMenu
+                      label={`Open actions for ${getCustomerDisplayName(row)}`}
+                      items={[
+                        {
+                          label: 'Edit',
+                          onSelect: () => openEditModal(row),
+                        },
+                        {
+                          label: 'Delete',
+                          onSelect: () => void handleDeleteCustomer(row),
+                          tone: 'danger',
+                        },
+                      ]}
+                    />
+                  </div>
+                ),
               },
               {
                 key: 'assistant',
@@ -1032,28 +1035,6 @@ export function CrmDashboardPage() {
                 key: 'created',
                 header: 'Created',
                 render: (row) => formatDateTime(row.created_at),
-              },
-              {
-                key: 'actions',
-                header: 'Actions',
-                render: (row) => (
-                  <div onClick={(event) => event.stopPropagation()}>
-                    <ActionsMenu
-                      label={`Open actions for ${getCustomerDisplayName(row)}`}
-                      items={[
-                        {
-                          label: 'Edit',
-                          onSelect: () => openEditModal(row),
-                        },
-                        {
-                          label: 'Delete',
-                          onSelect: () => void handleDeleteCustomer(row),
-                          tone: 'danger',
-                        },
-                      ]}
-                    />
-                  </div>
-                ),
               },
             ]}
           />

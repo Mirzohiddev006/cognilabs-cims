@@ -54,7 +54,7 @@ export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: Me
               key={user.id}
               className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--accent-soft)] px-2 py-1 text-[11px] font-medium text-[var(--foreground)]"
             >
-              <Avatar name={user.name} surname={user.surname} size="xs" />
+              <Avatar name={user.name} surname={user.surname} imageUrl={user.profile_image} size="xs" />
               {user.name} {user.surname}
               {!disabled && (
                 <button
@@ -102,7 +102,7 @@ export function MemberSelector({ allUsers, selectedIds, onChange, disabled }: Me
                   selected && 'bg-[var(--blue-dim)]',
                 )}
               >
-                <Avatar name={user.name} surname={user.surname} size="sm" />
+                <Avatar name={user.name} surname={user.surname} imageUrl={user.profile_image} size="sm" />
                 <div className="flex-1 min-w-0">
                   <p className="truncate font-medium text-[var(--foreground)]">
                     {user.name} {user.surname}
