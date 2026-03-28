@@ -15,6 +15,7 @@ import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { ErrorStateBlock } from '../../../shared/ui/state-block'
 import { useAuth } from '../../auth/hooks/useAuth'
+import { CompensationPolicyPanel } from '../../faults/components/CompensationPolicyPanel'
 import {
   DeliveryBonusSection,
   MistakeIncidentSection,
@@ -134,8 +135,9 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
     }
   }
 
-  const [estimateResult, mistakesResult, deliveryBonusesResult, calendarResult, statsResult] = await Promise.allSettled([
+  const [estimateResult, policyResult, mistakesResult, deliveryBonusesResult, calendarResult, statsResult] = await Promise.allSettled([
     membersService.mySalaryEstimate(year, month),
+    membersService.compensationPolicy({ employeeIds: [memberUser.id] }),
     membersService.listMistakes({ year, month, employeeId: memberUser.id }),
     membersService.listDeliveryBonuses({ year, month, employeeId: memberUser.id }),
     updateTrackingService.employeeMonthlyUpdates(year, month, memberUser.id),
@@ -147,11 +149,13 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
       report: buildReportFromUser(memberUser),
       user: memberUser,
       estimatePayload: estimateResult.status === 'fulfilled' ? estimateResult.value : null,
+      policyPayload: policyResult.status === 'fulfilled' ? policyResult.value : null,
       mistakesPayload: mistakesResult.status === 'fulfilled' ? mistakesResult.value : null,
       deliveryBonusesPayload: deliveryBonusesResult.status === 'fulfilled' ? deliveryBonusesResult.value : null,
       updatesPayload: null,
       calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
       estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
+      policyError: policyResult.status === 'rejected' ? getApiErrorMessage(policyResult.reason) : null,
       mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
       deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
       updatesError: null,
@@ -446,10 +450,11 @@ export function MemberDashboardPage() {
               </div>
             ) : null}
 
-            {data?.statsError || detail.estimateError || detail.mistakesError || detail.deliveryBonusesError || detail.updatesError || detail.calendarError ? (
+            {data?.statsError || detail.estimateError || detail.policyError || detail.mistakesError || detail.deliveryBonusesError || detail.updatesError || detail.calendarError ? (
               <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/8 px-4 py-4 text-sm text-amber-100/82">
                 {data?.statsError ? <p>Stats API unavailable: {data.statsError}</p> : null}
                 {detail.estimateError ? <p>Salary estimate API unavailable: {detail.estimateError}</p> : null}
+                {detail.policyError ? <p>Compensation policy API unavailable: {detail.policyError}</p> : null}
                 {detail.mistakesError ? <p>Mistake incidents API unavailable: {detail.mistakesError}</p> : null}
                 {detail.deliveryBonusesError ? <p>Delivery bonuses API unavailable: {detail.deliveryBonusesError}</p> : null}
                 {detail.updatesError ? <p>Update statistics unavailable: {detail.updatesError}</p> : null}
@@ -594,6 +599,8 @@ export function MemberDashboardPage() {
           </div>
         </div>
       </Card>
+
+      <CompensationPolicyPanel policy={detail.compensationPolicy} />
 
       <div className="grid gap-4 xl:grid-cols-2">
         <MistakeIncidentSection items={detail.mistakes} />

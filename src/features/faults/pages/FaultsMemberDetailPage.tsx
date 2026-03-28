@@ -21,6 +21,7 @@ import { SelectField } from '../../../shared/ui/select-field'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useAuth } from '../../auth/hooks/useAuth'
+import { CompensationPolicyPanel } from '../components/CompensationPolicyPanel'
 import {
   DeliveryBonusSection,
   MistakeIncidentSection,
@@ -39,6 +40,9 @@ import {
   formatCount,
   formatDetailDate,
   formatPercent,
+  getCompensationPolicyCategoryOptions,
+  getCompensationPolicyDeliveryBonusOptions,
+  getCompensationPolicySeverityOptions,
   getEstimateRecordForMember,
   getMonthName,
   getSuccessMessage,
@@ -128,12 +132,12 @@ function normalizeDateInput(value?: string | null) {
   return parsed.toISOString().slice(0, 10)
 }
 
-function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
+function createMistakeFormState(defaultReviewerId = '', defaultCategory = 'AI Integration', defaultSeverity = 'Minor'): MistakeFormState {
   return {
     reviewerId: defaultReviewerId,
     projectId: '0',
-    category: 'AI Integration',
-    severity: 'Minor',
+    category: defaultCategory,
+    severity: defaultSeverity,
     title: '',
     description: '',
     incidentDate: getTodayDateInput(),
@@ -142,10 +146,10 @@ function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
   }
 }
 
-function createDeliveryBonusFormState(): DeliveryBonusFormState {
+function createDeliveryBonusFormState(defaultBonusType = 'early_delivery'): DeliveryBonusFormState {
   return {
     projectId: '0',
-    bonusType: 'early_delivery',
+    bonusType: defaultBonusType,
     title: '',
     description: '',
     awardDate: getTodayDateInput(),
@@ -281,10 +285,20 @@ export function FaultsMemberDetailPage({
     [],
     { enabled: showCompensationActions },
   )
-  const reviewerOptions = (reviewerOptionsQuery.data ?? []).map((member) => ({
-    value: String(member.id),
-    label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
-  }))
+  const allUsersQuery = useAsyncData(
+    () => projectsService.getAllUsers(),
+    [],
+    { enabled: showCompensationActions },
+  )
+  const reviewerOptions = (allUsersQuery.data?.length
+    ? allUsersQuery.data.map((user) => ({
+        value: String(user.id),
+        label: `${user.name} ${user.surname}`.trim() || user.email || `Reviewer #${user.id}`,
+      }))
+    : (reviewerOptionsQuery.data ?? []).map((member) => ({
+        value: String(member.id),
+        label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
+      })))
   const projectOptions = [
     { value: '0', label: 'No project' },
     ...((projectsQuery.data?.projects ?? []).map((project) => ({
@@ -299,8 +313,9 @@ export function FaultsMemberDetailPage({
 
   const detailQuery = useAsyncData(
     async () => {
-      const [estimateResult, mistakesResult, deliveryBonusesResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
+      const [estimateResult, policyResult, mistakesResult, deliveryBonusesResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
         membersService.salaryEstimates({ year, month, employeeIds: [memberId] }),
+        membersService.compensationPolicy({ employeeIds: [memberId] }),
         membersService.listMistakes({ year, month, employeeId: memberId }),
         membersService.listDeliveryBonuses({ year, month, employeeId: memberId }),
         membersService.updatesStatistics({ year, month, employeeIds: [memberId] }),
@@ -309,6 +324,7 @@ export function FaultsMemberDetailPage({
       ])
 
       const estimatePayload = estimateResult.status === 'fulfilled' ? estimateResult.value : null
+      const policyPayload = policyResult.status === 'fulfilled' ? policyResult.value : null
       const mistakesPayload = mistakesResult.status === 'fulfilled' ? mistakesResult.value : null
       const deliveryBonusesPayload = deliveryBonusesResult.status === 'fulfilled' ? deliveryBonusesResult.value : null
       const updatesPayload = updatesResult.status === 'fulfilled' ? updatesResult.value : null
@@ -375,11 +391,13 @@ export function FaultsMemberDetailPage({
         report: fallbackReport,
         user: apiUser,
         estimatePayload: effectiveEstimatePayload,
+        policyPayload,
         mistakesPayload,
         deliveryBonusesPayload,
         updatesPayload,
         calendarPayload,
         estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
+        policyError: policyResult.status === 'rejected' ? getApiErrorMessage(policyResult.reason) : null,
         mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
         deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
         updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
@@ -395,6 +413,13 @@ export function FaultsMemberDetailPage({
   )
 
   const detail = detailQuery.data
+  const compensationPolicy = detail?.compensationPolicy ?? null
+  const mistakeCategoryOptions = getCompensationPolicyCategoryOptions(compensationPolicy)
+  const severityOptions = getCompensationPolicySeverityOptions(compensationPolicy)
+  const deliveryBonusTypeOptions = getCompensationPolicyDeliveryBonusOptions(compensationPolicy)
+  const defaultCategory = mistakeCategoryOptions[0]?.value ?? 'AI Integration'
+  const defaultSeverity = severityOptions[0]?.value ?? 'Minor'
+  const defaultDeliveryBonusType = deliveryBonusTypeOptions[0]?.value ?? 'early_delivery'
 
   function updatePeriod(next: { year?: number; month?: number }) {
     const nextYear = next.year ?? year
@@ -422,7 +447,10 @@ export function FaultsMemberDetailPage({
 
   async function handleRefresh() {
     try {
-      await detailQuery.refetch()
+      await Promise.all([
+        detailQuery.refetch(),
+        showCompensationActions ? allUsersQuery.refetch() : Promise.resolve(undefined),
+      ])
       showToast({
         title: 'Member detail refreshed',
         description: `${detail?.report.fullName ?? 'Member'} synced for ${getMonthName(month)} ${year}.`,
@@ -464,7 +492,7 @@ export function FaultsMemberDetailPage({
             reachedClient: record.reached_client,
             unclearTask: record.unclear_task,
           }
-        : createMistakeFormState(defaultReviewerId),
+        : createMistakeFormState(defaultReviewerId, defaultCategory, defaultSeverity),
     )
     setIsMistakeDialogOpen(true)
   }
@@ -480,7 +508,7 @@ export function FaultsMemberDetailPage({
             description: record.description ?? '',
             awardDate: normalizeDateInput(record.award_date ?? record.created_at),
           }
-        : createDeliveryBonusFormState(),
+        : createDeliveryBonusFormState(defaultDeliveryBonusType),
     )
     setIsDeliveryBonusDialogOpen(true)
   }
@@ -488,13 +516,13 @@ export function FaultsMemberDetailPage({
   function closeMistakeDialog() {
     setIsMistakeDialogOpen(false)
     setEditingMistake(null)
-    setMistakeDraft(createMistakeFormState(defaultReviewerId))
+    setMistakeDraft(createMistakeFormState(defaultReviewerId, defaultCategory, defaultSeverity))
   }
 
   function closeDeliveryBonusDialog() {
     setIsDeliveryBonusDialogOpen(false)
     setEditingDeliveryBonus(null)
-    setDeliveryBonusDraft(createDeliveryBonusFormState())
+    setDeliveryBonusDraft(createDeliveryBonusFormState(defaultDeliveryBonusType))
   }
 
   function buildMistakePayload(): MemberMistakePayload | null {
@@ -836,6 +864,11 @@ export function FaultsMemberDetailPage({
                     Estimate API unavailable: {detail.estimateError}
                   </p>
                 ) : null}
+                {detail.policyError ? (
+                  <p className="mt-2 text-xs leading-5 text-amber-300">
+                    Compensation policy unavailable: {detail.policyError}
+                  </p>
+                ) : null}
                 {detail.mistakesError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
                     Mistake incidents unavailable: {detail.mistakesError}
@@ -944,6 +977,8 @@ export function FaultsMemberDetailPage({
           tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
         />
       </div>
+
+      <CompensationPolicyPanel policy={detail.compensationPolicy} />
 
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -1376,20 +1411,38 @@ export function FaultsMemberDetailPage({
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-white">Category</label>
-                <Input
-                  value={mistakeDraft.category}
-                  onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
-                  placeholder="AI Integration"
-                />
+                {mistakeCategoryOptions.length > 0 ? (
+                  <SelectField
+                    value={mistakeDraft.category}
+                    options={mistakeCategoryOptions}
+                    onValueChange={(value) => setMistakeDraft((current) => ({ ...current, category: value }))}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    value={mistakeDraft.category}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
+                    placeholder="AI Integration"
+                  />
+                )}
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-semibold text-white">Severity</label>
-                <Input
-                  value={mistakeDraft.severity}
-                  onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
-                  placeholder="Minor"
-                />
+                {severityOptions.length > 0 ? (
+                  <SelectField
+                    value={mistakeDraft.severity}
+                    options={severityOptions}
+                    onValueChange={(value) => setMistakeDraft((current) => ({ ...current, severity: value }))}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    value={mistakeDraft.severity}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
+                    placeholder="Minor"
+                  />
+                )}
               </div>
             </div>
 
@@ -1473,11 +1526,20 @@ export function FaultsMemberDetailPage({
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-white">Bonus type</label>
-                <Input
-                  value={deliveryBonusDraft.bonusType}
-                  onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
-                  placeholder="early_delivery"
-                />
+                {deliveryBonusTypeOptions.length > 0 ? (
+                  <SelectField
+                    value={deliveryBonusDraft.bonusType}
+                    options={deliveryBonusTypeOptions}
+                    onValueChange={(value) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: value }))}
+                    className="rounded-xl"
+                  />
+                ) : (
+                  <Input
+                    value={deliveryBonusDraft.bonusType}
+                    onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
+                    placeholder="early_delivery"
+                  />
+                )}
               </div>
 
               <div>

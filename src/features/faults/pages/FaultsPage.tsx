@@ -24,6 +24,7 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import { SalaryEstimateDrawer } from '../components/SalaryEstimateDrawer'
 import {
+  buildEmployeeCompensationPolicy,
   buildEmployeeReports,
   defaultMonth,
   defaultYear,
@@ -33,6 +34,9 @@ import {
   findFirstRecord,
   formatAmount,
   formatPercent,
+  getCompensationPolicyCategoryOptions,
+  getCompensationPolicyDeliveryBonusOptions,
+  getCompensationPolicySeverityOptions,
   getMonthName,
   getSuccessMessage,
   isRecord,
@@ -112,12 +116,12 @@ function getTodayDateInput() {
   return new Date().toISOString().slice(0, 10)
 }
 
-function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
+function createMistakeFormState(defaultReviewerId = '', defaultCategory = 'AI Integration', defaultSeverity = 'Minor'): MistakeFormState {
   return {
     reviewerId: defaultReviewerId,
     projectId: '0',
-    category: 'AI Integration',
-    severity: 'Minor',
+    category: defaultCategory,
+    severity: defaultSeverity,
     title: '',
     description: '',
     incidentDate: getTodayDateInput(),
@@ -126,10 +130,10 @@ function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
   }
 }
 
-function createDeliveryBonusFormState(): DeliveryBonusFormState {
+function createDeliveryBonusFormState(defaultBonusType = 'early_delivery'): DeliveryBonusFormState {
   return {
     projectId: '0',
-    bonusType: 'early_delivery',
+    bonusType: defaultBonusType,
     title: '',
     description: '',
     awardDate: getTodayDateInput(),
@@ -160,17 +164,22 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
     totalReports: summary ? findFirstNumber(summary, ['total_reports']) : undefined,
     averageUpdatePercentage: summary ? findFirstNumber(summary, ['average_update_percentage']) : undefined,
     totalSalaryAmount:
-      (summary ? findFirstNumber(summary, ['total_salary_amount']) : undefined) ??
+      (summary ? findFirstNumber(summary, ['total_salary_amount', 'total_final_salary', 'final_salary_total']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_salary_amount', 'total_final_salary', 'final_salary_total']) : undefined),
     totalBaseSalary:
+      (summary ? findFirstNumber(summary, ['total_base_salary', 'base_salary_total', 'base_salary']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_base_salary', 'base_salary_total', 'base_salary']) : undefined),
     totalDeductionAmount:
+      (summary ? findFirstNumber(summary, ['total_applied_deduction_amount', 'total_deduction_amount', 'deduction_amount_total', 'deduction_total']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_applied_deduction_amount', 'total_deduction_amount', 'deduction_amount_total', 'deduction_total']) : undefined),
     totalBonusAmount:
+      (summary ? findFirstNumber(summary, ['total_bonus_amount', 'bonus_amount_total', 'bonus_total']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_bonus_amount', 'bonus_amount_total', 'bonus_total']) : undefined),
     totalFinalSalary:
+      (summary ? findFirstNumber(summary, ['total_final_salary', 'final_salary_total']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_final_salary', 'final_salary_total']) : undefined),
     totalEstimatedSalary:
+      (summary ? findFirstNumber(summary, ['total_estimated_salary', 'estimated_salary_total', 'salary_estimate_total']) : undefined) ??
       (salarySummary ? findFirstNumber(salarySummary, ['total_estimated_salary', 'estimated_salary_total', 'salary_estimate_total']) : undefined),
     employeesWithPenalties:
       (salarySummary ? findFirstNumber(salarySummary, ['employees_with_penalties', 'penalty_employee_count', 'employees_with_deductions']) : undefined),
@@ -209,6 +218,10 @@ export function FaultsPage() {
     () => projectsService.listProjects(),
     [],
   )
+  const reviewersQuery = useAsyncData(
+    () => projectsService.getAllUsers(),
+    [],
+  )
   const rosterUsers = useMemo(
     () => createRosterUsers(memberOptionsQuery.data ?? []),
     [memberOptionsQuery.data],
@@ -221,12 +234,37 @@ export function FaultsPage() {
     () => rosterUsers.map((user) => user.id),
     [rosterUsers],
   )
+  const compensationPolicyQuery = useAsyncData(
+    () => membersService.compensationPolicy({ employeeIds }),
+    [employeeIds.join(',')],
+    {
+      enabled: employeeIds.length > 0,
+      onError: (error) => {
+        showToast({
+          title: 'Compensation policy API failed',
+          description: getApiErrorMessage(error),
+          tone: 'error',
+        })
+      },
+    },
+  )
   const reviewerOptions = useMemo(
-    () => (memberOptionsQuery.data ?? []).map((member) => ({
-      value: String(member.id),
-      label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
-    })),
-    [memberOptionsQuery.data],
+    () => {
+      const allUsers = reviewersQuery.data ?? []
+
+      if (allUsers.length > 0) {
+        return allUsers.map((user) => ({
+          value: String(user.id),
+          label: `${user.name} ${user.surname}`.trim() || user.email || `Reviewer #${user.id}`,
+        }))
+      }
+
+      return (memberOptionsQuery.data ?? []).map((member) => ({
+        value: String(member.id),
+        label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
+      }))
+    },
+    [memberOptionsQuery.data, reviewersQuery.data],
   )
   const projectOptions = useMemo(
     () => [
@@ -241,6 +279,26 @@ export function FaultsPage() {
   const defaultReviewerId = useMemo(
     () => reviewerOptions.find((option) => Number(option.value) === currentUser?.id)?.value ?? reviewerOptions[0]?.value ?? '',
     [currentUser?.id, reviewerOptions],
+  )
+  const mistakePolicy = useMemo(
+    () => mistakeTarget ? buildEmployeeCompensationPolicy(compensationPolicyQuery.data, mistakeTarget.id, mistakeTarget.fullName) : null,
+    [compensationPolicyQuery.data, mistakeTarget],
+  )
+  const deliveryBonusPolicy = useMemo(
+    () => deliveryBonusTarget ? buildEmployeeCompensationPolicy(compensationPolicyQuery.data, deliveryBonusTarget.id, deliveryBonusTarget.fullName) : null,
+    [compensationPolicyQuery.data, deliveryBonusTarget],
+  )
+  const mistakeCategoryOptions = useMemo(
+    () => getCompensationPolicyCategoryOptions(mistakePolicy),
+    [mistakePolicy],
+  )
+  const severityOptions = useMemo(
+    () => getCompensationPolicySeverityOptions(mistakePolicy),
+    [mistakePolicy],
+  )
+  const deliveryBonusTypeOptions = useMemo(
+    () => getCompensationPolicyDeliveryBonusOptions(deliveryBonusPolicy),
+    [deliveryBonusPolicy],
   )
 
   const updatesAllQuery = useAsyncData(
@@ -319,8 +377,10 @@ export function FaultsPage() {
   const hasReports = reports.length > 0
 
   async function handleRefresh() {
-    const [membersResult, updatesResult, statisticsResult, salaryResult] = await Promise.allSettled([
+    const [membersResult, reviewersResult, policyResult, updatesResult, statisticsResult, salaryResult] = await Promise.allSettled([
       memberOptionsQuery.refetch(),
+      reviewersQuery.refetch(),
+      employeeIds.length > 0 ? compensationPolicyQuery.refetch() : Promise.resolve(undefined),
       updatesAllQuery.refetch(),
       statisticsQuery.refetch(),
       employeeIds.length > 0 ? salaryEstimatesQuery.refetch() : Promise.resolve(undefined),
@@ -328,6 +388,8 @@ export function FaultsPage() {
 
     if (
       membersResult.status === 'rejected' &&
+      reviewersResult.status === 'rejected' &&
+      policyResult.status === 'rejected' &&
       updatesResult.status === 'rejected' &&
       statisticsResult.status === 'rejected' &&
       salaryResult.status === 'rejected'
@@ -335,7 +397,7 @@ export function FaultsPage() {
       showToast({
         title: 'Refresh failed',
         description: getApiErrorMessage(
-          membersResult.reason ?? updatesResult.reason ?? statisticsResult.reason ?? salaryResult.reason,
+          membersResult.reason ?? reviewersResult.reason ?? policyResult.reason ?? updatesResult.reason ?? statisticsResult.reason ?? salaryResult.reason,
         ),
         tone: 'error',
       })
@@ -362,13 +424,20 @@ export function FaultsPage() {
   }
 
   function openMistakeDialog(report: EmployeeSalaryReport) {
+    const reportPolicy = buildEmployeeCompensationPolicy(compensationPolicyQuery.data, report.id, report.fullName)
+    const defaultCategory = getCompensationPolicyCategoryOptions(reportPolicy)[0]?.value ?? 'AI Integration'
+    const defaultSeverity = getCompensationPolicySeverityOptions(reportPolicy)[0]?.value ?? 'Minor'
+
     setMistakeTarget(report)
-    setMistakeDraft(createMistakeFormState(defaultReviewerId))
+    setMistakeDraft(createMistakeFormState(defaultReviewerId, defaultCategory, defaultSeverity))
   }
 
   function openDeliveryBonusDialog(report: EmployeeSalaryReport) {
+    const reportPolicy = buildEmployeeCompensationPolicy(compensationPolicyQuery.data, report.id, report.fullName)
+    const defaultBonusType = getCompensationPolicyDeliveryBonusOptions(reportPolicy)[0]?.value ?? 'early_delivery'
+
     setDeliveryBonusTarget(report)
-    setDeliveryBonusDraft(createDeliveryBonusFormState())
+    setDeliveryBonusDraft(createDeliveryBonusFormState(defaultBonusType))
   }
 
   function closeMistakeDialog() {
@@ -1069,20 +1138,38 @@ export function FaultsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-semibold text-white">Category</label>
-              <Input
-                value={mistakeDraft.category}
-                onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
-                placeholder="AI Integration"
-              />
+              {mistakeCategoryOptions.length > 0 ? (
+                <SelectField
+                  value={mistakeDraft.category}
+                  options={mistakeCategoryOptions}
+                  onValueChange={(value) => setMistakeDraft((current) => ({ ...current, category: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  value={mistakeDraft.category}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
+                  placeholder="AI Integration"
+                />
+              )}
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-white">Severity</label>
-              <Input
-                value={mistakeDraft.severity}
-                onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
-                placeholder="Minor"
-              />
+              {severityOptions.length > 0 ? (
+                <SelectField
+                  value={mistakeDraft.severity}
+                  options={severityOptions}
+                  onValueChange={(value) => setMistakeDraft((current) => ({ ...current, severity: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  value={mistakeDraft.severity}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
+                  placeholder="Minor"
+                />
+              )}
             </div>
           </div>
 
@@ -1168,11 +1255,20 @@ export function FaultsPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-semibold text-white">Bonus type</label>
-              <Input
-                value={deliveryBonusDraft.bonusType}
-                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
-                placeholder="early_delivery"
-              />
+              {deliveryBonusTypeOptions.length > 0 ? (
+                <SelectField
+                  value={deliveryBonusDraft.bonusType}
+                  options={deliveryBonusTypeOptions}
+                  onValueChange={(value) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  value={deliveryBonusDraft.bonusType}
+                  onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
+                  placeholder="early_delivery"
+                />
+              )}
             </div>
 
             <div>

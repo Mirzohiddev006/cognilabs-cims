@@ -1,5 +1,6 @@
 import { request } from '../http'
 import type {
+  MemberCompensationPolicyResponse,
   MemberDeliveryBonusPayload,
   MemberMistakePayload,
 } from '../types'
@@ -29,6 +30,10 @@ export type MemberDeliveryBonusListParams = {
   year?: number
   month?: number
   employeeId?: number
+}
+
+export type MemberCompensationPolicyParams = {
+  employeeIds?: number[]
 }
 
 export type AddMemberPenaltyPayload = {
@@ -116,6 +121,15 @@ export const membersService = {
         year,
         month,
         employee_ids: serializeEmployeeIds(employeeIds),
+      },
+    })
+  },
+
+  compensationPolicy(params?: MemberCompensationPolicyParams) {
+    return request<MemberCompensationPolicyResponse>({
+      path: '/members/compensation/policy',
+      query: {
+        employee_ids: serializeEmployeeIds(params?.employeeIds),
       },
     })
   },

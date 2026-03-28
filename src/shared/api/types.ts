@@ -334,6 +334,56 @@ export type MemberDeliveryBonusPayload = {
   project_id?: number | null
 }
 
+export type MemberCompensationPolicyCategory = {
+  key?: string | null
+  value: string
+  label?: string | null
+}
+
+export type MemberCompensationPolicyDeductionRate = {
+  severity: string
+  percent?: number | null
+  amount?: number | null
+}
+
+export type MemberCompensationPolicyDecisionStep = {
+  step: number
+  question: string
+  if_yes?: string | null
+  if_no?: string | null
+}
+
+export type MemberCompensationPolicyRecord = {
+  salary_base?: number | null
+  monthly_deduction_cap_percent?: number | null
+  monthly_deduction_cap_amount?: number | null
+  responsibility_split?: {
+    developer_percent?: number | null
+    reviewer_percent?: number | null
+  } | null
+  deduction_rates?: MemberCompensationPolicyDeductionRate[] | null
+  bonus_rates?: Record<string, number | null> | null
+  mistake_categories?: MemberCompensationPolicyCategory[] | null
+  severities?: string[] | null
+  decision_tree?: MemberCompensationPolicyDecisionStep[] | null
+}
+
+export type MemberCompensationPolicyItem = {
+  employee?: {
+    id: number
+    full_name?: string | null
+  } | null
+  policy?: MemberCompensationPolicyRecord | null
+}
+
+export type MemberCompensationPolicyResponse = {
+  items: MemberCompensationPolicyItem[]
+  total_count: number
+  filters?: {
+    employee_ids?: number[] | null
+  } | null
+}
+
 export type TeamMonthlyResponse = {
   month: number
   year: number

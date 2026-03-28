@@ -71,6 +71,40 @@ export type SalaryLedgerItem = {
   createdAt?: string
 }
 
+export type EmployeeCompensationPolicy = {
+  employeeId: number | null
+  employeeName?: string | null
+  salaryBase?: number
+  monthlyDeductionCapPercent?: number
+  monthlyDeductionCapAmount?: number
+  responsibilitySplit: {
+    developerPercent?: number
+    reviewerPercent?: number
+  }
+  deductionRates: Array<{
+    severity: string
+    percent?: number
+    amount?: number
+  }>
+  bonusRates: Array<{
+    key: string
+    label: string
+    percent?: number
+  }>
+  mistakeCategories: Array<{
+    key: string
+    value: string
+    label: string
+  }>
+  severities: string[]
+  decisionTree: Array<{
+    step: number
+    question: string
+    ifYes?: string
+    ifNo?: string
+  }>
+}
+
 export type MemberUpdateSummary = {
   totalUpdates: number
   submittedCount: number
@@ -127,6 +161,7 @@ export type EmployeeSalaryDetail = {
   year: number
   month: number
   report: EmployeeSalaryReport
+  compensationPolicy: EmployeeCompensationPolicy | null
   penalties: SalaryLedgerItem[]
   bonuses: SalaryLedgerItem[]
   mistakes: MemberMistakeRecord[]
@@ -139,6 +174,7 @@ export type EmployeeSalaryDetail = {
   calendarError?: string | null
   mistakesError?: string | null
   deliveryBonusesError?: string | null
+  policyError?: string | null
 }
 
 export const now = new Date()
@@ -439,6 +475,245 @@ export function findFirstArray(source: UnknownRecord, keys: string[]) {
   }
 
   return undefined
+}
+
+function humanizePolicyKey(value: string) {
+  return value
+    .replace(/_percent$/i, '')
+    .replace(/_/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (character) => character.toUpperCase())
+}
+
+function looksLikeCompensationPolicy(source: UnknownRecord) {
+  return [
+    'salary_base',
+    'monthly_deduction_cap_percent',
+    'monthly_deduction_cap_amount',
+    'deduction_rates',
+    'bonus_rates',
+    'mistake_categories',
+    'severities',
+    'decision_tree',
+  ].some((key) => key in source)
+}
+
+function findCompensationPolicyEntry(
+  payload: unknown,
+  memberId?: number | null,
+  memberName?: string | null,
+) {
+  const parsedPayload = parseMaybeJson(payload)
+
+  if (Array.isArray(parsedPayload)) {
+    const arrayEntries = parsedPayload.filter(isRecord)
+    return arrayEntries.find((entry) => matchesCompensationPolicyEntry(entry, memberId, memberName)) ?? arrayEntries[0] ?? null
+  }
+
+  if (!isRecord(parsedPayload)) {
+    return null
+  }
+
+  const directEntries = findFirstArray(parsedPayload, ['items', 'employees', 'members', 'results', 'data'])
+
+  if (directEntries) {
+    const normalizedEntries = directEntries.filter(isRecord)
+    return normalizedEntries.find((entry) => matchesCompensationPolicyEntry(entry, memberId, memberName)) ?? normalizedEntries[0] ?? null
+  }
+
+  if (looksLikeCompensationPolicy(parsedPayload) || isRecord(parsedPayload.policy)) {
+    return parsedPayload
+  }
+
+  const nestedEntries = Object.values(parsedPayload).filter(isRecord)
+  return nestedEntries.find((entry) => matchesCompensationPolicyEntry(entry, memberId, memberName)) ?? nestedEntries[0] ?? null
+}
+
+function matchesCompensationPolicyEntry(
+  entry: UnknownRecord,
+  memberId?: number | null,
+  memberName?: string | null,
+) {
+  if (!Number.isFinite(memberId ?? Number.NaN) || (memberId ?? 0) <= 0) {
+    return true
+  }
+
+  const employeeRecord = findFirstRecord(entry, ['employee', 'member', 'user'])
+  const entryEmployeeId =
+    findFirstNumber(entry, ['employee_id', 'member_id', 'user_id', 'id']) ??
+    findFirstNumber(employeeRecord ?? {}, ['id', 'employee_id', 'member_id', 'user_id'])
+
+  if (entryEmployeeId !== undefined) {
+    return entryEmployeeId === memberId
+  }
+
+  if (!memberName) {
+    return false
+  }
+
+  const entryEmployeeName =
+    resolveRecordDisplayName(entry, employeeRecord ?? null)?.toLowerCase().trim()
+
+  return entryEmployeeName === memberName.toLowerCase().trim()
+}
+
+function normalizePolicyCategory(source: unknown, index: number): EmployeeCompensationPolicy['mistakeCategories'][number] | null {
+  if (!isRecord(source)) {
+    return null
+  }
+
+  const value = findFirstString(source, ['value', 'label', 'name'])
+
+  if (!value) {
+    return null
+  }
+
+  return {
+    key: findFirstString(source, ['key']) ?? `category-${index + 1}`,
+    value,
+    label: findFirstString(source, ['label', 'value', 'name']) ?? value,
+  }
+}
+
+function normalizePolicyDeductionRate(source: unknown): EmployeeCompensationPolicy['deductionRates'][number] | null {
+  if (!isRecord(source)) {
+    return null
+  }
+
+  const severity = findFirstString(source, ['severity', 'label', 'name'])
+
+  if (!severity) {
+    return null
+  }
+
+  return {
+    severity,
+    percent: findFirstNumber(source, ['percent', 'percentage']),
+    amount: findFirstNumber(source, ['amount', 'value']),
+  }
+}
+
+function normalizePolicyDecisionStep(source: unknown): EmployeeCompensationPolicy['decisionTree'][number] | null {
+  if (!isRecord(source)) {
+    return null
+  }
+
+  const question = findFirstString(source, ['question', 'title', 'label'])
+
+  if (!question) {
+    return null
+  }
+
+  return {
+    step: findFirstNumber(source, ['step', 'order']) ?? 0,
+    question,
+    ifYes: findFirstString(source, ['if_yes']) ?? undefined,
+    ifNo: findFirstString(source, ['if_no']) ?? undefined,
+  }
+}
+
+export function buildEmployeeCompensationPolicy(
+  payload: unknown,
+  memberId?: number | null,
+  memberName?: string | null,
+): EmployeeCompensationPolicy | null {
+  const matchedEntry = findCompensationPolicyEntry(payload, memberId, memberName)
+
+  if (!matchedEntry) {
+    return null
+  }
+
+  const employeeRecord = findFirstRecord(matchedEntry, ['employee', 'member', 'user'])
+  const policyRecord = findFirstRecord(matchedEntry, ['policy']) ?? (looksLikeCompensationPolicy(matchedEntry) ? matchedEntry : null)
+
+  if (!policyRecord) {
+    return null
+  }
+
+  const deductionRates = (findFirstArray(policyRecord, ['deduction_rates']) ?? [])
+    .map((entry) => normalizePolicyDeductionRate(entry))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+  const bonusRatesRecord = findFirstRecord(policyRecord, ['bonus_rates'])
+  const bonusRates = bonusRatesRecord
+    ? Object.entries(bonusRatesRecord)
+      .map(([key, value]) => {
+        const percent = toNumber(value)
+
+        if (percent === null) {
+          return null
+        }
+
+        return {
+          key,
+          label: humanizePolicyKey(key),
+          percent,
+        }
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    : []
+  const mistakeCategories = (findFirstArray(policyRecord, ['mistake_categories']) ?? [])
+    .map((entry, index) => normalizePolicyCategory(entry, index))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+  const severities = (findFirstArray(policyRecord, ['severities']) ?? [])
+    .filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+    .map((entry) => entry.trim())
+  const decisionTree = (findFirstArray(policyRecord, ['decision_tree']) ?? [])
+    .map((entry) => normalizePolicyDecisionStep(entry))
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry))
+    .sort((left, right) => left.step - right.step)
+
+  return {
+    employeeId:
+      findFirstNumber(matchedEntry, ['employee_id', 'member_id', 'user_id', 'id']) ??
+      findFirstNumber(employeeRecord ?? {}, ['id', 'employee_id', 'member_id', 'user_id']) ??
+      null,
+    employeeName: resolveRecordDisplayName(matchedEntry, employeeRecord ?? null) ?? null,
+    salaryBase: findFirstNumber(policyRecord, ['salary_base']) ?? undefined,
+    monthlyDeductionCapPercent: findFirstNumber(policyRecord, ['monthly_deduction_cap_percent']) ?? undefined,
+    monthlyDeductionCapAmount: findFirstNumber(policyRecord, ['monthly_deduction_cap_amount']) ?? undefined,
+    responsibilitySplit: {
+      developerPercent: findFirstNumber(findFirstRecord(policyRecord, ['responsibility_split']) ?? {}, ['developer_percent']) ?? undefined,
+      reviewerPercent: findFirstNumber(findFirstRecord(policyRecord, ['responsibility_split']) ?? {}, ['reviewer_percent']) ?? undefined,
+    },
+    deductionRates,
+    bonusRates,
+    mistakeCategories,
+    severities,
+    decisionTree,
+  }
+}
+
+export function getCompensationPolicyCategoryOptions(policy: EmployeeCompensationPolicy | null) {
+  return policy?.mistakeCategories.map((category) => ({
+    value: category.value,
+    label: category.label,
+  })) ?? []
+}
+
+export function getCompensationPolicySeverityOptions(policy: EmployeeCompensationPolicy | null) {
+  return policy?.severities.map((severity) => ({
+    value: severity,
+    label: severity,
+  })) ?? []
+}
+
+export function getCompensationPolicyDeliveryBonusOptions(policy: EmployeeCompensationPolicy | null) {
+  const options = policy?.bonusRates
+    .filter((rate) => rate.key.toLowerCase().includes('delivery'))
+    .map((rate) => ({
+      value: rate.key.replace(/_percent$/i, ''),
+      label: rate.label,
+    })) ?? []
+
+  if (options.length > 0) {
+    return options
+  }
+
+  return [
+    { value: 'early_delivery', label: 'Early Delivery' },
+    { value: 'major_early_delivery', label: 'Major Early Delivery' },
+  ]
 }
 
 export function sumByKeys(items: unknown[], keys: string[]): number {
@@ -1871,11 +2146,13 @@ export function buildEmployeeSalaryDetail({
   report,
   user,
   estimatePayload,
+  policyPayload,
   mistakesPayload,
   deliveryBonusesPayload,
   updatesPayload,
   calendarPayload,
   estimateError,
+  policyError,
   mistakesError,
   deliveryBonusesError,
   updatesError,
@@ -1886,11 +2163,13 @@ export function buildEmployeeSalaryDetail({
   report: EmployeeSalaryReport
   user: CeoUserRecord | null
   estimatePayload: unknown
+  policyPayload: unknown
   mistakesPayload: unknown
   deliveryBonusesPayload: unknown
   updatesPayload: unknown
   calendarPayload: unknown
   estimateError?: string | null
+  policyError?: string | null
   mistakesError?: string | null
   deliveryBonusesError?: string | null
   updatesError?: string | null
@@ -1900,24 +2179,36 @@ export function buildEmployeeSalaryDetail({
 }): EmployeeSalaryDetail {
   const estimateRecord = getEstimateRecordForMember(estimatePayload, report.id, report.fullName)
   const snapshot = estimateRecord ? normalizeEstimateEntry(estimateRecord) : null
+  const policy =
+    buildEmployeeCompensationPolicy(policyPayload, report.id, report.fullName) ??
+    buildEmployeeCompensationPolicy(estimatePayload, report.id, report.fullName)
   const mergedReport = mergeReportWithSnapshot(report, user, snapshot)
+  const mergedReportWithPolicy =
+    policy && Number.isFinite(policy.salaryBase) && (mergedReport.baseSalary <= 0 || !Number.isFinite(mergedReport.baseSalary))
+      ? {
+          ...mergedReport,
+          baseSalary: policy.salaryBase!,
+        }
+      : mergedReport
   const updateCalendar = calendarError
     ? null
     : buildMemberMonthlyUpdateCalendar(calendarPayload, month, year, true)
 
   return {
-    memberId: mergedReport.id,
+    memberId: mergedReportWithPolicy.id,
     year,
     month,
-    report: mergedReport,
-    penalties: buildSalaryLedgerItems(estimatePayload, 'penalty', mergedReport),
-    bonuses: buildSalaryLedgerItems(estimatePayload, 'bonus', mergedReport),
-    mistakes: buildMistakeRecords(mistakesPayload, mergedReport.id),
-    deliveryBonuses: buildDeliveryBonusRecords(deliveryBonusesPayload, mergedReport.id),
+    report: mergedReportWithPolicy,
+    compensationPolicy: policy,
+    penalties: buildSalaryLedgerItems(estimatePayload, 'penalty', mergedReportWithPolicy),
+    bonuses: buildSalaryLedgerItems(estimatePayload, 'bonus', mergedReportWithPolicy),
+    mistakes: buildMistakeRecords(mistakesPayload, mergedReportWithPolicy.id),
+    deliveryBonuses: buildDeliveryBonusRecords(deliveryBonusesPayload, mergedReportWithPolicy.id),
     updatesSummary: parseMemberUpdateSummary(updatesPayload, updateCalendar),
     updateCalendar,
     estimateSource: estimateRecord ? 'live' : 'fallback',
     estimateError,
+    policyError,
     mistakesError,
     deliveryBonusesError,
     updatesError,
