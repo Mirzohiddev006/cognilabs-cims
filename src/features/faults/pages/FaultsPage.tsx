@@ -760,7 +760,7 @@ export function FaultsPage() {
               align: 'right',
               minWidth: '130px',
               render: (row) => (
-                <span className="inline-flex items-center rounded-full border border-emerald-500/24 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300">
+                <span className="inline-flex items-center rounded-full border border-emerald-500/38 bg-emerald-100 px-2.5 py-1 font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none">
                   {formatAmount(row.bonusAmount)}
                 </span>
               ),
@@ -775,7 +775,7 @@ export function FaultsPage() {
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 font-semibold',
                     row.totalBonusPercent > 0
-                      ? 'border border-emerald-500/24 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300'
+                      ? 'border border-emerald-500/38 bg-emerald-100 text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
                       : 'border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]',
                   )}
                 >
@@ -793,7 +793,7 @@ export function FaultsPage() {
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 font-semibold',
                     row.qualifiesProductivityBonus
-                      ? 'border border-emerald-500/24 bg-emerald-500/10 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300'
+                      ? 'border border-emerald-500/38 bg-emerald-100 text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
                       : 'border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]',
                   )}
                 >
