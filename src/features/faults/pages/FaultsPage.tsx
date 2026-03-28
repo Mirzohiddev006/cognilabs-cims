@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import type { MemberDeliveryBonusPayload, MemberMistakePayload } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
+import { projectsService } from '../../../shared/api/services/projects.service'
 import { updateTrackingService, type WorkdayOverrideMemberOption } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -18,6 +20,7 @@ import { MemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import { SalaryEstimateDrawer } from '../components/SalaryEstimateDrawer'
 import {
@@ -36,6 +39,26 @@ import {
   monthOptions,
   parseMaybeJson,
 } from '../lib/salaryEstimates'
+
+type MistakeFormState = {
+  reviewerId: string
+  projectId: string
+  category: string
+  severity: string
+  title: string
+  description: string
+  incidentDate: string
+  reachedClient: boolean
+  unclearTask: boolean
+}
+
+type DeliveryBonusFormState = {
+  projectId: string
+  bonusType: string
+  title: string
+  description: string
+  awardDate: string
+}
 
 function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
@@ -85,6 +108,39 @@ function createRosterUsers(memberOptions: WorkdayOverrideMemberOption[]): CeoUse
   }))
 }
 
+function getTodayDateInput() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function createMistakeFormState(defaultReviewerId = ''): MistakeFormState {
+  return {
+    reviewerId: defaultReviewerId,
+    projectId: '0',
+    category: 'AI Integration',
+    severity: 'Minor',
+    title: '',
+    description: '',
+    incidentDate: getTodayDateInput(),
+    reachedClient: false,
+    unclearTask: false,
+  }
+}
+
+function createDeliveryBonusFormState(): DeliveryBonusFormState {
+  return {
+    projectId: '0',
+    bonusType: 'early_delivery',
+    title: '',
+    description: '',
+    awardDate: getTodayDateInput(),
+  }
+}
+
+function parsePositiveId(value: string) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
 function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
   const parsed = parseMaybeJson(payload)
   const root = isRecord(parsed) ? parsed : null
@@ -126,6 +182,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
 export function FaultsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const [penaltyTarget, setPenaltyTarget] = useState<EmployeeSalaryReport | null>(null)
   const [penaltyPoints, setPenaltyPoints] = useState('10')
@@ -133,13 +190,23 @@ export function FaultsPage() {
   const [bonusTarget, setBonusTarget] = useState<EmployeeSalaryReport | null>(null)
   const [bonusAmount, setBonusAmount] = useState('')
   const [bonusReason, setBonusReason] = useState('')
+  const [mistakeTarget, setMistakeTarget] = useState<EmployeeSalaryReport | null>(null)
+  const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
+  const [deliveryBonusTarget, setDeliveryBonusTarget] = useState<EmployeeSalaryReport | null>(null)
+  const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [activeReportId, setActiveReportId] = useState<number | null>(null)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
+  const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
+  const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberOptionsQuery = useAsyncData(
     () => updateTrackingService.workdayOverrideMemberOptions(),
+    [],
+  )
+  const projectsQuery = useAsyncData(
+    () => projectsService.listProjects(),
     [],
   )
   const rosterUsers = useMemo(
@@ -153,6 +220,27 @@ export function FaultsPage() {
   const employeeIds = useMemo(
     () => rosterUsers.map((user) => user.id),
     [rosterUsers],
+  )
+  const reviewerOptions = useMemo(
+    () => (memberOptionsQuery.data ?? []).map((member) => ({
+      value: String(member.id),
+      label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
+    })),
+    [memberOptionsQuery.data],
+  )
+  const projectOptions = useMemo(
+    () => [
+      { value: '0', label: 'No project' },
+      ...((projectsQuery.data?.projects ?? []).map((project) => ({
+        value: String(project.id),
+        label: project.project_name,
+      }))),
+    ],
+    [projectsQuery.data],
+  )
+  const defaultReviewerId = useMemo(
+    () => reviewerOptions.find((option) => Number(option.value) === currentUser?.id)?.value ?? reviewerOptions[0]?.value ?? '',
+    [currentUser?.id, reviewerOptions],
   )
 
   const updatesAllQuery = useAsyncData(
@@ -273,6 +361,26 @@ export function FaultsPage() {
     setBonusReason('')
   }
 
+  function openMistakeDialog(report: EmployeeSalaryReport) {
+    setMistakeTarget(report)
+    setMistakeDraft(createMistakeFormState(defaultReviewerId))
+  }
+
+  function openDeliveryBonusDialog(report: EmployeeSalaryReport) {
+    setDeliveryBonusTarget(report)
+    setDeliveryBonusDraft(createDeliveryBonusFormState())
+  }
+
+  function closeMistakeDialog() {
+    setMistakeTarget(null)
+    setMistakeDraft(createMistakeFormState(defaultReviewerId))
+  }
+
+  function closeDeliveryBonusDialog() {
+    setDeliveryBonusTarget(null)
+    setDeliveryBonusDraft(createDeliveryBonusFormState())
+  }
+
   function openReportDrawer(report: EmployeeSalaryReport) {
     setActiveReportId(report.id)
   }
@@ -377,6 +485,129 @@ export function FaultsPage() {
       })
     } finally {
       setIsBonusSubmitting(false)
+    }
+  }
+
+  function buildMistakePayload(): MemberMistakePayload | null {
+    if (!mistakeTarget) {
+      return null
+    }
+
+    const reviewerId = parsePositiveId(mistakeDraft.reviewerId)
+
+    if (!reviewerId) {
+      showToast({
+        title: 'Reviewer is required',
+        description: 'Select a valid reviewer before saving this mistake incident.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    if (!mistakeDraft.title.trim() || !mistakeDraft.category.trim() || !mistakeDraft.severity.trim()) {
+      showToast({
+        title: 'Mistake details incomplete',
+        description: 'Title, category, and severity are required.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    return {
+      employee_id: mistakeTarget.id,
+      reviewer_id: reviewerId,
+      project_id: parsePositiveId(mistakeDraft.projectId) ?? 0,
+      category: mistakeDraft.category.trim(),
+      severity: mistakeDraft.severity.trim(),
+      title: mistakeDraft.title.trim(),
+      description: mistakeDraft.description.trim() || undefined,
+      incident_date: mistakeDraft.incidentDate,
+      reached_client: mistakeDraft.reachedClient,
+      unclear_task: mistakeDraft.unclearTask,
+    }
+  }
+
+  function buildDeliveryBonusPayload(): MemberDeliveryBonusPayload | null {
+    if (!deliveryBonusTarget) {
+      return null
+    }
+
+    if (!deliveryBonusDraft.title.trim() || !deliveryBonusDraft.bonusType.trim()) {
+      showToast({
+        title: 'Delivery bonus details incomplete',
+        description: 'Title and bonus type are required.',
+        tone: 'error',
+      })
+      return null
+    }
+
+    return {
+      employee_id: deliveryBonusTarget.id,
+      bonus_type: deliveryBonusDraft.bonusType.trim(),
+      title: deliveryBonusDraft.title.trim(),
+      description: deliveryBonusDraft.description.trim() || undefined,
+      award_date: deliveryBonusDraft.awardDate,
+      project_id: parsePositiveId(deliveryBonusDraft.projectId) ?? 0,
+    }
+  }
+
+  async function handleSubmitMistake() {
+    const payload = buildMistakePayload()
+
+    if (!payload || !mistakeTarget) {
+      return
+    }
+
+    setIsMistakeSubmitting(true)
+
+    try {
+      const response = await membersService.createMistake(payload)
+
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
+      closeMistakeDialog()
+      showToast({
+        title: 'Mistake added',
+        description: getSuccessMessage(response, `${mistakeTarget.fullName} updated.`),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: 'Mistake not added',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsMistakeSubmitting(false)
+    }
+  }
+
+  async function handleSubmitDeliveryBonus() {
+    const payload = buildDeliveryBonusPayload()
+
+    if (!payload || !deliveryBonusTarget) {
+      return
+    }
+
+    setIsDeliveryBonusSubmitting(true)
+
+    try {
+      const response = await membersService.createDeliveryBonus(payload)
+
+      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
+      closeDeliveryBonusDialog()
+      showToast({
+        title: 'Delivery bonus added',
+        description: getSuccessMessage(response, `${deliveryBonusTarget.fullName} updated.`),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: 'Delivery bonus not added',
+        description: getApiErrorMessage(error),
+        tone: 'error',
+      })
+    } finally {
+      setIsDeliveryBonusSubmitting(false)
     }
   }
 
@@ -621,6 +852,15 @@ export function FaultsPage() {
                         label: 'Add bonus',
                         onSelect: () => openBonusDialog(row),
                       },
+                      {
+                        label: 'Add mistake',
+                        onSelect: () => openMistakeDialog(row),
+                        tone: 'danger',
+                      },
+                      {
+                        label: 'Add delivery bonus',
+                        onSelect: () => openDeliveryBonusDialog(row),
+                      },
                     ]}
                   />
                 </div>
@@ -753,6 +993,233 @@ export function FaultsPage() {
               value={bonusReason}
               onChange={(event) => setBonusReason(event.target.value)}
               placeholder="Optional bonus reason"
+            />
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(mistakeTarget)}
+        onClose={closeMistakeDialog}
+        title={mistakeTarget ? `Add mistake for ${mistakeTarget.fullName}` : 'Add mistake'}
+        description={mistakeTarget ? `${getMonthName(month)} ${year} compensation mistake entry.` : undefined}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={closeMistakeDialog}
+              disabled={isMistakeSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={() => void handleSubmitMistake()} loading={isMistakeSubmitting}>
+              Save mistake
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-4">
+          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+            <p className="mt-2 text-base font-semibold text-white">{mistakeTarget?.fullName ?? '-'}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Reviewer</label>
+              {reviewerOptions.length > 0 ? (
+                <SelectField
+                  value={mistakeDraft.reviewerId}
+                  options={reviewerOptions}
+                  onValueChange={(value) => setMistakeDraft((current) => ({ ...current, reviewerId: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  type="number"
+                  min="1"
+                  value={mistakeDraft.reviewerId}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
+                  placeholder="Reviewer ID"
+                />
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+              {projectOptions.length > 1 ? (
+                <SelectField
+                  value={mistakeDraft.projectId}
+                  options={projectOptions}
+                  onValueChange={(value) => setMistakeDraft((current) => ({ ...current, projectId: value }))}
+                  className="rounded-xl"
+                />
+              ) : (
+                <Input
+                  type="number"
+                  min="0"
+                  value={mistakeDraft.projectId}
+                  onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
+                  placeholder="0 for no project"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+              <Input
+                value={mistakeDraft.category}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
+                placeholder="AI Integration"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Severity</label>
+              <Input
+                value={mistakeDraft.severity}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
+                placeholder="Minor"
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+              <Input
+                value={mistakeDraft.title}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
+                placeholder="Short mistake title"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Incident date</label>
+              <Input
+                type="date"
+                value={mistakeDraft.incidentDate}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, incidentDate: event.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+            <Textarea
+              value={mistakeDraft.description}
+              onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
+              placeholder="Describe what happened"
+            />
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+              <input
+                type="checkbox"
+                checked={mistakeDraft.reachedClient}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
+                className="h-4 w-4 rounded border-white/15 bg-transparent"
+              />
+              Reached client
+            </label>
+
+            <label className="flex items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/84">
+              <input
+                type="checkbox"
+                checked={mistakeDraft.unclearTask}
+                onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
+                className="h-4 w-4 rounded border-white/15 bg-transparent"
+              />
+              Unclear task
+            </label>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(deliveryBonusTarget)}
+        onClose={closeDeliveryBonusDialog}
+        title={deliveryBonusTarget ? `Add delivery bonus for ${deliveryBonusTarget.fullName}` : 'Add delivery bonus'}
+        description={deliveryBonusTarget ? `${getMonthName(month)} ${year} delivery bonus entry.` : undefined}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={closeDeliveryBonusDialog}
+              disabled={isDeliveryBonusSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button variant="success" onClick={() => void handleSubmitDeliveryBonus()} loading={isDeliveryBonusSubmitting}>
+              Save delivery bonus
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-4">
+          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
+            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+            <p className="mt-2 text-base font-semibold text-white">{deliveryBonusTarget?.fullName ?? '-'}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Bonus type</label>
+              <Input
+                value={deliveryBonusDraft.bonusType}
+                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
+                placeholder="early_delivery"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-white">Award date</label>
+              <Input
+                type="date"
+                value={deliveryBonusDraft.awardDate}
+                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, awardDate: event.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Title</label>
+            <Input
+              value={deliveryBonusDraft.title}
+              onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
+              placeholder="Short bonus title"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Project</label>
+            {projectOptions.length > 1 ? (
+              <SelectField
+                value={deliveryBonusDraft.projectId}
+                options={projectOptions}
+                onValueChange={(value) => setDeliveryBonusDraft((current) => ({ ...current, projectId: value }))}
+                className="rounded-xl"
+              />
+            ) : (
+              <Input
+                type="number"
+                min="0"
+                value={deliveryBonusDraft.projectId}
+                onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, projectId: event.target.value }))}
+                placeholder="0 for no project"
+              />
+            )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+            <Textarea
+              value={deliveryBonusDraft.description}
+              onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
+              placeholder="Describe why this delivery bonus was awarded"
             />
           </div>
         </div>
