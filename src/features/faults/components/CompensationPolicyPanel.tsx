@@ -65,7 +65,7 @@ export function CompensationPolicyPanel({
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        <div className="rounded-[20px] border border-rose-500/18 bg-rose-500/5 p-4 dark:bg-rose-950/15">
+        <div className="rounded-[20px] border border-rose-500/18 bg-rose-50/90 p-4 dark:bg-rose-950/15">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">Deduction rates</p>
@@ -76,7 +76,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-4 space-y-3">
             {policy.deductionRates.map((rate) => (
-              <div key={rate.severity} className="rounded-[16px] border border-rose-500/18 bg-white/70 px-4 py-3 dark:bg-black/18">
+              <div key={rate.severity} className="rounded-[16px] border border-rose-500/18 bg-white px-4 py-3 dark:bg-black/18">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{rate.severity}</p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -89,7 +89,7 @@ export function CompensationPolicyPanel({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-500/5 p-4 dark:bg-emerald-950/15">
+        <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-50/90 p-4 dark:bg-emerald-950/15">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">Bonus rates</p>
@@ -100,7 +100,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-4 space-y-3">
             {policy.bonusRates.map((rate) => (
-              <div key={rate.key} className="rounded-[16px] border border-emerald-500/18 bg-white/70 px-4 py-3 dark:bg-black/18">
+              <div key={rate.key} className="rounded-[16px] border border-emerald-500/18 bg-white px-4 py-3 dark:bg-black/18">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{rate.label}</p>
                   <Badge variant="success">{formatPercent(rate.percent)}</Badge>

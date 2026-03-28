@@ -527,7 +527,7 @@ export function MemberDashboardPage() {
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          <div className="rounded-[22px] border border-rose-500/20 bg-rose-500/5 p-4 dark:bg-black/18">
+          <div className="rounded-[22px] border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">Penalty history</p>
@@ -542,7 +542,7 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-rose-500/16 bg-white/70 px-4 py-3 dark:bg-black/20">
+                <div key={item.id} className="rounded-[16px] border border-rose-500/16 bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{item.title}</p>
@@ -563,7 +563,7 @@ export function MemberDashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-500/5 p-4 dark:bg-black/18">
+          <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">Bonus history</p>
@@ -578,7 +578,7 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-white/70 px-4 py-3 dark:bg-black/20">
+                <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-200">{item.title}</p>

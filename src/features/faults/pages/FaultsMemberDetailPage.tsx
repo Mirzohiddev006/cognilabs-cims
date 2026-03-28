@@ -1024,7 +1024,7 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-rose-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
+              <div key={item.id} className="rounded-[18px] border border-rose-500/18 bg-white px-4 py-4 dark:bg-black/15">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
@@ -1069,7 +1069,7 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-emerald-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
+              <div key={item.id} className="rounded-[18px] border border-emerald-500/18 bg-white px-4 py-4 dark:bg-black/15">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
