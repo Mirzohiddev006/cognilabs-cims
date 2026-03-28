@@ -265,7 +265,7 @@ function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null
 function getCalendarCellStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Logged'
+  if (status === 'submitted') return 'Updated'
   if (status === 'missing') return 'Missed'
   if (status === 'sunday') return specialLabel ?? 'Off Day'
   if (status === 'future') return 'Soon'
@@ -447,7 +447,7 @@ export function MemberMonthlyUpdateCalendarBoard({
     ),
     [calendarCells],
   )
-  const elapsedWorkingDays = counts.submitted + counts.missing + counts.open
+  const elapsedWorkingDays = counts.submitted + counts.missing
   const attentionDays = counts.missing + counts.open
   const monthProgressPct = elapsedWorkingDays > 0
     ? (counts.submitted / elapsedWorkingDays) * 100
@@ -466,8 +466,8 @@ export function MemberMonthlyUpdateCalendarBoard({
       ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
       : 'None'
   const completionSummaryText = elapsedWorkingDays > 0
-    ? `${counts.submitted} of ${elapsedWorkingDays} elapsed workdays logged.`
-    : 'No elapsed workdays yet.'
+    ? `${counts.submitted} of ${elapsedWorkingDays} completed workdays updated.`
+    : 'No completed workdays yet.'
 
   return (
     <div className={cn('w-full', className)}>
@@ -583,7 +583,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                   <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.submitted} logged
+                    {counts.submitted} updated
                   </Badge>
                   <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                     {counts.missing} missed
@@ -763,7 +763,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
-                Logged
+                Updated
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-rose-500/30 bg-rose-500/20" />

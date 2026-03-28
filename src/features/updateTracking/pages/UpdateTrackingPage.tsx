@@ -1018,7 +1018,7 @@ function getCalendarDetailText(day: CalendarDay | null) {
 function getCalendarCellStatusLabel(status: DayStatus, day?: CalendarDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Logged'
+  if (status === 'submitted') return 'Updated'
   if (status === 'missing') return 'Missed'
   if (status === 'sunday') return specialLabel ?? 'Off Day'
   if (status === 'future') return 'Soon'
@@ -1076,7 +1076,7 @@ function getCalendarEntryCount(day: CalendarDay) {
 function getCalendarCellHint(day: CalendarDay) {
   if (day.hasUpdate) {
     if ((day.updates_count ?? 0) > 1) {
-      return `${day.updates_count} updates logged`
+      return `${day.updates_count} updates captured`
     }
 
     return 'Update captured'
@@ -1353,7 +1353,7 @@ export function UpdateTrackingPage() {
   const calendarWeeks = Array.from({ length: Math.ceil(calendarCells.length / 7) }, (_, index) => (
     calendarCells.slice(index * 7, index * 7 + 7)
   ))
-  const elapsedWorkingDays = calendarCounts.submitted + calendarCounts.missing + calendarCounts.open
+  const elapsedWorkingDays = calendarCounts.submitted + calendarCounts.missing
   const attentionDaysCount = calendarCounts.missing + calendarCounts.open
   const monthProgressPct = elapsedWorkingDays > 0
     ? (calendarCounts.submitted / elapsedWorkingDays) * 100
@@ -1601,7 +1601,7 @@ export function UpdateTrackingPage() {
                     <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] lg:items-start">
                       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                       <Badge variant="success" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                        {calendarCounts.submitted} logged
+                        {calendarCounts.submitted} updated
                       </Badge>
                       <Badge variant="danger" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                         {calendarCounts.missing} missed
@@ -1626,7 +1626,7 @@ export function UpdateTrackingPage() {
                             Completion To Date
                           </p>
                           <p className="mt-1 text-[11px] text-white/72">
-                            {elapsedWorkingDays > 0 ? `${calendarCounts.submitted} of ${elapsedWorkingDays} elapsed workdays logged.` : 'No elapsed workdays yet.'}
+                            {elapsedWorkingDays > 0 ? `${calendarCounts.submitted} of ${elapsedWorkingDays} completed workdays updated.` : 'No completed workdays yet.'}
                           </p>
                         </div>
                         <div className="w-22 shrink-0">
@@ -1777,7 +1777,7 @@ export function UpdateTrackingPage() {
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
-                      Logged
+                      Updated
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-sm border border-rose-500/30 bg-rose-500/20" />

@@ -420,7 +420,7 @@ export function MemberDashboardPage() {
               <MetricPanel
                 label="Expected updates (to date)"
                 value={elapsedWorkingDays}
-                hint={`${calendarCounts.submitted} logged, ${calendarCounts.missing} missing, ${calendarCounts.open} still open.`}
+                hint={`${calendarCounts.submitted} updated, ${calendarCounts.missing} missing, ${calendarCounts.open} still open.`}
               />
               <MetricPanel
                 label="This week progress"
