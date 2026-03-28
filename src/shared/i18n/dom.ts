@@ -4,6 +4,7 @@ import { translateLiteral } from './translations'
 const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'alt'] as const
 
 const textSourceMap = new WeakMap<Text, string>()
+const textAppliedMap = new WeakMap<Text, string>()
 const attributeSourceMap = new WeakMap<Element, Map<string, string>>()
 
 function preserveEdgeWhitespace(source: string, translated: string) {
@@ -37,6 +38,13 @@ function applyTextTranslation(locale: AppLocale, node: Text) {
     return
   }
 
+  const previousSource = textSourceMap.get(node)
+  const previousApplied = textAppliedMap.get(node)
+
+  if (previousSource !== undefined && current !== previousSource && current !== previousApplied) {
+    textSourceMap.set(node, current)
+  }
+
   const source = textSourceMap.get(node) ?? current
   textSourceMap.set(node, source)
 
@@ -45,6 +53,8 @@ function applyTextTranslation(locale: AppLocale, node: Text) {
   if (translated !== current) {
     node.textContent = translated
   }
+
+  textAppliedMap.set(node, translated)
 }
 
 function applyAttributeTranslation(locale: AppLocale, element: Element) {

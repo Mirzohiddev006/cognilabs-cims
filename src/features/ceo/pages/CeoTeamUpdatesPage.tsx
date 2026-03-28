@@ -1002,6 +1002,45 @@ function parseAllUsersUpdates(
   return extractEmployeeRecords(data).map((entry) => normalizeEmployee(entry, month, year))
 }
 
+function parseTrackingMonthlyEmployees(
+  data: unknown,
+  month: number,
+  year: number,
+): EmployeeMonthlyStats[] {
+  return extractEmployeeRecords(data).map((entry) => {
+    const updates = findFirstArray(entry, ['updates', 'entries', 'reports', 'items']) ?? []
+    const dayStatuses = parseDayStatuses(updates, month, year)
+    const derivedSubmitted = dayStatuses ? dayStatuses.filter((day) => day.status === 'submitted').length : 0
+    const derivedMissing = dayStatuses ? dayStatuses.filter((day) => day.status === 'missing').length : 0
+    const submitted = findFirstNumber(entry, ['update_days', 'submitted_count', 'updates_count', 'total_submitted']) ?? derivedSubmitted
+    const workingDays = findFirstNumber(entry, ['working_days', 'work_days', 'expected_updates', 'expected_working_days'])
+    const missing =
+      findFirstNumber(entry, ['missing_days', 'missing_count', 'total_missing', 'missed_count']) ??
+      (typeof workingDays === 'number' ? Math.max(workingDays - submitted, 0) : derivedMissing)
+    const rawPercentage = findFirstNumber(entry, ['percentage', 'completion_percentage', 'completion_rate', 'percent'])
+    const completion =
+      typeof rawPercentage === 'number'
+        ? rawPercentage <= 1 ? rawPercentage * 100 : rawPercentage
+        : submitted + missing > 0
+          ? Math.round((submitted / (submitted + missing)) * 1000) / 10
+          : 0
+
+    return {
+      user_id: resolveEmployeeUserId(entry),
+      user_name: resolveDisplayName(entry) ?? `User #${resolveEmployeeUserId(entry)}`,
+      telegram_username: findFirstString(entry, ['telegram_username', 'telegram_id']) ?? null,
+      submitted_count: submitted,
+      missing_count: missing,
+      completion_percentage: completion,
+      last_update_date:
+        getLatestDateFromEntries(updates) ??
+        getLatestDateFromDayStatuses(dayStatuses, month, year) ??
+        null,
+      daily_statuses: dayStatuses,
+    }
+  })
+}
+
 function buildEmployeesFromRoster(memberOptions: WorkdayOverrideMemberOption[]): EmployeeMonthlyStats[] {
   return memberOptions.map((member) => ({
     user_id: member.id,
@@ -1591,7 +1630,7 @@ export function CeoTeamUpdatesPage() {
     [salaryQuery.data],
   )
   const trackingEmployees = useMemo(
-    () => parseAllUsersUpdates(trackingMonthlyQuery.data, month, year),
+    () => parseTrackingMonthlyEmployees(trackingMonthlyQuery.data, month, year),
     [month, trackingMonthlyQuery.data, year],
   )
   const reconciledTrackingEmployees = useMemo(
