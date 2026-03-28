@@ -196,16 +196,12 @@ export function FaultsPage() {
   const [penaltyTarget, setPenaltyTarget] = useState<EmployeeSalaryReport | null>(null)
   const [penaltyPoints, setPenaltyPoints] = useState('10')
   const [penaltyReason, setPenaltyReason] = useState('')
-  const [bonusTarget, setBonusTarget] = useState<EmployeeSalaryReport | null>(null)
-  const [bonusAmount, setBonusAmount] = useState('')
-  const [bonusReason, setBonusReason] = useState('')
   const [mistakeTarget, setMistakeTarget] = useState<EmployeeSalaryReport | null>(null)
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusTarget, setDeliveryBonusTarget] = useState<EmployeeSalaryReport | null>(null)
   const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [activeReportId, setActiveReportId] = useState<number | null>(null)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
-  const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
@@ -417,12 +413,6 @@ export function FaultsPage() {
     setPenaltyReason('')
   }
 
-  function openBonusDialog(report: EmployeeSalaryReport) {
-    setBonusTarget(report)
-    setBonusAmount('')
-    setBonusReason('')
-  }
-
   function openMistakeDialog(report: EmployeeSalaryReport) {
     const reportPolicy = buildEmployeeCompensationPolicy(compensationPolicyQuery.data, report.id, report.fullName)
     const defaultCategory = getCompensationPolicyCategoryOptions(reportPolicy)[0]?.value ?? 'AI Integration'
@@ -509,51 +499,6 @@ export function FaultsPage() {
       })
     } finally {
       setIsPenaltySubmitting(false)
-    }
-  }
-
-  async function handleSubmitBonus() {
-    if (!bonusTarget) {
-      return
-    }
-
-    const parsedAmount = Number(bonusAmount)
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      showToast({
-        title: 'Invalid bonus amount',
-        description: 'Bonus amount must be greater than 0.',
-        tone: 'error',
-      })
-      return
-    }
-
-    setIsBonusSubmitting(true)
-
-    try {
-      const response = await membersService.addBonus({
-        userId: bonusTarget.id,
-        year,
-        month,
-        bonusAmount: parsedAmount,
-        reason: bonusReason.trim() || undefined,
-      })
-
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
-      setBonusTarget(null)
-      showToast({
-        title: 'Bonus added',
-        description: getSuccessMessage(response, `${bonusTarget.fullName} updated.`),
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: 'Bonus not added',
-        description: getApiErrorMessage(error),
-        tone: 'error',
-      })
-    } finally {
-      setIsBonusSubmitting(false)
     }
   }
 
@@ -918,10 +863,6 @@ export function FaultsPage() {
                         tone: 'danger',
                       },
                       {
-                        label: 'Add bonus',
-                        onSelect: () => openBonusDialog(row),
-                      },
-                      {
                         label: 'Add mistake',
                         onSelect: () => openMistakeDialog(row),
                         tone: 'danger',
@@ -961,13 +902,13 @@ export function FaultsPage() {
           setActiveReportId(null)
           openPenaltyDialog(activeDrawerReport)
         }}
-        onAddBonus={() => {
+        onAddDeliveryBonus={() => {
           if (!activeDrawerReport) {
             return
           }
 
           setActiveReportId(null)
-          openBonusDialog(activeDrawerReport)
+          openDeliveryBonusDialog(activeDrawerReport)
         }}
       />
 
@@ -1014,54 +955,6 @@ export function FaultsPage() {
               value={penaltyReason}
               onChange={(event) => setPenaltyReason(event.target.value)}
               placeholder="Optional penalty reason"
-            />
-          </div>
-        </div>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(bonusTarget)}
-        onClose={() => setBonusTarget(null)}
-        title={bonusTarget ? `Add bonus for ${bonusTarget.fullName}` : 'Add bonus'}
-        description={bonusTarget ? `${getMonthName(month)} ${year} monthly bonus entry.` : undefined}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setBonusTarget(null)}
-              disabled={isBonusSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button variant="success" onClick={() => void handleSubmitBonus()} loading={isBonusSubmitting}>
-              Save bonus
-            </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-            <p className="mt-2 text-base font-semibold text-white">{bonusTarget?.fullName ?? '-'}</p>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Bonus amount</label>
-            <Input
-              type="number"
-              min="1"
-              value={bonusAmount}
-              onChange={(event) => setBonusAmount(event.target.value)}
-              placeholder="Enter bonus amount"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-            <Textarea
-              value={bonusReason}
-              onChange={(event) => setBonusReason(event.target.value)}
-              placeholder="Optional bonus reason"
             />
           </div>
         </div>

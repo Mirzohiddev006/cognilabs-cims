@@ -44,25 +44,10 @@ export type AddMemberPenaltyPayload = {
   reason?: string
 }
 
-export type AddMemberBonusPayload = {
-  userId: number
-  year: number
-  month: number
-  bonusAmount: number
-  reason?: string
-}
-
 export type UpdateMemberPenaltyPayload = {
   year: number
   month: number
   penaltyPoints: number
-  reason?: string
-}
-
-export type UpdateMemberBonusPayload = {
-  year: number
-  month: number
-  bonusAmount: number
   reason?: string
 }
 
@@ -247,20 +232,6 @@ export const membersService = {
     })
   },
 
-  addBonus({ userId, year, month, bonusAmount, reason }: AddMemberBonusPayload) {
-    return request<unknown>({
-      path: '/members/member/bonuses/add',
-      method: 'POST',
-      query: {
-        user_id: userId,
-        year,
-        month,
-        bonus_amount: bonusAmount,
-        reason,
-      },
-    })
-  },
-
   updatePenalty(penaltyId: number, { year, month, penaltyPoints, reason }: UpdateMemberPenaltyPayload) {
     return request<unknown>({
       path: `/members/member/penalties/${penaltyId}`,
@@ -277,26 +248,6 @@ export const membersService = {
   deletePenalty(penaltyId: number) {
     return request<unknown>({
       path: `/members/member/penalties/${penaltyId}`,
-      method: 'DELETE',
-    })
-  },
-
-  updateBonus(bonusId: number, { year, month, bonusAmount, reason }: UpdateMemberBonusPayload) {
-    return request<unknown>({
-      path: `/members/member/bonuses/${bonusId}`,
-      method: 'PUT',
-      query: {
-        year,
-        month,
-        bonus_amount: bonusAmount,
-        reason,
-      },
-    })
-  },
-
-  deleteBonus(bonusId: number) {
-    return request<unknown>({
-      path: `/members/member/bonuses/${bonusId}`,
       method: 'DELETE',
     })
   },

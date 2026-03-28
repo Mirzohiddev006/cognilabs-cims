@@ -244,19 +244,15 @@ export function FaultsMemberDetailPage({
   const { showToast } = useToast()
   const [penaltyPoints, setPenaltyPoints] = useState('10')
   const [penaltyReason, setPenaltyReason] = useState('')
-  const [bonusAmount, setBonusAmount] = useState('')
-  const [bonusReason, setBonusReason] = useState('')
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [editingMistake, setEditingMistake] = useState<MemberMistakeRecord | null>(null)
   const [editingDeliveryBonus, setEditingDeliveryBonus] = useState<MemberDeliveryBonusRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<CompensationDeleteTarget | null>(null)
   const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false)
-  const [isBonusDialogOpen, setIsBonusDialogOpen] = useState(false)
   const [isMistakeDialogOpen, setIsMistakeDialogOpen] = useState(false)
   const [isDeliveryBonusDialogOpen, setIsDeliveryBonusDialogOpen] = useState(false)
   const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
-  const [isBonusSubmitting, setIsBonusSubmitting] = useState(false)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
@@ -469,12 +465,6 @@ export function FaultsMemberDetailPage({
     setPenaltyPoints('10')
     setPenaltyReason('')
     setIsPenaltyDialogOpen(true)
-  }
-
-  function openBonusDialog() {
-    setBonusAmount('')
-    setBonusReason('')
-    setIsBonusDialogOpen(true)
   }
 
   function openMistakeDialog(record?: MemberMistakeRecord) {
@@ -728,51 +718,6 @@ export function FaultsMemberDetailPage({
     }
   }
 
-  async function handleSubmitBonus() {
-    if (!detail) {
-      return
-    }
-
-    const parsedAmount = Number(bonusAmount)
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      showToast({
-        title: 'Invalid bonus amount',
-        description: 'Bonus amount must be greater than 0.',
-        tone: 'error',
-      })
-      return
-    }
-
-    setIsBonusSubmitting(true)
-
-    try {
-      const response = await membersService.addBonus({
-        userId: detail.report.id,
-        year,
-        month,
-        bonusAmount: parsedAmount,
-        reason: bonusReason.trim() || undefined,
-      })
-
-      await detailQuery.refetch()
-      setIsBonusDialogOpen(false)
-      showToast({
-        title: 'Bonus added',
-        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: 'Bonus not added',
-        description: getApiErrorMessage(error),
-        tone: 'error',
-      })
-    } finally {
-      setIsBonusSubmitting(false)
-    }
-  }
-
   if (!Number.isFinite(memberId) || memberId <= 0) {
     return (
       <ErrorStateBlock
@@ -895,16 +840,6 @@ export function FaultsMemberDetailPage({
                 {showCompensationActions ? (
                   <Button variant="ghost" size="sm" onClick={openPenaltyDialog} className="rounded-xl">
                     Add penalty
-                  </Button>
-                ) : null}
-                {showCompensationActions ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={openBonusDialog}
-                    className="rounded-xl border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)]"
-                  >
-                    Add bonus
                   </Button>
                 ) : null}
                 {showCompensationActions ? (
@@ -1282,61 +1217,6 @@ export function FaultsMemberDetailPage({
                 value={penaltyReason}
                 onChange={(event) => setPenaltyReason(event.target.value)}
                 placeholder="Optional penalty reason"
-              />
-            </div>
-          </div>
-        </Dialog>
-      ) : null}
-
-      {showCompensationActions ? (
-        <Dialog
-          open={isBonusDialogOpen}
-          onClose={() => setIsBonusDialogOpen(false)}
-          title={`Add bonus for ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} monthly bonus entry.`}
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => setIsBonusDialogOpen(false)}
-                disabled={isBonusSubmitting}
-              >
-                Cancel
-              </Button>
-            <Button
-              variant="secondary"
-              onClick={() => void handleSubmitBonus()}
-              loading={isBonusSubmitting}
-              className="border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)]"
-            >
-              Save bonus
-            </Button>
-            </>
-          }
-        >
-          <div className="grid gap-4">
-            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Bonus amount</label>
-              <Input
-                type="number"
-                min="1"
-                value={bonusAmount}
-                onChange={(event) => setBonusAmount(event.target.value)}
-                placeholder="Enter bonus amount"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-              <Textarea
-                value={bonusReason}
-                onChange={(event) => setBonusReason(event.target.value)}
-                placeholder="Optional bonus reason"
               />
             </div>
           </div>

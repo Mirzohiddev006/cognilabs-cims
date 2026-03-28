@@ -20,7 +20,7 @@ export function SalaryEstimateDrawer({
   onClose,
   onOpenDetail,
   onAddPenalty,
-  onAddBonus,
+  onAddDeliveryBonus,
 }: {
   open: boolean
   report: EmployeeSalaryReport | null
@@ -29,7 +29,7 @@ export function SalaryEstimateDrawer({
   onClose: () => void
   onOpenDetail: () => void
   onAddPenalty: () => void
-  onAddBonus: () => void
+  onAddDeliveryBonus: () => void
 }) {
   useEffect(() => {
     if (!open) {
@@ -123,8 +123,8 @@ export function SalaryEstimateDrawer({
                 <Button variant="secondary" size="sm" className="rounded-xl" onClick={onAddPenalty}>
                   Add penalty
                 </Button>
-                <Button variant="success" size="sm" className="rounded-xl" onClick={onAddBonus}>
-                  Add bonus
+                <Button variant="success" size="sm" className="rounded-xl" onClick={onAddDeliveryBonus}>
+                  Add delivery bonus
                 </Button>
               </div>
             </div>
