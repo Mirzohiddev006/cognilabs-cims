@@ -153,6 +153,27 @@ function buildCustomerFormData(
   return formData
 }
 
+function buildCustomerDraft(customer: CustomerSummary, values: CustomerFormValues) {
+  const normalizedRecallTime = values.clear_recall_time
+    ? null
+    : values.recall_time
+      ? toApiDateTimeWithOffset(values.recall_time)
+      : customer.recall_time ?? null
+
+  return {
+    ...customer,
+    full_name: values.full_name.trim(),
+    platform: values.platform.trim(),
+    phone_number: values.phone_number.trim(),
+    status: values.status.trim(),
+    username: values.username.trim(),
+    assistant_name: values.assistant_name.trim(),
+    notes: values.notes.trim(),
+    recall_time: normalizedRecallTime,
+    conversation_language: values.conversation_language.trim(),
+  }
+}
+
 function getInitials(name: string) {
   return (
     name
@@ -640,8 +661,15 @@ export function CrmDashboardPage() {
       if (modalMode === 'create') {
         await crmService.createCustomer(formData)
       } else if (selectedCustomer) {
+        const draftedCustomer = buildCustomerDraft(selectedCustomer, formValues)
+
         await crmService.patchCustomer(selectedCustomer.id, formData)
-        updatedCustomer = await crmService.detail(selectedCustomer.id)
+        try {
+          updatedCustomer = buildCustomerDraft(await crmService.detail(selectedCustomer.id), formValues)
+        } catch {
+          updatedCustomer = draftedCustomer
+        }
+
         syncCustomerInUi(updatedCustomer)
       }
 
@@ -652,6 +680,11 @@ export function CrmDashboardPage() {
         summaryQuery.refetch(),
         statusesQuery.refetch(),
       ])
+
+      if (updatedCustomer) {
+        syncCustomerInUi(updatedCustomer)
+      }
+
       showToast({
         title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
         description: updatedCustomer
