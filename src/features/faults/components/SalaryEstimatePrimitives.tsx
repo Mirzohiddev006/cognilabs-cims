@@ -13,15 +13,15 @@ export function SummaryMetricCard({
   badge?: string
 }) {
   const toneClassName = {
-    default: 'border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))]',
-    danger: 'border-rose-500/35 bg-[linear-gradient(180deg,rgba(60,12,16,0.7),rgba(25,9,11,0.96))]',
-    success: 'border-emerald-500/35 bg-[linear-gradient(180deg,rgba(8,50,35,0.7),rgba(6,23,17,0.96))]',
+    default: 'border-[var(--border)] bg-[var(--card)]',
+    danger: 'border-rose-500/28 bg-rose-500/6',
+    success: 'border-emerald-500/28 bg-emerald-500/6',
   } as const
 
   const valueClassName = {
-    default: 'text-white',
-    danger: 'text-rose-400',
-    success: 'text-emerald-400',
+    default: 'text-[var(--foreground)]',
+    danger: 'text-rose-600 dark:text-rose-400',
+    success: 'text-emerald-600 dark:text-emerald-400',
   } as const
 
   return (
@@ -51,16 +51,16 @@ export function DetailStatTile({
   tone?: 'default' | 'danger' | 'success' | 'blue'
 }) {
   const toneClassName = {
-    default: 'border-white/10 bg-white/[0.025]',
-    danger: 'border-rose-500/35 bg-rose-500/8',
-    success: 'border-emerald-500/35 bg-emerald-500/8',
+    default: 'border-[var(--border)] bg-[var(--surface-elevated)]',
+    danger: 'border-rose-500/28 bg-rose-500/6 dark:bg-rose-500/8',
+    success: 'border-emerald-500/28 bg-emerald-500/6 dark:bg-emerald-500/8',
     blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)]',
   } as const
 
   const valueClassName = {
-    default: 'text-white',
-    danger: 'text-rose-400',
-    success: 'text-emerald-400',
+    default: 'text-[var(--foreground)]',
+    danger: 'text-rose-600 dark:text-rose-400',
+    success: 'text-emerald-600 dark:text-emerald-400',
     blue: 'text-[var(--blue-text)]',
   } as const
 

@@ -1007,13 +1007,13 @@ export function FaultsMemberDetailPage({
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="rounded-[24px] border-rose-500/18 bg-[linear-gradient(180deg,rgba(56,16,22,0.30),rgba(18,12,15,0.92))] p-6">
+        <Card className="rounded-[24px] border-rose-500/18 bg-[var(--card)] p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-200/70">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
                 Penalty ledger
               </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
                 Penalty entries for this month
               </h2>
             </div>
@@ -1024,12 +1024,12 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-rose-500/18 bg-black/15 px-4 py-4">
+              <div key={item.id} className="rounded-[18px] border border-rose-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                     {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-rose-100/72">
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
                         {item.description}
                       </p>
                     ) : null}
@@ -1039,26 +1039,26 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-rose-400">
+                  <p className="text-base font-semibold tracking-tight text-rose-600 dark:text-rose-400">
                     {formatAmount(item.amount)}
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-black/10 px-4 py-5 text-sm text-rose-100/72">
+              <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                 No penalty line-items were returned for this member in the selected month.
               </div>
             )}
           </div>
         </Card>
 
-        <Card className="rounded-[24px] border-emerald-500/18 bg-[linear-gradient(180deg,rgba(10,52,37,0.30),rgba(7,18,14,0.92))] p-6">
+        <Card className="rounded-[24px] border-emerald-500/18 bg-[var(--card)] p-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-200/70">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
                 Bonus ledger
               </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
                 Bonus entries for this month
               </h2>
             </div>
@@ -1069,12 +1069,12 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-emerald-500/18 bg-black/15 px-4 py-4">
+              <div key={item.id} className="rounded-[18px] border border-emerald-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                     {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-emerald-100/72">
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
                         {item.description}
                       </p>
                     ) : null}
@@ -1082,13 +1082,13 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-emerald-400">
+                  <p className="text-base font-semibold tracking-tight text-emerald-600 dark:text-emerald-400">
                     {formatAmount(item.amount)}
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-black/10 px-4 py-5 text-sm text-emerald-100/72">
+              <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                 No bonus line-items were returned for this member in the selected month.
               </div>
             )}

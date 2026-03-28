@@ -51,13 +51,13 @@ export function MistakeIncidentSection({
   className,
 }: MistakeIncidentSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border-rose-500/18 bg-[linear-gradient(180deg,rgba(56,16,22,0.30),rgba(18,12,15,0.92))] p-6', className)}>
+    <Card className={cn('rounded-[24px] border-rose-500/18 bg-[var(--card)] p-6', className)}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-200/70">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
             Mistake incidents
           </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
             Recorded compensation mistakes
           </h2>
         </div>
@@ -66,7 +66,7 @@ export function MistakeIncidentSection({
             {items.length} entries
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-rose-100/88 hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-rose-600 hover:text-rose-700 dark:text-rose-100/88 dark:hover:text-white">
               Add mistake
             </Button>
           ) : null}
@@ -75,16 +75,16 @@ export function MistakeIncidentSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-rose-500/18 bg-black/15 px-4 py-4">
+          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-rose-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                   <Badge variant="outline">{item.category}</Badge>
                   <Badge variant="danger">{item.severity}</Badge>
                 </div>
                 {item.description ? (
-                  <p className="mt-2 text-xs leading-5 text-rose-100/72">
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
                     {item.description}
                   </p>
                 ) : null}
@@ -111,7 +111,7 @@ export function MistakeIncidentSection({
             </div>
           </div>
         )) : (
-          <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-black/10 px-4 py-5 text-sm text-rose-100/72">
+          <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
             No mistake incidents were returned for the selected month.
           </div>
         )}
@@ -138,13 +138,13 @@ export function DeliveryBonusSection({
   className,
 }: DeliveryBonusSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border-emerald-500/18 bg-[linear-gradient(180deg,rgba(10,52,37,0.30),rgba(7,18,14,0.92))] p-6', className)}>
+    <Card className={cn('rounded-[24px] border-emerald-500/18 bg-[var(--card)] p-6', className)}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-200/70">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
             Delivery bonuses
           </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
             Recorded delivery bonus events
           </h2>
         </div>
@@ -153,7 +153,7 @@ export function DeliveryBonusSection({
             {items.length} entries
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-emerald-100/88 hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-emerald-600 hover:text-emerald-700 dark:text-emerald-100/88 dark:hover:text-white">
               Add delivery bonus
             </Button>
           ) : null}
@@ -162,15 +162,15 @@ export function DeliveryBonusSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-emerald-500/18 bg-black/15 px-4 py-4">
+          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-emerald-500/18 bg-white/70 px-4 py-4 dark:bg-black/15">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                   <Badge variant="success">{item.bonus_type}</Badge>
                 </div>
                 {item.description ? (
-                  <p className="mt-2 text-xs leading-5 text-emerald-100/72">
+                  <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
                     {item.description}
                   </p>
                 ) : null}
@@ -194,7 +194,7 @@ export function DeliveryBonusSection({
             </div>
           </div>
         )) : (
-          <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-black/10 px-4 py-5 text-sm text-emerald-100/72">
+          <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
             No delivery bonus records were returned for the selected month.
           </div>
         )}

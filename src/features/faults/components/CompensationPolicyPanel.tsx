@@ -23,7 +23,7 @@ export function CompensationPolicyPanel({
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Compensation policy
           </p>
-          <h2 className="text-xl font-semibold tracking-tight text-white">
+          <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
             Policy configuration unavailable
           </h2>
           <p className="text-sm text-[var(--muted-strong)]">
@@ -41,7 +41,7 @@ export function CompensationPolicyPanel({
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             Compensation policy
           </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
             Configured salary rules
           </h2>
           <p className="mt-2 text-sm text-[var(--muted-strong)]">
@@ -65,20 +65,20 @@ export function CompensationPolicyPanel({
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        <div className="rounded-[20px] border border-rose-500/16 bg-black/14 p-4">
+        <div className="rounded-[20px] border border-rose-500/18 bg-rose-500/5 p-4 dark:bg-rose-950/15">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-200/70">Deduction rates</p>
-              <p className="mt-1 text-sm text-white/58">Severity-based deduction rules.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">Deduction rates</p>
+              <p className="mt-1 text-sm text-[var(--muted-strong)]">Severity-based deduction rules.</p>
             </div>
             <Badge variant="outline">{policy.deductionRates.length}</Badge>
           </div>
 
           <div className="mt-4 space-y-3">
             {policy.deductionRates.map((rate) => (
-              <div key={rate.severity} className="rounded-[16px] border border-rose-500/16 bg-black/18 px-4 py-3">
+              <div key={rate.severity} className="rounded-[16px] border border-rose-500/18 bg-white/70 px-4 py-3 dark:bg-black/18">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">{rate.severity}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{rate.severity}</p>
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="danger">{formatPercent(rate.percent)}</Badge>
                     <Badge variant="outline">{formatAmount(rate.amount)}</Badge>
@@ -89,20 +89,20 @@ export function CompensationPolicyPanel({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-emerald-500/16 bg-black/14 p-4">
+        <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-500/5 p-4 dark:bg-emerald-950/15">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200/70">Bonus rates</p>
-              <p className="mt-1 text-sm text-white/58">Configured percentage rules for bonus triggers.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">Bonus rates</p>
+              <p className="mt-1 text-sm text-[var(--muted-strong)]">Configured percentage rules for bonus triggers.</p>
             </div>
             <Badge variant="outline">{policy.bonusRates.length}</Badge>
           </div>
 
           <div className="mt-4 space-y-3">
             {policy.bonusRates.map((rate) => (
-              <div key={rate.key} className="rounded-[16px] border border-emerald-500/16 bg-black/18 px-4 py-3">
+              <div key={rate.key} className="rounded-[16px] border border-emerald-500/18 bg-white/70 px-4 py-3 dark:bg-black/18">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-white">{rate.label}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{rate.label}</p>
                   <Badge variant="success">{formatPercent(rate.percent)}</Badge>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export function CompensationPolicyPanel({
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-        <div className="rounded-[20px] border border-white/8 bg-black/14 p-4">
+        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Mistake taxonomy</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {policy.mistakeCategories.map((category) => (
@@ -128,15 +128,15 @@ export function CompensationPolicyPanel({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-white/8 bg-black/14 p-4">
+        <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Decision tree</p>
           <div className="mt-4 space-y-3">
             {policy.decisionTree.map((step) => (
-              <div key={`${step.step}-${step.question}`} className="rounded-[16px] border border-white/8 bg-white/[0.02] px-4 py-3">
+              <div key={`${step.step}-${step.question}`} className="rounded-[16px] border border-[var(--border)] bg-[var(--card)] px-4 py-3">
                 <p className="text-xs font-semibold tracking-[0.18em] text-[var(--blue-text)]">
                   Step {step.step}
                 </p>
-                <p className="mt-2 text-sm font-medium text-white">{step.question}</p>
+                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{step.question}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {step.ifYes ? <Badge variant="success">If yes: {step.ifYes}</Badge> : null}
                   {step.ifNo ? <Badge variant="outline">If no: {step.ifNo}</Badge> : null}

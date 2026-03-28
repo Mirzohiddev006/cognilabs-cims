@@ -208,11 +208,11 @@ function MetricPanel({
   progressTone?: 'violet' | 'success' | 'danger'
 }) {
   return (
-    <div className="rounded-[22px] border border-white/8 bg-black/22 px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-white/40">{label}</p>
-      <p className="mt-3 text-[1.9rem] font-semibold tracking-tight text-white">{value}</p>
+    <div className="card-base rounded-[22px] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
+      <p className="mt-3 text-[1.9rem] font-semibold tracking-tight text-[var(--foreground)]">{value}</p>
       {hint ? (
-        <p className="mt-2 text-xs text-white/58">{hint}</p>
+        <p className="mt-2 text-xs text-[var(--muted-strong)]">{hint}</p>
       ) : null}
       {typeof progress === 'number' ? (
         <div className="mt-4">
@@ -367,8 +367,8 @@ export function MemberDashboardPage() {
           <div className="relative z-10 flex flex-col gap-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold tracking-[0.02em] text-white/62">Member Dashboard</p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">Member Dashboard</p>
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
                   {detail.report.fullName}
                 </h1>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">
@@ -386,23 +386,23 @@ export function MemberDashboardPage() {
 
               <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] xl:min-w-[430px]">
                 <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Year</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Year</label>
                   <Input
                     type="number"
                     min="2020"
                     max="2035"
                     value={year}
                     onChange={(event) => updatePeriod({ year: clampNumber(Number(event.target.value) || defaultYear, 2020, 2035) })}
-                    className="rounded-xl border-white/10 bg-white/[0.03]"
+                    className="rounded-xl border-[var(--border)] bg-[var(--card)]"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-white/48">Month</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Month</label>
                   <SelectField
                     value={String(month)}
                     options={monthOptions}
                     onValueChange={(value) => updatePeriod({ month: clampNumber(Number(value), 1, 12) })}
-                    className="rounded-xl border-white/10 bg-white/[0.03]"
+                    className="rounded-xl border-[var(--border)] bg-[var(--card)]"
                   />
                 </div>
                 <div className="flex items-end gap-2">
@@ -445,13 +445,13 @@ export function MemberDashboardPage() {
             </div>
 
             {dashboardQuery.isLoading && !dashboardQuery.data ? (
-              <div className="rounded-[20px] border border-blue-500/20 bg-blue-500/8 px-4 py-4 text-sm text-blue-100/80">
+              <div className="rounded-[20px] border border-[var(--blue-border)] bg-[var(--blue-dim)] px-4 py-4 text-sm text-[var(--foreground)]">
                 Syncing your latest dashboard data...
               </div>
             ) : null}
 
             {data?.statsError || detail.estimateError || detail.policyError || detail.mistakesError || detail.deliveryBonusesError || detail.updatesError || detail.calendarError ? (
-              <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/8 px-4 py-4 text-sm text-amber-100/82">
+              <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/10 px-4 py-4 text-sm text-[var(--foreground)]">
                 {data?.statsError ? <p>Stats API unavailable: {data.statsError}</p> : null}
                 {detail.estimateError ? <p>Salary estimate API unavailable: {detail.estimateError}</p> : null}
                 {detail.policyError ? <p>Compensation policy API unavailable: {detail.policyError}</p> : null}
@@ -465,13 +465,13 @@ export function MemberDashboardPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[28px] border-emerald-500/12 bg-[linear-gradient(180deg,rgba(8,38,30,0.52),rgba(10,15,14,0.98))] p-6">
+      <Card className="rounded-[28px] border-[var(--border)] bg-[var(--card)] p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] text-emerald-200/70">
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-200/70">
               Salary estimate for {month}/{year}
             </p>
-            <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-white">
+            <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-[var(--foreground)]">
               My Salary Snapshot
             </h2>
           </div>
@@ -513,12 +513,12 @@ export function MemberDashboardPage() {
             tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
           />
           <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
-            <p className="text-xs text-rose-100/78">Penalty percentage</p>
+            <p className="text-xs text-rose-600 dark:text-rose-100/78">Penalty percentage</p>
             <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-[1.05rem] font-semibold tracking-tight text-rose-300">
+              <p className="text-[1.05rem] font-semibold tracking-tight text-rose-600 dark:text-rose-300">
                 {formatPercent(detail.report.penaltyPercentage)}
               </p>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-rose-200/62">impact</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-rose-500/80 dark:text-rose-200/62">impact</span>
             </div>
             <div className="mt-3">
               <ProgressBar value={Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0} tone={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'violet'} />
@@ -527,11 +527,11 @@ export function MemberDashboardPage() {
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          <div className="rounded-[22px] border border-rose-500/20 bg-black/18 p-4">
+          <div className="rounded-[22px] border border-rose-500/20 bg-rose-500/5 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-200/70">Penalty history</p>
-                <p className="mt-1 text-sm text-white/64">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">Penalty history</p>
+                <p className="mt-1 text-sm text-[var(--muted-strong)]">
                   {detail.penalties.length > 0 ? `${detail.penalties.length} entries in this period.` : 'No penalty records returned.'}
                 </p>
               </div>
@@ -542,13 +542,13 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-rose-500/16 bg-black/20 px-4 py-3">
+                <div key={item.id} className="rounded-[16px] border border-rose-500/16 bg-white/70 px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-rose-200">{item.title}</p>
-                      <p className="mt-1 text-xs text-white/56">{item.description ?? 'No reason provided.'}</p>
+                      <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{item.title}</p>
+                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? 'No reason provided.'}</p>
                     </div>
-                    <p className="text-sm font-semibold text-rose-300">{formatDetailDate(item.createdAt)}</p>
+                    <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">{formatDetailDate(item.createdAt)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {item.points ? <Badge variant="danger">{item.points} points</Badge> : null}
@@ -556,18 +556,18 @@ export function MemberDashboardPage() {
                   </div>
                 </div>
               )) : (
-                <div className="rounded-[16px] border border-dashed border-rose-500/18 bg-black/10 px-4 py-5 text-sm text-rose-100/68">
+                <div className="rounded-[16px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                   No penalty line-items were returned for the selected month.
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-emerald-500/20 bg-black/18 p-4">
+          <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-500/5 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200/70">Bonus history</p>
-                <p className="mt-1 text-sm text-white/64">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">Bonus history</p>
+                <p className="mt-1 text-sm text-[var(--muted-strong)]">
                   {detail.bonuses.length > 0 ? `${detail.bonuses.length} entries in this period.` : 'No bonus records returned.'}
                 </p>
               </div>
@@ -578,20 +578,20 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-black/20 px-4 py-3">
+                <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-white/70 px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-emerald-200">{item.title}</p>
-                      <p className="mt-1 text-xs text-white/56">{item.description ?? 'No reason provided.'}</p>
+                      <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-200">{item.title}</p>
+                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? 'No reason provided.'}</p>
                     </div>
-                    <p className="text-sm font-semibold text-emerald-300">{formatDetailDate(item.createdAt)}</p>
+                    <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">{formatDetailDate(item.createdAt)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="success">{formatAmount(item.amount)}</Badge>
                   </div>
                 </div>
               )) : (
-                <div className="rounded-[16px] border border-dashed border-emerald-500/18 bg-black/10 px-4 py-5 text-sm text-emerald-100/68">
+                <div className="rounded-[16px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                   No bonus line-items were returned for the selected month.
                 </div>
               )}
