@@ -49,7 +49,15 @@ export function AppSidebar() {
   const { user, hasPermission, refreshUser } = useAuth()
   const isLight = theme === 'light'
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
-  const hasProjectsAccess = visibleNavigation.some((item) => item.to === '/projects')
+  const sidebarNavigation = useMemo(
+    () => (
+      String(user?.role ?? '').toLowerCase() === 'member'
+        ? visibleNavigation.filter((item) => item.to !== '/projects')
+        : visibleNavigation
+    ),
+    [user?.role, visibleNavigation],
+  )
+  const hasProjectsAccess = sidebarNavigation.some((item) => item.to === '/projects')
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
   const canManageProjects = hasPermission('projects')
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
@@ -282,11 +290,11 @@ export function AppSidebar() {
 
           <div className="mt-6 flex items-center justify-between px-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">{t('shell.menu')}</p>
-            <Badge>{visibleNavigation.length} {t('shell.modules')}</Badge>
+            <Badge>{sidebarNavigation.length} {t('shell.modules')}</Badge>
           </div>
 
           <nav className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
-            {visibleNavigation.map((item) => {
+            {sidebarNavigation.map((item) => {
               const itemLabel = getNavigationLabel(item.to, item.label)
               const itemGroup = getNavigationGroup(item.to, item.group)
 
