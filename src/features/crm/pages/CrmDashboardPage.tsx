@@ -956,11 +956,6 @@ export function CrmDashboardPage() {
                 },
               },
               {
-                key: 'platform',
-                header: 'Platform',
-                render: (row) => getCustomerDisplayPlatform(row) || '-',
-              },
-              {
                 key: 'phone',
                 header: 'Phone',
                 render: (row) => row.phone_number ?? row.phone ?? '-',
@@ -969,11 +964,6 @@ export function CrmDashboardPage() {
                 key: 'status',
                 header: 'Status',
                 render: (row) => <StatusBadge status={row.status} statusMetaMap={statusMetaMap} />,
-              },
-              {
-                key: 'language',
-                header: 'Language',
-                render: (row) => row.conversation_language || '-',
               },
               {
                 key: 'actions',
