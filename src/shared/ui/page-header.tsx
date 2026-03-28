@@ -53,11 +53,11 @@ export function PageHeader({
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               {eyebrow ? (
-                <p className="page-header-label text-[10px] font-semibold uppercase tracking-[0.22em]">
+                <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
                   {translateCurrentLiteral(eyebrow)}
                 </p>
               ) : null}
-              <h1 className="page-header-title text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              <h1 className="page-header-title ui-display-heading text-2xl font-semibold tracking-tight sm:text-[2rem]">
                 {translateCurrentLiteral(title)}
               </h1>
               {description ? (
@@ -84,7 +84,7 @@ export function PageHeader({
                     metaToneClassNames[item.tone ?? 'neutral'],
                   )}
                 >
-                  <p className="page-header-label text-[10px] font-semibold uppercase tracking-[0.22em]">
+                  <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
                     {translateCurrentLiteral(item.label)}
                   </p>
                   <p className="mt-2 text-base font-semibold tracking-tight text-current">

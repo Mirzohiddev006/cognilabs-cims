@@ -92,11 +92,11 @@ function hasUsefulMonthlyNumericStats(employee: Pick<EmployeeMonthlyStats, 'subm
 
 /* Dot Activity Strip */
 const dotStatusStyle = {
-  submitted: 'bg-emerald-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]',
-  missing:   'bg-rose-500/80',
-  sunday:    'bg-amber-400/70',
-  future:    'bg-white/12',
-  neutral:   'bg-white/18',
+  submitted: 'team-activity-dot team-activity-dot-submitted',
+  missing:   'team-activity-dot team-activity-dot-missing',
+  sunday:    'team-activity-dot team-activity-dot-sunday',
+  future:    'team-activity-dot team-activity-dot-future',
+  neutral:   'team-activity-dot team-activity-dot-neutral',
 } as const satisfies Record<DayStatus, string>
 
 function buildMonthlyActivityStatuses(
@@ -216,12 +216,17 @@ function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlySta
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.75" aria-label="Monthly activity">
+    <div
+      data-i18n-skip="true"
+      data-activity-strip="true"
+      className="flex flex-wrap items-center gap-0.75"
+      aria-label={translateCurrentLiteral('Monthly activity')}
+    >
       {statuses.map((entry) => (
         <span
           key={entry.day}
           title={entry.label ?? `Day ${entry.day}: ${entry.status}`}
-          className={cn('inline-block h-2 w-2 rounded-full shrink-0', dotStatusStyle[entry.status])}
+          className={cn('inline-block h-2.5 w-2.5 rounded-full shrink-0', dotStatusStyle[entry.status])}
         />
       ))}
     </div>
@@ -230,8 +235,8 @@ function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlySta
 
 function TrackBadge({ pct }: { pct: number }) {
   return pct >= COMPLETION_ON_TRACK
-    ? <Badge variant="success" dot>On Track</Badge>
-    : <Badge variant="warning" dot>Needs Attention</Badge>
+    ? <Badge variant="success" dot>{translateCurrentLiteral('On Track')}</Badge>
+    : <Badge variant="warning" dot>{translateCurrentLiteral('Needs Attention')}</Badge>
 }
 
 function CompletionPill({ pct }: { pct: number }) {
@@ -277,7 +282,7 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
-        <p className="mt-1 truncate text-xl font-semibold leading-none text-white">{value}</p>
+        <p className="mt-1 truncate text-xl font-semibold leading-none text-[var(--foreground)]">{value}</p>
       </div>
     </div>
   )
@@ -1342,7 +1347,7 @@ function parseSalarySummary(data: unknown): TeamSalarySummary | null {
   return {
     employeesCount: toNumber(summary.employees_count ?? summary.total_employees ?? summary.employee_count) ?? 0,
     totalBaseSalary: toNumber(summary.total_base_salary ?? summary.base_salary_total) ?? 0,
-    totalDeductionAmount: toNumber(summary.total_deduction_amount ?? summary.deduction_amount_total) ?? 0,
+    totalDeductionAmount: toNumber(summary.total_applied_deduction_amount ?? summary.total_deduction_amount ?? summary.deduction_amount_total) ?? 0,
     totalBonusAmount: toNumber(summary.total_bonus_amount ?? summary.bonus_amount_total) ?? 0,
     totalFinalSalary: toNumber(summary.total_final_salary ?? summary.final_salary_total) ?? 0,
     totalEstimatedSalary: toNumber(summary.total_estimated_salary ?? summary.estimated_salary_total ?? summary.salary_estimate_total) ?? 0,
@@ -1359,6 +1364,7 @@ function parseSalaryEntry(raw: unknown): TeamSalaryEntry | null {
     : isRecord(raw.salaryEstimate)
       ? raw.salaryEstimate
       : null
+  const policy = isRecord(raw.policy) ? raw.policy : null
 
   const userId = toNumber(raw.user_id ?? raw.id ?? raw.employee_id ?? raw.member_id)
 
@@ -1368,14 +1374,14 @@ function parseSalaryEntry(raw: unknown): TeamSalaryEntry | null {
 
   return {
     userId,
-    baseSalary: toNumber(salaryEstimate?.base_salary ?? raw.base_salary ?? raw.default_salary),
-    deductionAmount: toNumber(salaryEstimate?.deduction_amount ?? raw.deduction_amount),
+    baseSalary: toNumber(salaryEstimate?.base_salary ?? policy?.salary_base ?? raw.base_salary ?? raw.default_salary),
+    deductionAmount: toNumber(salaryEstimate?.applied_deduction_amount ?? salaryEstimate?.raw_deduction_amount ?? salaryEstimate?.deduction_amount ?? raw.deduction_amount),
     bonusAmount: toNumber(salaryEstimate?.total_bonus_amount ?? salaryEstimate?.bonus_amount ?? raw.total_bonus_amount ?? raw.bonus_amount),
     finalSalary: toNumber(salaryEstimate?.final_salary ?? raw.final_salary),
     estimatedSalary: toNumber(salaryEstimate?.estimated_salary ?? raw.estimated_salary),
     penaltyPoints: toNumber(salaryEstimate?.total_penalty_points ?? raw.total_penalty_points ?? raw.penalty_points),
-    penaltiesCount: toNumber(raw.penalties_count ?? raw.penalty_count),
-    bonusesCount: toNumber(raw.bonuses_count ?? raw.bonus_count),
+    penaltiesCount: toNumber(raw.penalties_count ?? raw.penalty_count ?? raw.mistakes_count),
+    bonusesCount: toNumber(raw.bonuses_count ?? raw.bonus_count ?? raw.delivery_bonus_count),
   }
 }
 
@@ -2129,14 +2135,14 @@ export function CeoTeamUpdatesPage() {
         <div className="mb-3 flex items-center justify-between gap-3">
           <SectionTitle title="Filters and Comparison Controls" />
           <Badge variant="blue">
-            Showing {employees.length} of {totalEmployees} employees
+            {translateCurrentLiteral('Showing')} {employees.length} {translateCurrentLiteral('of')} {totalEmployees} {translateCurrentLiteral('employees')}
           </Badge>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              Search employee
+              {translateCurrentLiteral('Search employee')}
             </label>
             <div className="relative">
               <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-(--muted)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -2144,7 +2150,7 @@ export function CeoTeamUpdatesPage() {
                 <path d="M10.5 10.5l3 3" />
               </svg>
               <Input
-                placeholder="Search by name"
+                placeholder={translateCurrentLiteral('Search by name')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-8"
@@ -2154,34 +2160,34 @@ export function CeoTeamUpdatesPage() {
 
           <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              Sort by
+              {translateCurrentLiteral('Sort by')}
             </label>
             <SelectField
               value={sortKey}
-              options={[...SORT_OPTIONS]}
+              options={[...SORT_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
               onValueChange={(value) => setSortKey(value as SortKey)}
               className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
             >
-              <option value="submitted">Most updates</option>
-              <option value="missing">Most missing</option>
-              <option value="completion">Completion rate</option>
-              <option value="name">Name A-Z</option>
+              <option value="submitted">{translateCurrentLiteral('Most updates')}</option>
+              <option value="missing">{translateCurrentLiteral('Most missing')}</option>
+              <option value="completion">{translateCurrentLiteral('Completion rate')}</option>
+              <option value="name">{translateCurrentLiteral('Name A-Z')}</option>
             </SelectField>
           </div>
 
           <div>
             <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              Status
+              {translateCurrentLiteral('Status')}
             </label>
             <SelectField
               value={statusFilter}
-              options={[...STATUS_OPTIONS]}
+              options={[...STATUS_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
               onValueChange={(value) => setStatusFilter(value as StatusFilter)}
               className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
             >
-              <option value="all">All</option>
-              <option value="on_track">On Track</option>
-              <option value="needs_attention">Needs Attention</option>
+              <option value="all">{translateCurrentLiteral('All')}</option>
+              <option value="on_track">{translateCurrentLiteral('On Track')}</option>
+              <option value="needs_attention">{translateCurrentLiteral('Needs Attention')}</option>
             </SelectField>
           </div>
         </div>
@@ -2198,7 +2204,7 @@ export function CeoTeamUpdatesPage() {
                     key={col}
                     className="whitespace-nowrap border-b border-(--border) px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-(--caption)"
                   >
-                    {col}
+                    {translateCurrentLiteral(col)}
                   </th>
                 ))}
               </tr>
@@ -2208,8 +2214,8 @@ export function CeoTeamUpdatesPage() {
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-sm text-(--muted)">
                     {search || statusFilter !== 'all'
-                      ? 'No employees match the current filters.'
-                      : `No data for ${selectedMonthName} ${year}.`}
+                      ? translateCurrentLiteral('No employees match the current filters.')
+                      : `${translateCurrentLiteral('No data for')} ${selectedMonthName} ${year}.`}
                   </td>
                 </tr>
               ) : (
@@ -2225,19 +2231,19 @@ export function CeoTeamUpdatesPage() {
                       <div className="flex items-center gap-3">
                         <EmployeeAvatar name={emp.user_name} />
                         <div>
-                          <span className="text-sm font-semibold text-white">{emp.user_name}</span>
+                          <span className="text-sm font-semibold text-[var(--foreground)]">{emp.user_name}</span>
                           {typeof emp.estimated_salary === 'number' && emp.estimated_salary > 0 ? (
                             <p className="mt-1 text-xs text-(--muted)">
-                              Est. salary: {formatCurrency(emp.estimated_salary)}
+                              {translateCurrentLiteral('Est. salary')}: {formatCurrency(emp.estimated_salary)}
                             </p>
                           ) : null}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 text-sm font-semibold text-white tabular-nums">
+                    <td className="px-4 py-3.5 text-sm font-semibold text-[var(--foreground)] tabular-nums" data-ui-number="true">
                       {emp.submitted_count}
                     </td>
-                    <td className="px-4 py-3.5 text-sm font-semibold tabular-nums text-rose-300">
+                    <td className="px-4 py-3.5 text-sm font-semibold tabular-nums text-rose-300" data-ui-number="true" data-keep-color="true">
                       {emp.missing_count}
                     </td>
                     <td className="px-4 py-3.5">
@@ -2262,7 +2268,7 @@ export function CeoTeamUpdatesPage() {
                         onClick={() => openMemberDetail(emp)}
                         disabled={!Number.isFinite(emp.user_id) || emp.user_id <= 0}
                       >
-                        View Details
+                        {translateCurrentLiteral('View Details')}
                       </Button>
                     </td>
                   </tr>
@@ -2274,22 +2280,22 @@ export function CeoTeamUpdatesPage() {
 
         {employees.length > 0 && (
           <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface) px-4 py-2.5">
-            <div className="flex gap-3 text-[11px] text-(--muted)">
+            <div className="flex gap-3 text-[11px] text-(--muted)" data-i18n-skip="true" data-activity-legend="true">
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_4px_rgba(34,197,94,0.6)]" />
-                Active month
+                <span className="team-activity-dot team-activity-dot-submitted h-2.5 w-2.5 rounded-full" />
+                {translateCurrentLiteral('Active month')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-rose-500/80" />
-                No reports
+                <span className="team-activity-dot team-activity-dot-missing h-2.5 w-2.5 rounded-full" />
+                {translateCurrentLiteral('No reports')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-white/12" />
-                No data
+                <span className="team-activity-dot team-activity-dot-neutral h-2.5 w-2.5 rounded-full" />
+                {translateCurrentLiteral('No data')}
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-white/18" />
-                Future month
+                <span className="team-activity-dot team-activity-dot-future h-2.5 w-2.5 rounded-full" />
+                {translateCurrentLiteral('Future month')}
               </span>
             </div>
             <p className="text-[11px] text-(--muted)">

@@ -139,24 +139,6 @@ export function ProjectsListPage() {
     return counts
   }, [detailedProjects])
 
-  const projectParticipantIds = useMemo(() => {
-    const ids = new Set<number>()
-
-    for (const project of detailedProjects) {
-      if (project.created_by.id > 0) {
-        ids.add(project.created_by.id)
-      }
-
-      for (const member of project.members) {
-        if (member.id > 0) {
-          ids.add(member.id)
-        }
-      }
-    }
-
-    return ids
-  }, [detailedProjects])
-
   const derivedMembers = useMemo(() => {
     const entries = new Map<number, UserSummary>()
 
@@ -180,11 +162,6 @@ export function ProjectsListPage() {
       }
 
       const allUsers = membersQuery.data ?? []
-      const relatedUsers = allUsers.filter((member) => projectParticipantIds.has(member.id))
-
-      if (relatedUsers.length > 0) {
-        return relatedUsers
-      }
 
       if (allUsers.length > 0) {
         return allUsers
@@ -203,7 +180,7 @@ export function ProjectsListPage() {
 
       return `${left.name} ${left.surname}`.localeCompare(`${right.name} ${right.surname}`)
     })
-  }, [canManageProjects, derivedMembers, memberProjectCounts, membersQuery.data, projectParticipantIds])
+  }, [canManageProjects, derivedMembers, memberProjectCounts, membersQuery.data])
 
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedMemberId) ?? null,
@@ -579,7 +556,7 @@ export function ProjectsListPage() {
                             return (
                               <Link
                                 key={task.cardId}
-                                to={`/boards/${task.boardId}?project=${task.projectId}`}
+                                to={`/projects/${task.projectId}?board=${task.boardId}`}
                                 className="block rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
                               >
                                 <div className="flex flex-wrap items-start justify-between gap-3">

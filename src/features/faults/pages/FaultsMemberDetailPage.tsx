@@ -564,11 +564,19 @@ export function FaultsMemberDetailPage({
         </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <DetailStatTile label="Final salary" value={formatAmount(detail.report.finalSalary)} />
         <DetailStatTile label="Estimated salary" value={formatAmount(detail.report.estimatedSalary)} />
         <DetailStatTile label="Deduction" value={formatAmount(detail.report.deductionAmount)} tone="danger" />
         <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="blue" />
+        <DetailStatTile label="Bonus %" value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
+        <DetailStatTile
+          label="Productivity"
+          value={Number.isFinite(detail.report.productivityPercentage)
+            ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)} / ${formatPercent(detail.report.productivityPercentage)}`
+            : '-'}
+          tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
+        />
       </div>
 
       <Card className="rounded-[24px] border-white/10 p-6">
@@ -586,11 +594,13 @@ export function FaultsMemberDetailPage({
           </Badge>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
           <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
           <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="blue" />
+          <DetailStatTile label="Mistakes" value={formatCount(detail.report.mistakesCount)} tone="danger" />
+          <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
         <div className="mt-5 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
@@ -605,6 +615,11 @@ export function FaultsMemberDetailPage({
               {formatAmount(detail.report.finalSalary)}
             </span>
           </div>
+          <p className="mt-3 text-xs text-white/56">
+            {detail.report.qualifiesProductivityBonus
+              ? 'Productivity bonus qualified for this period.'
+              : 'Productivity bonus did not qualify for this period.'}
+          </p>
           <div className="mt-4 h-2 rounded-full bg-white/8">
             <div
               className="h-full rounded-full bg-rose-500 transition-[width] duration-300"

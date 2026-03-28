@@ -7,6 +7,7 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
+import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -96,7 +97,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
     : null
 
   return {
-    totalEmployees: summary ? findFirstNumber(summary, ['total_employees']) : undefined,
+    totalEmployees: summary ? findFirstNumber(summary, ['total_employees', 'employees_count', 'employee_count']) : undefined,
     totalReports: summary ? findFirstNumber(summary, ['total_reports']) : undefined,
     averageUpdatePercentage: summary ? findFirstNumber(summary, ['average_update_percentage']) : undefined,
     totalSalaryAmount:
@@ -105,7 +106,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
     totalBaseSalary:
       (salarySummary ? findFirstNumber(salarySummary, ['total_base_salary', 'base_salary_total', 'base_salary']) : undefined),
     totalDeductionAmount:
-      (salarySummary ? findFirstNumber(salarySummary, ['total_deduction_amount', 'deduction_amount_total', 'deduction_total']) : undefined),
+      (salarySummary ? findFirstNumber(salarySummary, ['total_applied_deduction_amount', 'total_deduction_amount', 'deduction_amount_total', 'deduction_total']) : undefined),
     totalBonusAmount:
       (salarySummary ? findFirstNumber(salarySummary, ['total_bonus_amount', 'bonus_amount_total', 'bonus_total']) : undefined),
     totalFinalSalary:
@@ -196,9 +197,11 @@ export function FaultsPage() {
     () => {
       const statisticsSummary = extractEmployeeApiSummary(statisticsQuery.data)
       const salarySummary = extractEmployeeApiSummary(salaryEstimatesQuery.data)
+      const derivedEmployeesWithPenalties = reports.filter((report) => report.hasPenalty).length
+      const derivedEmployeesWithBonuses = reports.filter((report) => report.hasBonus).length
 
       return {
-        totalEmployees: salarySummary.totalEmployees ?? statisticsSummary.totalEmployees,
+        totalEmployees: salarySummary.totalEmployees ?? statisticsSummary.totalEmployees ?? reports.length,
         totalReports: statisticsSummary.totalReports,
         averageUpdatePercentage: statisticsSummary.averageUpdatePercentage,
         totalSalaryAmount: salarySummary.totalSalaryAmount ?? statisticsSummary.totalSalaryAmount,
@@ -207,11 +210,11 @@ export function FaultsPage() {
         totalBonusAmount: salarySummary.totalBonusAmount ?? statisticsSummary.totalBonusAmount,
         totalFinalSalary: salarySummary.totalFinalSalary ?? statisticsSummary.totalFinalSalary,
         totalEstimatedSalary: salarySummary.totalEstimatedSalary ?? statisticsSummary.totalEstimatedSalary,
-        employeesWithPenalties: statisticsSummary.employeesWithPenalties,
-        employeesWithBonuses: statisticsSummary.employeesWithBonuses,
+        employeesWithPenalties: statisticsSummary.employeesWithPenalties ?? derivedEmployeesWithPenalties,
+        employeesWithBonuses: statisticsSummary.employeesWithBonuses ?? derivedEmployeesWithBonuses,
       } satisfies EmployeeApiSummary
     },
-    [salaryEstimatesQuery.data, statisticsQuery.data],
+    [reports, salaryEstimatesQuery.data, statisticsQuery.data],
   )
   const hasReports = reports.length > 0
 
@@ -476,6 +479,15 @@ export function FaultsPage() {
         </div>
       </Card>
 
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <DetailStatTile label="Employees" value={formatCount(apiSummary.totalEmployees)} />
+        <DetailStatTile label="Base salary total" value={formatAmount(apiSummary.totalBaseSalary ?? 0)} />
+        <DetailStatTile label="Applied deductions" value={formatAmount(apiSummary.totalDeductionAmount ?? 0)} tone="danger" />
+        <DetailStatTile label="Bonus total" value={formatAmount(apiSummary.totalBonusAmount ?? 0)} tone="success" />
+        <DetailStatTile label="Estimated total" value={formatAmount(apiSummary.totalEstimatedSalary ?? 0)} />
+        <DetailStatTile label="Final salary total" value={formatAmount(apiSummary.totalFinalSalary ?? apiSummary.totalSalaryAmount ?? 0)} tone="success" />
+      </div>
+
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="mb-5 flex flex-col gap-2">
           <h2 className="text-2xl font-semibold tracking-tight text-white">All Members</h2>
@@ -497,10 +509,14 @@ export function FaultsPage() {
               header: 'User',
               width: '280px',
               render: (row) => (
-                <div>
-                  <p className="font-semibold text-white">{row.fullName}</p>
+                <button
+                  type="button"
+                  onClick={() => openDetailPage(row)}
+                  className="text-left transition hover:opacity-90"
+                >
+                  <p className="font-semibold text-white transition-colors hover:text-blue-300">{row.fullName}</p>
                   <p className="text-xs text-[var(--muted)]">{row.label}</p>
-                </div>
+                </button>
               ),
             },
             {
@@ -514,6 +530,18 @@ export function FaultsPage() {
               header: 'Bonuses',
               align: 'right',
               render: (row) => <span className="text-emerald-400">{formatCount(row.bonusEntries)}</span>,
+            },
+            {
+              key: 'mistakes',
+              header: 'Mistakes',
+              align: 'right',
+              render: (row) => <span className={cn(row.mistakesCount > 0 ? 'text-rose-400' : 'text-white')}>{formatCount(row.mistakesCount)}</span>,
+            },
+            {
+              key: 'deliveryBonusCount',
+              header: 'Delivery bonuses',
+              align: 'right',
+              render: (row) => <span className={cn(row.deliveryBonusCount > 0 ? 'text-emerald-400' : 'text-white')}>{formatCount(row.deliveryBonusCount)}</span>,
             },
             {
               key: 'base',
@@ -556,6 +584,24 @@ export function FaultsPage() {
               render: (row) => <span className="text-emerald-400">{formatAmount(row.bonusAmount)}</span>,
             },
             {
+              key: 'bonusPercent',
+              header: 'Bonus %',
+              align: 'right',
+              render: (row) => <span className={cn(row.totalBonusPercent > 0 ? 'text-emerald-400' : 'text-white')}>{formatPercent(row.totalBonusPercent)}</span>,
+            },
+            {
+              key: 'productivity',
+              header: 'Productivity',
+              align: 'right',
+              render: (row) => (
+                <span className={cn(row.qualifiesProductivityBonus ? 'text-emerald-400' : 'text-white')}>
+                  {Number.isFinite(row.productivityPercentage)
+                    ? `${formatCount(row.updateDays)}/${formatCount(row.workingDays)} / ${formatPercent(row.productivityPercentage)}`
+                    : '-'}
+                </span>
+              ),
+            },
+            {
               key: 'finalSalary',
               header: 'Final salary',
               align: 'right',
@@ -566,31 +612,25 @@ export function FaultsPage() {
               header: 'Actions',
               align: 'right',
               render: (row) => (
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openDetailPage(row)}
-                    className="rounded-lg"
-                  >
-                    View details
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => openPenaltyDialog(row)}
-                    className="rounded-lg"
-                  >
-                    Add penalty
-                  </Button>
-                  <Button
-                    variant="success"
-                    size="sm"
-                    onClick={() => openBonusDialog(row)}
-                    className="rounded-lg"
-                  >
-                    Add bonus
-                  </Button>
+                <div className="flex justify-end">
+                  <ActionsMenu
+                    label={`Open actions for ${row.fullName}`}
+                    items={[
+                      {
+                        label: 'View details',
+                        onSelect: () => openDetailPage(row),
+                      },
+                      {
+                        label: 'Add penalty',
+                        onSelect: () => openPenaltyDialog(row),
+                        tone: 'danger',
+                      },
+                      {
+                        label: 'Add bonus',
+                        onSelect: () => openBonusDialog(row),
+                      },
+                    ]}
+                  />
                 </div>
               ),
             },
@@ -621,6 +661,11 @@ export function FaultsPage() {
                   <Badge variant={report.hasBonus ? 'success' : 'outline'}>
                     {report.hasBonus ? 'Has bonus' : 'No bonus'}
                   </Badge>
+                  <Badge variant={report.qualifiesProductivityBonus ? 'success' : 'outline'}>
+                    {Number.isFinite(report.productivityPercentage)
+                      ? `${formatPercent(report.productivityPercentage)} productivity`
+                      : 'No productivity data'}
+                  </Badge>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -648,16 +693,26 @@ export function FaultsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid gap-3 px-5 py-5 sm:grid-cols-3">
+            <div className="grid gap-3 px-5 py-5 sm:grid-cols-3 xl:grid-cols-4">
               <DetailStatTile label="Final salary" value={formatAmount(report.finalSalary)} />
               <DetailStatTile label="Estimated salary" value={formatAmount(report.estimatedSalary)} />
               <DetailStatTile label="Deduction" value={formatAmount(report.deductionAmount)} tone="danger" />
               <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} />
               <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} />
               <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" />
+              <DetailStatTile label="Bonus %" value={formatPercent(report.totalBonusPercent)} tone="success" />
               <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" />
               <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" />
               <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" />
+              <DetailStatTile label="Mistakes" value={formatCount(report.mistakesCount)} tone="danger" />
+              <DetailStatTile label="Delivery bonuses" value={formatCount(report.deliveryBonusCount)} tone="success" />
+              <DetailStatTile
+                label="Productivity"
+                value={Number.isFinite(report.productivityPercentage)
+                  ? `${formatCount(report.updateDays)}/${formatCount(report.workingDays)} / ${formatPercent(report.productivityPercentage)}`
+                  : '-'}
+                tone={report.qualifiesProductivityBonus ? 'success' : 'default'}
+              />
             </div>
 
             <div className="border-t border-white/8 px-5 py-4">

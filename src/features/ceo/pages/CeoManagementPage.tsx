@@ -399,6 +399,34 @@ export function CeoManagementPage() {
     !rolesQuery.data &&
     (pagesQuery.isLoading || statusesQuery.isLoading || rolesQuery.isLoading)
 
+  function closePageDialog() {
+    setPageDialogOpen(false)
+    setEditingPage(null)
+    setPageForm(initialPageForm)
+  }
+
+  function closeStatusDialog() {
+    setStatusDialogOpen(false)
+    setEditingStatus(null)
+    setStatusForm(initialStatusForm)
+  }
+
+  function closeRoleDialog() {
+    setRoleDialogOpen(false)
+    setEditingRole(null)
+    setRoleForm(initialRoleForm)
+  }
+
+  function reloadManagementPageAfterSave() {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.setTimeout(() => {
+      window.location.reload()
+    }, 180)
+  }
+
   async function refreshAll() {
     const tasks: Array<Promise<unknown>> = [
       pagesQuery.refetch(),
@@ -551,6 +579,8 @@ export function CeoManagementPage() {
     setIsPageSubmitting(true)
 
     try {
+      const shouldReloadPage = pageDialogMode === 'edit'
+
       if (pageDialogMode === 'create') {
         const payload: ManagementPageCreatePayload = {
           name: pageForm.name.trim(),
@@ -576,12 +606,16 @@ export function CeoManagementPage() {
       }
 
       await pagesQuery.refetch()
-      setPageDialogOpen(false)
+      closePageDialog()
       showToast({
         title: pageDialogMode === 'create' ? 'Page created' : 'Page updated',
         description: 'Management pages list refreshed.',
         tone: 'success',
       })
+
+      if (shouldReloadPage) {
+        reloadManagementPageAfterSave()
+      }
     } catch (error) {
       showToast({
         title: 'Page save failed',
@@ -665,6 +699,8 @@ export function CeoManagementPage() {
     setIsStatusSubmitting(true)
 
     try {
+      const shouldReloadPage = statusDialogMode === 'edit'
+
       if (statusDialogMode === 'create') {
         const payload: ManagementStatusCreatePayload = {
           name: statusForm.name.trim(),
@@ -690,12 +726,16 @@ export function CeoManagementPage() {
       }
 
       await statusesQuery.refetch()
-      setStatusDialogOpen(false)
+      closeStatusDialog()
       showToast({
         title: statusDialogMode === 'create' ? 'Status created' : 'Status updated',
         description: 'Management statuses list refreshed.',
         tone: 'success',
       })
+
+      if (shouldReloadPage) {
+        reloadManagementPageAfterSave()
+      }
     } catch (error) {
       showToast({
         title: 'Status save failed',
@@ -751,6 +791,8 @@ export function CeoManagementPage() {
     setIsRoleSubmitting(true)
 
     try {
+      const shouldReloadPage = roleDialogMode === 'edit'
+
       if (roleDialogMode === 'create') {
         const payload: ManagementRoleCreatePayload = {
           name: roleForm.name.trim(),
@@ -772,12 +814,16 @@ export function CeoManagementPage() {
       }
 
       await rolesQuery.refetch()
-      setRoleDialogOpen(false)
+      closeRoleDialog()
       showToast({
         title: roleDialogMode === 'create' ? 'Role created' : 'Role updated',
         description: 'Management roles list refreshed.',
         tone: 'success',
       })
+
+      if (shouldReloadPage) {
+        reloadManagementPageAfterSave()
+      }
     } catch (error) {
       showToast({
         title: 'Role save failed',
@@ -1737,13 +1783,13 @@ export function CeoManagementPage() {
 
       <Dialog
         open={pageDialogOpen}
-        onClose={() => setPageDialogOpen(false)}
+        onClose={closePageDialog}
         title={pageDialogMode === 'create' ? 'Create page' : 'Edit page'}
         description="Management page CRUD form"
         size="xl"
         footer={(
           <>
-            <Button variant="secondary" onClick={() => setPageDialogOpen(false)} disabled={isPageSubmitting}>
+            <Button variant="secondary" onClick={closePageDialog} disabled={isPageSubmitting}>
               Cancel
             </Button>
             <Button onClick={() => void handleSubmitPage()} loading={isPageSubmitting}>
@@ -1829,13 +1875,13 @@ export function CeoManagementPage() {
 
       <Dialog
         open={statusDialogOpen}
-        onClose={() => setStatusDialogOpen(false)}
+        onClose={closeStatusDialog}
         title={statusDialogMode === 'create' ? 'Create status' : 'Edit status'}
         description="Status CRUD form"
         size="xl"
         footer={(
           <>
-            <Button variant="secondary" onClick={() => setStatusDialogOpen(false)} disabled={isStatusSubmitting}>
+            <Button variant="secondary" onClick={closeStatusDialog} disabled={isStatusSubmitting}>
               Cancel
             </Button>
             <Button onClick={() => void handleSubmitStatus()} loading={isStatusSubmitting}>
@@ -1939,13 +1985,13 @@ export function CeoManagementPage() {
 
       <Dialog
         open={roleDialogOpen}
-        onClose={() => setRoleDialogOpen(false)}
+        onClose={closeRoleDialog}
         title={roleDialogMode === 'create' ? 'Create role' : 'Edit role'}
         description="Role CRUD form"
         size="lg"
         footer={(
           <>
-            <Button variant="secondary" onClick={() => setRoleDialogOpen(false)} disabled={isRoleSubmitting}>
+            <Button variant="secondary" onClick={closeRoleDialog} disabled={isRoleSubmitting}>
               Cancel
             </Button>
             <Button onClick={() => void handleSubmitRole()} loading={isRoleSubmitting}>

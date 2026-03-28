@@ -15,6 +15,20 @@ function glyphPath(name: GlyphName) {
           <path d="M5.5 19a6.5 6.5 0 0 1 13 0" />
         </>
       )
+    case 'ai':
+      return (
+        <>
+          <path d="M12 4.75v2.5" />
+          <rect x="6.25" y="7.25" width="11.5" height="9.5" rx="3.25" />
+          <circle cx="10" cy="12" r=".85" fill="currentColor" stroke="none" />
+          <circle cx="14" cy="12" r=".85" fill="currentColor" stroke="none" />
+          <path d="M10 14.5h4" />
+          <path d="M8.5 18v1.25" />
+          <path d="M15.5 18v1.25" />
+          <path d="M4.75 10.5h1.5" />
+          <path d="M17.75 10.5h1.5" />
+        </>
+      )
     case 'ceo':
       return (
         <>

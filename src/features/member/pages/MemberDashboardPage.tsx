@@ -422,19 +422,29 @@ export function MemberDashboardPage() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 xl:grid-cols-4">
+        <div className="mt-5 grid gap-4 xl:grid-cols-6">
           <DetailStatTile label="Estimated salary" value={formatAmount(detail.report.estimatedSalary)} tone="success" />
           <DetailStatTile label="Final salary" value={formatAmount(detail.report.finalSalary)} />
           <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
           <DetailStatTile label="Deduction amount" value={formatAmount(detail.report.deductionAmount)} tone="danger" />
+          <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="success" />
+          <DetailStatTile label="Bonus %" value={formatPercent(detail.report.totalBonusPercent)} tone="success" />
         </div>
 
-        <div className="mt-4 grid gap-4 xl:grid-cols-6">
+        <div className="mt-4 grid gap-4 xl:grid-cols-8">
           <DetailStatTile label="Penalty entries" value={formatCount(detail.report.penaltyEntries)} tone="danger" />
           <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="success" />
           <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
           <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="success" />
+          <DetailStatTile label="Mistakes" value={formatCount(detail.report.mistakesCount)} tone="danger" />
+          <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
+          <DetailStatTile
+            label="Productivity"
+            value={Number.isFinite(detail.report.productivityPercentage)
+              ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)} / ${formatPercent(detail.report.productivityPercentage)}`
+              : '-'}
+            tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
+          />
           <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
             <p className="text-xs text-rose-100/78">Penalty percentage</p>
             <div className="mt-2 flex items-center justify-between gap-3">

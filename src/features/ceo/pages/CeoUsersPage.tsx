@@ -170,10 +170,11 @@ function renderJobTitleTag(jobTitle: string, role?: string | null) {
     <span
       data-keep-color="true"
       className={cn(
-        'mt-1 inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold',
-        isCeo ? 'text-violet-400' : 'text-emerald-400',
+        'mt-1 inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold',
+        isCeo
+          ? 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)]'
+          : 'border-[var(--success-border)] bg-[var(--success-dim)] text-[var(--success-text)]',
       )}
-      style={{ backgroundColor: '#1E1E1E' }}
     >
       {jobTitle}
     </span>

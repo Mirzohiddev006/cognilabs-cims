@@ -8,20 +8,33 @@ import {
   type CimsAiChatMessage,
 } from '../lib/cimsAi'
 import { cn } from '../../../shared/lib/cn'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Textarea } from '../../../shared/ui/textarea'
+import { NavGlyph } from '../../../widgets/navigation/NavGlyph'
 
 type CimsAiWorkspaceProps = {
   mode: 'page' | 'dialog'
 }
 
 function formatMessageTime(createdAt: number) {
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(getIntlLocale(), {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(createdAt))
+}
+
+function AiGlyph({ className }: { className?: string }) {
+  return (
+    <div className={cn(
+      'grid place-items-center rounded-[20px] border border-[var(--blue-border)] bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.26),rgba(15,23,42,0.92))] text-white shadow-[0_16px_48px_rgba(37,99,235,0.18)]',
+      className,
+    )}>
+      <NavGlyph name="ai" className="h-5 w-5" />
+    </div>
+  )
 }
 
 function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
@@ -33,12 +46,11 @@ function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
       )}
     >
       {message.role === 'assistant' ? (
-        <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-500/25 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.22),rgba(15,23,42,0.92))] text-[11px] font-semibold text-white shadow-[0_10px_35px_rgba(37,99,235,0.16)]">
-          AI
-        </div>
+        <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-2xl" />
       ) : null}
 
       <div
+        data-i18n-skip="true"
         className={cn(
           'max-w-[min(100%,780px)] rounded-[28px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
           message.role === 'user'
@@ -48,7 +60,7 @@ function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
       >
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
-            {message.role === 'user' ? 'You' : 'CIMS AI'}
+            {message.role === 'user' ? translateCurrentLiteral('You') : 'CIMS AI'}
           </p>
           <span className="text-[10px] text-[var(--muted)]">{formatMessageTime(message.createdAt)}</span>
         </div>
@@ -59,7 +71,7 @@ function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
 
       {message.role === 'user' ? (
         <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-[var(--border)] bg-[var(--muted-surface)] text-[11px] font-semibold text-[var(--foreground)]">
-          You
+          {translateCurrentLiteral('You')}
         </div>
       ) : null}
     </article>
@@ -70,17 +82,15 @@ function LoadingBubble({ stage }: { stage: CimsAiLoadingStage }) {
   const currentStage = cimsAiLoadingStages.find((item) => item.key === stage) ?? cimsAiLoadingStages[0]
 
   return (
-    <article className="group flex w-full justify-start gap-3">
-      <div className="mt-1 grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-500/25 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.22),rgba(15,23,42,0.92))] text-[11px] font-semibold text-white shadow-[0_10px_35px_rgba(37,99,235,0.16)]">
-        AI
-      </div>
+    <article className="group flex w-full justify-start gap-3" data-i18n-skip="true">
+      <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-2xl" />
 
       <div className="max-w-[min(100%,780px)] rounded-[28px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-5 py-4 text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
             CIMS AI
           </p>
-          <span className="text-[10px] text-[var(--blue-text)]">Thinking</span>
+          <span className="text-[10px] text-[var(--blue-text)]">{translateCurrentLiteral('Thinking')}</span>
         </div>
         <div className="mt-3 flex items-center gap-3">
           <div className="flex items-center gap-1.5">
@@ -89,7 +99,7 @@ function LoadingBubble({ stage }: { stage: CimsAiLoadingStage }) {
             <span className="h-2 w-2 animate-pulse rounded-full bg-blue-300/60 [animation-delay:360ms]" />
             <span className="h-2 w-2 animate-pulse rounded-full bg-blue-300/40 [animation-delay:540ms]" />
           </div>
-          <p className="text-sm leading-6 text-[var(--muted)]">{currentStage.label}</p>
+          <p className="text-sm leading-6 text-[var(--muted)]">{translateCurrentLiteral(currentStage.label)}</p>
         </div>
       </div>
     </article>
@@ -109,20 +119,12 @@ function EmptyConversation({
       mode === 'page' ? 'px-8 py-10 lg:px-10' : 'px-1 py-1',
     )}>
       <div className="mx-auto max-w-3xl text-center">
-        <div className="mx-auto grid h-14 w-14 place-items-center rounded-[20px] border border-blue-500/20 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.24),rgba(15,23,42,0.92))] text-white shadow-[0_18px_60px_rgba(37,99,235,0.18)]">
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-            <path d="M12 4v5" strokeLinecap="round" />
-            <path d="M12 15v5" strokeLinecap="round" />
-            <path d="M4 12h5" strokeLinecap="round" />
-            <path d="M15 12h5" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="3.25" />
-          </svg>
-        </div>
+        <AiGlyph className="mx-auto h-14 w-14" />
         <h2 className="mt-5 text-2xl font-semibold tracking-tight text-[var(--foreground)]">
-          Ask CIMS AI from anywhere
+          {translateCurrentLiteral('Ask CIMS AI from anywhere')}
         </h2>
         <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-          Use it for team updates, CRM signals, payment priorities, and fast executive summaries.
+          {translateCurrentLiteral('Use it for team updates, CRM signals, payment priorities, and fast executive summaries.')}
         </p>
       </div>
 
@@ -137,7 +139,7 @@ function EmptyConversation({
             onClick={() => onPrompt(prompt)}
             className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
           >
-            {prompt}
+            {translateCurrentLiteral(prompt)}
           </button>
         ))}
       </div>
@@ -170,14 +172,14 @@ function Composer({
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleKeyDown}
           rows={mode === 'page' ? 5 : 4}
-          placeholder="Write a question for CIMS AI. Ctrl/Cmd + Enter to send."
+          placeholder={translateCurrentLiteral('Write a question for CIMS AI. Ctrl/Cmd + Enter to send.')}
           className="min-h-0 resize-none border-0 bg-transparent px-2 py-2 text-sm leading-7 shadow-none hover:bg-transparent focus:bg-transparent focus:shadow-none"
         />
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 px-2 pb-1">
           <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--muted)]">
-            <span>Frontend chat history</span>
+            <span>{translateCurrentLiteral('Frontend chat history')}</span>
             <span className="h-1 w-1 rounded-full bg-[var(--border)]" />
-            <span>Shared across pages</span>
+            <span>{translateCurrentLiteral('Shared across pages')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -185,10 +187,10 @@ function Composer({
               onClick={() => setDraft('')}
               disabled={!draft.trim() || isSubmitting}
             >
-              Reset
+              {translateCurrentLiteral('Reset')}
             </Button>
             <Button onClick={() => void submitQuestion()} loading={isSubmitting}>
-              Send
+              {translateCurrentLiteral('Send')}
             </Button>
           </div>
         </div>
@@ -217,14 +219,14 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
         <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">CIMS AI</p>
-            <h2 className="mt-1 text-base font-semibold tracking-tight text-[var(--foreground)]">Quick assistant</h2>
+            <h2 className="mt-1 text-base font-semibold tracking-tight text-[var(--foreground)]">{translateCurrentLiteral('Quick assistant')}</h2>
           </div>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/ceo/ai">Open page</Link>
+            <Link to="/ceo/ai">{translateCurrentLiteral('Open page')}</Link>
           </Button>
         </div>
 
-        <div ref={streamRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div ref={streamRef} data-chat-stream="true" className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           {history.length > 0 ? (
             <div className="space-y-4">
               {history.map((message) => (
@@ -251,17 +253,17 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
         <div className="px-1">
           <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--blue-text)]">CIMS AI</p>
           <h1 className="mt-3 text-[2.35rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-            Executive copilot for live operations
+            {translateCurrentLiteral('Executive copilot for live operations')}
           </h1>
           <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--muted)]">
-            Ask about updates, CRM movement, workload pressure, and management decisions without leaving your current workflow.
+            {translateCurrentLiteral('Ask about updates, CRM movement, workload pressure, and management decisions without leaving your current workflow.')}
           </p>
         </div>
 
         <Card variant="glass" className="overflow-hidden rounded-[30px] p-0">
           <div className="border-b border-[var(--border)] px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">Prompt library</p>
-            <p className="mt-2 text-sm text-[var(--muted)]">Fast starts for CEO-level questions.</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{translateCurrentLiteral('Prompt library')}</p>
+            <p className="mt-2 text-sm text-[var(--muted)]">{translateCurrentLiteral('Fast starts for CEO-level questions.')}</p>
           </div>
           <div className="grid gap-3 px-5 py-5">
             {cimsAiQuickPrompts.map((prompt) => (
@@ -271,7 +273,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
                 onClick={() => fillPrompt(prompt)}
                 className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
               >
-                {prompt}
+                {translateCurrentLiteral(prompt)}
               </button>
             ))}
           </div>
@@ -284,18 +286,18 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
 
         <div className="relative flex items-center justify-between gap-4 border-b border-[var(--border)] px-6 py-5 lg:px-8">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">Shared conversation</p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">Chat with CIMS AI</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">{translateCurrentLiteral('Shared conversation')}</p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">{translateCurrentLiteral('Chat with CIMS AI')}</h2>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">{history.length} turns</Badge>
+            <Badge variant="secondary">{history.length} {translateCurrentLiteral('turns')}</Badge>
             <Button variant="secondary" onClick={clearConversation} disabled={history.length === 0}>
-              Clear chat
+              {translateCurrentLiteral('Clear chat')}
             </Button>
           </div>
         </div>
 
-        <div ref={streamRef} className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 lg:px-8">
+        <div ref={streamRef} data-chat-stream="true" className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 lg:px-8">
           {history.length > 0 ? (
             <div className="space-y-5">
               {history.map((message) => (

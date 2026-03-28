@@ -15,7 +15,7 @@ type BoardCardProps = {
 
 export function BoardCard({ board, onEdit, onArchive, canManage = true }: BoardCardProps) {
   const { t } = useLocale()
-  const boardUrl = `/boards/${board.id}?project=${board.project_id}`
+  const boardUrl = `/projects/${board.project_id}?board=${board.id}`
 
   return (
     <div className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.2)]">

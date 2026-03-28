@@ -58,7 +58,7 @@ const sizes = {
 }
 
 const baseClassName =
-  'inline-flex items-center justify-center font-medium ' +
+  'inline-flex items-center justify-center font-medium tracking-[0.01em] ' +
   'transition-[color,box-shadow,background-color,border-color,transform,opacity] ' +
   'duration-150 active:translate-y-px ' +
   'disabled:pointer-events-none disabled:opacity-40 ' +

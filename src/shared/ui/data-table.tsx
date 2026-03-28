@@ -114,7 +114,7 @@ export function DataTable<T>({
                   style={col.width ? { width: col.width } : undefined}
                   className={cn(
                     headPadding,
-                    'border-b border-[var(--border)] text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--caption)] whitespace-nowrap',
+                    'ui-table-heading border-b border-[var(--border)] text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--caption)] whitespace-nowrap',
                     alignClassName[col.align ?? 'left'],
                   )}
                 >

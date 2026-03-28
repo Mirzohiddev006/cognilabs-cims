@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { ceoService, type CeoMessageRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import { crmService } from '../../../shared/api/services/crm.service'
-import type { CustomerSummary, PaymentItem } from '../../../shared/api/types'
+import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { getCustomerDisplayMeta, getCustomerDisplayName } from '../../../shared/lib/customer-display'
-import { formatCompactNumber, formatCurrency, formatShortDate } from '../../../shared/lib/format'
+import { formatCurrency, formatShortDate } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
-import { Badge, StatusBadge } from '../../../shared/ui/badge'
+import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
@@ -18,7 +17,6 @@ import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../sh
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
-import { MetricCard } from '../components/MetricCard'
 import { PaymentFormModal, type PaymentFormValues } from '../components/PaymentFormModal'
 
 const initialBroadcastMessage: MessageComposerValues = {
@@ -45,68 +43,7 @@ const initialCompanyPaymentForm: CompanyPaymentFormValues = {
 const emptyPayments: PaymentItem[] = []
 const emptyCompanyPayments: CompanyPaymentRecord[] = []
 const emptyMessages: CeoMessageRecord[] = []
-const emptyCustomers: CustomerSummary[] = []
 const showRecurringPayments = false
-
-function normalizeCustomerId(value: unknown) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) && value > 0 ? value : null
-  }
-
-  if (typeof value === 'string') {
-    const parsed = Number(value.trim())
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
-  }
-
-  return null
-}
-
-function mergeCustomerSummary(base: CustomerSummary, detail?: CustomerSummary | null): CustomerSummary {
-  if (!detail) {
-    return base
-  }
-
-  return {
-    ...detail,
-    ...base,
-    full_name: detail.full_name ?? base.full_name,
-    fullName: detail.fullName ?? base.fullName,
-    displayName: detail.displayName ?? base.displayName,
-    name: detail.name ?? base.name,
-    surname: detail.surname ?? base.surname,
-    first_name: detail.first_name ?? base.first_name,
-    last_name: detail.last_name ?? base.last_name,
-    firstName: detail.firstName ?? base.firstName,
-    lastName: detail.lastName ?? base.lastName,
-    display_name: detail.display_name ?? base.display_name,
-    customer_name: detail.customer_name ?? base.customer_name,
-    customerName: detail.customerName ?? base.customerName,
-    contact_name: detail.contact_name ?? base.contact_name,
-    full: detail.full ?? base.full,
-    client_name: detail.client_name ?? base.client_name,
-    lead_name: detail.lead_name ?? base.lead_name,
-    user_name: detail.user_name ?? base.user_name,
-    fio: detail.fio ?? base.fio,
-    username: detail.username ?? base.username,
-    phone_number: detail.phone_number ?? base.phone_number,
-    phone: detail.phone ?? base.phone,
-    customer: detail.customer ?? base.customer,
-    client: detail.client ?? base.client,
-    lead: detail.lead ?? base.lead,
-    contact: detail.contact ?? base.contact,
-    profile: detail.profile ?? base.profile,
-    details: detail.details ?? base.details,
-    platform: detail.platform ?? base.platform,
-    platform_name: detail.platform_name ?? base.platform_name,
-    source_platform: detail.source_platform ?? base.source_platform,
-    social_platform: detail.social_platform ?? base.social_platform,
-    source: detail.source ?? base.source,
-    lead_source: detail.lead_source ?? base.lead_source,
-    channel: detail.channel ?? base.channel,
-    platforms: detail.platforms ?? base.platforms,
-    assistant_name: detail.assistant_name ?? base.assistant_name,
-  }
-}
 
 function toPaymentFormValues(payment?: PaymentItem | null): PaymentFormValues {
   if (!payment) {
@@ -158,38 +95,6 @@ export function CeoDashboardPage() {
   const { confirm } = useConfirm()
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
-  const todayMetricsQuery = useAsyncData(() => ceoService.getTodayMetrics(), [])
-  const todayCustomerDetailsQuery = useAsyncData(
-    async () => {
-      const rows = todayMetricsQuery.data?.today_customers ?? emptyCustomers
-
-      if (rows.length === 0) {
-        return rows
-      }
-
-      const uniqueIds = Array.from(
-        new Set(rows.map((row) => normalizeCustomerId(row.id)).filter((id): id is number => id !== null)),
-      )
-
-      const detailResults = await Promise.all(
-        uniqueIds.map(async (customerId) => {
-          try {
-            const detail = await crmService.detail(customerId)
-            return [customerId, detail] as const
-          } catch {
-            return null
-          }
-        }),
-      )
-
-      const detailMap = new Map(
-        detailResults.filter((entry): entry is readonly [number, CustomerSummary] => Boolean(entry)),
-      )
-
-      return rows.map((row) => mergeCustomerSummary(row, detailMap.get(normalizeCustomerId(row.id) ?? -1)))
-    },
-    [todayMetricsQuery.data],
-  )
   const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
   const companyPaymentsQuery = useAsyncData(() => ceoService.listCompanyPayments(), [])
@@ -231,23 +136,10 @@ export function CeoDashboardPage() {
   const [isCompanyPaymentOpen, setIsCompanyPaymentOpen] = useState(false)
   const [isCompanyPaymentSubmitting, setIsCompanyPaymentSubmitting] = useState(false)
 
-  const statistics = dashboardQuery.data?.statistics
-  const metrics = todayMetricsQuery.data
-  const hasTodayCustomers = (metrics?.today_customers?.length ?? 0) > 0
-  const todayCustomers = hasTodayCustomers
-    ? (todayCustomerDetailsQuery.data?.length ? todayCustomerDetailsQuery.data : (metrics?.today_customers ?? emptyCustomers))
-    : emptyCustomers
-  const users = dashboardQuery.data?.users ?? []
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data ?? emptyCompanyPayments
 
-  const totalPlannedPayments = useMemo(() => {
-    return payments.reduce((sum, payment) => sum + Number(payment.summ ?? 0), 0)
-  }, [payments])
-  const totalRecurringPayments = useMemo(() => {
-    return companyPayments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0)
-  }, [companyPayments])
   const activeRecurringPayments = useMemo(() => {
     return companyPayments.filter((payment) => payment.is_active).length
   }, [companyPayments])
@@ -255,7 +147,6 @@ export function CeoDashboardPage() {
   async function refreshAll() {
     await Promise.allSettled([
       dashboardQuery.refetch(),
-      todayMetricsQuery.refetch(),
       messagesQuery.refetch(),
       paymentsQuery.refetch(),
       companyPaymentsQuery.refetch(),
@@ -356,7 +247,7 @@ export function CeoDashboardPage() {
         })
       }
 
-      await Promise.all([paymentsQuery.refetch(), todayMetricsQuery.refetch()])
+      await paymentsQuery.refetch()
       setIsPaymentOpen(false)
       showToast({
         title: paymentMode === 'create' ? 'Payment yaratildi' : 'Payment yangilandi',
@@ -453,7 +344,7 @@ export function CeoDashboardPage() {
   async function handleTogglePayment(payment: PaymentItem) {
     try {
       await ceoService.togglePayment(payment.id)
-      await Promise.all([paymentsQuery.refetch(), todayMetricsQuery.refetch()])
+      await paymentsQuery.refetch()
       showToast({
         title: 'Payment holati yangilandi',
         description: `${payment.project} payment status o'zgartirildi.`,
@@ -483,7 +374,7 @@ export function CeoDashboardPage() {
 
     try {
       await ceoService.deletePayment(payment.id)
-      await Promise.all([paymentsQuery.refetch(), todayMetricsQuery.refetch()])
+      await paymentsQuery.refetch()
       showToast({
         title: "Payment o'chirildi",
         description: "Payments ro'yxati yangilandi.",
@@ -528,7 +419,7 @@ export function CeoDashboardPage() {
     }
   }
 
-  if (dashboardQuery.isLoading && todayMetricsQuery.isLoading && !dashboardQuery.data && !todayMetricsQuery.data) {
+  if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Day 6"
@@ -538,7 +429,7 @@ export function CeoDashboardPage() {
     )
   }
 
-  if (dashboardQuery.isError && todayMetricsQuery.isError && !dashboardQuery.data && !todayMetricsQuery.data) {
+  if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Day 6"
@@ -574,49 +465,6 @@ export function CeoDashboardPage() {
           </div>
         }
       />
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
-        <MetricCard
-          label="Users"
-          value={formatCompactNumber(statistics?.user_count ?? users.length)}
-          caption="Platformadagi jami foydalanuvchilar"
-          delta={`${messages.length} sent`}
-          deltaLabel="message activity"
-          trend="up"
-          accent="blue"
-          sparkBars={[6, 8, 9, 11, 10, 12]}
-        />
-        <MetricCard
-          label="Need to call"
-          value={formatCompactNumber(metrics?.need_to_call_count ?? 0)}
-          caption="Operativ follow-up navbati"
-          delta={`${metrics?.today_customers?.length ?? 0} new`}
-          deltaLabel="today customers"
-          trend="flat"
-          accent="violet"
-          sparkBars={[4, 5, 7, 6, 8, 7]}
-        />
-        <MetricCard
-          label="Due today"
-          value={formatCompactNumber(metrics?.due_payments_today ?? 0)}
-          caption="Unpaid payment rows for today"
-          delta={`${payments.filter((item) => !item.payment).length} pending`}
-          deltaLabel="overall queue"
-          trend={(metrics?.due_payments_today ?? 0) > 0 ? 'down' : 'flat'}
-          accent="warning"
-          sparkBars={[5, 4, 6, 3, 4, Math.max(metrics?.due_payments_today ?? 0, 1)]}
-        />
-        <MetricCard
-          label="Total balance"
-          value={metrics?.total_balance_formatted ?? formatCurrency(metrics?.total_balance_uzs ?? 0)}
-          caption="Latest DB exchange rate bilan"
-          delta={formatCurrency(totalPlannedPayments)}
-          deltaLabel="planned pipeline"
-          trend="up"
-          accent="success"
-          sparkBars={[2, 3, 4, 5, 5, 6]}
-        />
-      </div>
 
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -716,100 +564,6 @@ export function CeoDashboardPage() {
           void chartsQuery.refetch()
         }}
       />
-
-      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              eyebrow="Today metrics"
-              title="Bugungi customerlar"
-            />
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="blue" dot>
-                {metrics?.today_customers?.length ?? 0} customers
-              </Badge>
-              <Badge variant="warning" dot pulse={(metrics?.due_payments_today ?? 0) > 0}>
-                {metrics?.due_payments_today ?? 0} due
-              </Badge>
-            </div>
-          </div>
-          <div className="mt-6">
-            <DataTable
-              caption="Today customers"
-              rows={todayCustomers}
-              getRowKey={(row) => String(row.id)}
-              zebra
-              emptyState={
-                <EmptyStateBlock
-                  eyebrow="Today customers"
-                  title="Bugungi customer yo'q"
-                  description="Today metrics endpoint bo'sh ro'yxat qaytardi."
-                />
-              }
-              columns={[
-                {
-                  key: 'full_name',
-                  header: 'Customer',
-                  render: (row) => (
-                    <div>
-                      <p className="font-semibold text-(--foreground)">{getCustomerDisplayName(row)}</p>
-                      <p className="text-xs text-(--muted)">{getCustomerDisplayMeta(row)}</p>
-                    </div>
-                  ),
-                },
-                {
-                  key: 'status',
-                  header: 'Status',
-                  render: (row) => <StatusBadge status={row.status} />,
-                },
-                { key: 'assistant', header: 'Assistant', render: (row) => row.assistant_name || '-' },
-                { key: 'created_at', header: 'Created', render: (row) => formatShortDate(row.created_at) },
-              ]}
-            />
-          </div>
-        </Card>
-
-        <Card variant="glass" className="overflow-hidden p-0">
-          <div className="border-b border-white/10 px-6 py-6">
-            <SectionTitle
-              eyebrow="Summary"
-              title="CEO quick snapshot"
-            />
-          </div>
-          <div className="grid gap-3 px-6 py-5">
-            <div className="rounded-[20px] border border-blue-500/20 bg-blue-600/10 px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-200/80">Messages sent</p>
-              <p className="mt-2 text-xl font-semibold text-white">{messages.length}</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[18px] border border-white/10 bg-(--card) px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#3b82f6]">Payments rows</p>
-                <p className="mt-2 text-lg font-semibold text-(--foreground)">{payments.length}</p>
-                <p className="mt-1 text-[11px] text-(--muted)">CRUD bilan boshqariladi</p>
-              </div>
-              <div className="rounded-[18px] border border-white/10 bg-(--card) px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/85">Recurring active</p>
-                <p className="mt-2 text-lg font-semibold text-(--foreground)">{activeRecurringPayments}</p>
-                <p className="mt-1 text-[11px] text-(--muted)">Company reminderlar ichida active holatlar</p>
-              </div>
-            </div>
-            <div className="rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] px-4 py-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-violet-200/80">Recurring pipeline</p>
-                  <p className="mt-2 text-xl font-semibold text-white">{formatCurrency(totalRecurringPayments)}</p>
-                </div>
-                <Badge variant="success" dot>
-                  {companyPayments.length} reminders
-                </Badge>
-              </div>
-              <p className="mt-3 text-[11px] leading-5 text-(--muted)">
-                Recurring company payments alohida endpointdan olinadi va CRUD oqimi bilan boshqariladi.
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="p-6">

@@ -10,6 +10,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
   closestCorners,
+  pointerWithin,
 } from '@dnd-kit/core'
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable'
 import type { ColumnRecord, CardRecord, UserSummary } from '../../../shared/api/services/projects.service'
@@ -68,6 +69,10 @@ export function KanbanBoard({
   )
 
   const columnIds = useMemo(() => localColumns.map((c) => `col-${c.id}`), [localColumns])
+  const collisionDetectionStrategy = useCallback((args: Parameters<typeof closestCorners>[0]) => {
+    const pointerIntersections = pointerWithin(args)
+    return pointerIntersections.length > 0 ? pointerIntersections : closestCorners(args)
+  }, [])
 
   const onDragStart = useCallback((event: DragStartEvent) => {
     preDragColumnsRef.current = localColumnsRef.current
@@ -113,12 +118,19 @@ export function KanbanBoard({
         const movedCard = prev[sourceColIdx].cards.find((c) => c.id === activeCard.id)
         if (!movedCard) return prev
         const overCardIdx = prev[targetColIdx].cards.findIndex((c) => c.id === overCard.id)
+        const isBelowOverCard =
+          Boolean(active.rect.current.translated) &&
+          active.rect.current.translated!.top > over.rect.top + over.rect.height / 2
+        const insertIndex = Math.max(
+          0,
+          Math.min(overCardIdx + (isBelowOverCard ? 1 : 0), prev[targetColIdx].cards.length),
+        )
 
         const nextColumns = prev.map((col, i) => {
           if (i === sourceColIdx) return { ...col, cards: col.cards.filter((c) => c.id !== activeCard.id) }
           if (i === targetColIdx) {
             const newCards = [...col.cards]
-            newCards.splice(overCardIdx, 0, { ...movedCard, column_id: col.id })
+            newCards.splice(insertIndex, 0, { ...movedCard, column_id: col.id })
             return { ...col, cards: newCards }
           }
           return col
@@ -208,7 +220,7 @@ export function KanbanBoard({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={collisionDetectionStrategy}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}

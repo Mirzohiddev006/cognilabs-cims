@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { CimsAiWorkspace } from '../../features/ceo/components/CimsAiWorkspace'
+import { translateCurrentLiteral } from '../../shared/i18n/translations'
 import { cn } from '../../shared/lib/cn'
+import { NavGlyph } from '../navigation/NavGlyph'
 
 export function CimsAiLauncher() {
   const location = useLocation()
@@ -54,7 +56,7 @@ export function CimsAiLauncher() {
     <>
       <button
         type="button"
-        aria-label="Close CIMS AI backdrop"
+        aria-label={translateCurrentLiteral('Close CIMS AI backdrop')}
         onClick={() => setIsOpen(false)}
         className={cn(
           'fixed inset-0 z-[64] transition-all duration-200',
@@ -85,15 +87,9 @@ export function CimsAiLauncher() {
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         className="fixed bottom-6 right-4 z-[66] grid h-14 w-14 place-items-center rounded-[20px] border border-blue-400/22 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.28),rgba(15,23,42,0.98))] text-white shadow-[0_18px_60px_rgba(37,99,235,0.24)] transition hover:scale-[1.02] hover:border-blue-300/35 hover:shadow-[0_24px_70px_rgba(37,99,235,0.34)] sm:right-6"
-        aria-label={isOpen ? 'Close CIMS AI launcher' : 'Open CIMS AI launcher'}
+        aria-label={isOpen ? translateCurrentLiteral('Close CIMS AI launcher') : translateCurrentLiteral('Open CIMS AI launcher')}
       >
-        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-          <path d="M12 4v5" strokeLinecap="round" />
-          <path d="M12 15v5" strokeLinecap="round" />
-          <path d="M4 12h5" strokeLinecap="round" />
-          <path d="M15 12h5" strokeLinecap="round" />
-          <circle cx="12" cy="12" r="3.25" />
-        </svg>
+        <NavGlyph name="ai" className="h-6 w-6" aria-hidden="true" />
       </button>
     </>
   )

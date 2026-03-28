@@ -1,5 +1,6 @@
 export type GlyphName =
   | 'member'
+  | 'ai'
   | 'ceo'
   | 'crm'
   | 'faults'
@@ -13,6 +14,7 @@ export type GlyphName =
 
 export function getNavigationGlyphName(pathname: string): GlyphName {
   if (pathname.startsWith('/member')) return 'member'
+  if (pathname.startsWith('/ceo/ai')) return 'ai'
   if (pathname.startsWith('/ceo')) return 'ceo'
   if (pathname.startsWith('/crm')) return 'crm'
   if (pathname.startsWith('/faults')) return 'faults'

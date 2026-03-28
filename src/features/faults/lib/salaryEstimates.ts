@@ -15,11 +15,20 @@ export type SalaryEstimateSnapshot = {
   penaltyPoints?: number
   penaltyEntries?: number
   penaltyPercentage?: number
+  mistakesCount?: number
   deductionAmount?: number
+  rawDeductionAmount?: number
+  appliedDeductionAmount?: number
   afterPenalty?: number
   bonusEntries?: number
+  deliveryBonusCount?: number
   bonusAmount?: number
+  totalBonusPercent?: number
   finalSalary?: number
+  workingDays?: number
+  updateDays?: number
+  productivityPercentage?: number
+  qualifiesProductivityBonus?: boolean
 }
 
 export type EmployeeSalaryReport = {
@@ -37,6 +46,13 @@ export type EmployeeSalaryReport = {
   penaltyEntries: number
   bonusEntries: number
   penaltyPercentage: number
+  mistakesCount: number
+  deliveryBonusCount: number
+  totalBonusPercent: number
+  workingDays: number
+  updateDays: number
+  productivityPercentage: number
+  qualifiesProductivityBonus: boolean
   hasPenalty: boolean
   hasBonus: boolean
 }
@@ -554,7 +570,7 @@ function areAmountsEquivalent(left: number, right: number) {
 
 function resolveSalaryMetrics(snapshot?: SalaryEstimateSnapshot | null) {
   const baseSalary = getOptionalMetric(snapshot?.baseSalary)
-  const deductionAmount = getOptionalMetric(snapshot?.deductionAmount)
+  const deductionAmount = getOptionalMetric(snapshot?.appliedDeductionAmount ?? snapshot?.deductionAmount ?? snapshot?.rawDeductionAmount)
   const bonusAmount = getOptionalMetric(snapshot?.bonusAmount)
   const snapshotAfterPenalty = getOptionalMetric(snapshot?.afterPenalty)
   const snapshotFinalSalary = getOptionalMetric(snapshot?.finalSalary)
@@ -671,7 +687,9 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     findFirstRecord(parsedEntry, ['user', 'employee', 'member']) ??
     findFirstRecord(parsedEntry, ['member_data', 'user_data'])
   const salaryRecord = findFirstRecord(parsedEntry, ['salary', 'estimate', 'salary_estimate', 'summary'])
-  const sources = [parsedEntry, userRecord, salaryRecord].filter(Boolean) as UnknownRecord[]
+  const policyRecord = findFirstRecord(parsedEntry, ['policy'])
+  const productivityRecord = findFirstRecord(parsedEntry, ['update_productivity', 'updateProductivity', 'productivity'])
+  const sources = [parsedEntry, userRecord, salaryRecord, policyRecord].filter(Boolean) as UnknownRecord[]
 
   const penalties =
     findFirstArray(parsedEntry, ['penalties', 'penalty_entries', 'deductions']) ??
@@ -685,22 +703,35 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
   const userId =
     sources.map((source) => findFirstNumber(source, ['user_id', 'employee_id', 'member_id', 'id'])).find((value) => value !== undefined) ?? null
   const baseSalary =
-    sources.map((source) => findFirstNumber(source, ['base_salary', 'default_salary', 'salary_amount', 'base'])).find((value) => value !== undefined)
+    sources.map((source) => findFirstNumber(source, ['base_salary', 'salary_base', 'default_salary', 'salary_amount', 'base'])).find((value) => value !== undefined)
+  const rawDeductionAmount =
+    sources.map((source) => findFirstNumber(source, ['raw_deduction_amount'])).find((value) => value !== undefined)
+  const appliedDeductionAmount =
+    sources.map((source) => findFirstNumber(source, ['applied_deduction_amount', 'total_applied_deduction_amount', 'deduction_amount', 'deduction', 'total_deduction', 'penalty_amount'])).find((value) => value !== undefined)
   const deductionAmount =
-    sources.map((source) => findFirstNumber(source, ['deduction_amount', 'deduction', 'total_deduction', 'penalty_amount'])).find((value) => value !== undefined) ??
+    appliedDeductionAmount ??
+    rawDeductionAmount ??
     sumByKeys(penalties, ['deduction_amount', 'deduction', 'amount', 'penalty_amount'])
   const bonusAmount =
-    sources.map((source) => findFirstNumber(source, ['bonus_amount', 'total_bonus', 'bonus'])).find((value) => value !== undefined) ??
+    sources.map((source) => findFirstNumber(source, ['total_bonus_amount', 'bonus_amount', 'total_bonus', 'bonus'])).find((value) => value !== undefined) ??
     sumByKeys(bonuses, ['bonus_amount', 'amount', 'bonus'])
+  const mistakesCount =
+    sources.map((source) => findFirstNumber(source, ['mistakes_count', 'mistake_count'])).find((value) => value !== undefined)
   const penaltyPoints =
     sources.map((source) => findFirstNumber(source, ['penalty_points', 'points', 'total_penalty_points'])).find((value) => value !== undefined) ??
     sumByKeys(penalties, ['penalty_points', 'points', 'value'])
   const penaltyEntries =
     sources.map((source) => findFirstNumber(source, ['penalty_entries', 'penalties_count', 'penalty_count'])).find((value) => value !== undefined) ??
+    mistakesCount ??
     penalties.length
+  const deliveryBonusCount =
+    sources.map((source) => findFirstNumber(source, ['delivery_bonus_count', 'delivery_bonuses_count'])).find((value) => value !== undefined)
   const bonusEntries =
     sources.map((source) => findFirstNumber(source, ['bonus_entries', 'bonuses_count', 'bonus_count'])).find((value) => value !== undefined) ??
+    deliveryBonusCount ??
     bonuses.length
+  const totalBonusPercent =
+    sources.map((source) => findFirstNumber(source, ['total_bonus_percent', 'bonus_percent'])).find((value) => value !== undefined)
   const penaltyPercentage =
     sources.map((source) => findFirstNumber(source, ['penalty_percentage', 'deduction_percentage'])).find((value) => value !== undefined)
   const afterPenalty =
@@ -709,6 +740,14 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     sources.map((source) => findFirstNumber(source, ['final_salary', 'final_amount', 'payable_salary'])).find((value) => value !== undefined)
   const estimatedSalary =
     sources.map((source) => findFirstNumber(source, ['estimated_salary', 'salary_estimate', 'salary_amount'])).find((value) => value !== undefined)
+  const workingDays =
+    productivityRecord ? findFirstNumber(productivityRecord, ['working_days']) : undefined
+  const updateDays =
+    productivityRecord ? findFirstNumber(productivityRecord, ['update_days']) : undefined
+  const productivityPercentage =
+    productivityRecord ? findFirstNumber(productivityRecord, ['percentage', 'update_percentage', 'completion_percentage']) : undefined
+  const qualifiesProductivityBonus =
+    productivityRecord ? toBoolean(productivityRecord.qualifies_productivity_bonus ?? productivityRecord.qualifiesBonus) : null
   const userName = resolveRecordDisplayName(...sources)
   const roleLabel =
     sources.map((source) => findFirstString(source, ['job_title', 'role_name', 'role'])).find(Boolean)
@@ -725,11 +764,20 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     penaltyPoints,
     penaltyEntries,
     penaltyPercentage,
+    mistakesCount,
     deductionAmount,
+    rawDeductionAmount,
+    appliedDeductionAmount,
     afterPenalty,
     bonusEntries,
+    deliveryBonusCount,
     bonusAmount,
+    totalBonusPercent,
     finalSalary,
+    workingDays,
+    updateDays,
+    productivityPercentage,
+    qualifiesProductivityBonus: qualifiesProductivityBonus ?? undefined,
   }
 }
 
@@ -748,9 +796,20 @@ export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstima
     estimatedSalary,
   } = resolveSalaryMetrics(snapshot)
   const penaltyPoints = getOptionalCount(snapshot?.penaltyPoints)
-  const penaltyEntries = getOptionalCount(snapshot?.penaltyEntries)
-  const bonusEntries = getOptionalCount(snapshot?.bonusEntries)
+  const mistakesCount = getOptionalCount(snapshot?.mistakesCount)
+  const deliveryBonusCount = getOptionalCount(snapshot?.deliveryBonusCount)
+  const penaltyEntries = Number.isFinite(getOptionalCount(snapshot?.penaltyEntries))
+    ? getOptionalCount(snapshot?.penaltyEntries)
+    : mistakesCount
+  const bonusEntries = Number.isFinite(getOptionalCount(snapshot?.bonusEntries))
+    ? getOptionalCount(snapshot?.bonusEntries)
+    : deliveryBonusCount
   const penaltyPercentage = getOptionalMetric(normalizePercentageValue(snapshot?.penaltyPercentage))
+  const totalBonusPercent = getOptionalMetric(normalizePercentageValue(snapshot?.totalBonusPercent))
+  const workingDays = getOptionalCount(snapshot?.workingDays)
+  const updateDays = getOptionalCount(snapshot?.updateDays)
+  const productivityPercentage = getOptionalMetric(normalizePercentageValue(snapshot?.productivityPercentage))
+  const qualifiesProductivityBonus = snapshot?.qualifiesProductivityBonus === true
 
   return {
     id: user.id,
@@ -767,14 +826,24 @@ export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstima
     penaltyEntries,
     bonusEntries,
     penaltyPercentage,
+    mistakesCount,
+    deliveryBonusCount,
+    totalBonusPercent,
+    workingDays,
+    updateDays,
+    productivityPercentage,
+    qualifiesProductivityBonus,
     hasPenalty:
       (Number.isFinite(deductionAmount) && deductionAmount > 0) ||
+      (Number.isFinite(mistakesCount) && mistakesCount > 0) ||
       (Number.isFinite(penaltyPoints) && penaltyPoints > 0) ||
       (Number.isFinite(penaltyEntries) && penaltyEntries > 0) ||
       (Number.isFinite(penaltyPercentage) && penaltyPercentage > 0),
     hasBonus:
       (Number.isFinite(bonusAmount) && bonusAmount > 0) ||
-      (Number.isFinite(bonusEntries) && bonusEntries > 0),
+      (Number.isFinite(bonusEntries) && bonusEntries > 0) ||
+      (Number.isFinite(totalBonusPercent) && totalBonusPercent > 0) ||
+      qualifiesProductivityBonus,
   }
 }
 
@@ -880,12 +949,35 @@ export function mergeReportWithSnapshot(
   const baseSalary = resolvedSalaryMetrics?.baseSalary ?? report.baseSalary
   const deductionAmount = resolvedSalaryMetrics?.deductionAmount ?? report.deductionAmount
   const bonusAmount = resolvedSalaryMetrics?.bonusAmount ?? report.bonusAmount
+  const mistakesCount = snapshot ? getOptionalCount(snapshot.mistakesCount) : report.mistakesCount
+  const deliveryBonusCount = snapshot ? getOptionalCount(snapshot.deliveryBonusCount) : report.deliveryBonusCount
   const penaltyPoints = snapshot ? getOptionalCount(snapshot.penaltyPoints) : report.penaltyPoints
-  const penaltyEntries = snapshot ? getOptionalCount(snapshot.penaltyEntries) : report.penaltyEntries
-  const bonusEntries = snapshot ? getOptionalCount(snapshot.bonusEntries) : report.bonusEntries
+  const penaltyEntries = snapshot
+    ? (
+      Number.isFinite(getOptionalCount(snapshot.penaltyEntries))
+        ? getOptionalCount(snapshot.penaltyEntries)
+        : mistakesCount
+    )
+    : report.penaltyEntries
+  const bonusEntries = snapshot
+    ? (
+      Number.isFinite(getOptionalCount(snapshot.bonusEntries))
+        ? getOptionalCount(snapshot.bonusEntries)
+        : deliveryBonusCount
+    )
+    : report.bonusEntries
   const penaltyPercentage = snapshot
     ? getOptionalMetric(normalizePercentageValue(snapshot.penaltyPercentage))
     : report.penaltyPercentage
+  const totalBonusPercent = snapshot
+    ? getOptionalMetric(normalizePercentageValue(snapshot.totalBonusPercent))
+    : report.totalBonusPercent
+  const workingDays = snapshot ? getOptionalCount(snapshot.workingDays) : report.workingDays
+  const updateDays = snapshot ? getOptionalCount(snapshot.updateDays) : report.updateDays
+  const productivityPercentage = snapshot
+    ? getOptionalMetric(normalizePercentageValue(snapshot.productivityPercentage))
+    : report.productivityPercentage
+  const qualifiesProductivityBonus = snapshot ? snapshot.qualifiesProductivityBonus === true : report.qualifiesProductivityBonus
   const afterPenalty = resolvedSalaryMetrics?.afterPenalty ?? report.afterPenalty
   const finalSalary = resolvedSalaryMetrics?.finalSalary ?? report.finalSalary
   const estimatedSalary = resolvedSalaryMetrics?.estimatedSalary ?? report.estimatedSalary
@@ -901,18 +993,28 @@ export function mergeReportWithSnapshot(
     bonusAmount,
     afterPenalty,
     finalSalary,
+    mistakesCount,
     penaltyPoints,
     penaltyEntries,
+    deliveryBonusCount,
     bonusEntries,
     penaltyPercentage,
+    totalBonusPercent,
+    workingDays,
+    updateDays,
+    productivityPercentage,
+    qualifiesProductivityBonus,
     hasPenalty:
       (Number.isFinite(deductionAmount) && deductionAmount > 0) ||
+      (Number.isFinite(mistakesCount) && mistakesCount > 0) ||
       (Number.isFinite(penaltyPoints) && penaltyPoints > 0) ||
       (Number.isFinite(penaltyEntries) && penaltyEntries > 0) ||
       (Number.isFinite(penaltyPercentage) && penaltyPercentage > 0),
     hasBonus:
       (Number.isFinite(bonusAmount) && bonusAmount > 0) ||
-      (Number.isFinite(bonusEntries) && bonusEntries > 0),
+      (Number.isFinite(bonusEntries) && bonusEntries > 0) ||
+      (Number.isFinite(totalBonusPercent) && totalBonusPercent > 0) ||
+      qualifiesProductivityBonus,
   } satisfies EmployeeSalaryReport
 }
 
@@ -1012,7 +1114,59 @@ export function buildSalaryLedgerItems(
     })
     .filter((item) => item.amount > 0 || (item.points ?? 0) > 0)
 
+  if (items.length > 0) {
+    return items
+  }
+
+  const normalizedRoot = normalizeEstimateEntry(root)
+
+  if (kind === 'penalty') {
+    if ((report.deductionAmount ?? 0) <= 0 && (report.mistakesCount ?? 0) <= 0 && (report.penaltyPoints ?? 0) <= 0) {
+      return []
+    }
+
+    const penaltyNotes = [
+      report.mistakesCount > 0 ? `${report.mistakesCount} client-facing mistake${report.mistakesCount === 1 ? '' : 's'} recorded.` : null,
+      report.penaltyPoints > 0 ? `${report.penaltyPoints} penalty points applied.` : null,
+    ].filter(Boolean)
+
+    return [
+      {
+        id: `penalty-derived-${report.id}`,
+        title: report.deductionAmount > 0 ? 'Calculated monthly deduction' : 'Penalty activity recorded',
+        description: penaltyNotes.join(' ') || 'Penalty information was inferred from the salary estimate summary.',
+        amount: Math.max(0, report.deductionAmount),
+        points: report.penaltyPoints > 0 ? report.penaltyPoints : undefined,
+        percentage: report.penaltyPercentage > 0 ? report.penaltyPercentage : undefined,
+      } satisfies SalaryLedgerItem,
+    ].filter((item) => item.amount > 0 || (item.points ?? 0) > 0)
+  }
+
+  if ((report.bonusAmount ?? 0) <= 0 && (report.totalBonusPercent ?? 0) <= 0 && !report.qualifiesProductivityBonus) {
+    return []
+  }
+
+  const productivityText =
+    report.updateDays >= 0 && report.workingDays >= 0 && Number.isFinite(report.productivityPercentage)
+      ? `${report.updateDays}/${report.workingDays} update days (${report.productivityPercentage.toFixed(report.productivityPercentage % 1 === 0 ? 0 : 2)}%).`
+      : null
+  const bonusNotes = [
+    report.qualifiesProductivityBonus ? 'Full update productivity bonus qualified.' : null,
+    report.deliveryBonusCount > 0 ? `${report.deliveryBonusCount} delivery bonus trigger${report.deliveryBonusCount === 1 ? '' : 's'} recorded.` : null,
+    productivityText,
+  ].filter(Boolean)
+
   return items
+    .concat({
+      id: `bonus-derived-${report.id}`,
+      title: report.totalBonusPercent > 0 ? `Calculated monthly bonus (${report.totalBonusPercent.toFixed(report.totalBonusPercent % 1 === 0 ? 0 : 2)}%)` : 'Calculated monthly bonus',
+      description: bonusNotes.join(' ') || 'Bonus information was inferred from the salary estimate summary.',
+      amount: Math.max(0, report.bonusAmount),
+      points: undefined,
+      percentage: report.totalBonusPercent > 0 ? report.totalBonusPercent : normalizedRoot.totalBonusPercent,
+      createdAt: undefined,
+    } satisfies SalaryLedgerItem)
+    .filter((item) => item.amount > 0 || (item.points ?? 0) > 0)
 }
 
 function getPrimaryUpdateRecord(payload: unknown) {

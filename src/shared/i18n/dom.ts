@@ -2,6 +2,14 @@ import type { AppLocale } from './translations'
 import { translateLiteral } from './translations'
 
 const TRANSLATABLE_ATTRIBUTES = ['placeholder', 'title', 'aria-label', 'alt'] as const
+const LEGACY_TRANSLATION_SKIP_SELECTOR = [
+  '[data-i18n-skip="true"]',
+  '[data-ui-number="true"]',
+  '[data-chat-stream="true"]',
+  '[data-activity-strip="true"]',
+  '[data-activity-legend="true"]',
+  '[data-metric-grid="true"]',
+].join(', ')
 
 const textSourceMap = new WeakMap<Text, string>()
 const textAppliedMap = new WeakMap<Text, string>()
@@ -20,7 +28,7 @@ function shouldSkipTextNode(node: Text) {
     return true
   }
 
-  if (parent.closest('[data-i18n-skip="true"]')) {
+  if (parent.closest(LEGACY_TRANSLATION_SKIP_SELECTOR)) {
     return true
   }
 
@@ -58,7 +66,7 @@ function applyTextTranslation(locale: AppLocale, node: Text) {
 }
 
 function applyAttributeTranslation(locale: AppLocale, element: Element) {
-  if (element.closest('[data-i18n-skip="true"]')) {
+  if (element.closest(LEGACY_TRANSLATION_SKIP_SELECTOR)) {
     return
   }
 
@@ -120,7 +128,6 @@ export function observeDomTranslations(locale: AppLocale) {
   observer.observe(document.body, {
     childList: true,
     subtree: true,
-    characterData: true,
     attributes: true,
     attributeFilter: [...TRANSLATABLE_ATTRIBUTES],
   })

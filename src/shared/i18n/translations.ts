@@ -399,6 +399,166 @@ const translations: Record<AppLocale, Record<string, string>> = {
   },
 }
 
+Object.assign(translations.en, {
+  'shell.modules': 'modules',
+  'nav./ceo/team-updates.label': 'Team Monthly Updates',
+  'nav./faults.label': 'Salary Estimates',
+  'nav./projects.group': 'Work',
+})
+
+Object.assign(translations.uz, {
+  'common.request_failed': "So'rov bajarilmadi. Qayta urinib ko'ring.",
+  'auth.protected.verifying': "Ma'lumotlar tekshirilmoqda",
+  'auth.protected.description': "Access token, refresh flow va foydalanuvchi ruxsatlari tekshirilmoqda.",
+  'auth.validation.email_invalid': "Email formati noto'g'ri.",
+  'auth.validation.password_short': "Parol kamida 6 ta belgidan iborat bo'lsin.",
+  'auth.validation.confirm_password_required': "Parol tasdig'i majburiy.",
+  'shell.no_projects': "Hali loyihalar yo'q.",
+  'shell.failed_load_projects': "Loyihalarni yuklab bo'lmadi.",
+  'shell.collapse_projects': "Loyihalarni yig'ish",
+  'shell.switch_to_light': "Yorug' mavzuga o'tish",
+  'shell.switch_to_dark': "Qorong'u mavzuga o'tish",
+  'profile.member_details': "Foydalanuvchi ma'lumotlari",
+  'profile.current_user': 'Joriy foydalanuvchi',
+  'profile.no_active_permissions': "Faol ruxsatlar yo'q.",
+  'profile.update_failed': "Profilni yangilab bo'lmadi",
+  'nav./ceo/team-updates.label': "Jamoaning oylik update'lari",
+  'cims.link_copied_desc': 'Havola clipboardga nusxalandi.',
+  'cims.copy_failed_desc': 'Bu brauzerda clipboard ruxsati mavjud emas.',
+  'projects.unknown_user': "Noma'lum foydalanuvchi",
+  'projects.unknown_date': "Noma'lum sana",
+  'projects.priority.medium': "O'rta",
+  'projects.color.blue': "Ko'k",
+})
+
+Object.assign(translations.ru, {
+  'common.request_failed': 'Запрос не выполнен. Попробуйте снова.',
+  'auth.protected.session': 'Сессия',
+  'auth.protected.verifying': 'Проверка данных',
+  'auth.protected.description': 'Проверяются access token, refresh flow и права пользователя.',
+  'auth.protected.session_expired': 'Сессия истекла или не найдена. Войдите снова.',
+  'auth.validation.email_required': 'Email обязателен.',
+  'auth.validation.email_invalid': 'Неверный формат email.',
+  'auth.validation.password_required': 'Пароль обязателен.',
+  'auth.validation.password_short': 'Пароль должен содержать минимум 6 символов.',
+  'auth.validation.name_required': 'Имя обязательно.',
+  'auth.validation.surname_required': 'Фамилия обязательна.',
+  'auth.validation.company_code_required': 'Код компании обязателен.',
+  'auth.validation.verification_code_required': 'Код подтверждения обязателен.',
+  'auth.validation.reset_code_required': 'Код сброса обязателен.',
+  'auth.validation.confirm_password_required': 'Подтверждение пароля обязательно.',
+  'auth.validation.passwords_mismatch': 'Пароли не совпадают.',
+  'shell.language': 'Язык',
+  'shell.menu': 'Меню',
+  'shell.modules': 'модулей',
+  'shell.logout': 'Выйти',
+  'shell.logging_out': 'Выход...',
+  'shell.close': 'Закрыть',
+  'shell.edit': 'Редактировать',
+  'shell.cancel': 'Отмена',
+  'shell.save_changes': 'Сохранить',
+  'shell.retry': 'Повторить',
+  'shell.no_projects': 'Проектов пока нет.',
+  'shell.failed_load_projects': 'Не удалось загрузить проекты.',
+  'shell.authenticated_user': 'Текущий пользователь',
+  'shell.user': 'Пользователь',
+  'shell.management_system': 'Система управления',
+  'shell.toggle_navigation': 'Открыть навигацию',
+  'shell.close_navigation': 'Закрыть навигацию',
+  'shell.close_navigation_overlay': 'Закрыть слой навигации',
+  'shell.expand_projects': 'Развернуть проекты',
+  'shell.collapse_projects': 'Свернуть проекты',
+  'shell.switch_to_light': 'Переключить на светлую тему',
+  'shell.switch_to_dark': 'Переключить на тёмную тему',
+  'shell.logged_out': 'Выход выполнен',
+  'shell.session_closed': 'Сессия закрыта. Можно войти снова.',
+  'profile.member_details': 'Данные пользователя',
+  'profile.current_user': 'Текущий пользователь',
+  'profile.role': 'Роль',
+  'profile.company_code': 'Код компании',
+  'profile.job_title': 'Должность',
+  'profile.email': 'Email',
+  'profile.status': 'Статус',
+  'profile.name': 'Имя',
+  'profile.surname': 'Фамилия',
+  'profile.permissions': 'Разрешения',
+  'profile.enabled': 'включено',
+  'profile.no_active_permissions': 'Активных разрешений нет.',
+  'profile.active': 'Активен',
+  'profile.inactive': 'Неактивен',
+  'profile.updated': 'Профиль обновлён',
+  'profile.update_failed': 'Не удалось обновить профиль',
+  'profile.fill_required': 'Имя, фамилия и email обязательны.',
+  'nav./member/dashboard.label': 'Панель сотрудника',
+  'nav./member/dashboard.group': 'Сотрудник',
+  'nav./ceo/dashboard.label': 'Панель CEO',
+  'nav./ceo/dashboard.group': 'CEO',
+  'nav./crm.label': 'CRM',
+  'nav./crm.group': 'Продажи',
+  'nav./ceo/users.label': 'Пользователи и права',
+  'nav./ceo/users.group': 'CEO',
+  'nav./ceo/team-updates.label': 'Ежемесячные обновления команды',
+  'nav./ceo/team-updates.group': 'CEO',
+  'nav./faults.label': 'Расчёты зарплаты',
+  'nav./faults.group': 'CEO',
+  'nav./updates.label': 'Обновления',
+  'nav./updates.group': 'Люди',
+  'nav./projects.label': 'Проекты',
+  'nav./projects.group': 'Работа',
+  'nav./ceo/ai.label': 'CIMS AI',
+  'nav./ceo/ai.group': 'CEO',
+  'nav./ceo/management.label': 'Management API',
+  'nav./ceo/management.group': 'CEO',
+  'nav./cims-team.label': 'CIMS Team',
+  'nav./cims-team.group': 'Workspace',
+  'cims.copy': 'Копировать',
+  'cims.open_link': 'Открыть ссылку',
+  'cims.link_copied': 'Ссылка скопирована',
+  'cims.link_copied_desc': 'Ссылка скопирована в буфер обмена.',
+  'cims.copy_failed': 'Не удалось скопировать',
+  'cims.copy_failed_desc': 'В этом браузере нет доступа к буферу обмена.',
+  'cims.handle': 'Handle',
+  'cims.category.official': 'Официальный',
+  'cims.category.channel': 'Канал',
+  'cims.category.bot': 'Бот',
+  'cims.instagram.title': 'Instagram',
+  'cims.instagram.eyebrow': 'Социальное присутствие',
+  'cims.instagram.note': 'Публичная страница бренда для узнаваемости, доверия и первого контакта.',
+  'cims.telegram.title': 'Telegram-канал',
+  'cims.telegram.eyebrow': 'Линия сообщества',
+  'cims.telegram.note': 'Основная точка в Telegram для новостей, быстрого охвата и лёгкой коммуникации.',
+  'cims.recall.title': 'Recall Bot',
+  'cims.recall.eyebrow': 'Автоматизация',
+  'cims.recall.note': 'Бот для напоминаний и recall-процессов.',
+  'cims.update.title': 'Update Bot',
+  'cims.update.eyebrow': 'Операции',
+  'cims.update.note': 'Точка входа в update-tracking для ежедневной операционной работы.',
+  'projects.unknown_user': 'Неизвестный пользователь',
+  'projects.unknown_date': 'Неизвестная дата',
+  'projects.relative.upcoming': 'Скоро',
+  'projects.relative.today': 'Сегодня',
+  'projects.relative.yesterday': 'Вчера',
+  'projects.relative.days_ago': '{count} дн. назад',
+  'projects.relative.weeks_ago': '{count} нед. назад',
+  'projects.relative.months_ago': '{count} мес. назад',
+  'projects.relative.years_ago': '{count} г. назад',
+  'projects.priority.urgent': 'Срочно',
+  'projects.priority.high': 'Высокий',
+  'projects.priority.medium': 'Средний',
+  'projects.priority.low': 'Низкий',
+  'projects.color.blue': 'Синий',
+  'projects.color.violet': 'Фиолетовый',
+  'projects.color.green': 'Зелёный',
+  'projects.color.amber': 'Янтарный',
+  'projects.color.red': 'Красный',
+  'projects.color.pink': 'Розовый',
+  'projects.color.cyan': 'Циан',
+  'projects.color.slate': 'Серый',
+  'projects.snooze.later_today': 'Позже сегодня',
+  'projects.snooze.tomorrow': 'Завтра',
+  'projects.snooze.next_week': 'На следующей неделе',
+})
+
 export function getStoredLocale(): AppLocale {
   if (currentLocale !== null) {
     return currentLocale
@@ -439,7 +599,24 @@ function interpolate(template: string, params?: TranslationParams) {
   })
 }
 
+function repairBrokenText(value: string) {
+  return value
+    .replace(/\u00A0/g, ' ')
+    .replace(/[‘’`]/g, "'")
+    .replace(/[“”]/g, '"')
+    .replace(/[–—]/g, '-')
+    .replace(/вЂ|вЂ™/g, "'")
+    .replace(/вЂњ|вЂќ/g, '"')
+    .replace(/вЂ“|вЂ”/g, '-')
+    .replace(/вЂ¦/g, '...')
+    .replace(/вЂў/g, ' • ')
+    .replace(/в†’/g, ' → ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function normalizeTranslationSource(value: string) {
+  return repairBrokenText(value).toLowerCase()
   return value
     .replace(/\u00A0/g, ' ')
     .replace(/[‘’]/g, "'")
@@ -462,6 +639,14 @@ function preserveCase(source: string, translated: string) {
   }
 
   if (/^[A-ZА-ЯЁ]/.test(trimmed)) {
+    return translated.charAt(0).toUpperCase() + translated.slice(1)
+  }
+
+  if (/^[A-ZА-ЯЁ]/.test(trimmed)) {
+    return translated.charAt(0).toUpperCase() + translated.slice(1)
+  }
+
+  if (/^[A-Z\u0410-\u042F\u0401]/.test(trimmed)) {
     return translated.charAt(0).toUpperCase() + translated.slice(1)
   }
 
@@ -493,7 +678,7 @@ function buildLiteralLookups(): PhraseMap {
         const normalized = normalizeTranslationSource(variant)
 
         if (normalized) {
-          maps[locale].set(normalized, phrase[locale])
+          maps[locale].set(normalized, repairBrokenText(phrase[locale]))
         }
       })
     })
@@ -624,7 +809,95 @@ function translatePrefixedSubject(locale: AppLocale, prefix: string, subject: st
   return `${prefix} ${localizedSubject}`
 }
 
+function translateLooseWordsSafely(locale: AppLocale, value: string): string | null {
+  const repairedValue = repairBrokenText(value)
+  const tokenPattern = /([A-Za-zА-Яа-яЁё]+(?:[-'][A-Za-zА-Яа-яЁё]+)*)|([^A-Za-zА-Яа-яЁё]+)/g
+  const tokens: Array<{ value: string; isWord: boolean }> = []
+  let match: RegExpExecArray | null
+
+  while ((match = tokenPattern.exec(repairedValue)) !== null) {
+    tokens.push({
+      value: match[1] ?? match[2] ?? '',
+      isWord: Boolean(match[1]),
+    })
+  }
+
+  if (tokens.length === 0) {
+    return null
+  }
+
+  let changed = false
+  let result = ''
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const current = tokens[index]
+
+    if (!current.isWord) {
+      result += current.value
+      continue
+    }
+
+    let translatedChunk: string | null = null
+    let consumedUntil = index
+
+    for (let end = Math.min(tokens.length - 1, index + 10); end >= index; end -= 1) {
+      const slice = tokens.slice(index, end + 1)
+
+      if (!slice.at(-1)?.isWord) {
+        continue
+      }
+
+      let valid = true
+
+      for (let inner = 1; inner < slice.length; inner += 1) {
+        if (!slice[inner].isWord && !/^\s+$/.test(slice[inner].value)) {
+          valid = false
+          break
+        }
+      }
+
+      if (!valid) {
+        continue
+      }
+
+      const phrase = slice.map((part) => part.value).join('')
+      const resolved = resolveLiteral(locale, phrase)
+
+      if (resolved) {
+        translatedChunk = preserveCase(phrase, resolved)
+        consumedUntil = end
+        break
+      }
+    }
+
+    if (translatedChunk) {
+      result += translatedChunk
+      index = consumedUntil
+      changed = true
+      continue
+    }
+
+    const resolvedWord = resolveLiteral(locale, current.value)
+
+    if (resolvedWord) {
+      result += preserveCase(current.value, resolvedWord)
+      changed = true
+      continue
+    }
+
+    result += current.value
+  }
+
+  return changed ? preserveCase(value, result) : null
+}
+
 function translateLooseWords(locale: AppLocale, value: string): string | null {
+  const safeTranslation = translateLooseWordsSafely(locale, value)
+
+  if (safeTranslation) {
+    return safeTranslation
+  }
+
   const tokenPattern = /([A-Za-zА-Яа-яЁё]+(?:[-'][A-Za-zА-Яа-яЁё]+)*)|([^A-Za-zА-Яа-яЁё]+)/g
   const tokens: Array<{ value: string; isWord: boolean }> = []
   let match: RegExpExecArray | null
@@ -706,6 +979,12 @@ function translateLooseWords(locale: AppLocale, value: string): string | null {
 }
 
 function translateLiteralInternal(locale: AppLocale, value: string, depth = 0): string {
+  const repairedValue = repairBrokenText(value)
+
+  if (repairedValue !== value) {
+    return preserveCase(value, translateLiteralInternal(locale, repairedValue, depth))
+  }
+
   const direct = resolveLiteral(locale, value)
 
   if (direct) {
@@ -728,8 +1007,56 @@ function translateLiteralInternal(locale: AppLocale, value: string, depth = 0): 
 }
 
 function translateCompositeLiteral(locale: AppLocale, value: string, depth = 0): string | null {
+  value = repairBrokenText(value)
+
   if (depth > 2) {
     return null
+  }
+
+  for (const separator of [' / ', ' | ', ' • ', ' > ', ' → ']) {
+    if (!value.includes(separator)) {
+      continue
+    }
+
+    const parts = value.split(separator)
+    let changed = false
+    const translatedParts = parts.map((part) => {
+      const trimmedPart = part.trim()
+      const translatedPart = translateLiteralInternal(locale, trimmedPart, depth + 1)
+
+      if (translatedPart !== trimmedPart) {
+        changed = true
+      }
+
+      return translatedPart
+    })
+
+    if (changed) {
+      return translatedParts.join(separator)
+    }
+  }
+
+  for (const separator of [' / ', ' | ', ' • ', ' > ', ' → ']) {
+    if (!value.includes(separator)) {
+      continue
+    }
+
+    const parts = value.split(separator)
+    let changed = false
+    const translatedParts = parts.map((part) => {
+      const trimmedPart = part.trim()
+      const translatedPart = translateLiteralInternal(locale, trimmedPart, depth + 1)
+
+      if (translatedPart !== trimmedPart) {
+        changed = true
+      }
+
+      return translatedPart
+    })
+
+    if (changed) {
+      return translatedParts.join(separator)
+    }
   }
 
   for (const separator of [' / ', ' | ', ' • ', ' > ', ' → ']) {
