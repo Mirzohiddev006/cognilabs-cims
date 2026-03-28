@@ -44,6 +44,8 @@ type CalendarDay = {
   hasUpdate?: boolean | null
   updateContent?: string | null
   isValid?: boolean | null
+  checkInTime?: string | null
+  checkOutTime?: string | null
   workdayOverride?: WorkdayOverrideRecord | null
 }
 
@@ -238,6 +240,59 @@ function parseDateValue(value: string) {
   }
 
   return new Date(value)
+}
+
+function formatCalendarWorkTime(value?: string | null) {
+  if (!value) {
+    return '--:--'
+  }
+
+  const trimmed = value.trim()
+  const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/)
+
+  if (timeMatch) {
+    return `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`
+  }
+
+  const parsed = new Date(trimmed)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed
+  }
+
+  return new Intl.DateTimeFormat(getIntlLocale(), {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed)
+}
+
+function getMinutesFromCalendarTime(value?: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const trimmed = value.trim()
+  const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+
+  if (timeMatch) {
+    const hours = Number(timeMatch[1])
+    const minutes = Number(timeMatch[2])
+
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+      return null
+    }
+
+    return (hours * 60) + minutes
+  }
+
+  const parsed = new Date(trimmed)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  return (parsed.getHours() * 60) + parsed.getMinutes()
 }
 
 function normalizeOverrideDayType(value: unknown): WorkdayOverrideRecord['day_type'] {
@@ -553,6 +608,8 @@ function toCalendarDay(entry: unknown, selectedMonth: number, selectedYear: numb
     hasUpdate: explicitHasUpdate ?? hasUpdate,
     updateContent,
     isValid: toBoolean(entry.is_valid ?? entry.valid),
+    checkInTime: findFirstString(entry, ['check_in_time', 'check_in', 'checkInTime']) ?? null,
+    checkOutTime: findFirstString(entry, ['check_out_time', 'check_out', 'checkOutTime']) ?? null,
     workdayOverride,
   }
 }
@@ -592,6 +649,8 @@ function parseCalendar(data: unknown, selectedMonth: number, selectedYear: numbe
       hasUpdate: null,
       updateContent: null,
       isValid: null,
+      checkInTime: null,
+      checkOutTime: null,
       workdayOverride: null,
     }
   })
@@ -1042,6 +1101,37 @@ function getCalendarCellHint(day: CalendarDay) {
   return 'No update yet'
 }
 
+function shouldShowCalendarTimePanel(day: CalendarDay) {
+  return day.hasUpdate || Boolean(day.checkInTime) || Boolean(day.checkOutTime)
+}
+
+function getCalendarWorkedDurationLabel(day: CalendarDay) {
+  const checkInMinutes = getMinutesFromCalendarTime(day.checkInTime)
+  const checkOutMinutes = getMinutesFromCalendarTime(day.checkOutTime)
+
+  if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
+    return 'Hours not returned'
+  }
+
+  const totalMinutes = checkOutMinutes - checkInMinutes
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+
+  if (hours <= 0 && minutes <= 0) {
+    return '0h'
+  }
+
+  if (minutes === 0) {
+    return `${hours}h`
+  }
+
+  if (hours === 0) {
+    return `${minutes}m`
+  }
+
+  return `${hours}h ${minutes}m`
+}
+
 function shiftCalendarMonth(month: number, year: number, delta: number) {
   const nextDate = new Date(year, month - 1 + delta, 1)
 
@@ -1393,6 +1483,32 @@ export function UpdateTrackingPage() {
         />
       </div>
 
+      {trends.length > 0 && (
+        <Card variant="glass" className="overflow-hidden p-0">
+          <div className="border-b border-(--border) px-5 py-4">
+            <SectionTitle title="Performance Trends" />
+          </div>
+          <div className="space-y-3 px-5 py-4">
+            {trends.slice(-6).map((trend) => {
+              const pct = trend.completion_percentage ?? 0
+              const label = trend.month_name ?? `${getMonthName(trend.month)} ${trend.year}`
+
+              return (
+                <div key={`${trend.year}-${trend.month}`} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-(--muted-strong)">{label}</span>
+                    <span className={cn('font-bold tabular-nums', pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-rose-400')}>
+                      {pct.toFixed(1)}%
+                    </span>
+                  </div>
+                  <CompletionBar pct={pct} />
+                </div>
+              )
+            })}
+          </div>
+        </Card>
+      )}
+
       <div className="grid items-stretch gap-6">
         <div className="flex min-h-full flex-col gap-6">
           <Card variant="glass" className="overflow-hidden p-0">
@@ -1562,7 +1678,7 @@ export function UpdateTrackingPage() {
                                   onClick={() => setSelectedDate(day.date ?? null)}
                                   aria-pressed={isSelected}
                                   className={cn(
-                                    'group relative flex min-h-[114px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3.5 py-2.5 text-left transition-all duration-200',
+                                    'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200',
                                     getCalendarDaySurfaceClass(day),
                                     isSelected
                                       ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
@@ -1579,7 +1695,12 @@ export function UpdateTrackingPage() {
                                       <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-40', getCalendarDayTextClass(day))}>
                                         {getCalendarBoardWeekday(day)}
                                       </p>
-                                      <p className="mt-1.5 text-[1.75rem] font-semibold leading-none tabular-nums tracking-tight opacity-90">
+                                      <p
+                                        className={cn(
+                                          'mt-1.5 text-[1.5rem] font-semibold leading-none tabular-nums tracking-tight',
+                                          day.status === 'submitted' || day.status === 'missing' ? 'text-white' : 'text-white/82',
+                                        )}
+                                      >
                                         {day.day}
                                       </p>
                                     </div>
@@ -1598,6 +1719,32 @@ export function UpdateTrackingPage() {
                                     </div>
                                   </div>
 
+                                  {shouldShowCalendarTimePanel(day) ? (
+                                    <div className="relative mt-2.5 space-y-1.5">
+                                      <div className="grid grid-cols-2 gap-1.5">
+                                        <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
+                                          <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                            In
+                                          </p>
+                                          <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                            {formatCalendarWorkTime(day.checkInTime)}
+                                          </p>
+                                        </div>
+                                        <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
+                                          <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                            Out
+                                          </p>
+                                          <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                            {formatCalendarWorkTime(day.checkOutTime)}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-white/76">
+                                        {getCalendarWorkedDurationLabel(day)}
+                                      </p>
+                                    </div>
+                                  ) : null}
+
                                   <div className="relative mt-auto">
                                     <span className={cn(
                                       'inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 text-[9px] font-semibold uppercase tracking-[0.14em]',
@@ -1606,7 +1753,7 @@ export function UpdateTrackingPage() {
                                       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', getCalendarDayDotClass(day))} />
                                       {getCalendarCellStatusLabel(day.status, day)}
                                     </span>
-                                    <p className={cn('mt-1.5 text-[9px] leading-3.5', getCalendarDayTextClass(day))}>
+                                    <p className="mt-1.5 text-[8px] leading-3 text-white/76">
                                       {getCalendarCellHint(day)}
                                     </p>
                                   </div>
@@ -1805,31 +1952,6 @@ export function UpdateTrackingPage() {
 
       </div>
 
-      {trends.length > 0 && (
-        <Card variant="glass" className="overflow-hidden p-0">
-          <div className="border-b border-(--border) px-5 py-4">
-            <SectionTitle title="Performance Trends" />
-          </div>
-          <div className="space-y-3 px-5 py-4">
-            {trends.slice(-6).map((trend) => {
-              const pct = trend.completion_percentage ?? 0
-              const label = trend.month_name ?? `${getMonthName(trend.month)} ${trend.year}`
-
-              return (
-                <div key={`${trend.year}-${trend.month}`} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-(--muted-strong)">{label}</span>
-                    <span className={cn('font-bold tabular-nums', pct >= 80 ? 'text-emerald-400' : pct >= 50 ? 'text-amber-400' : 'text-rose-400')}>
-                      {pct.toFixed(1)}%
-                    </span>
-                  </div>
-                  <CompletionBar pct={pct} />
-                </div>
-              )
-            })}
-          </div>
-        </Card>
-      )}
     </section>
   )
 }
