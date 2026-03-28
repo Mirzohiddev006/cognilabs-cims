@@ -711,7 +711,7 @@ export function FaultsMemberDetailPage({
             variant="ghost"
             size="sm"
             onClick={() => navigate(backTarget)}
-            className="min-h-8 rounded-xl border border-white/8 bg-white/[0.03] px-3 text-[11px] text-white/78 hover:border-white/12 hover:bg-white/[0.05] hover:text-white"
+            className="min-h-8 rounded-xl border border-[var(--border)] bg-white px-3 text-[11px] text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/8 dark:bg-white/[0.03] dark:text-white/78 dark:hover:border-white/12 dark:hover:bg-white/[0.05] dark:hover:text-white"
           >
             <svg viewBox="0 0 16 16" className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M10 3.5 5.5 8 10 12.5" />
@@ -731,7 +731,7 @@ export function FaultsMemberDetailPage({
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
                   {topHeaderEyebrow}
                 </p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
                   {detail.report.fullName}
                 </h1>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">
@@ -807,24 +807,24 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Year</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Year</label>
                 <Input
                   type="number"
                   min="2020"
                   max="2035"
                   value={year}
                   onChange={(event) => updatePeriod({ year: clampNumber(Number(event.target.value) || defaultYear, 2020, 2035) })}
-                  className="rounded-xl border-white/10 bg-white/[0.03]"
+                  className="rounded-xl border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/[0.03]"
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Month</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Month</label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
                   onValueChange={(value) => updatePeriod({ month: clampNumber(Number(value), 1, 12) })}
-                  className="rounded-xl border-white/10 bg-white/[0.03]"
+                  className="rounded-xl border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/[0.03]"
                 />
               </div>
 
@@ -861,7 +861,7 @@ export function FaultsMemberDetailPage({
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
               Compensation flow
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
               How the final salary is built
             </h2>
           </div>
@@ -879,24 +879,24 @@ export function FaultsMemberDetailPage({
           <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
-        <div className="mt-5 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
+        <div className="mt-5 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
           <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="text-white/72">{formatAmount(detail.report.baseSalary)}</span>
-            <span className="text-white/25">-</span>
+            <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
+            <span className="text-[var(--muted)]">-</span>
             <span className="font-semibold text-rose-400">{formatAmount(detail.report.deductionAmount)}</span>
-            <span className="text-white/25">+</span>
+            <span className="text-[var(--muted)]">+</span>
             <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
-            <span className="text-white/25">=</span>
-            <span className="text-base font-semibold tracking-tight text-white">
+            <span className="text-[var(--muted)]">=</span>
+            <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
               {formatAmount(detail.report.finalSalary)}
             </span>
           </div>
-          <p className="mt-3 text-xs text-white/56">
+          <p className="mt-3 text-xs text-[var(--muted-strong)]">
             {detail.report.qualifiesProductivityBonus
               ? 'Productivity bonus qualified for this period.'
               : 'Productivity bonus did not qualify for this period.'}
           </p>
-          <div className="mt-4 h-2 rounded-full bg-white/8">
+          <div className="mt-4 h-2 rounded-full bg-[var(--surface-elevated)] dark:bg-white/8">
             <div
               className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
               style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
@@ -911,7 +911,7 @@ export function FaultsMemberDetailPage({
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
               Monthly execution
             </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-white">
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
               Salary context and update performance
             </h2>
           </div>
@@ -938,21 +938,21 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div className="mt-4 grid gap-3 xl:grid-cols-3">
-              <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
                 <p className="text-xs text-[var(--muted-strong)]">Last update</p>
-                <p className="mt-2 text-sm font-semibold text-white">
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {formatDetailDate(updatesSummary!.lastUpdateDate)}
                 </p>
               </div>
-              <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
                 <p className="text-xs text-[var(--muted-strong)]">Next payment date</p>
-                <p className="mt-2 text-sm font-semibold text-white">
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {formatDetailDate(updatesSummary!.nextPaymentDate)}
                 </p>
               </div>
-              <div className="rounded-[18px] border border-white/8 bg-black/15 px-4 py-3">
+              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
                 <p className="text-xs text-[var(--muted-strong)]">Salary amount in update record</p>
-                <p className="mt-2 text-sm font-semibold text-white">
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {typeof updatesSummary!.salaryAmount === 'number'
                     ? formatAmount(updatesSummary!.salaryAmount)
                     : 'Not returned'}
@@ -961,11 +961,11 @@ export function FaultsMemberDetailPage({
             </div>
 
             {updatesSummary!.note ? (
-              <div className="mt-4 rounded-[18px] border border-white/8 bg-black/15 px-4 py-4">
+              <div className="mt-4 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
                   Manager note
                 </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/80">
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
                   {updatesSummary!.note}
                 </p>
               </div>
@@ -986,7 +986,7 @@ export function FaultsMemberDetailPage({
           </>
         ) : (
           <>
-            <div className="mt-4 rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-[var(--muted-strong)]">
+            <div className="mt-4 rounded-[18px] border border-dashed border-[var(--border)] bg-white px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-white/10 dark:bg-black/10">
               No monthly update statistics were returned for this member.
             </div>
 

@@ -68,11 +68,11 @@ export function SalaryEstimateDrawer({
       />
 
       <div className="absolute inset-y-0 right-0 w-full md:w-[min(50vw,760px)] xl:w-[min(46vw,780px)]">
-        <div className="sheet-enter flex h-full flex-col border-l border-white/10 bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
-          <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+        <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface)] shadow-[0_20px_80px_rgba(0,0,0,0.46)] dark:bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))]">
+          <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-blue-300/72">Salary estimate</p>
-              <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">Salary estimate</p>
+              <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                 {report.fullName}
               </h2>
               <p className="mt-1 text-xs text-[var(--muted-strong)]">
@@ -83,7 +83,7 @@ export function SalaryEstimateDrawer({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.03] text-white/72 transition hover:border-white/16 hover:bg-white/[0.06] hover:text-white"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-white text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:bg-white/[0.03] dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/[0.06] dark:hover:text-white"
               aria-label="Close salary drawer"
             >
               <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -93,11 +93,11 @@ export function SalaryEstimateDrawer({
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
-            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
+            <div className="rounded-[24px] border border-[var(--border)] bg-white p-5 dark:border-white/10 dark:bg-white/[0.03]">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-sm text-[var(--muted-strong)]">{report.label}</p>
-                  <h3 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-white">{report.fullName}</h3>
+                  <h3 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-[var(--foreground)]">{report.fullName}</h3>
                   <p className="mt-1 text-sm text-[var(--muted)]">{report.roleLabel}</p>
                 </div>
 
@@ -150,14 +150,14 @@ export function SalaryEstimateDrawer({
             </div>
 
             <div className="mt-5 grid gap-4">
-              <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-4">
+              <div className="rounded-[22px] border border-rose-500/18 bg-rose-50 px-5 py-4 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-rose-300">Penalty pressure</span>
-                  <span className={cn('font-semibold', penaltyProgress > 0 ? 'text-rose-400' : 'text-white')}>
+                  <span className="text-rose-600 dark:text-rose-300">Penalty pressure</span>
+                  <span className={cn('font-semibold', penaltyProgress > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-[var(--foreground)]')}>
                     {formatPercent(report.penaltyPercentage)}
                   </span>
                 </div>
-                <div className="mt-3 h-2 rounded-full bg-white/7">
+                <div className="mt-3 h-2 rounded-full bg-rose-100 dark:bg-white/7">
                   <div
                     className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
                     style={{ width: `${penaltyProgress}%` }}
@@ -170,14 +170,14 @@ export function SalaryEstimateDrawer({
                 </p>
               </div>
 
-              <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-4">
+              <div className="rounded-[22px] border border-emerald-500/18 bg-emerald-50 px-5 py-4 dark:border-white/10 dark:bg-white/[0.03]">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-emerald-300">Productivity performance</span>
-                  <span className={cn('font-semibold', report.qualifiesProductivityBonus ? 'text-emerald-400' : 'text-white')}>
+                  <span className="text-emerald-600 dark:text-emerald-300">Productivity performance</span>
+                  <span className={cn('font-semibold', report.qualifiesProductivityBonus ? 'text-emerald-600 dark:text-emerald-400' : 'text-[var(--foreground)]')}>
                     {Number.isFinite(report.productivityPercentage) ? formatPercent(report.productivityPercentage) : '-'}
                   </span>
                 </div>
-                <div className="mt-3 h-2 rounded-full bg-white/7">
+                <div className="mt-3 h-2 rounded-full bg-emerald-100 dark:bg-white/7">
                   <div
                     className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
                     style={{ width: `${productivityProgress}%` }}
