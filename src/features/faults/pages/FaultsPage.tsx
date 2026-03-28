@@ -193,15 +193,11 @@ export function FaultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
-  const [penaltyTarget, setPenaltyTarget] = useState<EmployeeSalaryReport | null>(null)
-  const [penaltyPoints, setPenaltyPoints] = useState('10')
-  const [penaltyReason, setPenaltyReason] = useState('')
   const [mistakeTarget, setMistakeTarget] = useState<EmployeeSalaryReport | null>(null)
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusTarget, setDeliveryBonusTarget] = useState<EmployeeSalaryReport | null>(null)
   const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [activeReportId, setActiveReportId] = useState<number | null>(null)
-  const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
@@ -407,12 +403,6 @@ export function FaultsPage() {
     })
   }
 
-  function openPenaltyDialog(report: EmployeeSalaryReport) {
-    setPenaltyTarget(report)
-    setPenaltyPoints('10')
-    setPenaltyReason('')
-  }
-
   function openMistakeDialog(report: EmployeeSalaryReport) {
     const reportPolicy = buildEmployeeCompensationPolicy(compensationPolicyQuery.data, report.id, report.fullName)
     const defaultCategory = getCompensationPolicyCategoryOptions(reportPolicy)[0]?.value ?? 'AI Integration'
@@ -455,51 +445,6 @@ export function FaultsPage() {
 
   function openDetailPage(report: EmployeeSalaryReport) {
     navigate(`/faults/members/${report.id}?year=${year}&month=${month}`)
-  }
-
-  async function handleSubmitPenalty() {
-    if (!penaltyTarget) {
-      return
-    }
-
-    const parsedPoints = Number(penaltyPoints)
-
-    if (!Number.isFinite(parsedPoints) || parsedPoints <= 0 || parsedPoints > 100) {
-      showToast({
-        title: 'Invalid penalty points',
-        description: 'Penalty points must be between 1 and 100.',
-        tone: 'error',
-      })
-      return
-    }
-
-    setIsPenaltySubmitting(true)
-
-    try {
-      const response = await membersService.addPenalty({
-        userId: penaltyTarget.id,
-        year,
-        month,
-        penaltyPoints: parsedPoints,
-        reason: penaltyReason.trim() || undefined,
-      })
-
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
-      setPenaltyTarget(null)
-      showToast({
-        title: 'Penalty added',
-        description: getSuccessMessage(response, `${penaltyTarget.fullName} updated.`),
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: 'Penalty not added',
-        description: getApiErrorMessage(error),
-        tone: 'error',
-      })
-    } finally {
-      setIsPenaltySubmitting(false)
-    }
   }
 
   function buildMistakePayload(): MemberMistakePayload | null {
@@ -858,11 +803,6 @@ export function FaultsPage() {
                         onSelect: () => openDetailPage(row),
                       },
                       {
-                        label: 'Add penalty',
-                        onSelect: () => openPenaltyDialog(row),
-                        tone: 'danger',
-                      },
-                      {
                         label: 'Add mistake',
                         onSelect: () => openMistakeDialog(row),
                         tone: 'danger',
@@ -894,14 +834,6 @@ export function FaultsPage() {
           setActiveReportId(null)
           openDetailPage(activeDrawerReport)
         }}
-        onAddPenalty={() => {
-          if (!activeDrawerReport) {
-            return
-          }
-
-          setActiveReportId(null)
-          openPenaltyDialog(activeDrawerReport)
-        }}
         onAddDeliveryBonus={() => {
           if (!activeDrawerReport) {
             return
@@ -911,54 +843,6 @@ export function FaultsPage() {
           openDeliveryBonusDialog(activeDrawerReport)
         }}
       />
-
-      <Dialog
-        open={Boolean(penaltyTarget)}
-        onClose={() => setPenaltyTarget(null)}
-        title={penaltyTarget ? `Add penalty for ${penaltyTarget.fullName}` : 'Add penalty'}
-        description={penaltyTarget ? `${getMonthName(month)} ${year} monthly penalty entry.` : undefined}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setPenaltyTarget(null)}
-              disabled={isPenaltySubmitting}
-            >
-              Cancel
-            </Button>
-            <Button onClick={() => void handleSubmitPenalty()} loading={isPenaltySubmitting}>
-              Save penalty
-            </Button>
-          </>
-        }
-      >
-        <div className="grid gap-4">
-          <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-            <p className="mt-2 text-base font-semibold text-white">{penaltyTarget?.fullName ?? '-'}</p>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Penalty points</label>
-            <Input
-              type="number"
-              min="1"
-              max="100"
-              value={penaltyPoints}
-              onChange={(event) => setPenaltyPoints(event.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-            <Textarea
-              value={penaltyReason}
-              onChange={(event) => setPenaltyReason(event.target.value)}
-              placeholder="Optional penalty reason"
-            />
-          </div>
-        </div>
-      </Dialog>
 
       <Dialog
         open={Boolean(mistakeTarget)}

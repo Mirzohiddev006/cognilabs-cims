@@ -36,21 +36,6 @@ export type MemberCompensationPolicyParams = {
   employeeIds?: number[]
 }
 
-export type AddMemberPenaltyPayload = {
-  userId: number
-  year: number
-  month: number
-  penaltyPoints: number
-  reason?: string
-}
-
-export type UpdateMemberPenaltyPayload = {
-  year: number
-  month: number
-  penaltyPoints: number
-  reason?: string
-}
-
 export type AddMemberUpdatePayload = {
   userId: number
   year: number
@@ -215,40 +200,6 @@ export const membersService = {
         month: params?.month,
         employee_ids: serializeEmployeeIds(params?.employeeIds),
       },
-    })
-  },
-
-  addPenalty({ userId, year, month, penaltyPoints, reason }: AddMemberPenaltyPayload) {
-    return request<unknown>({
-      path: '/members/member/penalties/add',
-      method: 'POST',
-      query: {
-        user_id: userId,
-        year,
-        month,
-        penalty_points: penaltyPoints,
-        reason,
-      },
-    })
-  },
-
-  updatePenalty(penaltyId: number, { year, month, penaltyPoints, reason }: UpdateMemberPenaltyPayload) {
-    return request<unknown>({
-      path: `/members/member/penalties/${penaltyId}`,
-      method: 'PUT',
-      query: {
-        year,
-        month,
-        penalty_points: penaltyPoints,
-        reason,
-      },
-    })
-  },
-
-  deletePenalty(penaltyId: number) {
-    return request<unknown>({
-      path: `/members/member/penalties/${penaltyId}`,
-      method: 'DELETE',
     })
   },
 

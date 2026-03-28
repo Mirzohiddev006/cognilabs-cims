@@ -242,17 +242,13 @@ export function FaultsMemberDetailPage({
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
-  const [penaltyPoints, setPenaltyPoints] = useState('10')
-  const [penaltyReason, setPenaltyReason] = useState('')
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [editingMistake, setEditingMistake] = useState<MemberMistakeRecord | null>(null)
   const [editingDeliveryBonus, setEditingDeliveryBonus] = useState<MemberDeliveryBonusRecord | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<CompensationDeleteTarget | null>(null)
-  const [isPenaltyDialogOpen, setIsPenaltyDialogOpen] = useState(false)
   const [isMistakeDialogOpen, setIsMistakeDialogOpen] = useState(false)
   const [isDeliveryBonusDialogOpen, setIsDeliveryBonusDialogOpen] = useState(false)
-  const [isPenaltySubmitting, setIsPenaltySubmitting] = useState(false)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
@@ -461,12 +457,6 @@ export function FaultsMemberDetailPage({
     }
   }
 
-  function openPenaltyDialog() {
-    setPenaltyPoints('10')
-    setPenaltyReason('')
-    setIsPenaltyDialogOpen(true)
-  }
-
   function openMistakeDialog(record?: MemberMistakeRecord) {
     setEditingMistake(record ?? null)
     setMistakeDraft(
@@ -673,51 +663,6 @@ export function FaultsMemberDetailPage({
     }
   }
 
-  async function handleSubmitPenalty() {
-    if (!detail) {
-      return
-    }
-
-    const parsedPoints = Number(penaltyPoints)
-
-    if (!Number.isFinite(parsedPoints) || parsedPoints <= 0 || parsedPoints > 100) {
-      showToast({
-        title: 'Invalid penalty points',
-        description: 'Penalty points must be between 1 and 100.',
-        tone: 'error',
-      })
-      return
-    }
-
-    setIsPenaltySubmitting(true)
-
-    try {
-      const response = await membersService.addPenalty({
-        userId: detail.report.id,
-        year,
-        month,
-        penaltyPoints: parsedPoints,
-        reason: penaltyReason.trim() || undefined,
-      })
-
-      await detailQuery.refetch()
-      setIsPenaltyDialogOpen(false)
-      showToast({
-        title: 'Penalty added',
-        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: 'Penalty not added',
-        description: getApiErrorMessage(error),
-        tone: 'error',
-      })
-    } finally {
-      setIsPenaltySubmitting(false)
-    }
-  }
-
   if (!Number.isFinite(memberId) || memberId <= 0) {
     return (
       <ErrorStateBlock
@@ -837,11 +782,6 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-                {showCompensationActions ? (
-                  <Button variant="ghost" size="sm" onClick={openPenaltyDialog} className="rounded-xl">
-                    Add penalty
-                  </Button>
-                ) : null}
                 {showCompensationActions ? (
                   <Button variant="ghost" size="sm" onClick={() => openMistakeDialog()} className="rounded-xl">
                     Add mistake
@@ -1172,56 +1112,6 @@ export function FaultsMemberDetailPage({
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
         />
       </div>
-
-      {showCompensationActions ? (
-        <Dialog
-          open={isPenaltyDialogOpen}
-          onClose={() => setIsPenaltyDialogOpen(false)}
-          title={`Add penalty for ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} monthly penalty entry.`}
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => setIsPenaltyDialogOpen(false)}
-                disabled={isPenaltySubmitting}
-              >
-                Cancel
-              </Button>
-              <Button onClick={() => void handleSubmitPenalty()} loading={isPenaltySubmitting}>
-                Save penalty
-              </Button>
-            </>
-          }
-        >
-          <div className="grid gap-4">
-            <div className="rounded-[18px] border border-white/10 bg-white/[0.03] px-4 py-3">
-              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
-              <p className="mt-2 text-base font-semibold text-white">{detail.report.fullName}</p>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Penalty points</label>
-              <Input
-                type="number"
-                min="1"
-                max="100"
-                value={penaltyPoints}
-                onChange={(event) => setPenaltyPoints(event.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Reason</label>
-              <Textarea
-                value={penaltyReason}
-                onChange={(event) => setPenaltyReason(event.target.value)}
-                placeholder="Optional penalty reason"
-              />
-            </div>
-          </div>
-        </Dialog>
-      ) : null}
 
       {showCompensationActions ? (
         <Dialog

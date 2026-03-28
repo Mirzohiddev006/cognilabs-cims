@@ -19,7 +19,6 @@ export function SalaryEstimateDrawer({
   year,
   onClose,
   onOpenDetail,
-  onAddPenalty,
   onAddDeliveryBonus,
 }: {
   open: boolean
@@ -28,7 +27,6 @@ export function SalaryEstimateDrawer({
   year: number
   onClose: () => void
   onOpenDetail: () => void
-  onAddPenalty: () => void
   onAddDeliveryBonus: () => void
 }) {
   useEffect(() => {
@@ -119,9 +117,6 @@ export function SalaryEstimateDrawer({
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button variant="ghost" size="sm" className="rounded-xl" onClick={onOpenDetail}>
                   Open full detail
-                </Button>
-                <Button variant="secondary" size="sm" className="rounded-xl" onClick={onAddPenalty}>
-                  Add penalty
                 </Button>
                 <Button variant="success" size="sm" className="rounded-xl" onClick={onAddDeliveryBonus}>
                   Add delivery bonus
