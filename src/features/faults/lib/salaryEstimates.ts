@@ -101,6 +101,8 @@ export type MemberMonthlyUpdateDay = {
   isFuture: boolean
   isWeekend: boolean
   isDayOff?: boolean | null
+  checkInTime?: string | null
+  checkOutTime?: string | null
   hasUpdate: boolean
   updatesCount: number
   entries: MemberMonthlyUpdateEntry[]
@@ -1660,6 +1662,8 @@ function parseMonthlyDaySeed(
   const isDayOff = toBoolean(source.is_day_off ?? source.day_off) ?? isWorkdayOverrideOffDay(workdayOverride)
   const explicitHasUpdate = toBoolean(source.has_update ?? source.has_updates ?? source.is_submitted ?? source.submitted)
   const updatesCount = toNumber(source.updates_count ?? source.count ?? source.total_updates ?? source.submitted_count)
+  const checkInTime = findFirstString(source, ['check_in_time', 'checkInTime', 'check_in', 'checkIn'])
+  const checkOutTime = findFirstString(source, ['check_out_time', 'checkOutTime', 'check_out', 'checkOut'])
   const note = extractUpdateEntryText(source) ?? null
   const normalizedStatus = normalizeMonthlyDayStatus(
     source.status ??
@@ -1683,6 +1687,8 @@ function parseMonthlyDaySeed(
     date: formatDateKey(date),
     status: hasUpdate && normalizedStatus !== 'sunday' ? 'submitted' as const : normalizedStatus,
     isDayOff,
+    checkInTime,
+    checkOutTime,
     hasUpdate,
     updatesCount: updatesCount ?? (hasUpdate ? 1 : 0),
     note,
@@ -1744,6 +1750,8 @@ export function buildMemberMonthlyUpdateCalendar(
       isFuture: currentDate > todayStart,
       isWeekend: currentDate.getDay() === 0,
       isDayOff: daySeed?.isDayOff ?? null,
+      checkInTime: daySeed?.checkInTime ?? null,
+      checkOutTime: daySeed?.checkOutTime ?? null,
       hasUpdate,
       updatesCount,
       entries,

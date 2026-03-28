@@ -72,28 +72,72 @@ type MemberDashboardData = {
   statsError: string | null
 }
 
+const MEMBER_DASHBOARD_CACHE_PREFIX = 'cims:member-dashboard:'
 const memberDashboardCache = new Map<string, MemberDashboardData>()
 
 function getMemberDashboardCacheKey(userId: number, year: number, month: number) {
   return `${userId}:${year}:${month}`
 }
 
+function getMemberDashboardStorageKey(cacheKey: string) {
+  return `${MEMBER_DASHBOARD_CACHE_PREFIX}${cacheKey}`
+}
+
+function readMemberDashboardCache(cacheKey: string) {
+  const cached = memberDashboardCache.get(cacheKey)
+
+  if (cached) {
+    return cached
+  }
+
+  if (typeof window === 'undefined') {
+    return undefined
+  }
+
+  try {
+    const rawValue = window.sessionStorage.getItem(getMemberDashboardStorageKey(cacheKey))
+
+    if (!rawValue) {
+      return undefined
+    }
+
+    const parsed = JSON.parse(rawValue) as MemberDashboardData
+    memberDashboardCache.set(cacheKey, parsed)
+    return parsed
+  } catch {
+    return undefined
+  }
+}
+
+function writeMemberDashboardCache(cacheKey: string, data: MemberDashboardData) {
+  memberDashboardCache.set(cacheKey, data)
+
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.sessionStorage.setItem(getMemberDashboardStorageKey(cacheKey), JSON.stringify(data))
+  } catch {
+    // Ignore sessionStorage quota or serialization issues and keep in-memory cache.
+  }
+}
+
 async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number, force = false): Promise<MemberDashboardData> {
   const cacheKey = getMemberDashboardCacheKey(memberUser.id, year, month)
 
   if (!force) {
-    const cached = memberDashboardCache.get(cacheKey)
+    const cached = readMemberDashboardCache(cacheKey)
 
     if (cached) {
       return cached
     }
   }
 
-  const [estimateResult, mistakesResult, deliveryBonusesResult, updatesResult, calendarResult, statsResult] = await Promise.allSettled([
+  const [estimateResult, mistakesResult, deliveryBonusesResult, calendarResult, statsResult] = await Promise.allSettled([
     membersService.mySalaryEstimate(year, month),
     membersService.listMistakes({ year, month, employeeId: memberUser.id }),
     membersService.listDeliveryBonuses({ year, month, employeeId: memberUser.id }),
-    membersService.updatesStatistics({ year, month, employeeIds: [memberUser.id] }),
     updateTrackingService.employeeMonthlyUpdates(year, month, memberUser.id),
     updateTrackingService.myStats(),
   ])
@@ -105,12 +149,12 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
       estimatePayload: estimateResult.status === 'fulfilled' ? estimateResult.value : null,
       mistakesPayload: mistakesResult.status === 'fulfilled' ? mistakesResult.value : null,
       deliveryBonusesPayload: deliveryBonusesResult.status === 'fulfilled' ? deliveryBonusesResult.value : null,
-      updatesPayload: updatesResult.status === 'fulfilled' ? updatesResult.value : null,
+      updatesPayload: null,
       calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
       estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
       mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
       deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
-      updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
+      updatesError: null,
       calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
       year,
       month,
@@ -119,7 +163,7 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
     statsError: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
   }
 
-  memberDashboardCache.set(cacheKey, result)
+  writeMemberDashboardCache(cacheKey, result)
   return result
 }
 
@@ -183,7 +227,8 @@ export function MemberDashboardPage() {
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberUser = user ? createMemberUser(user) : null
   const cacheKey = memberUser ? getMemberDashboardCacheKey(memberUser.id, year, month) : null
-  const cachedDashboardData = cacheKey ? memberDashboardCache.get(cacheKey) : undefined
+  const cachedDashboardData = cacheKey ? readMemberDashboardCache(cacheKey) : undefined
+  const shouldFetchDashboard = Boolean(memberUser) && !cachedDashboardData
 
   const dashboardQuery = useAsyncData(
     async () => {
@@ -194,10 +239,15 @@ export function MemberDashboardPage() {
       return loadMemberDashboardData(memberUser, year, month)
     },
     [memberUser?.id, month, year],
-    { enabled: Boolean(memberUser), initialData: cachedDashboardData },
+    { enabled: shouldFetchDashboard, initialData: cachedDashboardData },
   )
 
-  const data = dashboardQuery.data
+  const hasLiveDashboardDataForPeriod =
+    dashboardQuery.data?.detail.memberId === memberUser?.id &&
+    dashboardQuery.data?.detail.year === year &&
+    dashboardQuery.data?.detail.month === month
+  const data = cachedDashboardData ?? (hasLiveDashboardDataForPeriod ? dashboardQuery.data : undefined)
+  const isDashboardPending = Boolean(memberUser) && !data && !dashboardQuery.isError
 
   const calendarCounts = useMemo(() => {
     const days = data?.detail.updateCalendar?.days ?? []
@@ -282,7 +332,7 @@ export function MemberDashboardPage() {
 
   const detail = data?.detail
 
-  if (dashboardQuery.isLoading && !detail) {
+  if (isDashboardPending && !detail) {
     return (
       <ErrorStateBlock
         eyebrow="Member"

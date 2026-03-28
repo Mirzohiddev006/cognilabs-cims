@@ -167,30 +167,32 @@ export function CustomerDetailContent({
       </Card>
 
       <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
-          <div className="border-b border-[var(--border)] px-6 py-5">
-            <SectionTitle title="Profile" description="Core contact and routing metadata returned by the CRM detail endpoint." />
-          </div>
-          <div className="grid gap-3 px-6 py-5">
-            {[
-              ['Phone', customer.phone_number ?? customer.phone ?? '-'],
-              ['Platform', getCustomerDisplayPlatform(customer) || '-'],
-              ['Audio file ID', customer.audio_file_id || '-'],
-              ['Assistant', customer.assistant_name || '-'],
-              ['Conversation language', customer.conversation_language || '-'],
-              ['Recall time', customer.recall_time || '-'],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-center justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
-                <span className="text-sm text-[var(--muted-strong)]">{label}</span>
-                <span className="text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <div className="grid gap-5">
+          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+            <div className="border-b border-[var(--border)] px-6 py-5">
+              <SectionTitle title="Profile" description="Core contact and routing metadata returned by the CRM detail endpoint." />
+            </div>
+            <div className="grid gap-3 px-6 py-5">
+              {[
+                ['Phone', customer.phone_number ?? customer.phone ?? '-'],
+                ['Platform', getCustomerDisplayPlatform(customer) || '-'],
+                ['Audio file ID', customer.audio_file_id || '-'],
+                ['Assistant', customer.assistant_name || '-'],
+                ['Conversation language', customer.conversation_language || '-'],
+                ['Recall time', customer.recall_time || '-'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+                  <span className="text-sm text-[var(--muted-strong)]">{label}</span>
+                  <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {audioSource ? <CustomerAudioPanel audioSource={audioSource} /> : null}
+        </div>
 
         <div className="grid gap-5">
-          {audioSource ? <CustomerAudioPanel audioSource={audioSource} /> : null}
-
           <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
             <div className="border-b border-[var(--border)] px-6 py-5">
               <SectionTitle title="Notes" description="Operator notes attached to the customer record." />

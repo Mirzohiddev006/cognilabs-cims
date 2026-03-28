@@ -98,6 +98,87 @@ function formatEntryTimestamp(value?: string) {
   }).format(parsed)
 }
 
+function formatWorkTime(value?: string | null) {
+  if (!value) {
+    return '--:--'
+  }
+
+  const trimmed = value.trim()
+
+  const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/)
+
+  if (timeMatch) {
+    return `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}`
+  }
+
+  const parsed = new Date(trimmed)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return trimmed
+  }
+
+  return new Intl.DateTimeFormat(getIntlLocale(), {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(parsed)
+}
+
+function getMinutesFromTime(value?: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const trimmed = value.trim()
+  const timeMatch = trimmed.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+
+  if (timeMatch) {
+    const hours = Number(timeMatch[1])
+    const minutes = Number(timeMatch[2])
+
+    if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+      return null
+    }
+
+    return (hours * 60) + minutes
+  }
+
+  const parsed = new Date(trimmed)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return null
+  }
+
+  return (parsed.getHours() * 60) + parsed.getMinutes()
+}
+
+function getWorkedDurationLabel(day: MemberMonthlyUpdateDay) {
+  const checkInMinutes = getMinutesFromTime(day.checkInTime)
+  const checkOutMinutes = getMinutesFromTime(day.checkOutTime)
+
+  if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
+    return 'Hours not returned'
+  }
+
+  const totalMinutes = checkOutMinutes - checkInMinutes
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+
+  if (hours <= 0 && minutes <= 0) {
+    return '0h'
+  }
+
+  if (minutes === 0) {
+    return `${hours}h`
+  }
+
+  if (hours === 0) {
+    return `${minutes}m`
+  }
+
+  return `${hours}h ${minutes}m`
+}
+
 function getSpecialDayLabel(day: MemberMonthlyUpdateDay | null | undefined) {
   if (!day?.workdayOverride) {
     return null
@@ -225,6 +306,10 @@ function getDaySummary(day: MemberMonthlyUpdateDay) {
   if (day.status === 'sunday') return isHolidayDay(day) ? 'Holiday' : 'Off day'
   if (day.status === 'future') return 'Awaiting date'
   return 'No explicit status returned'
+}
+
+function shouldShowTimePanel(day: MemberMonthlyUpdateDay) {
+  return day.hasUpdate || Boolean(day.checkInTime) || Boolean(day.checkOutTime)
 }
 
 function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
@@ -577,7 +662,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                             onClick={() => setSelectedDate(day.date)}
                             aria-pressed={isSelected}
                             className={cn(
-                              'group relative flex min-h-[114px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3.5 py-2.5 text-left transition-all duration-200',
+                              'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200',
                               getDaySurfaceClass(day),
                               isSelected
                                 ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
@@ -596,7 +681,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 </p>
                                 <p
                                   className={cn(
-                                    'mt-1.5 text-[1.75rem] font-semibold leading-none tabular-nums tracking-tight',
+                                    'mt-1.5 text-[1.5rem] font-semibold leading-none tabular-nums tracking-tight',
                                     day.status === 'submitted' || day.status === 'missing' ? 'text-white' : 'text-white/82',
                                   )}
                                 >
@@ -618,6 +703,32 @@ export function MemberMonthlyUpdateCalendarBoard({
                               </div>
                             </div>
 
+                            {shouldShowTimePanel(day) ? (
+                              <div className="relative mt-2.5 space-y-1.5">
+                                <div className="grid grid-cols-2 gap-1.5">
+                                  <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
+                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                      In
+                                    </p>
+                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                      {formatWorkTime(day.checkInTime)}
+                                    </p>
+                                  </div>
+                                  <div className="rounded-[12px] border border-white/10 bg-white/[0.04] px-2 py-1.5">
+                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/44">
+                                      Out
+                                    </p>
+                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-white">
+                                      {formatWorkTime(day.checkOutTime)}
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-white/76">
+                                  {getWorkedDurationLabel(day)}
+                                </p>
+                              </div>
+                            ) : null}
+
                             <div className="relative mt-auto">
                               <span
                                 className={cn(
@@ -628,7 +739,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', getDayDotClass(day))} />
                                 {getCalendarCellStatusLabel(day.status, day)}
                               </span>
-                              <p className={cn('mt-1.5 text-[9px] leading-3.5', getDayTextClass(day))}>
+                              <p className="mt-1.5 text-[8px] leading-3 text-white/76">
                                 {getCalendarCellHint(day)}
                               </p>
                             </div>

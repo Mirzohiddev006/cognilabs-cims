@@ -1042,76 +1042,6 @@ function getCalendarCellHint(day: CalendarDay) {
   return 'No update yet'
 }
 
-function getCalendarAgendaEyebrow(day: CalendarDay, todayKey: string, selectedDate: string | null) {
-  if (day.date && day.date === selectedDate) {
-    return 'Selected'
-  }
-
-  if (day.date === todayKey) {
-    return 'Today'
-  }
-
-  if (day.workdayOverride) {
-    return getSpecialDayLabel(day) ?? 'Special day'
-  }
-
-  if (day.status === 'missing') {
-    return 'Needs follow-up'
-  }
-
-  if (day.status === 'submitted') {
-    return 'Latest log'
-  }
-
-  if (day.status === 'future') {
-    return 'Upcoming'
-  }
-
-  if (day.status === 'sunday') {
-    return 'Off day'
-  }
-
-  return 'Calendar day'
-}
-
-function getCalendarAgendaDays(calendar: CalendarData | null, todayKey: string, selectedDate: string | null) {
-  if (!calendar) {
-    return []
-  }
-
-  const selectedDay = selectedDate
-    ? calendar.days.find((day) => day.date === selectedDate) ?? null
-    : null
-  const todayDay = calendar.days.find((day) => day.date === todayKey) ?? null
-  const missingDays = calendar.days
-    .filter((day) => day.status === 'missing' && day.date)
-    .sort((left, right) => (right.date ?? '').localeCompare(left.date ?? ''))
-  const submittedDays = calendar.days
-    .filter((day) => day.status === 'submitted' && day.date)
-    .sort((left, right) => (right.date ?? '').localeCompare(left.date ?? ''))
-  const upcomingDays = calendar.days
-    .filter((day) => day.status === 'future' && day.date)
-    .sort((left, right) => (left.date ?? '').localeCompare(right.date ?? ''))
-
-  const seen = new Set<string>()
-  const result: CalendarDay[] = []
-
-  for (const day of [selectedDay, todayDay, ...missingDays, ...submittedDays, ...upcomingDays]) {
-    if (!day?.date || seen.has(day.date)) {
-      continue
-    }
-
-    seen.add(day.date)
-    result.push(day)
-
-    if (result.length === 6) {
-      break
-    }
-  }
-
-  return result
-}
-
 function shiftCalendarMonth(month: number, year: number, delta: number) {
   const nextDate = new Date(year, month - 1 + delta, 1)
 
@@ -1251,7 +1181,6 @@ export function UpdateTrackingPage() {
   const calendarCounts = useMemo(() => getCalendarCounts(calendar), [calendar])
   const selectedCalendarDay = useMemo(() => getSelectedCalendarDay(calendar, selectedDate), [calendar, selectedDate])
   const selectedCalendarDayLabel = useMemo(() => formatCalendarDayLabel(selectedCalendarDay), [selectedCalendarDay])
-  const calendarAgendaDays = useMemo(() => getCalendarAgendaDays(calendar, todayKey, selectedDate), [calendar, todayKey, selectedDate])
   const latestSubmittedDay = useMemo(() => (
     calendar?.days
       .slice()
@@ -1464,7 +1393,7 @@ export function UpdateTrackingPage() {
         />
       </div>
 
-      <div className="grid items-stretch gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.92fr)]">
+      <div className="grid items-stretch gap-6">
         <div className="flex min-h-full flex-col gap-6">
           <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-(--border) px-4 py-4 sm:px-5">
@@ -1538,7 +1467,7 @@ export function UpdateTrackingPage() {
                           onClick={handleJumpToToday}
                           className="min-h-11 rounded-[14px] border-emerald-400/18 bg-emerald-400/10 px-5 text-emerald-50 hover:border-emerald-300/30 hover:bg-emerald-400/14"
                         >
-                          This month
+                          {selectedMonthName} {year}
                         </Button>
                         <Button
                           variant="secondary"
@@ -1712,6 +1641,120 @@ export function UpdateTrackingPage() {
                       Open or upcoming
                     </span>
                   </div>
+
+                  <div className="mt-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 sm:p-5">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={cn(
+                            'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+                            getCalendarDayFocusClass(selectedCalendarDay),
+                          )}
+                        >
+                          {selectedCalendarDay?.day ?? '--'}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-blue-300/72">
+                            Focus Day
+                          </p>
+                          <h4 className="mt-2 text-lg font-semibold tracking-tight text-(--foreground)">
+                            {selectedCalendarDayLabel || 'No date selected'}
+                          </h4>
+                          <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-(--muted)">
+                            {selectedCalendarDay ? getCalendarCellHint(selectedCalendarDay) : 'Pick a date from the month grid to inspect details.'}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {selectedCalendarDay ? (
+                              <Badge variant={getCalendarStatusVariant(selectedCalendarDay.status, selectedCalendarDay)} dot>
+                                {getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay)}
+                              </Badge>
+                            ) : null}
+                            {selectedCalendarDay?.weekday ? (
+                              <Badge variant="secondary">{selectedCalendarDay.weekday}</Badge>
+                            ) : null}
+                            {selectedCalendarDay?.date === todayKey ? (
+                              <Badge variant="blue">Today</Badge>
+                            ) : null}
+                            {selectedCalendarDay?.hasUpdate ? (
+                              <Badge variant="violet">Payload available</Badge>
+                            ) : null}
+                            {isHolidayCalendarDay(selectedCalendarDay) ? (
+                              <Badge variant="blue">Holiday</Badge>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[420px] xl:max-w-[480px]">
+                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                          <p>Status</p>
+                          <p className="mt-1 font-medium text-(--foreground)">
+                            {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                          <p>Submission</p>
+                          <p className="mt-1 font-medium text-(--foreground)">
+                            {selectedCalendarDay?.hasUpdate ? 'Available' : 'None'}
+                          </p>
+                        </div>
+                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                          <p>Validation</p>
+                          <p className={cn(
+                            'mt-1 font-medium',
+                            selectedCalendarDay?.isValid === false
+                              ? 'text-amber-300'
+                              : selectedCalendarDay?.isValid === true
+                                ? 'text-emerald-300'
+                                : 'text-(--foreground)',
+                          )}>
+                            {selectedCalendarDay?.isValid === false ? 'Needs review' : selectedCalendarDay?.isValid === true ? 'Valid' : 'N/A'}
+                          </p>
+                        </div>
+                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                          <p>Entries</p>
+                          <p className="mt-1 font-medium text-(--foreground)">
+                            {selectedCalendarDay ? getCalendarEntryCount(selectedCalendarDay) : 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {shouldShowFocusContent ? (
+                      <div className="mt-4 rounded-[20px] border border-(--border) bg-(--surface) p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
+                              {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Special Day'}
+                            </p>
+                            <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
+                              {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'Details for this date'}
+                            </h4>
+                          </div>
+                          {selectedCalendarDay?.hasUpdate ? (
+                            <Badge variant="blue">API payload</Badge>
+                          ) : selectedCalendarDay?.workdayOverride ? (
+                            <Badge variant={isHolidayCalendarDay(selectedCalendarDay) ? 'blue' : 'warning'}>
+                              {getSpecialDayLabel(selectedCalendarDay) ?? 'Special day'}
+                            </Badge>
+                          ) : null}
+                        </div>
+
+                        <div className="mt-4 max-h-[320px] overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                          <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
+                            {getCalendarDetailText(selectedCalendarDay)}
+                          </p>
+                        </div>
+
+                        {selectedCalendarDay?.isValid === false ? (
+                          <p className="mt-3 text-xs text-amber-300">
+                            This update was returned with an invalid flag by the API.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </>
             )}
@@ -1760,169 +1803,6 @@ export function UpdateTrackingPage() {
           </Card>
         </div>
 
-        <div className="flex h-full min-h-full flex-col gap-6">
-          <Card variant="glass" className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-            <div className="border-b border-(--border) px-5 py-4">
-              <SectionTitle
-                title="Focus Day"
-                description="Selected-date inspector with status, validation, and returned content."
-              />
-            </div>
-            <div className="flex flex-1 flex-col space-y-4 px-5 py-4">
-              <div className="flex items-start gap-4">
-                <div className={cn(
-                  'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
-                  getCalendarDayFocusClass(selectedCalendarDay),
-                )}>
-                  {selectedCalendarDay?.day ?? '--'}
-                </div>
-
-                <div className="min-w-0">
-                  <h3 className="text-base font-semibold tracking-tight text-(--foreground)">
-                    {selectedCalendarDayLabel || 'No date selected'}
-                  </h3>
-                  <p className="mt-1 text-[12px] leading-5 text-(--muted)">
-                    {selectedCalendarDay ? getCalendarCellHint(selectedCalendarDay) : 'Pick a date from the month grid to inspect details.'}
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {selectedCalendarDay ? (
-                      <Badge variant={getCalendarStatusVariant(selectedCalendarDay.status, selectedCalendarDay)} dot>
-                        {getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay)}
-                      </Badge>
-                    ) : null}
-                    {selectedCalendarDay?.weekday ? (
-                      <Badge variant="secondary">{selectedCalendarDay.weekday}</Badge>
-                    ) : null}
-                    {selectedCalendarDay?.date === todayKey ? (
-                      <Badge variant="blue">Today</Badge>
-                    ) : null}
-                    {selectedCalendarDay?.hasUpdate ? (
-                      <Badge variant="violet">Payload available</Badge>
-                    ) : null}
-                    {isHolidayCalendarDay(selectedCalendarDay) ? (
-                      <Badge variant="blue">Holiday</Badge>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                  <p>Status</p>
-                  <p className="mt-1 font-medium text-(--foreground)">
-                    {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : 'N/A'}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                  <p>Submission</p>
-                  <p className="mt-1 font-medium text-(--foreground)">
-                    {selectedCalendarDay?.hasUpdate ? 'Available' : 'None'}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                  <p>Validation</p>
-                  <p className={cn(
-                    'mt-1 font-medium',
-                    selectedCalendarDay?.isValid === false
-                      ? 'text-amber-300'
-                      : selectedCalendarDay?.isValid === true
-                        ? 'text-emerald-300'
-                        : 'text-(--foreground)',
-                  )}>
-                    {selectedCalendarDay?.isValid === false ? 'Needs review' : selectedCalendarDay?.isValid === true ? 'Valid' : 'N/A'}
-                  </p>
-                </div>
-                <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                  <p>Entries</p>
-                  <p className="mt-1 font-medium text-(--foreground)">
-                    {selectedCalendarDay ? getCalendarEntryCount(selectedCalendarDay) : 0}
-                  </p>
-                </div>
-              </div>
-
-              {shouldShowFocusContent ? (
-                <div className="flex flex-1 flex-col rounded-[20px] border border-(--border) bg-(--surface) p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
-                        {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Special Day'}
-                      </p>
-                      <h3 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
-                        {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'Details for this date'}
-                      </h3>
-                    </div>
-                    {selectedCalendarDay?.hasUpdate ? (
-                      <Badge variant="blue">API payload</Badge>
-                    ) : selectedCalendarDay?.workdayOverride ? (
-                      <Badge variant={isHolidayCalendarDay(selectedCalendarDay) ? 'blue' : 'warning'}>
-                        {getSpecialDayLabel(selectedCalendarDay) ?? 'Special day'}
-                      </Badge>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-4 min-h-[280px] flex-1 overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
-                    <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
-                      {getCalendarDetailText(selectedCalendarDay)}
-                    </p>
-                  </div>
-
-                  {selectedCalendarDay?.isValid === false ? (
-                    <p className="mt-3 text-xs text-amber-300">
-                      This update was returned with an invalid flag by the API.
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-          </Card>
-
-          <Card variant="glass" className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
-            <div className="border-b border-(--border) px-5 py-4">
-              <SectionTitle
-                title="Action Queue"
-                description="Recent misses, today, and the next upcoming dates stay one click away."
-              />
-            </div>
-            <div className="flex-1 space-y-2.5 overflow-y-auto px-5 py-4">
-              {calendarAgendaDays.length > 0 ? calendarAgendaDays.map((day) => (
-                <button
-                  key={`agenda-${day.date ?? day.day}`}
-                  type="button"
-                  onClick={() => setSelectedDate(day.date ?? null)}
-                  className={cn(
-                    'w-full rounded-[18px] border px-3.5 py-3 text-left transition',
-                    selectedCalendarDay?.date === day.date
-                      ? 'border-violet-400/45 bg-violet-500/[0.08] shadow-[0_10px_24px_rgba(76,29,149,0.20)]'
-                      : 'border-white/8 bg-white/[0.02] hover:border-white/14 hover:bg-white/[0.04]',
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">
-                        {getCalendarAgendaEyebrow(day, todayKey, selectedDate)}
-                      </p>
-                      <p className="mt-1 text-sm font-semibold tracking-tight text-(--foreground)">
-                        {formatCalendarDayLabel(day) || `Day ${day.day}`}
-                      </p>
-                      <p className={cn('mt-1 text-[11px] leading-5', getCalendarDayTextClass(day))}>
-                        {getCalendarCellHint(day)}
-                      </p>
-                    </div>
-
-                    <Badge variant={getCalendarStatusVariant(day.status)} size="sm" dot>
-                      {getCalendarCellStatusLabel(day.status, day)}
-                    </Badge>
-                  </div>
-                </button>
-              )) : (
-                <div className="rounded-[18px] border border-dashed border-(--border) bg-(--card) px-4 py-5 text-sm text-(--muted)">
-                  No highlighted days in this range.
-                </div>
-              )}
-            </div>
-          </Card>
-
-        </div>
       </div>
 
       {trends.length > 0 && (
