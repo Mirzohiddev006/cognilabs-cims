@@ -51,6 +51,11 @@ export type CompanyPaymentRecord = {
   is_active: boolean
 } & Record<string, unknown>
 
+export type CompanyPaymentsResponse = {
+  payments: CompanyPaymentRecord[]
+  totalAmount: number
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
@@ -126,26 +131,39 @@ function normalizeCompanyPayment(item: unknown): CompanyPaymentRecord | null {
   }
 }
 
-function normalizeCompanyPaymentsResponse(payload: unknown): CompanyPaymentRecord[] {
+function normalizeCompanyPaymentsResponse(payload: unknown): CompanyPaymentsResponse {
   const parsed = parsePayload(payload)
 
   if (Array.isArray(parsed)) {
-    return parsed.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+    const payments = parsed.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+
+    return {
+      payments,
+      totalAmount: payments.reduce((sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0), 0),
+    }
   }
 
   if (!isRecord(parsed)) {
-    return []
+    return {
+      payments: [],
+      totalAmount: 0,
+    }
   }
 
   const list = ['items', 'payments', 'data', 'results']
     .map((key) => parsed[key])
     .find(Array.isArray)
 
-  if (!Array.isArray(list)) {
-    return []
-  }
+  const payments = Array.isArray(list)
+    ? list.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+    : []
 
-  return list.map(normalizeCompanyPayment).filter((item): item is CompanyPaymentRecord => Boolean(item))
+  return {
+    payments,
+    totalAmount:
+      toNumber(parsed.total_amount ?? parsed.totalAmount ?? parsed.amount_total ?? parsed.amountTotal)
+      ?? payments.reduce((sum, item) => sum + (Number.isFinite(item.amount) ? item.amount : 0), 0),
+  }
 }
 
 export type UserPayload = {

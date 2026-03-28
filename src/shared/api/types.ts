@@ -27,6 +27,7 @@ export type CreateResponse = {
 
 export type UserRole =
   | 'CEO'
+  | 'Member'
   | 'Customer'
   | 'SalesManager'
   | 'Finance'

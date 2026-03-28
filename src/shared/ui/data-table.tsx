@@ -9,6 +9,7 @@ type Column<T> = {
   header: ReactNode
   align?: 'left' | 'center' | 'right'
   width?: string
+  minWidth?: string
   render: (row: T) => ReactNode
 }
 
@@ -30,6 +31,17 @@ const alignClassName = {
   left: 'text-left',
   center: 'text-center',
   right: 'text-right',
+}
+
+function getColumnStyle<T>(column: Column<T>) {
+  if (!column.width && !column.minWidth) {
+    return undefined
+  }
+
+  return {
+    width: column.width,
+    minWidth: column.minWidth ?? column.width,
+  }
 }
 
 function getVisiblePageItems(totalPages: number) {
@@ -111,7 +123,7 @@ export function DataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  style={col.width ? { width: col.width } : undefined}
+                  style={getColumnStyle(col)}
                   className={cn(
                     headPadding,
                     'ui-table-heading border-b border-[var(--border)] text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--caption)] whitespace-nowrap',
@@ -141,6 +153,7 @@ export function DataTable<T>({
                   {columns.map((col) => (
                     <td
                       key={col.key}
+                      style={getColumnStyle(col)}
                       className={cn(
                         rowPadding,
                         'text-sm font-medium text-[var(--foreground)] align-middle',

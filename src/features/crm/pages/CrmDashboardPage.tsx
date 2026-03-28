@@ -246,6 +246,24 @@ function normalizePhoneValue(value?: string | null) {
   return (value ?? '').replace(/\D/g, '')
 }
 
+function summarizeCustomerNotes(value?: string | null, wordLimit = 3) {
+  const notes = (value ?? '').replace(/\s+/g, ' ').trim()
+
+  if (!notes) {
+    return '-'
+  }
+
+  const aiBotJobMatch = notes.match(/Lead from AI Bot\s*\|\s*Job:\s*(.+?)(?:\s*\|\s*|$)/i)
+  const sourceText = aiBotJobMatch?.[1]?.trim() || notes
+  const words = sourceText.split(/\s+/).filter(Boolean)
+
+  if (words.length <= wordLimit) {
+    return sourceText
+  }
+
+  return `${words.slice(0, wordLimit).join(' ')}...`
+}
+
 function buildNormalizedStatusMetaMap(statusOptions: DynamicStatusOption[]) {
   const map = new Map<string, DynamicStatusOption>()
 
@@ -929,6 +947,7 @@ export function CrmDashboardPage() {
               {
                 key: 'client',
                 header: 'Client',
+                minWidth: '280px',
                 render: (row) => {
                   const displayName = getCustomerDisplayName(row)
                   const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? 'none'
@@ -999,8 +1018,8 @@ export function CrmDashboardPage() {
                 header: 'Notes',
                 width: '320px',
                 render: (row) => (
-                  <span className="block max-w-[320px] truncate text-sm text-(--muted-strong) sm:text-[15px]">
-                    {row.notes || '-'}
+                  <span className="block max-w-[320px] truncate text-sm text-(--muted-strong) sm:text-[15px]" title={row.notes ?? undefined}>
+                    {summarizeCustomerNotes(row.notes)}
                   </span>
                 ),
               },

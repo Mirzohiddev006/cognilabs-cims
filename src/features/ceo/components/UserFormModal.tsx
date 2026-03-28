@@ -18,7 +18,7 @@ type UserFormModalProps = {
   isSubmitting: boolean
 }
 
-const roleOptions = ['Customer', 'SalesManager', 'Finance', 'CEO', 'Admin']
+const roleOptions = ['Member', 'SalesManager', 'Finance', 'CEO', 'Admin', 'Customer']
 
 export function UserFormModal({
   open,

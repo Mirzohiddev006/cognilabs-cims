@@ -29,6 +29,46 @@ export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: 
   return new URL(`/crm/customers/audio/${audioFileId}`, env.apiBaseUrl).toString()
 }
 
+function formatCustomerNotes(notes?: string | null) {
+  if (!notes) {
+    return []
+  }
+
+  const normalizedNotes = notes
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\r\n?/g, '\n')
+    .replace(/\u00a0/g, ' ')
+
+  const segmentedNotes = normalizedNotes
+    .replace(/\s+(?=\([^)]+\)\s+\d{1,2}[./]\d{1,2}[./]\d{2,4}\b)/g, '\n\n')
+    .replace(
+      /\s+(?=\d{1,2}[./]\d{1,2}[./]\d{2,4}\s+\d{1,2}(?::|\.)\d{2}(?:\s?[APMapm]{2})?\s+\([^)]+\)\s+)/g,
+      '\n\n',
+    )
+    .replace(
+      /\s+(?=\d{1,2}[./]\d{1,2}[./]\d{2,4}\s+\d{1,2}(?::|\.)\d{2}(?:\s?[APMapm]{2})?\s+[A-ZА-ЯЁ][\p{L}.'-]*(?:\s+[A-ZА-ЯЁ][\p{L}.'-]*){0,2}\s+)/gu,
+      '\n\n',
+    )
+    .replace(
+      /\s+(?=\d{1,2}(?::|\.)\d{2}(?:\s?[APMapm]{2})?\s+\d{1,2}[./]\d{1,2}[./]\d{2,4}\s+[A-ZА-ЯЁ][\p{L}.'-]*(?:\s+[A-ZА-ЯЁ][\p{L}.'-]*){0,2}\b)/gu,
+      '\n\n',
+    )
+    .replace(
+      /\s+(?=(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{1,2}:\d{2}(?:\s+\([^)]+\))?)/g,
+      '\n\n',
+    )
+    .replace(
+      /([.!?])\s+(?=\d{1,2}[./]\d{1,2}[./]\d{2,4}\s+(?:Today|Tomorrow|Yesterday|Call|Called|Need|Meeting|Spoke|Contacted|Lead)\b)/g,
+      '$1\n\n',
+    )
+    .replace(/\n{3,}/g, '\n\n')
+
+  return segmentedNotes
+    .split(/\n{2,}/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
 export function CustomerDetailContent({
   customer,
   audioSource,
@@ -37,6 +77,7 @@ export function CustomerDetailContent({
   audioSource: string | null
 }) {
   const customerName = getCustomerDisplayName(customer)
+  const formattedNotes = formatCustomerNotes(customer.notes)
 
   return (
     <section className="space-y-5">
@@ -123,8 +164,14 @@ export function CustomerDetailContent({
               <SectionTitle title="Notes" description="Operator notes attached to the customer record." />
             </div>
             <div className="px-6 py-5">
-              {customer.notes ? (
-                <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.notes}</p>
+              {formattedNotes.length > 0 ? (
+                <div className="space-y-4">
+                  {formattedNotes.map((note, index) => (
+                    <p key={`${customer.id}-note-${index}`} className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">
+                      {note}
+                    </p>
+                  ))}
+                </div>
               ) : (
                 <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
               )}

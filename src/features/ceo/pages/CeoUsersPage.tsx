@@ -40,7 +40,7 @@ const initialUserForm: UserFormValues = {
   telegram_id: '',
   default_salary: 0,
   job_title: '',
-  role: 'Customer',
+  role: 'Member',
   is_active: true,
 }
 
@@ -55,7 +55,7 @@ const emptyUsers: CeoUserRecord[] = []
 const emptySentMessages: CeoMessageRecord[] = []
 const emptyIncomingMessages: IncomingCeoMessageRecord[] = []
 const now = new Date()
-const supportedUserRoles = ['Customer', 'SalesManager', 'Finance', 'CEO', 'Admin'] as const
+const supportedUserRoles = ['Member', 'Customer', 'SalesManager', 'Finance', 'CEO', 'Admin'] as const
 const messageTimestampFormatter = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
@@ -256,7 +256,7 @@ function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
     telegram_id: user.telegram_id ?? '',
     default_salary: typeof user.default_salary === 'number' ? user.default_salary : 0,
     job_title: user.job_title ?? '',
-    role: normalizeUserRole(String(user.role ?? 'Customer')),
+    role: normalizeUserRole(String(user.role ?? initialUserForm.role)),
     is_active: Boolean(user.is_active),
   }
 }

@@ -138,11 +138,15 @@ export function CeoDashboardPage() {
 
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
-  const companyPayments = companyPaymentsQuery.data ?? emptyCompanyPayments
+  const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
 
   const activeRecurringPayments = useMemo(() => {
     return companyPayments.filter((payment) => payment.is_active).length
   }, [companyPayments])
+  const totalRecurringPaymentsAmount = useMemo(() => {
+    return companyPaymentsQuery.data?.totalAmount
+      ?? companyPayments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0)
+  }, [companyPayments, companyPaymentsQuery.data?.totalAmount])
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -479,6 +483,9 @@ export function CeoDashboardPage() {
             <Badge variant="secondary" dot>
               {companyPayments.length - activeRecurringPayments} inactive
             </Badge>
+            <Badge variant="blue" dot>
+              {formatCurrency(totalRecurringPaymentsAmount)} total
+            </Badge>
             <Button size="sm" onClick={openCreateCompanyPaymentModal}>
               Create reminder
             </Button>
@@ -734,6 +741,9 @@ export function CeoDashboardPage() {
             </Badge>
             <Badge variant="secondary" dot>
               {companyPayments.length - activeRecurringPayments} inactive
+            </Badge>
+            <Badge variant="blue" dot>
+              {formatCurrency(totalRecurringPaymentsAmount)} total
             </Badge>
             <Button size="sm" onClick={openCreateCompanyPaymentModal}>
               Create reminder
