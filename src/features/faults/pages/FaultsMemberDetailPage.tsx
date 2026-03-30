@@ -873,8 +873,6 @@ export function FaultsMemberDetailPage({
         />
       </div>
 
-      <CompensationPolicyPanel policy={detail.compensationPolicy} />
-
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -1129,6 +1127,8 @@ export function FaultsMemberDetailPage({
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
         />
       </div>
+
+      <CompensationPolicyPanel policy={detail.compensationPolicy} />
 
       {showCompensationActions ? (
         <Dialog
