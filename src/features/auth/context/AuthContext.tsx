@@ -1,7 +1,9 @@
 import {
   createContext,
   startTransition,
+  useCallback,
   useEffect,
+  useMemo,
   useState,
   type PropsWithChildren,
 } from 'react'
@@ -102,7 +104,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   })
   const [isRefreshingUser, setIsRefreshingUser] = useState(false)
 
-  async function refreshUser() {
+  const refreshUser = useCallback(async () => {
     setIsRefreshingUser(true)
 
     try {
@@ -119,7 +121,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } finally {
       setIsRefreshingUser(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     async function initializeAuth() {
@@ -136,16 +138,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     void initializeAuth()
-  }, [])
+  }, [refreshUser])
 
-  async function acceptTokens(tokens: TokenResponse) {
+  const acceptTokens = useCallback(async (tokens: TokenResponse) => {
     setSessionTokens(tokens)
     setStatus('loading')
 
     return refreshUser()
-  }
+  }, [refreshUser])
 
-  async function logout(scope: LogoutScope = 'current') {
+  const logout = useCallback(async (scope: LogoutScope = 'current') => {
     try {
       if (scope === 'all') {
         await authService.logoutAll()
@@ -163,18 +165,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setUser(null)
       startTransition(() => setStatus('anonymous'))
     }
-  }
+  }, [])
 
-  function hasPermission(permissionKey?: string) {
+  const hasPermission = useCallback((permissionKey?: string) => {
     return canAccess(user, permissionKey)
-  }
+  }, [user])
 
-  function getDefaultPath() {
+  const getDefaultPath = useCallback(() => {
     return getDefaultDashboardPath(user)
-  }
+  }, [user])
 
-  async function resolveDashboardPath() {
-    const fallbackPath = getDefaultPath()
+  const resolveDashboardPath = useCallback(async () => {
+    const fallbackPath = getDefaultDashboardPath(user)
 
     if (fallbackPath === '/updates' || fallbackPath === '/member/dashboard') {
       return fallbackPath
@@ -188,24 +190,34 @@ export function AuthProvider({ children }: PropsWithChildren) {
     } catch {
       return fallbackPath
     }
-  }
+  }, [user])
+
+  const value = useMemo<AuthContextValue>(() => ({
+    user,
+    status,
+    isAuthenticated: status === 'authenticated',
+    isReady: status !== 'loading',
+    isRefreshingUser,
+    acceptTokens,
+    refreshUser,
+    logout,
+    hasPermission,
+    getDefaultPath,
+    resolveDashboardPath,
+  }), [
+    acceptTokens,
+    getDefaultPath,
+    hasPermission,
+    isRefreshingUser,
+    logout,
+    refreshUser,
+    resolveDashboardPath,
+    status,
+    user,
+  ])
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        status,
-        isAuthenticated: status === 'authenticated',
-        isReady: status !== 'loading',
-        isRefreshingUser,
-        acceptTokens,
-        refreshUser,
-        logout,
-        hasPermission,
-        getDefaultPath,
-        resolveDashboardPath,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )

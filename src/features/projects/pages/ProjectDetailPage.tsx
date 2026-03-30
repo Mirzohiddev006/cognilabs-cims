@@ -166,16 +166,18 @@ export function ProjectDetailPage() {
       return
     }
 
-    const nextSearchParams = new URLSearchParams(searchParams)
+    setSearchParams((current) => {
+      const nextSearchParams = new URLSearchParams(current)
 
-    if (nextBoardParam === null) {
-      nextSearchParams.delete('board')
-    } else {
-      nextSearchParams.set('board', nextBoardParam)
-    }
+      if (nextBoardParam === null) {
+        nextSearchParams.delete('board')
+      } else {
+        nextSearchParams.set('board', nextBoardParam)
+      }
 
-    setSearchParams(nextSearchParams, { replace: true })
-  }, [project, searchParams, selectedBoard, selectedBoardParam, setSearchParams])
+      return nextSearchParams
+    }, { replace: true })
+  }, [project, selectedBoard, selectedBoardParam, setSearchParams])
 
   useEffect(() => {
     if (projectMembers.length === 0) {

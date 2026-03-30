@@ -86,11 +86,14 @@ export function DataTable<T>({
   const totalPages = Math.max(1, Math.ceil(rows.length / effectivePageSize))
 
   useEffect(() => {
-    setCurrentPage(1)
+    setCurrentPage((current) => (current === 1 ? current : 1))
   }, [rows.length, effectivePageSize])
 
   useEffect(() => {
-    setCurrentPage((current) => Math.min(current, totalPages))
+    setCurrentPage((current) => {
+      const nextPage = Math.min(current, totalPages)
+      return nextPage === current ? current : nextPage
+    })
   }, [totalPages])
 
   const startIndex = (currentPage - 1) * effectivePageSize

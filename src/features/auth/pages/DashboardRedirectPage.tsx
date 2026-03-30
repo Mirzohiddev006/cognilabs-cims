@@ -1,11 +1,12 @@
 import { startTransition, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { Card } from '../../../shared/ui/card'
 import { useAuth } from '../hooks/useAuth'
 
 export function DashboardRedirectPage() {
   const { t } = useLocale()
+  const location = useLocation()
   const navigate = useNavigate()
   const { resolveDashboardPath, status } = useAuth()
 
@@ -14,13 +15,30 @@ export function DashboardRedirectPage() {
       return
     }
 
+    let isActive = true
+
     async function redirectToDashboard() {
       const destination = await resolveDashboardPath()
+
+      if (!isActive) {
+        return
+      }
+
+      const currentLocation = `${location.pathname}${location.search}${location.hash}`
+
+      if (destination === currentLocation) {
+        return
+      }
+
       startTransition(() => navigate(destination, { replace: true }))
     }
 
     void redirectToDashboard()
-  }, [navigate, resolveDashboardPath, status])
+
+    return () => {
+      isActive = false
+    }
+  }, [location.hash, location.pathname, location.search, navigate, resolveDashboardPath, status])
 
   return (
     <div className="grid min-h-[55vh] place-items-center">
