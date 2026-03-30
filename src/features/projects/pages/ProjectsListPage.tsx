@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -32,6 +33,7 @@ export function ProjectsListPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
+  const lt = translateCurrentLiteral
   const [searchParams, setSearchParams] = useSearchParams()
 
   const canManageProjects = hasPermission('projects')
@@ -214,14 +216,14 @@ export function ProjectsListPage() {
 
   const headerMeta = useMemo(() => {
     const meta: Array<{ label: string; value: string; tone?: 'neutral' | 'blue' | 'success' | 'warning' | 'danger' | 'violet' }> = [
-      { label: 'All projects', value: String(total), tone: 'blue' },
-      { label: 'Visible now', value: String(filteredProjects.length), tone: selectedMemberId !== null ? 'violet' : 'success' },
-      { label: 'Members', value: String(members.length), tone: 'neutral' },
+      { label: lt('All projects'), value: String(total), tone: 'blue' },
+      { label: lt('Visible now'), value: String(filteredProjects.length), tone: selectedMemberId !== null ? 'violet' : 'success' },
+      { label: lt('Members'), value: String(members.length), tone: 'neutral' },
     ]
 
     if (selectedMember && memberOverview) {
       meta.push({
-        label: 'Assigned tasks',
+        label: lt('Assigned tasks'),
         value: String(memberOverview.taskCount),
         tone: memberOverview.taskCount > 0 ? 'warning' : 'neutral',
       })
@@ -238,13 +240,13 @@ export function ProjectsListPage() {
     setIsSubmitting(true)
     try {
       await projectsService.createProject(fd)
-      showToast({ title: 'Project created', tone: 'success' })
+      showToast({ title: lt('Project created'), tone: 'success' })
       setIsCreateOpen(false)
       await projectsQuery.refetch()
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: 'Failed to create project', tone: 'error' })
+      showToast({ title: lt('Failed to create project'), tone: 'error' })
     } finally {
       setIsSubmitting(false)
     }
@@ -258,14 +260,14 @@ export function ProjectsListPage() {
     setIsSubmitting(true)
     try {
       await projectsService.updateProject(editProject.id, fd)
-      showToast({ title: 'Project updated', tone: 'success' })
+      showToast({ title: lt('Project updated'), tone: 'success' })
       setEditProject(null)
       await projectsQuery.refetch()
       await projectDetailsQuery.refetch()
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: 'Failed to update project', tone: 'error' })
+      showToast({ title: lt('Failed to update project'), tone: 'error' })
     } finally {
       setIsSubmitting(false)
     }
@@ -277,8 +279,8 @@ export function ProjectsListPage() {
     }
 
     const ok = await confirm({
-      title: 'Delete project?',
-      description: `"${project.project_name}" and all its boards will be permanently deleted. This cannot be undone.`,
+      title: lt('Delete project?'),
+      description: `"${project.project_name}" ${lt('and all its boards will be permanently deleted. This cannot be undone.')}`,
       tone: 'danger',
     })
 
@@ -288,12 +290,12 @@ export function ProjectsListPage() {
 
     try {
       await projectsService.deleteProject(project.id)
-      showToast({ title: 'Project deleted', tone: 'success' })
+      showToast({ title: lt('Project deleted'), tone: 'success' })
       await projectsQuery.refetch()
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: 'Failed to delete project', tone: 'error' })
+      showToast({ title: lt('Failed to delete project'), tone: 'error' })
     }
   }
 
@@ -331,7 +333,7 @@ export function ProjectsListPage() {
       const detail = await projectsService.getProject(project.id)
       setEditProject(detail)
     } catch {
-      showToast({ title: 'Failed to load project members', tone: 'error' })
+      showToast({ title: lt('Failed to load project members'), tone: 'error' })
     }
   }
 
@@ -339,7 +341,7 @@ export function ProjectsListPage() {
     <>
       <div className="flex flex-col gap-6 page-enter">
         <PageHeader
-          title="Projects"
+          title={lt('Projects')}
           meta={headerMeta}
           actions={canManageProjects ? (
             <Button
@@ -352,7 +354,7 @@ export function ProjectsListPage() {
                 </svg>
               )}
             >
-              New project
+              {lt('New project')}
             </Button>
           ) : undefined}
         />
@@ -361,16 +363,16 @@ export function ProjectsListPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Members</p>
-                <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">Project members overview</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Members')}</p>
+                <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">{lt('Project members overview')}</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  Member ustiga bossangiz, shu member qatnashayotgan projectlar va unga biriktirilgan tasklar ko'rinadi.
+                  {lt('Click a member to see the projects they are part of and the tasks assigned to them.')}
                 </p>
               </div>
 
               {selectedMemberId !== null ? (
                 <Button variant="ghost" size="sm" onClick={() => selectMember(null)}>
-                  Clear member filter
+                  {lt('Clear member filter')}
                 </Button>
               ) : null}
             </div>
@@ -386,7 +388,7 @@ export function ProjectsListPage() {
               </div>
             ) : members.length === 0 ? (
               <p className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-4 py-5 text-sm text-[var(--muted)]">
-                Members are not available yet.
+                {lt('Members are not available yet.')}
               </p>
             ) : (
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -401,8 +403,8 @@ export function ProjectsListPage() {
                   )}
                 >
                   <div>
-                    <p className="text-sm font-semibold">All members</p>
-                    <p className="mt-1 text-[11px] text-[var(--muted)]">Show every project</p>
+                    <p className="text-sm font-semibold">{lt('All members')}</p>
+                    <p className="mt-1 text-[11px] text-[var(--muted)]">{lt('Show every project')}</p>
                   </div>
                   <Badge variant={selectedMemberId === null ? 'blue' : 'secondary'}>
                     {total}
@@ -464,7 +466,7 @@ export function ProjectsListPage() {
                     size="lg"
                   />
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Selected member</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Selected member')}</p>
                     <h2 className="mt-2 truncate text-xl font-semibold text-[var(--foreground)]">
                       {selectedMember.name} {selectedMember.surname}
                     </h2>
@@ -475,10 +477,10 @@ export function ProjectsListPage() {
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="violet">{selectedMemberProjects.length} projects</Badge>
-                  <Badge variant="secondary">{memberOverview?.boardCount ?? 0} boards</Badge>
+                  <Badge variant="violet">{selectedMemberProjects.length} {lt('projects')}</Badge>
+                  <Badge variant="secondary">{memberOverview?.boardCount ?? 0} {lt('boards')}</Badge>
                   <Badge variant={(memberOverview?.taskCount ?? 0) > 0 ? 'warning' : 'secondary'}>
-                    {memberOverview?.taskCount ?? 0} tasks
+                    {memberOverview?.taskCount ?? 0} {lt('tasks')}
                   </Badge>
                 </div>
               </div>
@@ -496,9 +498,9 @@ export function ProjectsListPage() {
                 <StateBlock
                   tone="error"
                   eyebrow="Error"
-                  title="Failed to load member tasks"
-                  description="Member overviewni yuklashda xatolik bo'ldi. Qayta urinib ko'ring."
-                  actionLabel="Retry"
+                  title={lt('Failed to load member tasks')}
+                  description={lt('There was an error loading the member overview. Please try again.')}
+                  actionLabel={lt('Retry')}
                   onAction={refetchSelectedMemberData}
                 />
               ) : memberOverview && memberOverview.projects.length > 0 ? (
@@ -524,16 +526,16 @@ export function ProjectsListPage() {
                         </div>
 
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{project.boardCount} boards</Badge>
+                          <Badge variant="secondary">{project.boardCount} {lt('boards')}</Badge>
                           <Badge variant={project.taskCount > 0 ? 'warning' : 'secondary'}>
-                            {project.taskCount} tasks
+                            {project.taskCount} {lt('tasks')}
                           </Badge>
                         </div>
                       </div>
 
                       {project.tasks.length === 0 ? (
                         <p className="mt-4 rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 text-sm text-[var(--muted)]">
-                          This member has no assigned tasks in active boards for this project.
+                          {lt('This member has no assigned tasks in active boards for this project.')}
                         </p>
                       ) : (
                         <div className="mt-4 space-y-3">
@@ -570,7 +572,7 @@ export function ProjectsListPage() {
                                       </Badge>
                                     ) : null}
                                     <Badge variant={dueVariant}>
-                                      {task.dueDate ? `Due ${formatProjectDate(task.dueDate)}` : 'No due date'}
+                                      {task.dueDate ? `${lt('Due')} ${formatProjectDate(task.dueDate)}` : lt('No due date')}
                                     </Badge>
                                   </div>
                                 </div>
@@ -585,9 +587,9 @@ export function ProjectsListPage() {
               ) : (
                 <StateBlock
                   tone="empty"
-                  eyebrow="No tasks"
-                  title="No member activity found"
-                  description="Bu member projectlarda qatnashgan bo'lishi mumkin, lekin active boardlarda unga biriktirilgan task topilmadi."
+                  eyebrow={lt('No tasks')}
+                  title={lt('No member activity found')}
+                  description={lt('This member may be part of projects, but no assigned tasks were found in active boards.')}
                 />
               )}
             </div>
@@ -609,7 +611,7 @@ export function ProjectsListPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={selectedMember ? 'Search selected member projects...' : 'Search projects...'}
+              placeholder={selectedMember ? lt('Search selected member projects...') : lt('Search projects...')}
               className="pl-9"
             />
           </div>
@@ -619,7 +621,7 @@ export function ProjectsListPage() {
               onClick={() => setSearch('')}
               className="text-xs text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
             >
-              Clear
+              {lt('Clear')}
             </button>
           ) : null}
         </div>
@@ -633,33 +635,33 @@ export function ProjectsListPage() {
         ) : projectsQuery.isError || isSelectedMemberProjectsError ? (
           <StateBlock
             tone="error"
-            eyebrow="Error"
-            title="Failed to load projects"
-            description="Something went wrong. Please try again."
-            actionLabel="Retry"
+            eyebrow={lt('Error')}
+            title={lt('Failed to load projects')}
+            description={lt('Something went wrong. Please try again.')}
+            actionLabel={lt('Retry')}
             onAction={selectedMemberId !== null ? refetchSelectedMemberData : () => void projectsQuery.refetch()}
           />
         ) : filteredProjects.length === 0 ? (
           <StateBlock
             tone="empty"
-            eyebrow="No results"
+            eyebrow={lt('No results')}
             title={
               search
-                ? 'No projects match your search'
+                ? lt('No projects match your search')
                 : selectedMember
-                  ? 'This member has no matching projects'
-                  : 'No projects yet'
+                  ? lt('This member has no matching projects')
+                  : lt('No projects yet')
             }
             description={
               search
-                ? 'Try a different search term.'
+                ? lt('Try a different search term.')
                 : selectedMember
-                  ? 'Choose another member or clear the filter to see all projects.'
+                  ? lt('Choose another member or clear the filter to see all projects.')
                   : canManageProjects
-                    ? 'Create your first project to get started organizing your work.'
-                    : 'No projects are visible for this account yet.'
+                    ? lt('Create your first project to get started organizing your work.')
+                    : lt('No projects are visible for this account yet.')
             }
-            actionLabel={!search && !selectedMember && canManageProjects ? 'Create project' : undefined}
+            actionLabel={!search && !selectedMember && canManageProjects ? lt('Create project') : undefined}
             onAction={!search && !selectedMember && canManageProjects ? () => setIsCreateOpen(true) : undefined}
           />
         ) : (
@@ -683,8 +685,8 @@ export function ProjectsListPage() {
             open={isCreateOpen}
             onClose={() => setIsCreateOpen(false)}
             onSubmit={handleCreate}
-            title="Create project"
-            submitLabel="Create"
+            title={lt('Create project')}
+            submitLabel={lt('Create')}
             isSubmitting={isSubmitting}
           />
 
@@ -693,8 +695,8 @@ export function ProjectsListPage() {
             onClose={() => setEditProject(null)}
             onSubmit={handleUpdate}
             initial={editProject}
-            title="Edit project"
-            submitLabel="Save changes"
+            title={lt('Edit project')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isSubmitting}
           />
         </>

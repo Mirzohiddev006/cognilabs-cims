@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from '../../../app/hooks/useTheme'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -32,6 +33,7 @@ export function SalaryEstimateDrawer({
 }) {
   const { theme } = useTheme()
   const isLight = theme === 'light'
+  const lt = translateCurrentLiteral
 
   useEffect(() => {
     if (!open) {
@@ -70,7 +72,7 @@ export function SalaryEstimateDrawer({
     >
       <button
         type="button"
-        aria-label="Close salary detail drawer"
+        aria-label={lt('Close salary detail drawer')}
         className={cn(
           'absolute inset-0 backdrop-blur-md',
           isLight
@@ -96,12 +98,12 @@ export function SalaryEstimateDrawer({
             )}
           >
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">Salary estimate</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">{lt('Salary estimate')}</p>
               <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                 {report.fullName}
               </h2>
               <p className="mt-1 text-xs text-[var(--muted-strong)]">
-                {getMonthName(month)} {year} snapshot
+                {getMonthName(month)} {year} {lt('snapshot')}
               </p>
             </div>
 
@@ -114,7 +116,7 @@ export function SalaryEstimateDrawer({
                   ? 'bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)]'
                   : 'bg-white/[0.03] text-white/72 hover:border-white/16 hover:bg-white/[0.06] hover:text-white',
               )}
-              aria-label="Close salary drawer"
+              aria-label={lt('Close salary drawer')}
             >
               <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                 <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
@@ -140,45 +142,45 @@ export function SalaryEstimateDrawer({
 
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={report.hasPenalty ? 'danger' : 'outline'}>
-                    {report.hasPenalty ? 'Has deduction' : 'Clean'}
+                    {report.hasPenalty ? lt('Has deduction') : lt('Clean')}
                   </Badge>
                   <Badge variant={report.hasBonus ? 'success' : 'outline'}>
-                    {report.hasBonus ? 'Has bonus' : 'No bonus'}
+                    {report.hasBonus ? lt('Has bonus') : lt('No bonus')}
                   </Badge>
                   <Badge variant={report.qualifiesProductivityBonus ? 'success' : 'outline'}>
-                    {report.qualifiesProductivityBonus ? 'Productivity qualified' : 'Productivity pending'}
+                    {report.qualifiesProductivityBonus ? lt('Productivity qualified') : lt('Productivity pending')}
                   </Badge>
                 </div>
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Button variant="ghost" size="sm" className="rounded-xl" onClick={onOpenDetail}>
-                  Open full detail
+                  {lt('Open full detail')}
                 </Button>
                 <Button variant="success" size="sm" className="rounded-xl" onClick={onAddDeliveryBonus}>
-                  Add delivery bonus
+                  {lt('Add delivery bonus')}
                 </Button>
               </div>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <DetailStatTile label="Final salary" value={formatAmount(report.finalSalary)} theme={theme} />
-              <DetailStatTile label="Estimated salary" value={formatAmount(report.estimatedSalary)} theme={theme} />
-              <DetailStatTile label="Base salary" value={formatAmount(report.baseSalary)} theme={theme} />
-              <DetailStatTile label="After penalty" value={formatAmount(report.afterPenalty)} theme={theme} />
-              <DetailStatTile label="Deduction" value={formatAmount(report.deductionAmount)} tone="danger" theme={theme} />
-              <DetailStatTile label="Bonus amount" value={formatAmount(report.bonusAmount)} tone="success" theme={theme} />
-              <DetailStatTile label="Bonus %" value={formatPercent(report.totalBonusPercent)} tone="success" theme={theme} />
-              <DetailStatTile label="Penalty %" value={formatPercent(report.penaltyPercentage)} tone="danger" theme={theme} />
-              <DetailStatTile label="Penalty points" value={formatCount(report.penaltyPoints)} tone="danger" theme={theme} />
-              <DetailStatTile label="Penalty entries" value={formatCount(report.penaltyEntries)} tone="danger" theme={theme} />
-              <DetailStatTile label="Bonus entries" value={formatCount(report.bonusEntries)} tone="success" theme={theme} />
-              <DetailStatTile label="Mistakes" value={formatCount(report.mistakesCount)} tone="danger" theme={theme} />
-              <DetailStatTile label="Delivery bonuses" value={formatCount(report.deliveryBonusCount)} tone="success" theme={theme} />
-              <DetailStatTile label="Working days" value={formatCount(report.workingDays)} theme={theme} />
-              <DetailStatTile label="Update days" value={formatCount(report.updateDays)} theme={theme} />
+              <DetailStatTile label={lt('Final salary')} value={formatAmount(report.finalSalary)} theme={theme} />
+              <DetailStatTile label={lt('Estimated salary')} value={formatAmount(report.estimatedSalary)} theme={theme} />
+              <DetailStatTile label={lt('Base salary')} value={formatAmount(report.baseSalary)} theme={theme} />
+              <DetailStatTile label={lt('After penalty')} value={formatAmount(report.afterPenalty)} theme={theme} />
+              <DetailStatTile label={lt('Deduction')} value={formatAmount(report.deductionAmount)} tone="danger" theme={theme} />
+              <DetailStatTile label={lt('Bonus amount')} value={formatAmount(report.bonusAmount)} tone="success" theme={theme} />
+              <DetailStatTile label={lt('Bonus %')} value={formatPercent(report.totalBonusPercent)} tone="success" theme={theme} />
+              <DetailStatTile label={lt('Penalty %')} value={formatPercent(report.penaltyPercentage)} tone="danger" theme={theme} />
+              <DetailStatTile label={lt('Penalty points')} value={formatCount(report.penaltyPoints)} tone="danger" theme={theme} />
+              <DetailStatTile label={lt('Penalty entries')} value={formatCount(report.penaltyEntries)} tone="danger" theme={theme} />
+              <DetailStatTile label={lt('Bonus entries')} value={formatCount(report.bonusEntries)} tone="success" theme={theme} />
+              <DetailStatTile label={lt('Mistakes')} value={formatCount(report.mistakesCount)} tone="danger" theme={theme} />
+              <DetailStatTile label={lt('Delivery bonuses')} value={formatCount(report.deliveryBonusCount)} tone="success" theme={theme} />
+              <DetailStatTile label={lt('Working days')} value={formatCount(report.workingDays)} theme={theme} />
+              <DetailStatTile label={lt('Update days')} value={formatCount(report.updateDays)} theme={theme} />
               <DetailStatTile
-                label="Productivity"
+                label={lt('Productivity')}
                 value={Number.isFinite(report.productivityPercentage)
                   ? `${formatCount(report.updateDays)}/${formatCount(report.workingDays)} / ${formatPercent(report.productivityPercentage)}`
                   : '-'}
@@ -197,7 +199,7 @@ export function SalaryEstimateDrawer({
                 )}
               >
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className={cn(isLight ? 'text-rose-600' : 'text-[var(--danger-text)]')}>Penalty pressure</span>
+                  <span className={cn(isLight ? 'text-rose-600' : 'text-[var(--danger-text)]')}>{lt('Penalty pressure')}</span>
                   <span className={cn('font-semibold', penaltyProgress > 0 ? (isLight ? 'text-rose-600' : 'text-[var(--danger-text)]') : 'text-[var(--foreground)]')}>
                     {formatPercent(report.penaltyPercentage)}
                   </span>
@@ -210,8 +212,8 @@ export function SalaryEstimateDrawer({
                 </div>
                 <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
                   {report.penaltyEntries > 0
-                    ? `${formatCount(report.penaltyEntries)} penalties and ${formatCount(report.penaltyPoints)} points reduced this month.`
-                    : 'No penalty entries were recorded for this period.'}
+                    ? `${formatCount(report.penaltyEntries)} ${lt('penalties')} ${lt('and')} ${formatCount(report.penaltyPoints)} ${lt('points reduced this month.')}`
+                    : lt('No penalty entries were recorded for this period.')}
                 </p>
               </div>
 
@@ -224,7 +226,7 @@ export function SalaryEstimateDrawer({
                 )}
               >
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className={cn(isLight ? 'text-emerald-600' : 'text-[var(--success-text)]')}>Productivity performance</span>
+                  <span className={cn(isLight ? 'text-emerald-600' : 'text-[var(--success-text)]')}>{lt('Productivity performance')}</span>
                   <span className={cn('font-semibold', report.qualifiesProductivityBonus ? (isLight ? 'text-emerald-600' : 'text-[var(--success-text)]') : 'text-[var(--foreground)]')}>
                     {Number.isFinite(report.productivityPercentage) ? formatPercent(report.productivityPercentage) : '-'}
                   </span>
@@ -237,8 +239,8 @@ export function SalaryEstimateDrawer({
                 </div>
                 <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
                   {report.qualifiesProductivityBonus
-                    ? 'Productivity bonus qualified for this period.'
-                    : 'Productivity bonus did not qualify for this period.'}
+                    ? lt('Productivity bonus qualified for this period.')
+                    : lt('Productivity bonus did not qualify for this period.')}
                 </p>
               </div>
             </div>

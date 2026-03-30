@@ -2,6 +2,7 @@ import { createPortal } from 'react-dom'
 import { useEffect, useState } from 'react'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
 import { formatProjectDate, getPriorityConfig, getSnoozePresets, isDueDateOverdue, isDueDateSoon } from '../lib/format'
@@ -26,10 +27,11 @@ function getCardImageUrl(image: { url?: string | null; url_path?: string | null 
 
 function SnoozeMenu({ disabled }: { disabled?: boolean }) {
   const presets = getSnoozePresets()
+  const lt = translateCurrentLiteral
   return (
     <div className="flex flex-col gap-1">
       <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-        Snooze until
+        {lt('Snooze until')}
       </p>
       {presets.map((p) => (
         <button
@@ -54,10 +56,10 @@ function SnoozeMenu({ disabled }: { disabled?: boolean }) {
           <rect x="2" y="2" width="12" height="12" rx="2" />
           <path d="M5 8h6M8 5v6" strokeLinecap="round" />
         </svg>
-        Pick a date
+        {lt('Pick a date')}
       </button>
       <Badge variant="secondary" size="sm" className="self-start mt-1">
-        Coming soon
+        {lt('Coming soon')}
       </Badge>
     </div>
   )
@@ -74,6 +76,7 @@ export function CardDetailModal({
   canManage = true,
 }: CardDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const lt = translateCurrentLiteral
 
   useEffect(() => {
     if (!open) return
@@ -113,7 +116,7 @@ export function CardDetailModal({
         type="button"
         className="absolute inset-0 bg-black/70 backdrop-blur-md"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={lt('Close')}
       />
 
       {/* Drawer / modal */}
@@ -152,7 +155,7 @@ export function CardDetailModal({
                   size="sm"
                   dot={overdue || soon}
                 >
-                  Due {formatProjectDate(card.due_date)}
+                  {lt('Due')} {formatProjectDate(card.due_date)}
                 </Badge>
               )}
             </div>
@@ -161,12 +164,12 @@ export function CardDetailModal({
           <div className="flex items-center gap-2 shrink-0">
             {canManage ? (
               <Button variant="secondary" size="sm" onClick={onEdit}>
-                Edit
+                {lt('Edit')}
               </Button>
             ) : null}
             {canManage ? (
               <Button variant="danger" size="sm" onClick={onDelete}>
-                Delete
+                {lt('Delete')}
               </Button>
             ) : null}
             <button
@@ -202,7 +205,7 @@ export function CardDetailModal({
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-4">
                       <div className="min-w-0">
                         <p className="truncate text-base font-semibold text-white">{selectedImage.filename}</p>
-                        <p className="mt-1 text-sm text-white/70">Open full size</p>
+                        <p className="mt-1 text-sm text-white/70">{lt('Open full size')}</p>
                       </div>
                       <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[11px] font-medium text-white/80">
                         {selectedImageIndex + 1} / {images.length}
@@ -215,14 +218,14 @@ export function CardDetailModal({
               {/* Description */}
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  Description
+                  {lt('Description')}
                 </p>
                 {card.description ? (
                   <p className="text-base leading-7 text-[var(--foreground)] whitespace-pre-wrap">
                     {card.description}
                   </p>
                 ) : (
-                  <p className="text-base text-[var(--muted)] italic">No description</p>
+                  <p className="text-base text-[var(--muted)] italic">{lt('No description')}</p>
                 )}
               </div>
 
@@ -230,7 +233,7 @@ export function CardDetailModal({
               {images.length > 0 && (
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                    Attachments ({images.length})
+                    {lt('Attachments')} ({images.length})
                   </p>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                     {images.map((img, index) => (
@@ -265,7 +268,7 @@ export function CardDetailModal({
               {/* Assignee */}
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  Assignee
+                  {lt('Assignee')}
                 </p>
                 {card.assignee ? (
                   <div className="flex items-center gap-2">
@@ -285,14 +288,14 @@ export function CardDetailModal({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-[var(--muted)]">Unassigned</p>
+                  <p className="text-sm text-[var(--muted)]">{lt('Unassigned')}</p>
                 )}
               </div>
 
               {/* Created by */}
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  Created by
+                  {lt('Created by')}
                 </p>
                 <div className="flex items-center gap-2">
                   <Avatar
@@ -310,20 +313,20 @@ export function CardDetailModal({
               {/* Dates */}
               <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-                  Dates
+                  {lt('Dates')}
                 </p>
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[var(--muted)]">Created</span>
+                    <span className="text-[var(--muted)]">{lt('Created')}</span>
                     <span className="text-[var(--foreground)]">{formatProjectDate(card.created_at)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[var(--muted)]">Updated</span>
+                    <span className="text-[var(--muted)]">{lt('Updated')}</span>
                     <span className="text-[var(--foreground)]">{formatProjectDate(card.updated_at)}</span>
                   </div>
                   {card.due_date && (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-[var(--muted)]">Due</span>
+                      <span className="text-[var(--muted)]">{lt('Due')}</span>
                       <span className={cn(
                         overdue ? 'text-[var(--danger-text)]' : soon ? 'text-[var(--warning-text)]' : 'text-[var(--foreground)]'
                       )}>

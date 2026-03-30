@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -113,6 +114,7 @@ export function BoardWorkspace({
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
+  const lt = translateCurrentLiteral
 
   const canManageProjects = hasPermission('projects')
   const isEmbedded = mode === 'embedded'
@@ -173,11 +175,11 @@ export function BoardWorkspace({
     setIsBoardSubmitting(true)
     try {
       await projectsService.updateBoard(board.id, values)
-      showToast({ title: 'Board updated', tone: 'success' })
+      showToast({ title: lt('Board updated'), tone: 'success' })
       setIsEditBoardOpen(false)
       await Promise.allSettled([boardQuery.refetch(), notifyBoardsChanged()])
     } catch {
-      showToast({ title: 'Failed to update board', tone: 'error' })
+      showToast({ title: lt('Failed to update board'), tone: 'error' })
     } finally {
       setIsBoardSubmitting(false)
     }
@@ -189,8 +191,8 @@ export function BoardWorkspace({
     }
 
     const ok = await confirm({
-      title: 'Archive board?',
-      description: `"${board.name}" will be archived. All data is preserved.`,
+      title: lt('Archive board?'),
+      description: `"${board.name}" ${lt('will be archived. All data is preserved.')}`,
       tone: 'danger',
     })
 
@@ -200,7 +202,7 @@ export function BoardWorkspace({
 
     try {
       await projectsService.deleteBoard(board.id)
-      showToast({ title: 'Board archived', tone: 'success' })
+      showToast({ title: lt('Board archived'), tone: 'success' })
       await notifyBoardsChanged()
 
       if (isEmbedded) {
@@ -209,7 +211,7 @@ export function BoardWorkspace({
 
       navigate(`/projects/${board.project_id}`)
     } catch {
-      showToast({ title: 'Failed to archive board', tone: 'error' })
+      showToast({ title: lt('Failed to archive board'), tone: 'error' })
     }
   }
 
@@ -221,11 +223,11 @@ export function BoardWorkspace({
     setIsColumnSubmitting(true)
     try {
       await projectsService.createColumn(board.id, values)
-      showToast({ title: 'Column added', tone: 'success' })
+      showToast({ title: lt('Column added'), tone: 'success' })
       setIsAddColumnOpen(false)
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to create column', tone: 'error' })
+      showToast({ title: lt('Failed to create column'), tone: 'error' })
     } finally {
       setIsColumnSubmitting(false)
     }
@@ -239,11 +241,11 @@ export function BoardWorkspace({
     setIsColumnSubmitting(true)
     try {
       await projectsService.updateColumn(editColumnState.column.id, values)
-      showToast({ title: 'Column updated', tone: 'success' })
+      showToast({ title: lt('Column updated'), tone: 'success' })
       setEditColumnState(null)
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to update column', tone: 'error' })
+      showToast({ title: lt('Failed to update column'), tone: 'error' })
     } finally {
       setIsColumnSubmitting(false)
     }
@@ -255,8 +257,8 @@ export function BoardWorkspace({
     }
 
     const ok = await confirm({
-      title: 'Delete column?',
-      description: 'All cards in this column will also be deleted.',
+      title: lt('Delete column?'),
+      description: lt('All cards in this column will also be deleted.'),
       tone: 'danger',
     })
 
@@ -266,10 +268,10 @@ export function BoardWorkspace({
 
     try {
       await projectsService.deleteColumn(columnId)
-      showToast({ title: 'Column deleted', tone: 'success' })
+      showToast({ title: lt('Column deleted'), tone: 'success' })
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to delete column', tone: 'error' })
+      showToast({ title: lt('Failed to delete column'), tone: 'error' })
     }
   }
 
@@ -281,11 +283,11 @@ export function BoardWorkspace({
     setIsCardSubmitting(true)
     try {
       await projectsService.createCard(addCardState.columnId, fd)
-      showToast({ title: 'Card created', tone: 'success' })
+      showToast({ title: lt('Card created'), tone: 'success' })
       setAddCardState(null)
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to create card', tone: 'error' })
+      showToast({ title: lt('Failed to create card'), tone: 'error' })
     } finally {
       setIsCardSubmitting(false)
     }
@@ -299,14 +301,14 @@ export function BoardWorkspace({
     setIsCardSubmitting(true)
     try {
       await projectsService.updateCard(editCardState.card.id, fd)
-      showToast({ title: 'Card updated', tone: 'success' })
+      showToast({ title: lt('Card updated'), tone: 'success' })
       setEditCardState(null)
       if (detailCard?.id === editCardState.card.id) {
         setDetailCard(null)
       }
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to update card', tone: 'error' })
+      showToast({ title: lt('Failed to update card'), tone: 'error' })
     } finally {
       setIsCardSubmitting(false)
     }
@@ -318,8 +320,8 @@ export function BoardWorkspace({
     }
 
     const ok = await confirm({
-      title: 'Delete card?',
-      description: 'This card will be permanently removed.',
+      title: lt('Delete card?'),
+      description: lt('This card will be permanently removed.'),
       tone: 'danger',
     })
 
@@ -329,13 +331,13 @@ export function BoardWorkspace({
 
     try {
       await projectsService.deleteCard(cardId)
-      showToast({ title: 'Card deleted', tone: 'success' })
+      showToast({ title: lt('Card deleted'), tone: 'success' })
       if (detailCard?.id === cardId) {
         setDetailCard(null)
       }
       await boardQuery.refetch()
     } catch {
-      showToast({ title: 'Failed to delete card', tone: 'error' })
+      showToast({ title: lt('Failed to delete card'), tone: 'error' })
     }
   }
 
@@ -348,7 +350,7 @@ export function BoardWorkspace({
       await projectsService.moveCard(cardId, columnId, order)
       boardQuery.setData((current) => (current ? moveCardInBoard(current, cardId, columnId, order) : current))
     } catch {
-      showToast({ title: 'Failed to move card, changes reverted.', tone: 'error' })
+      showToast({ title: lt('Failed to move card, changes reverted.'), tone: 'error' })
       await boardQuery.refetch()
       throw new Error('moveCard failed')
     }
@@ -363,7 +365,7 @@ export function BoardWorkspace({
       await projectsService.moveColumn(columnId, order)
       boardQuery.setData((current) => (current ? moveColumnInBoard(current, columnId, order) : current))
     } catch {
-      showToast({ title: 'Failed to reorder column, changes reverted.', tone: 'error' })
+      showToast({ title: lt('Failed to reorder column, changes reverted.'), tone: 'error' })
       await boardQuery.refetch()
       throw new Error('moveColumn failed')
     }
@@ -391,10 +393,10 @@ export function BoardWorkspace({
     return (
       <StateBlock
         tone="error"
-        eyebrow="Error"
-        title="Failed to load board"
-        description="The board could not be found or an error occurred."
-        actionLabel={isEmbedded ? undefined : 'Go back'}
+        eyebrow={lt('Error')}
+        title={lt('Failed to load board')}
+        description={lt('The board could not be found or an error occurred.')}
+        actionLabel={isEmbedded ? undefined : lt('Go back')}
         onAction={isEmbedded ? undefined : () => navigate(-1)}
       />
     )
@@ -411,7 +413,7 @@ export function BoardWorkspace({
             <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M10 4L6 8l4 4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            Back to project
+            {lt('Back to project')}
           </Link>
         ) : null}
 
@@ -421,7 +423,7 @@ export function BoardWorkspace({
           </h2>
           {board.is_archived ? (
             <Badge variant="secondary" size="sm" dot>
-              Archived
+              {lt('Archived')}
             </Badge>
           ) : null}
           {board.description ? (
@@ -432,7 +434,7 @@ export function BoardWorkspace({
         </div>
 
         <p className="text-[10px] text-[var(--muted)]">
-          {boardStats.columnCount} columns · {boardStats.cardCount} cards · Updated {formatProjectDate(board.updated_at)}
+          {boardStats.columnCount} {lt('columns')} · {boardStats.cardCount} {lt('cards')} · {lt('Updated')} {formatProjectDate(board.updated_at)}
         </p>
       </div>
 
@@ -448,13 +450,13 @@ export function BoardWorkspace({
               </svg>
             )}
           >
-            Add column
+            {lt('Add column')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setIsEditBoardOpen(true)}>
-            Edit
+            {lt('Edit')}
           </Button>
           <Button variant="danger" size="sm" onClick={handleArchiveBoard}>
-            Archive
+            {lt('Archive')}
           </Button>
         </div>
       ) : null}
@@ -465,14 +467,14 @@ export function BoardWorkspace({
     <div className={isEmbedded ? 'p-6' : 'flex flex-1 items-center justify-center'}>
       <StateBlock
         tone="empty"
-        eyebrow="Empty board"
-        title="No columns yet"
+        eyebrow={lt('Empty board')}
+        title={lt('No columns yet')}
         description={
           isReadOnlyBoard
-            ? 'This board has no visible columns yet.'
-            : 'Add your first column to start organizing cards.'
+            ? lt('This board has no visible columns yet.')
+            : lt('Add your first column to start organizing cards.')
         }
-        actionLabel={!isReadOnlyBoard ? 'Add column' : undefined}
+        actionLabel={!isReadOnlyBoard ? lt('Add column') : undefined}
         onAction={!isReadOnlyBoard ? () => setIsAddColumnOpen(true) : undefined}
       />
     </div>
@@ -516,8 +518,8 @@ export function BoardWorkspace({
             onClose={() => setIsEditBoardOpen(false)}
             onSubmit={handleUpdateBoard}
             initial={board}
-            title="Edit board"
-            submitLabel="Save changes"
+            title={lt('Edit board')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isBoardSubmitting}
           />
 
@@ -525,8 +527,8 @@ export function BoardWorkspace({
             open={isAddColumnOpen}
             onClose={() => setIsAddColumnOpen(false)}
             onSubmit={handleCreateColumn}
-            title="Add column"
-            submitLabel="Add column"
+            title={lt('Add column')}
+            submitLabel={lt('Add column')}
             isSubmitting={isColumnSubmitting}
           />
 
@@ -535,8 +537,8 @@ export function BoardWorkspace({
             onClose={() => setEditColumnState(null)}
             onSubmit={handleUpdateColumn}
             initial={editColumnState?.column ?? null}
-            title="Edit column"
-            submitLabel="Save changes"
+            title={lt('Edit column')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isColumnSubmitting}
           />
 
@@ -545,8 +547,8 @@ export function BoardWorkspace({
             onClose={() => setAddCardState(null)}
             onSubmit={handleCreateCard}
             members={allUsers}
-            title="Create card"
-            submitLabel="Create card"
+            title={lt('Create card')}
+            submitLabel={lt('Create card')}
             isSubmitting={isCardSubmitting}
           />
 
@@ -556,8 +558,8 @@ export function BoardWorkspace({
             onSubmit={handleUpdateCard}
             initial={editCardState?.card ?? null}
             members={allUsers}
-            title="Edit card"
-            submitLabel="Save changes"
+            title={lt('Edit card')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isCardSubmitting}
           />
         </>

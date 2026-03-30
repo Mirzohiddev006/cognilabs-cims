@@ -16,6 +16,7 @@ import type {
 } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
@@ -125,11 +126,12 @@ function SummaryCard({
   value: string | number
   hint: string
 }) {
+  const lt = translateCurrentLiteral
   return (
     <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{lt(label)}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-white">{value}</p>
-      <p className="mt-2 text-xs text-(--muted)">{hint}</p>
+      <p className="mt-2 text-xs text-(--muted)">{lt(hint)}</p>
     </div>
   )
 }
@@ -191,6 +193,7 @@ function BooleanToggle({
   trueLabel: string
   falseLabel: string
 }) {
+  const lt = translateCurrentLiteral
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       <button
@@ -203,7 +206,7 @@ function BooleanToggle({
             : 'border-white/10 bg-white/[0.03] text-white/72 hover:border-white/16',
         )}
       >
-        {trueLabel}
+        {lt(trueLabel)}
       </button>
       <button
         type="button"
@@ -215,7 +218,7 @@ function BooleanToggle({
             : 'border-white/10 bg-white/[0.03] text-white/72 hover:border-white/16',
         )}
       >
-        {falseLabel}
+        {lt(falseLabel)}
       </button>
     </div>
   )
@@ -260,6 +263,7 @@ function getImageCategoryLabel(category?: ManagementImageCategory | null) {
 export function CeoManagementPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const lt = translateCurrentLiteral
   const [activeTab, setActiveTab] = useState<ManagementTab>('statuses')
 
   const [pageDialogMode, setPageDialogMode] = useState<'create' | 'edit'>('create')
@@ -419,7 +423,7 @@ export function CeoManagementPage() {
 
     if (failed && failed.status === 'rejected') {
       showToast({
-        title: 'Management refresh failed',
+        title: lt('Management refresh failed'),
         description: getApiErrorMessage(failed.reason),
         tone: 'error',
       })
@@ -427,10 +431,10 @@ export function CeoManagementPage() {
     }
 
     showToast({
-      title: 'Management refreshed',
+      title: lt('Management refreshed'),
       description: activeTab === 'images'
-        ? 'Pages, statuses, roles and images reloaded.'
-        : 'Pages, statuses and roles reloaded.',
+        ? lt('Pages, statuses, roles and images reloaded.')
+        : lt('Pages, statuses and roles reloaded.'),
       tone: 'success',
     })
   }
@@ -486,9 +490,9 @@ export function CeoManagementPage() {
 
   async function handleDeleteImageByPath(imagePath: string) {
     const approved = await confirm({
-      title: 'Delete this image?',
+      title: lt('Delete this image?'),
       description: imagePath,
-      confirmLabel: 'Delete image',
+      confirmLabel: lt('Delete image'),
       tone: 'danger',
     })
 
@@ -503,13 +507,13 @@ export function CeoManagementPage() {
       applyCleanupResult(response)
       await refreshImagesAfterCleanup()
       showToast({
-        title: 'Image cleanup complete',
+        title: lt('Image cleanup complete'),
         description: response.message,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Image delete failed',
+        title: lt('Image delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -535,8 +539,8 @@ export function CeoManagementPage() {
   async function handleSubmitPage() {
     if (!pageForm.name.trim() || !pageForm.displayName.trim() || !pageForm.routePath.trim()) {
       showToast({
-        title: 'Page form incomplete',
-        description: 'Name, display name va route path majburiy.',
+        title: lt('Page form incomplete'),
+        description: lt('Name, display name, and route path are required.'),
         tone: 'error',
       })
       return
@@ -574,8 +578,8 @@ export function CeoManagementPage() {
       await pagesQuery.refetch()
       closePageDialog()
       showToast({
-        title: pageDialogMode === 'create' ? 'Page created' : 'Page updated',
-        description: 'Management pages list refreshed.',
+        title: pageDialogMode === 'create' ? lt('Page created') : lt('Page updated'),
+        description: lt('Management pages list refreshed.'),
         tone: 'success',
       })
 
@@ -584,7 +588,7 @@ export function CeoManagementPage() {
       }
     } catch (error) {
       showToast({
-        title: 'Page save failed',
+        title: lt('Page save failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -595,11 +599,11 @@ export function CeoManagementPage() {
 
   async function handleDeletePage(item: ManagementPageRecord) {
     const approved = await confirm({
-      title: `Delete page ${item.display_name}?`,
+      title: `${lt('Delete page')} ${item.display_name}?`,
       description: item.is_system
         ? 'Backend system page ni oвЂchirishga ruxsat bermasligi mumkin.'
         : 'Permission page butunlay oвЂchiriladi.',
-      confirmLabel: 'Delete page',
+      confirmLabel: lt('Delete page'),
       tone: 'danger',
     })
 
@@ -611,13 +615,13 @@ export function CeoManagementPage() {
       await managementService.deletePage(item.id)
       await pagesQuery.refetch()
       showToast({
-        title: 'Page deleted',
-        description: `${item.display_name} removed.`,
+        title: lt('Page deleted'),
+        description: `${item.display_name} ${lt('removed.')}`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete failed',
+        title: lt('Delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -655,8 +659,8 @@ export function CeoManagementPage() {
   async function handleSubmitStatus() {
     if (!statusForm.name.trim() || !statusForm.displayName.trim()) {
       showToast({
-        title: 'Status form incomplete',
-        description: 'Name va display name majburiy.',
+        title: lt('Status form incomplete'),
+        description: lt('Name and display name are required.'),
         tone: 'error',
       })
       return
@@ -694,8 +698,8 @@ export function CeoManagementPage() {
       await statusesQuery.refetch()
       closeStatusDialog()
       showToast({
-        title: statusDialogMode === 'create' ? 'Status created' : 'Status updated',
-        description: 'Management statuses list refreshed.',
+        title: statusDialogMode === 'create' ? lt('Status created') : lt('Status updated'),
+        description: lt('Management statuses list refreshed.'),
         tone: 'success',
       })
 
@@ -704,7 +708,7 @@ export function CeoManagementPage() {
       }
     } catch (error) {
       showToast({
-        title: 'Status save failed',
+        title: lt('Status save failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -715,11 +719,11 @@ export function CeoManagementPage() {
 
   async function handleDeleteStatus(item: ManagementStatusRecord) {
     const approved = await confirm({
-      title: `Delete status ${item.display_name}?`,
+      title: `${lt('Delete status')} ${item.display_name}?`,
       description: item.is_system
         ? 'Backend system statusni oвЂchirishga ruxsat bermasligi mumkin.'
         : 'Status butunlay oвЂchiriladi.',
-      confirmLabel: 'Delete status',
+      confirmLabel: lt('Delete status'),
       tone: 'danger',
     })
 
@@ -731,13 +735,13 @@ export function CeoManagementPage() {
       await managementService.deleteStatus(item.id)
       await statusesQuery.refetch()
       showToast({
-        title: 'Status deleted',
-        description: `${item.display_name} removed.`,
+        title: lt('Status deleted'),
+        description: `${item.display_name} ${lt('removed.')}`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete failed',
+        title: lt('Delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -747,8 +751,8 @@ export function CeoManagementPage() {
   async function handleSubmitRole() {
     if (!roleForm.name.trim() || !roleForm.displayName.trim()) {
       showToast({
-        title: 'Role form incomplete',
-        description: 'Name va display name majburiy.',
+        title: lt('Role form incomplete'),
+        description: lt('Name and display name are required.'),
         tone: 'error',
       })
       return
@@ -782,8 +786,8 @@ export function CeoManagementPage() {
       await rolesQuery.refetch()
       closeRoleDialog()
       showToast({
-        title: roleDialogMode === 'create' ? 'Role created' : 'Role updated',
-        description: 'Management roles list refreshed.',
+        title: roleDialogMode === 'create' ? lt('Role created') : lt('Role updated'),
+        description: lt('Management roles list refreshed.'),
         tone: 'success',
       })
 
@@ -792,7 +796,7 @@ export function CeoManagementPage() {
       }
     } catch (error) {
       showToast({
-        title: 'Role save failed',
+        title: lt('Role save failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -803,11 +807,11 @@ export function CeoManagementPage() {
 
   async function handleDeleteRole(item: ManagementRoleRecord) {
     const approved = await confirm({
-      title: `Delete role ${item.display_name}?`,
+      title: `${lt('Delete role')} ${item.display_name}?`,
       description: item.is_system
         ? 'Backend system rolni oвЂchirishga ruxsat bermasligi mumkin.'
         : 'Role butunlay oвЂchiriladi.',
-      confirmLabel: 'Delete role',
+      confirmLabel: lt('Delete role'),
       tone: 'danger',
     })
 
@@ -819,13 +823,13 @@ export function CeoManagementPage() {
       await managementService.deleteRole(item.id)
       await rolesQuery.refetch()
       showToast({
-        title: 'Role deleted',
-        description: `${item.display_name} removed.`,
+        title: lt('Role deleted'),
+        description: `${item.display_name} ${lt('removed.')}`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete failed',
+        title: lt('Delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -835,17 +839,17 @@ export function CeoManagementPage() {
   async function handleDeleteSelectedImages() {
     if (selectedImagePaths.length === 0) {
       showToast({
-        title: 'No images selected',
-        description: 'Delete qilish uchun kamida bitta rasm tanlang.',
+        title: lt('No images selected'),
+        description: lt('Select at least one image to delete.'),
         tone: 'error',
       })
       return
     }
 
     const approved = await confirm({
-      title: `Delete ${selectedImagePaths.length} selected image${selectedImagePaths.length > 1 ? 's' : ''}?`,
-      description: 'Bulk delete selected paths orqali ishlaydi va DB reference-lar ham tozalanishi mumkin.',
-      confirmLabel: 'Delete selected',
+      title: `${lt('Delete')} ${selectedImagePaths.length} ${lt(selectedImagePaths.length > 1 ? 'selected images' : 'selected image')}?`,
+      description: lt('Bulk delete runs against the selected paths and can also clear database references.'),
+      confirmLabel: lt('Delete selected'),
       tone: 'danger',
     })
 
@@ -865,13 +869,13 @@ export function CeoManagementPage() {
       applyCleanupResult(response)
       await refreshImagesAfterCleanup()
       showToast({
-        title: 'Selected images deleted',
+        title: lt('Selected images deleted'),
         description: response.message,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Selected delete failed',
+        title: lt('Selected delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -950,9 +954,9 @@ export function CeoManagementPage() {
   if (isInitialLoading) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Management"
-        title="Loading management modules"
-        description="Fetching pages overview, statuses and roles."
+        eyebrow={lt('CEO / Management')}
+        title={lt('Loading management modules')}
+        description={lt('Fetching pages overview, statuses and roles.')}
       />
     )
   }
@@ -960,10 +964,10 @@ export function CeoManagementPage() {
   if (!pagesQuery.data && !statusesQuery.data && !rolesQuery.data && (pagesQuery.isError || statusesQuery.isError || rolesQuery.isError)) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Management"
-        title="Management modules unavailable"
-        description="Could not load the management dashboard."
-        actionLabel="Retry"
+        eyebrow={lt('CEO / Management')}
+        title={lt('Management modules unavailable')}
+        description={lt('Could not load the management dashboard.')}
+        actionLabel={lt('Retry')}
         onAction={() => void refreshAll()}
       />
     )
@@ -972,20 +976,20 @@ export function CeoManagementPage() {
   return (
     <section className="space-y-6 page-enter">
       <PageHeader
-        title="Management API"
+        title={lt('Management API')}
         actions={(
           <>
             <Button variant="secondary" onClick={() => void refreshAll()}>
-              Refresh
+              {lt('Refresh')}
             </Button>
             {activeTab === 'pages' ? (
-              <Button onClick={openCreatePageDialog}>Create page</Button>
+              <Button onClick={openCreatePageDialog}>{lt('Create page')}</Button>
             ) : null}
             {activeTab === 'statuses' ? (
-              <Button onClick={openCreateStatusDialog}>Create status</Button>
+              <Button onClick={openCreateStatusDialog}>{lt('Create status')}</Button>
             ) : null}
             {activeTab === 'roles' ? (
-              <Button onClick={openCreateRoleDialog}>Create role</Button>
+              <Button onClick={openCreateRoleDialog}>{lt('Create role')}</Button>
             ) : null}
           </>
         )}
@@ -1022,8 +1026,8 @@ export function CeoManagementPage() {
                 : 'border-white/10 bg-white/[0.03] text-white/72 hover:border-white/16 hover:bg-white/[0.05]',
             )}
           >
-            <p className="text-sm font-semibold">{tab.label}</p>
-            <p className="mt-2 text-xs leading-5 text-(--muted)">{tab.description}</p>
+            <p className="text-sm font-semibold">{lt(tab.label)}</p>
+            <p className="mt-2 text-xs leading-5 text-(--muted)">{lt(tab.description)}</p>
           </button>
         ))}
       </div>
@@ -1032,22 +1036,22 @@ export function CeoManagementPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              title="Pages Registry"
-              description="Permission page catalog create, edit va delete oqimi bilan shu table ichida boshqariladi."
+              title={lt('Pages Registry')}
+              description={lt('Permission page catalog is managed from this table with create, edit, and delete actions.')}
             />
-            <Badge variant="blue">{pageItems.length} pages</Badge>
+            <Badge variant="blue">{pageItems.length} {lt('pages')}</Badge>
           </div>
 
           <div className="mt-6">
             <DataTable
-              caption="Management pages"
+              caption={lt('Management pages')}
               rows={pageItems}
               getRowKey={(row) => String(row.id)}
               zebra
               columns={[
                 {
                   key: 'page',
-                  header: 'Page',
+                  header: lt('Page'),
                   render: (row) => (
                     <div>
                       <p className="font-semibold text-white">{row.display_name}</p>
@@ -1057,48 +1061,48 @@ export function CeoManagementPage() {
                 },
                 {
                   key: 'route',
-                  header: 'Route',
+                  header: lt('Route'),
                   render: (row) => <span className="text-sm text-white/75">{row.route_path}</span>,
                 },
                 {
                   key: 'description',
-                  header: 'Description',
-                  render: (row) => <span className="text-sm text-white/75">{row.description || 'No description'}</span>,
+                  header: lt('Description'),
+                  render: (row) => <span className="text-sm text-white/75">{row.description || lt('No description')}</span>,
                 },
                 {
                   key: 'order',
-                  header: 'Order',
+                  header: lt('Order'),
                   align: 'right',
                   render: (row) => row.order,
                 },
                 {
                   key: 'flags',
-                  header: 'Flags',
+                  header: lt('Flags'),
                   render: (row) => (
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={row.is_active ? 'success' : 'outline'}>
-                        {row.is_active ? 'Active' : 'Inactive'}
+                        {row.is_active ? lt('Active') : lt('Inactive')}
                       </Badge>
                       <Badge variant={row.is_system ? 'warning' : 'secondary'}>
-                        {row.is_system ? 'System' : 'Custom'}
+                        {row.is_system ? lt('System') : lt('Custom')}
                       </Badge>
                     </div>
                   ),
                 },
                 {
                   key: 'updated',
-                  header: 'Updated',
+                  header: lt('Updated'),
                   render: (row) => formatShortDate(row.updated_at),
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                  header: lt('Actions'),
                   render: (row) => (
                     <ActionsMenu
-                      label={`Actions for ${row.display_name}`}
+                      label={`${lt('Actions for')} ${row.display_name}`}
                       items={[
-                        { label: 'Edit', onSelect: () => openEditPageDialog(row) },
-                        { label: 'Delete', onSelect: () => void handleDeletePage(row), tone: 'danger' },
+                        { label: lt('Edit'), onSelect: () => openEditPageDialog(row) },
+                        { label: lt('Delete'), onSelect: () => void handleDeletePage(row), tone: 'danger' },
                       ]}
                     />
                   ),
@@ -1113,22 +1117,22 @@ export function CeoManagementPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              title="Statuses"
-              description="CRM dynamic statuslar uchun create, edit va delete shu table ichida."
+              title={lt('Statuses')}
+              description={lt('Dynamic CRM statuses are managed from this table with create, edit, and delete actions.')}
             />
-            <Badge variant="success">{statuses.length} statuses</Badge>
+            <Badge variant="success">{statuses.length} {lt('statuses')}</Badge>
           </div>
 
           <div className="mt-6">
             <DataTable
-              caption="Management statuses"
+              caption={lt('Management statuses')}
               rows={statuses}
               getRowKey={(row) => String(row.id)}
               zebra
               columns={[
                 {
                   key: 'status',
-                  header: 'Status',
+                  header: lt('Status'),
                   render: (row) => (
                     <div>
                       <div className="flex items-center gap-2">
@@ -1141,45 +1145,45 @@ export function CeoManagementPage() {
                 },
                 {
                   key: 'description',
-                  header: 'Description',
+                  header: lt('Description'),
                   render: (row) => (
-                    <span className="text-sm text-white/75">{row.description || 'No description'}</span>
+                    <span className="text-sm text-white/75">{row.description || lt('No description')}</span>
                   ),
                 },
                 {
                   key: 'order',
-                  header: 'Order',
+                  header: lt('Order'),
                   align: 'right',
                   render: (row) => row.order,
                 },
                 {
                   key: 'flags',
-                  header: 'Flags',
+                  header: lt('Flags'),
                   render: (row) => (
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={row.is_active ? 'success' : 'outline'}>
-                        {row.is_active ? 'Active' : 'Inactive'}
+                        {row.is_active ? lt('Active') : lt('Inactive')}
                       </Badge>
                       <Badge variant={row.is_system ? 'warning' : 'secondary'}>
-                        {row.is_system ? 'System' : 'Custom'}
+                        {row.is_system ? lt('System') : lt('Custom')}
                       </Badge>
                     </div>
                   ),
                 },
                 {
                   key: 'updated',
-                  header: 'Updated',
+                  header: lt('Updated'),
                   render: (row) => formatShortDate(row.updated_at),
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                  header: lt('Actions'),
                   render: (row) => (
                     <ActionsMenu
-                      label={`Actions for ${row.display_name}`}
+                      label={`${lt('Actions for')} ${row.display_name}`}
                       items={[
-                        { label: 'Edit', onSelect: () => openEditStatusDialog(row) },
-                        { label: 'Delete', onSelect: () => void handleDeleteStatus(row), tone: 'danger' },
+                        { label: lt('Edit'), onSelect: () => openEditStatusDialog(row) },
+                        { label: lt('Delete'), onSelect: () => void handleDeleteStatus(row), tone: 'danger' },
                       ]}
                     />
                   ),
@@ -1194,22 +1198,22 @@ export function CeoManagementPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              title="Roles"
-              description="User role management `statuses` section bilan bir xil oqimda ishlaydi."
+              title={lt('Roles')}
+              description={lt('User role management follows the same CRUD workflow as the statuses section.')}
             />
-            <Badge variant="violet">{roles.length} roles</Badge>
+            <Badge variant="violet">{roles.length} {lt('roles')}</Badge>
           </div>
 
           <div className="mt-6">
             <DataTable
-              caption="Management roles"
+              caption={lt('Management roles')}
               rows={roles}
               getRowKey={(row) => String(row.id)}
               zebra
               columns={[
                 {
                   key: 'role',
-                  header: 'Role',
+                  header: lt('Role'),
                   render: (row) => (
                     <div>
                       <p className="font-semibold text-white">{row.display_name}</p>
@@ -1219,39 +1223,39 @@ export function CeoManagementPage() {
                 },
                 {
                   key: 'description',
-                  header: 'Description',
+                  header: lt('Description'),
                   render: (row) => (
-                    <span className="text-sm text-white/75">{row.description || 'No description'}</span>
+                    <span className="text-sm text-white/75">{row.description || lt('No description')}</span>
                   ),
                 },
                 {
                   key: 'flags',
-                  header: 'Flags',
+                  header: lt('Flags'),
                   render: (row) => (
                     <div className="flex flex-wrap gap-2">
                       <Badge variant={row.is_active ? 'success' : 'outline'}>
-                        {row.is_active ? 'Active' : 'Inactive'}
+                        {row.is_active ? lt('Active') : lt('Inactive')}
                       </Badge>
                       <Badge variant={row.is_system ? 'warning' : 'secondary'}>
-                        {row.is_system ? 'System' : 'Custom'}
+                        {row.is_system ? lt('System') : lt('Custom')}
                       </Badge>
                     </div>
                   ),
                 },
                 {
                   key: 'updated',
-                  header: 'Updated',
+                  header: lt('Updated'),
                   render: (row) => formatShortDate(row.updated_at),
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                  header: lt('Actions'),
                   render: (row) => (
                     <ActionsMenu
-                      label={`Actions for ${row.display_name}`}
+                      label={`${lt('Actions for')} ${row.display_name}`}
                       items={[
-                        { label: 'Edit', onSelect: () => openEditRoleDialog(row) },
-                        { label: 'Delete', onSelect: () => void handleDeleteRole(row), tone: 'danger' },
+                        { label: lt('Edit'), onSelect: () => openEditRoleDialog(row) },
+                        { label: lt('Delete'), onSelect: () => void handleDeleteRole(row), tone: 'danger' },
                       ]}
                     />
                   ),
@@ -1292,28 +1296,28 @@ export function CeoManagementPage() {
             />
           </div>
 
-          <div className="mt-5 rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-white">Image library</p>
-                <p className="mt-1 text-xs text-(--muted)">
-                  GET /management/images va GET /management/images/detail endpointlari shu yerga ulandi.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
+            <div className="mt-5 rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-white">{lt('Image library')}</p>
+                  <p className="mt-1 text-xs text-(--muted)">
+                    {lt('GET /management/images and GET /management/images/detail are connected here.')}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
                   onClick={() => void imagesQuery.refetch()}
                   disabled={imagesQuery.isLoading && !imagesQuery.data}
                 >
-                  Refresh images
+                  {lt('Refresh images')}
                 </Button>
                 <Button
                   variant="ghost"
                   onClick={() => setSelectedImagePaths([])}
                   disabled={selectedImagePaths.length === 0}
                 >
-                  Clear selection
+                  {lt('Clear selection')}
                 </Button>
                 <Button
                   variant="danger"
@@ -1321,35 +1325,35 @@ export function CeoManagementPage() {
                   disabled={selectedImagePaths.length === 0}
                   loading={isBulkDeleteSubmitting}
                 >
-                  Delete selected
+                  {lt('Delete selected')}
                 </Button>
               </div>
             </div>
 
             <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.85fr_0.85fr]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Search</label>
+                <label className="mb-2 block text-sm font-semibold text-white">{lt('Search')}</label>
                 <Input
                   value={imageSearch}
                   onChange={(event) => setImageSearch(event.target.value)}
-                  placeholder="Search by file name or path"
+                  placeholder={lt('Search by file name or path')}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+                <label className="mb-2 block text-sm font-semibold text-white">{lt('Category')}</label>
                 <SelectField
                   value={imageCategoryFilter}
-                  options={imageCategoryOptions}
+                  options={imageCategoryOptions.map((option) => ({ ...option, label: lt(option.label) }))}
                   onValueChange={(value) => setImageCategoryFilter(value)}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">Reference filter</label>
+                <label className="mb-2 block text-sm font-semibold text-white">{lt('Reference filter')}</label>
                 <SelectField
                   value={imageReferenceFilter}
-                  options={imageReferenceFilterOptions}
+                  options={imageReferenceFilterOptions.map((option) => ({ ...option, label: lt(option.label) }))}
                   onValueChange={(value) => setImageReferenceFilter(value as ImageReferenceFilter)}
                 />
               </div>
@@ -1358,28 +1362,28 @@ export function CeoManagementPage() {
             <div className="mt-5">
               {imagesQuery.isLoading && !imagesQuery.data ? (
                 <LoadingStateBlock
-                  eyebrow="Management / Images"
-                  title="Loading image library"
-                  description="Fetching management image metadata and reference counts."
+                  eyebrow={lt('Management / Images')}
+                  title={lt('Loading image library')}
+                  description={lt('Fetching management image metadata and reference counts.')}
                 />
               ) : imagesQuery.isError && !imagesQuery.data ? (
                 <ErrorStateBlock
-                  eyebrow="Management / Images"
-                  title="Image library unavailable"
-                  description="Could not load management images."
-                  actionLabel="Retry"
+                  eyebrow={lt('Management / Images')}
+                  title={lt('Image library unavailable')}
+                  description={lt('Could not load management images.')}
+                  actionLabel={lt('Retry')}
                   onAction={() => void imagesQuery.refetch()}
                 />
               ) : (
                 <DataTable
-                  caption="Management images"
+                  caption={lt('Management images')}
                   rows={filteredImages}
                   getRowKey={(row) => row.path}
                   pageSize={75}
                   zebra
                   emptyState={(
                     <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
-                      Image list is empty for the current filters.
+                      {lt('Image list is empty for the current filters.')}
                     </div>
                   )}
                   columns={[
@@ -1390,7 +1394,7 @@ export function CeoManagementPage() {
                           type="checkbox"
                           checked={allFilteredImagesSelected}
                           onChange={(event) => toggleSelectAllFilteredImages(event.target.checked)}
-                          aria-label="Select all filtered images"
+                          aria-label={lt('Select all filtered images')}
                           className="h-4 w-4 rounded border border-white/15 bg-black/20 accent-blue-500"
                         />
                       ),
@@ -1401,14 +1405,14 @@ export function CeoManagementPage() {
                           type="checkbox"
                           checked={selectedImagePathSet.has(row.path)}
                           onChange={(event) => toggleImageSelection(row.path, event.target.checked)}
-                          aria-label={`Select ${row.filename}`}
+                          aria-label={`${lt('Select')} ${row.filename}`}
                           className="h-4 w-4 rounded border border-white/15 bg-black/20 accent-blue-500"
                         />
                       ),
                     },
                     {
                       key: 'image',
-                      header: 'Image',
+                      header: lt('Image'),
                       width: '360px',
                       render: (row) => (
                         <div className="flex items-center gap-3">
@@ -1438,47 +1442,47 @@ export function CeoManagementPage() {
                     },
                     {
                       key: 'category',
-                      header: 'Category',
-                      render: (row) => <Badge variant="secondary">{getImageCategoryLabel(row.category)}</Badge>,
+                      header: lt('Category'),
+                      render: (row) => <Badge variant="secondary">{lt(getImageCategoryLabel(row.category))}</Badge>,
                     },
                     {
                       key: 'references',
-                      header: 'References',
+                      header: lt('References'),
                       align: 'center',
                       render: (row) => (
                         <div className="flex flex-col items-center gap-1">
                           <Badge variant={row.is_referenced ? 'success' : 'outline'}>
-                            {row.is_referenced ? 'Referenced' : 'Unused'}
+                            {row.is_referenced ? lt('Referenced') : lt('Unused')}
                           </Badge>
-                          <span className="text-xs text-white/55">{row.reference_count} refs</span>
+                          <span className="text-xs text-white/55">{row.reference_count} {lt('refs')}</span>
                         </div>
                       ),
                     },
                     {
                       key: 'size',
-                      header: 'Size',
+                      header: lt('Size'),
                       align: 'right',
                       render: (row) => formatBytes(row.size_bytes),
                     },
                     {
                       key: 'updated',
-                      header: 'Updated',
+                      header: lt('Updated'),
                       render: (row) => formatShortDate(row.updated_at),
                     },
                     {
                       key: 'actions',
-                      header: 'Actions',
+                      header: lt('Actions'),
                       render: (row) => (
                         <ActionsMenu
-                          label={`Actions for ${row.filename}`}
+                          label={`${lt('Actions for')} ${row.filename}`}
                           items={[
-                            { label: 'View detail', onSelect: () => openImageDetail(row) },
+                            { label: lt('View detail'), onSelect: () => openImageDetail(row) },
                             {
-                              label: selectedImagePathSet.has(row.path) ? 'Unselect' : 'Select',
+                              label: selectedImagePathSet.has(row.path) ? lt('Unselect') : lt('Select'),
                               onSelect: () => toggleImageSelection(row.path),
                             },
                             {
-                              label: 'Delete',
+                              label: lt('Delete'),
                               onSelect: () => void handleDeleteImageByPath(row.path),
                               tone: 'danger',
                             },
@@ -1656,8 +1660,8 @@ export function CeoManagementPage() {
       <Dialog
         open={Boolean(imageDetailPath)}
         onClose={() => setImageDetailPath(null)}
-        title={activeImageDetail?.filename ?? 'Image detail'}
-        description={activeImageDetail?.path ?? 'Management image metadata'}
+        title={activeImageDetail?.filename ?? lt('Image detail')}
+        description={activeImageDetail?.path ?? lt('Management image metadata')}
         size="lg"
         footer={(
           <>
@@ -1666,7 +1670,7 @@ export function CeoManagementPage() {
                 variant="secondary"
                 onClick={() => toggleImageSelection(activeImageDetail.path)}
               >
-                {selectedImagePathSet.has(activeImageDetail.path) ? 'Unselect' : 'Select'}
+                {selectedImagePathSet.has(activeImageDetail.path) ? lt('Unselect') : lt('Select')}
               </Button>
             ) : null}
             {activeImageDetail ? (
@@ -1675,11 +1679,11 @@ export function CeoManagementPage() {
                 onClick={() => void handleDeleteImageByPath(activeImageDetail.path)}
                 loading={isSingleDeleteSubmitting}
               >
-                Delete image
+                {lt('Delete image')}
               </Button>
             ) : null}
             <Button variant="secondary" onClick={() => setImageDetailPath(null)}>
-              Close
+              {lt('Close')}
             </Button>
           </>
         )}
@@ -1695,43 +1699,43 @@ export function CeoManagementPage() {
             </div>
 
             {imageDetailQuery.isLoading && imageDetailQuery.data?.path !== imageDetailPath ? (
-              <p className="text-sm text-(--muted)">Refreshing image detail...</p>
+              <p className="text-sm text-(--muted)">{lt('Refreshing image detail...')}</p>
             ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Category</p>
-                <p className="mt-2 text-sm font-semibold text-white">{getImageCategoryLabel(activeImageDetail.category)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('Category')}</p>
+                <p className="mt-2 text-sm font-semibold text-white">{lt(getImageCategoryLabel(activeImageDetail.category))}</p>
               </div>
               <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Size</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('Size')}</p>
                 <p className="mt-2 text-sm font-semibold text-white">{formatBytes(activeImageDetail.size_bytes)}</p>
               </div>
               <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">References</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('References')}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge variant={activeImageDetail.is_referenced ? 'success' : 'outline'}>
-                    {activeImageDetail.is_referenced ? 'Referenced' : 'Unused'}
+                    {activeImageDetail.is_referenced ? lt('Referenced') : lt('Unused')}
                   </Badge>
                   <span className="text-sm font-semibold text-white">{activeImageDetail.reference_count}</span>
                 </div>
               </div>
               <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Updated</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('Updated')}</p>
                 <p className="mt-2 text-sm font-semibold text-white">{formatShortDate(activeImageDetail.updated_at)}</p>
               </div>
             </div>
 
             <div className="rounded-[18px] border border-white/10 bg-black/10 px-4 py-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Path</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('Path')}</p>
               <p className="mt-2 break-all text-sm font-semibold text-white">{activeImageDetail.path}</p>
-              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">File URL</p>
+              <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{lt('File URL')}</p>
               <p className="mt-2 break-all text-sm text-white/72">{activeImageDetail.file_url}</p>
             </div>
           </div>
         ) : (
           <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
-            Image detail not found.
+            {lt('Image detail not found.')}
           </div>
         )}
       </Dialog>
@@ -1739,16 +1743,16 @@ export function CeoManagementPage() {
       <Dialog
         open={pageDialogOpen}
         onClose={closePageDialog}
-        title={pageDialogMode === 'create' ? 'Create page' : 'Edit page'}
-        description="Management page CRUD form"
+        title={pageDialogMode === 'create' ? lt('Create page') : lt('Edit page')}
+        description={lt('Management page CRUD form')}
         size="xl"
         footer={(
           <>
             <Button variant="secondary" onClick={closePageDialog} disabled={isPageSubmitting}>
-              Cancel
+              {lt('Cancel')}
             </Button>
             <Button onClick={() => void handleSubmitPage()} loading={isPageSubmitting}>
-              {pageDialogMode === 'create' ? 'Create page' : 'Save changes'}
+              {pageDialogMode === 'create' ? lt('Create page') : lt('Save changes')}
             </Button>
           </>
         )}
@@ -1756,7 +1760,7 @@ export function CeoManagementPage() {
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Name</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
               <Input
                 value={pageForm.name}
                 onChange={(event) => setPageForm((current) => ({ ...current, name: event.target.value }))}
@@ -1766,27 +1770,27 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Display name</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
               <Input
                 value={pageForm.displayName}
                 onChange={(event) => setPageForm((current) => ({ ...current, displayName: event.target.value }))}
-                placeholder="Team Updates"
+                placeholder={lt('Team Updates')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
               <Textarea
                 value={pageForm.description}
                 onChange={(event) => setPageForm((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Page usage description"
+                placeholder={lt('Page usage description')}
               />
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Route path</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Route path')}</label>
               <Input
                 value={pageForm.routePath}
                 onChange={(event) => setPageForm((current) => ({ ...current, routePath: event.target.value }))}
@@ -1795,7 +1799,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Order</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</label>
               <Input
                 type="number"
                 value={pageForm.order}
@@ -1804,23 +1808,23 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <p className="mb-2 block text-sm font-semibold text-white">Active state</p>
+              <p className="mb-2 block text-sm font-semibold text-white">{lt('Active state')}</p>
               <BooleanToggle
                 value={pageForm.isActive}
                 onChange={(isActive) => setPageForm((current) => ({ ...current, isActive }))}
-                trueLabel="Active"
-                falseLabel="Inactive"
+                trueLabel={lt('Active')}
+                falseLabel={lt('Inactive')}
               />
             </div>
 
             {pageDialogMode === 'create' ? (
               <div>
-                <p className="mb-2 block text-sm font-semibold text-white">System page</p>
+                <p className="mb-2 block text-sm font-semibold text-white">{lt('System page')}</p>
                 <BooleanToggle
                   value={pageForm.isSystem}
                   onChange={(isSystem) => setPageForm((current) => ({ ...current, isSystem }))}
-                  trueLabel="System"
-                  falseLabel="Custom"
+                  trueLabel={lt('System')}
+                  falseLabel={lt('Custom')}
                 />
               </div>
             ) : null}
@@ -1831,16 +1835,16 @@ export function CeoManagementPage() {
       <Dialog
         open={statusDialogOpen}
         onClose={closeStatusDialog}
-        title={statusDialogMode === 'create' ? 'Create status' : 'Edit status'}
-        description="Status CRUD form"
+        title={statusDialogMode === 'create' ? lt('Create status') : lt('Edit status')}
+        description={lt('Status CRUD form')}
         size="xl"
         footer={(
           <>
             <Button variant="secondary" onClick={closeStatusDialog} disabled={isStatusSubmitting}>
-              Cancel
+              {lt('Cancel')}
             </Button>
             <Button onClick={() => void handleSubmitStatus()} loading={isStatusSubmitting}>
-              {statusDialogMode === 'create' ? 'Create status' : 'Save changes'}
+              {statusDialogMode === 'create' ? lt('Create status') : lt('Save changes')}
             </Button>
           </>
         )}
@@ -1848,7 +1852,7 @@ export function CeoManagementPage() {
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Name</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
               <Input
                 value={statusForm.name}
                 onChange={(event) => setStatusForm((current) => ({ ...current, name: event.target.value }))}
@@ -1858,27 +1862,27 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Display name</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
               <Input
                 value={statusForm.displayName}
                 onChange={(event) => setStatusForm((current) => ({ ...current, displayName: event.target.value }))}
-                placeholder="Contacted"
+                placeholder={lt('Contacted')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
               <Textarea
                 value={statusForm.description}
                 onChange={(event) => setStatusForm((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Status usage description"
+                placeholder={lt('Status usage description')}
               />
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Color</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Color')}</label>
               <div className="flex flex-wrap items-center gap-3">
                 <Input
                   type="color"
@@ -1905,7 +1909,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">Order</label>
+              <label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</label>
               <Input
                 type="number"
                 value={statusForm.order}
@@ -1914,23 +1918,23 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <p className="mb-2 block text-sm font-semibold text-white">Active state</p>
+              <p className="mb-2 block text-sm font-semibold text-white">{lt('Active state')}</p>
               <BooleanToggle
                 value={statusForm.isActive}
                 onChange={(isActive) => setStatusForm((current) => ({ ...current, isActive }))}
-                trueLabel="Active"
-                falseLabel="Inactive"
+                trueLabel={lt('Active')}
+                falseLabel={lt('Inactive')}
               />
             </div>
 
             {statusDialogMode === 'create' ? (
               <div>
-                <p className="mb-2 block text-sm font-semibold text-white">System status</p>
+                <p className="mb-2 block text-sm font-semibold text-white">{lt('System status')}</p>
                 <BooleanToggle
                   value={statusForm.isSystem}
                   onChange={(isSystem) => setStatusForm((current) => ({ ...current, isSystem }))}
-                  trueLabel="System"
-                  falseLabel="Custom"
+                  trueLabel={lt('System')}
+                  falseLabel={lt('Custom')}
                 />
               </div>
             ) : null}
@@ -1941,23 +1945,23 @@ export function CeoManagementPage() {
       <Dialog
         open={roleDialogOpen}
         onClose={closeRoleDialog}
-        title={roleDialogMode === 'create' ? 'Create role' : 'Edit role'}
-        description="Role CRUD form"
+        title={roleDialogMode === 'create' ? lt('Create role') : lt('Edit role')}
+        description={lt('Role CRUD form')}
         size="lg"
         footer={(
           <>
             <Button variant="secondary" onClick={closeRoleDialog} disabled={isRoleSubmitting}>
-              Cancel
+              {lt('Cancel')}
             </Button>
             <Button onClick={() => void handleSubmitRole()} loading={isRoleSubmitting}>
-              {roleDialogMode === 'create' ? 'Create role' : 'Save changes'}
+              {roleDialogMode === 'create' ? lt('Create role') : lt('Save changes')}
             </Button>
           </>
         )}
       >
         <div className="grid gap-4">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Name</label>
+            <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
             <Input
               value={roleForm.name}
               onChange={(event) => setRoleForm((current) => ({ ...current, name: event.target.value }))}
@@ -1967,41 +1971,41 @@ export function CeoManagementPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Display name</label>
+            <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
             <Input
               value={roleForm.displayName}
               onChange={(event) => setRoleForm((current) => ({ ...current, displayName: event.target.value }))}
-              placeholder="Sales Manager"
-            />
-          </div>
+                placeholder={lt('Sales Manager')}
+              />
+            </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">Description</label>
+            <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
             <Textarea
               value={roleForm.description}
               onChange={(event) => setRoleForm((current) => ({ ...current, description: event.target.value }))}
-              placeholder="Role usage description"
+              placeholder={lt('Role usage description')}
             />
           </div>
 
           <div>
-            <p className="mb-2 block text-sm font-semibold text-white">Active state</p>
+            <p className="mb-2 block text-sm font-semibold text-white">{lt('Active state')}</p>
             <BooleanToggle
               value={roleForm.isActive}
               onChange={(isActive) => setRoleForm((current) => ({ ...current, isActive }))}
-              trueLabel="Active"
-              falseLabel="Inactive"
+              trueLabel={lt('Active')}
+              falseLabel={lt('Inactive')}
             />
           </div>
 
           {roleDialogMode === 'create' ? (
             <div>
-              <p className="mb-2 block text-sm font-semibold text-white">System role</p>
+              <p className="mb-2 block text-sm font-semibold text-white">{lt('System role')}</p>
               <BooleanToggle
                 value={roleForm.isSystem}
                 onChange={(isSystem) => setRoleForm((current) => ({ ...current, isSystem }))}
-                trueLabel="System"
-                falseLabel="Custom"
+                trueLabel={lt('System')}
+                falseLabel={lt('Custom')}
               />
             </div>
           ) : null}

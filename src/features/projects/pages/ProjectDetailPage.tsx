@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
@@ -38,6 +39,7 @@ export function ProjectDetailPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
+  const lt = translateCurrentLiteral
 
   const id = Number(projectId)
   const canManageProjects = hasPermission('projects')
@@ -220,12 +222,12 @@ export function ProjectDetailPage() {
     setIsProjectSubmitting(true)
     try {
       await projectsService.updateProject(project.id, fd)
-      showToast({ title: 'Project updated', tone: 'success' })
+      showToast({ title: lt('Project updated'), tone: 'success' })
       setIsEditProjectOpen(false)
       await projectQuery.refetch()
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: 'Failed to update project', tone: 'error' })
+      showToast({ title: lt('Failed to update project'), tone: 'error' })
     } finally {
       setIsProjectSubmitting(false)
     }
@@ -237,8 +239,8 @@ export function ProjectDetailPage() {
     }
 
     const ok = await confirm({
-      title: 'Delete project?',
-      description: `"${project.project_name}" and all its boards will be permanently deleted.`,
+      title: lt('Delete project?'),
+      description: `"${project.project_name}" ${lt('and all its boards will be permanently deleted.')}`,
       tone: 'danger',
     })
 
@@ -248,11 +250,11 @@ export function ProjectDetailPage() {
 
     try {
       await projectsService.deleteProject(project.id)
-      showToast({ title: 'Project deleted', tone: 'success' })
+      showToast({ title: lt('Project deleted'), tone: 'success' })
       notifyProjectsNavigationChanged()
       navigate('/projects')
     } catch {
-      showToast({ title: 'Failed to delete project', tone: 'error' })
+      showToast({ title: lt('Failed to delete project'), tone: 'error' })
     }
   }
 
@@ -264,13 +266,13 @@ export function ProjectDetailPage() {
     setIsBoardSubmitting(true)
     try {
       const createdBoard = await projectsService.createBoard(project.id, values)
-      showToast({ title: 'Board created', tone: 'success' })
+      showToast({ title: lt('Board created'), tone: 'success' })
       setIsCreateBoardOpen(false)
       await projectQuery.refetch()
       selectBoard(createdBoard.id)
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: 'Failed to create board', tone: 'error' })
+      showToast({ title: lt('Failed to create board'), tone: 'error' })
     } finally {
       setIsBoardSubmitting(false)
     }
@@ -296,10 +298,10 @@ export function ProjectDetailPage() {
     return (
       <StateBlock
         tone="error"
-        eyebrow="Error"
-        title="Failed to load project"
-        description="The project could not be found or loaded."
-        actionLabel="Back to projects"
+        eyebrow={lt('Error')}
+        title={lt('Failed to load project')}
+        description={lt('The project could not be found or loaded.')}
+        actionLabel={lt('Back to projects')}
         onAction={() => navigate('/projects')}
       />
     )
@@ -315,7 +317,7 @@ export function ProjectDetailPage() {
           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
             <path d="M10 4L6 8l4 4" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          All projects
+          {lt('All projects')}
         </Link>
 
         <Card variant="glass" noPadding className="overflow-hidden rounded-[28px]">
@@ -379,10 +381,10 @@ export function ProjectDetailPage() {
                 {canManageProjects ? (
                   <div className="flex shrink-0 items-center gap-2">
                     <Button variant="secondary" size="sm" onClick={() => setIsEditProjectOpen(true)}>
-                      Edit
+                      {lt('Edit')}
                     </Button>
                     <Button variant="danger" size="sm" onClick={handleDeleteProject}>
-                      Delete
+                      {lt('Delete')}
                     </Button>
                   </div>
                 ) : null}
@@ -397,7 +399,7 @@ export function ProjectDetailPage() {
                     size="sm"
                   />
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Created by</p>
+                    <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Created by')}</p>
                     <p className="text-xs font-medium text-[var(--foreground)]">
                       {project.created_by.name} {project.created_by.surname}
                     </p>
@@ -407,7 +409,7 @@ export function ProjectDetailPage() {
                 <div className="h-8 w-px bg-[var(--border)]" />
 
                 <div>
-                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Created</p>
+                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Created')}</p>
                   <p className="text-xs font-medium text-[var(--foreground)]">
                     {formatProjectDate(project.created_at)}
                   </p>
@@ -416,7 +418,7 @@ export function ProjectDetailPage() {
                 <div className="h-8 w-px bg-[var(--border)]" />
 
                 <div>
-                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Boards</p>
+                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Boards')}</p>
                   <p className="text-xs font-medium text-[var(--foreground)]">{project.boards_count}</p>
                 </div>
 
@@ -424,7 +426,7 @@ export function ProjectDetailPage() {
                   <>
                     <div className="h-8 w-px bg-[var(--border)]" />
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">Members</p>
+                      <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Members')}</p>
                       <div className="mt-1 flex items-center gap-2">
                         {projectMembers.slice(0, 6).map((member) => {
                           const isExpanded = member.id === expandedMemberId
@@ -439,8 +441,8 @@ export function ProjectDetailPage() {
                                   ? 'rounded-full ring-2 ring-blue-400/60 ring-offset-2 ring-offset-[var(--surface-elevated)] transition'
                                   : 'rounded-full ring-2 ring-[var(--surface-elevated)] transition hover:ring-[var(--border-hover)]'
                               }
-                              title={`${member.name} ${member.surname}`}
-                              aria-label={`Show ${member.name} ${member.surname} tasks`}
+                                title={`${member.name} ${member.surname}`}
+                              aria-label={`${lt('Show')} ${member.name} ${member.surname} ${lt('tasks')}`}
                               aria-expanded={isExpanded}
                             >
                               <Avatar
@@ -471,10 +473,10 @@ export function ProjectDetailPage() {
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                  Assigned Members
+                  {lt('Assigned Members')}
                 </h2>
                 <p className="text-sm text-[var(--muted)]">
-                  Memberni bossangiz, aynan shu project ichidagi unga biriktirilgan tasklar ochiladi.
+                  {lt('Click a member to open the tasks assigned to them inside this project.')}
                 </p>
               </div>
 
@@ -536,7 +538,7 @@ export function ProjectDetailPage() {
                           {expandedMember.name} {expandedMember.surname}
                         </p>
                         <p className="truncate text-[11px] text-[var(--muted)]">
-                          {expandedMember.job_title?.trim() || 'Project member'}
+                          {expandedMember.job_title?.trim() || lt('Project member')}
                         </p>
                       </div>
                     </div>
@@ -545,7 +547,7 @@ export function ProjectDetailPage() {
                       <Badge
                         variant={!isExpandedMemberTasksLoading && expandedMemberTasks.length > 0 ? 'blue' : 'secondary'}
                       >
-                        {isExpandedMemberTasksLoading ? 'Loading...' : `${expandedMemberTasks.length} tasks`}
+                        {isExpandedMemberTasksLoading ? lt('Loading...') : `${expandedMemberTasks.length} ${lt('tasks')}`}
                       </Badge>
                       <svg
                         viewBox="0 0 16 16"
@@ -572,28 +574,28 @@ export function ProjectDetailPage() {
                     ) : expandedMemberTasksQuery.isError ? (
                       <StateBlock
                         tone="error"
-                        eyebrow="Error"
-                        title="Failed to load member tasks"
-                        description="Shu memberning tasklarini yuklashda xatolik bo'ldi."
-                        actionLabel="Retry"
+                        eyebrow={lt('Error')}
+                        title={lt('Failed to load member tasks')}
+                        description={lt('There was an error loading this member tasks.')}
+                        actionLabel={lt('Retry')}
                         onAction={() => expandedMemberTasksQuery.refetch()}
                       />
                     ) : expandedMemberTasks.length === 0 ? (
                       <StateBlock
                         tone="empty"
-                        eyebrow="No tasks"
-                        title="No tasks assigned in this project"
-                        description="Hozircha shu memberga ushbu project ichida task biriktirilmagan."
+                        eyebrow={lt('No tasks')}
+                        title={lt('No tasks assigned in this project')}
+                        description={lt('No tasks are currently assigned to this member inside this project.')}
                       />
                     ) : (
                       <div className="flex flex-col gap-4">
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{expandedMemberBoardsCount} boards</Badge>
+                          <Badge variant="secondary">{expandedMemberBoardsCount} {lt('boards')}</Badge>
                           <Badge variant={expandedMemberTasksDueSoon > 0 ? 'warning' : 'secondary'}>
-                            {expandedMemberTasksDueSoon} due soon
+                            {expandedMemberTasksDueSoon} {lt('due soon')}
                           </Badge>
                           <Badge variant="blue">
-                            {expandedMemberActiveItemsCount} active items
+                            {expandedMemberActiveItemsCount} {lt('active items')}
                           </Badge>
                         </div>
 
@@ -634,10 +636,10 @@ export function ProjectDetailPage() {
 
                                   <div className="flex flex-wrap gap-2">
                                     <Badge variant="secondary">
-                                      Board: {task.board_name}
+                                      {lt('Board')}: {task.board_name}
                                     </Badge>
                                     <Badge variant={dueVariant}>
-                                      {task.due_date ? `Due ${formatProjectDate(task.due_date)}` : 'No due date'}
+                                      {task.due_date ? `${lt('Due')} ${formatProjectDate(task.due_date)}` : lt('No due date')}
                                     </Badge>
                                   </div>
                                 </div>
@@ -651,7 +653,7 @@ export function ProjectDetailPage() {
                 </div>
               ) : (
                 <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]">
-                  Tepadagi memberlardan bittasini bosing, shu project ichidagi tasklari shu yerda ochiladi.
+                  {lt('Pick one of the members above to open their tasks inside this project here.')}
                 </div>
               )}
             </div>
@@ -662,10 +664,10 @@ export function ProjectDetailPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                Project Lists
+                {lt('Project Lists')}
               </h2>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                Open the project and work with its lists directly here without an extra board layer.
+                {lt('Open the project and work with its lists directly here without an extra board layer.')}
               </p>
             </div>
             {canManageProjects ? (
@@ -679,7 +681,7 @@ export function ProjectDetailPage() {
                   </svg>
                 )}
               >
-                New board
+                {lt('New board')}
               </Button>
             ) : null}
           </div>
@@ -687,14 +689,14 @@ export function ProjectDetailPage() {
           {project.boards.length === 0 ? (
             <StateBlock
               tone="empty"
-              eyebrow="No boards"
-              title="No boards yet"
+              eyebrow={lt('No boards')}
+              title={lt('No boards yet')}
               description={
                 canManageProjects
-                  ? 'Create a board to start organizing your work with columns and cards.'
-                  : 'This project does not have any visible boards yet.'
+                  ? lt('Create a board to start organizing your work with columns and cards.')
+                  : lt('This project does not have any visible boards yet.')
               }
-              actionLabel={canManageProjects ? 'Create board' : undefined}
+              actionLabel={canManageProjects ? lt('Create board') : undefined}
               onAction={canManageProjects ? () => setIsCreateBoardOpen(true) : undefined}
             />
           ) : (
@@ -727,6 +729,7 @@ export function ProjectDetailPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
                       Archived
+                      
                     </span>
                     {archivedBoards.map((board) => {
                       const isSelected = selectedBoard?.id === board.id
@@ -770,8 +773,8 @@ export function ProjectDetailPage() {
             onClose={() => setIsEditProjectOpen(false)}
             onSubmit={handleUpdateProject}
             initial={project as ProjectRecord}
-            title="Edit project"
-            submitLabel="Save changes"
+            title={lt('Edit project')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isProjectSubmitting}
           />
 
@@ -779,8 +782,8 @@ export function ProjectDetailPage() {
             open={isCreateBoardOpen}
             onClose={() => setIsCreateBoardOpen(false)}
             onSubmit={handleCreateBoard}
-            title="Create board"
-            submitLabel="Create"
+            title={lt('Create board')}
+            submitLabel={lt('Create')}
             isSubmitting={isBoardSubmitting}
           />
         </>

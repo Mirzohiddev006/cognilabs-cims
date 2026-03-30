@@ -1,5 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
@@ -15,6 +16,7 @@ type KanbanCardProps = {
 }
 
 export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnly = false }: KanbanCardProps) {
+  const lt = translateCurrentLiteral
   const {
     attributes,
     listeners,
@@ -151,7 +153,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
               onEdit(card)
             }}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-            aria-label="Edit card"
+            aria-label={lt('Edit card')}
           >
             <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="m9.5 2.5 1 1L4 10H3v-1l6.5-6.5Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -166,7 +168,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
               onDelete(card.id)
             }}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/15 bg-red-500/10 text-red-400/75 shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-red-500/30 hover:bg-red-500/25 hover:text-red-300"
-            aria-label="Delete card"
+            aria-label={lt('Delete card')}
           >
             <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" strokeLinecap="round" strokeLinejoin="round" />

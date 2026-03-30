@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ColumnRecord, CardRecord } from '../../../shared/api/services/projects.service'
@@ -29,6 +30,7 @@ export function KanbanColumn({
   isOverlay,
   readOnly = false,
 }: KanbanColumnProps) {
+  const lt = translateCurrentLiteral
   const cardIds = useMemo(() => column.cards.map((c) => `card-${c.id}`), [column.cards])
 
   const {
@@ -97,10 +99,10 @@ export function KanbanColumn({
         {!readOnly ? (
           <div onClick={(e) => e.stopPropagation()}>
             <ActionsMenu
-              label="Column actions"
+              label={lt('Column actions')}
               items={[
-                { label: 'Edit column', onSelect: () => onEditColumn(column) },
-                { label: 'Delete column', tone: 'danger', onSelect: () => onDeleteColumn(column.id) },
+                { label: lt('Edit column'), onSelect: () => onEditColumn(column) },
+                { label: lt('Delete column'), tone: 'danger', onSelect: () => onDeleteColumn(column.id) },
               ]}
             />
           </div>
@@ -113,7 +115,7 @@ export function KanbanColumn({
           <div className="flex flex-col gap-2 py-0.5">
             {column.cards.length === 0 ? (
               <div className="rounded-lg border border-dashed border-white/10 px-3 py-5 text-center">
-                <p className="text-[10px] text-white/30">No cards</p>
+                <p className="text-[10px] text-white/30">{lt('No cards')}</p>
               </div>
             ) : (
               column.cards.map((card) => (
@@ -142,7 +144,7 @@ export function KanbanColumn({
             <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M8 3v10M3 8h10" strokeLinecap="round" />
             </svg>
-            Add a card
+            {lt('Add a card')}
           </button>
         </div>
       ) : null}

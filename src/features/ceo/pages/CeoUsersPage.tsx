@@ -11,6 +11,7 @@ import {
 } from '../../../shared/api/services/ceo.service'
 import type { PermissionMap } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { formatCompactNumber, formatShortDate } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
@@ -287,6 +288,7 @@ export function CeoUsersPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const lt = translateCurrentLiteral
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
   const permissionsOverviewQuery = useAsyncData(() => ceoService.permissionsOverview(), [])
@@ -451,8 +453,8 @@ export function CeoUsersPage() {
         }
 
         showToast({
-          title: 'Permissions failed to load',
-          description: error instanceof Error ? error.message : 'Error fetching user permission details.',
+          title: lt('Permissions failed to load'),
+          description: error instanceof Error ? error.message : lt('Error fetching user permission details.'),
           tone: 'error',
         })
       } finally {
@@ -503,8 +505,8 @@ export function CeoUsersPage() {
   async function handleSubmitUser() {
     if (!userFormValues.email.trim() || !userFormValues.name.trim() || !userFormValues.surname.trim()) {
       showToast({
-        title: 'Required fields missing',
-        description: 'Email, name, and surname are required.',
+        title: lt('Required fields missing'),
+        description: lt('Email, name, and surname are required.'),
         tone: 'error',
       })
       return
@@ -512,8 +514,8 @@ export function CeoUsersPage() {
 
     if (userModalMode === 'create' && !userFormValues.password.trim()) {
       showToast({
-        title: 'Password required',
-        description: 'Password cannot be empty when creating a new user.',
+        title: lt('Password required'),
+        description: lt('Password cannot be empty when creating a new user.'),
         tone: 'error',
       })
       return
@@ -527,10 +529,10 @@ export function CeoUsersPage() {
       isCeoUser(selectedUser)
     ) {
       const approved = await confirm({
-        title: `Deactivate CEO ${selectedUser.name} ${selectedUser.surname}?`,
-        description: 'Saving this form will deactivate a CEO account.',
-        confirmLabel: 'Deactivate CEO',
-        cancelLabel: 'Cancel',
+        title: `${lt('Deactivate CEO')} ${selectedUser.name} ${selectedUser.surname}?`,
+        description: lt('Saving this form will deactivate a CEO account.'),
+        confirmLabel: lt('Deactivate CEO'),
+        cancelLabel: lt('Cancel'),
         tone: 'danger',
       })
 
@@ -553,14 +555,14 @@ export function CeoUsersPage() {
       await refreshAll()
       setIsUserModalOpen(false)
       showToast({
-        title: userModalMode === 'create' ? 'User created' : 'User updated',
-        description: 'CEO user list has been successfully updated.',
+        title: userModalMode === 'create' ? lt('User created') : lt('User updated'),
+        description: lt('CEO user list has been successfully updated.'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'User not saved',
-        description: error instanceof Error ? error.message : 'Error in user CRUD request.',
+        title: lt('User not saved'),
+        description: error instanceof Error ? error.message : lt('Error in user CRUD request.'),
         tone: 'error',
       })
     } finally {
@@ -571,12 +573,12 @@ export function CeoUsersPage() {
   async function handleDeleteUser(user: CeoUserRecord) {
     const isDeletingCeo = isCeoUser(user)
     const approved = await confirm({
-      title: isDeletingCeo ? `Delete CEO ${user.name} ${user.surname}?` : `Delete ${user.name} ${user.surname}?`,
+      title: isDeletingCeo ? `${lt('Delete CEO')} ${user.name} ${user.surname}?` : `${lt('Delete')} ${user.name} ${user.surname}?`,
       description: isDeletingCeo
-        ? 'This CEO account will be permanently removed from the system. Please confirm this destructive action.'
-        : 'This user will be permanently removed from the system.',
-      confirmLabel: isDeletingCeo ? 'Delete CEO' : 'Delete user',
-      cancelLabel: 'Cancel',
+        ? lt('This CEO account will be permanently removed from the system. Please confirm this destructive action.')
+        : lt('This user will be permanently removed from the system.'),
+      confirmLabel: isDeletingCeo ? lt('Delete CEO') : lt('Delete user'),
+      cancelLabel: lt('Cancel'),
       tone: 'danger',
     })
 
@@ -588,14 +590,14 @@ export function CeoUsersPage() {
       await ceoService.deleteUser(user.id)
       await refreshAll()
       showToast({
-        title: 'User deleted',
-        description: `${user.email} has been removed from the system.`,
+        title: lt('User deleted'),
+        description: `${user.email} ${lt('has been removed from the system.')}`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete failed',
-        description: error instanceof Error ? error.message : 'User delete flow failed.',
+        title: lt('Delete failed'),
+        description: error instanceof Error ? error.message : lt('User delete flow failed.'),
         tone: 'error',
       })
     }
@@ -607,10 +609,10 @@ export function CeoUsersPage() {
 
     if (isDeactivatingCeo) {
       const approved = await confirm({
-        title: `Deactivate CEO ${user.name} ${user.surname}?`,
-        description: 'This will disable a CEO account until it is activated again.',
-        confirmLabel: 'Deactivate CEO',
-        cancelLabel: 'Cancel',
+        title: `${lt('Deactivate CEO')} ${user.name} ${user.surname}?`,
+        description: lt('This will disable a CEO account until it is activated again.'),
+        confirmLabel: lt('Deactivate CEO'),
+        cancelLabel: lt('Cancel'),
         tone: 'danger',
       })
 
@@ -623,14 +625,14 @@ export function CeoUsersPage() {
       await ceoService.toggleUserActive(user.id)
       await dashboardQuery.refetch()
       showToast({
-        title: `User set to ${nextStatusLabel}`,
-        description: `${user.email} is now marked as ${nextStatusLabel}.`,
+        title: `${lt('User set to')} ${lt(nextStatusLabel)}`,
+        description: `${user.email} ${lt('is now marked as')} ${lt(nextStatusLabel)}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Status update failed',
-        description: error instanceof Error ? error.message : 'Error changing active status.',
+        title: lt('Status update failed'),
+        description: error instanceof Error ? error.message : lt('Error changing active status.'),
         tone: 'error',
       })
     }
@@ -661,14 +663,14 @@ export function CeoUsersPage() {
       const nextActiveCount = Object.values(permissionState).filter(Boolean).length
       setActivePermissionsCount(nextActiveCount)
       showToast({
-        title: 'Permissions updated',
-        description: `Checkbox values saved for ${permissionTargetUser.email}.`,
+        title: lt('Permissions updated'),
+        description: `${lt('Checkbox values saved for')} ${permissionTargetUser.email}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permissions not saved',
-        description: error instanceof Error ? error.message : 'Permission replace flow failed.',
+        title: lt('Permissions not saved'),
+        description: error instanceof Error ? error.message : lt('Permission replace flow failed.'),
         tone: 'error',
       })
     } finally {
@@ -690,14 +692,14 @@ export function CeoUsersPage() {
       setActivePermissionsCount(refreshed.active_permissions_count)
       await permissionsOverviewQuery.refetch()
       showToast({
-        title: 'Permissions added',
-        description: 'Selected permissions have been added to the user.',
+        title: lt('Permissions added'),
+        description: lt('Selected permissions have been added to the user.'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permissions not added',
-        description: error instanceof Error ? error.message : 'Add permission flow failed.',
+        title: lt('Permissions not added'),
+        description: error instanceof Error ? error.message : lt('Add permission flow failed.'),
         tone: 'error',
       })
     } finally {
@@ -719,14 +721,14 @@ export function CeoUsersPage() {
       setActivePermissionsCount((current) => Math.max(0, current - 1))
       await permissionsOverviewQuery.refetch()
       showToast({
-        title: 'Permission removed',
-        description: `${permissionKey} has been removed from the user.`,
+        title: lt('Permission removed'),
+        description: `${permissionKey} ${lt('has been removed from the user.')}`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Permission not removed',
-        description: error instanceof Error ? error.message : 'Single remove flow failed.',
+        title: lt('Permission not removed'),
+        description: error instanceof Error ? error.message : lt('Single remove flow failed.'),
         tone: 'error',
       })
     }
@@ -746,8 +748,8 @@ export function CeoUsersPage() {
   async function handleSendSingleMessage() {
     if (!messageValues.receiver_id || !messageValues.subject.trim() || !messageValues.body.trim()) {
       showToast({
-        title: 'Message incomplete',
-        description: 'Receiver, subject, and body are required.',
+        title: lt('Message incomplete'),
+        description: lt('Receiver, subject, and body are required.'),
         tone: 'error',
       })
       return
@@ -768,14 +770,14 @@ export function CeoUsersPage() {
         body: '',
       }))
       showToast({
-        title: 'Message sent',
+        title: lt('Message sent'),
         description: messageValues.receiver_label,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Message not sent',
-        description: error instanceof Error ? error.message : 'Single user message flow failed.',
+        title: lt('Message not sent'),
+        description: error instanceof Error ? error.message : lt('Single user message flow failed.'),
         tone: 'error',
       })
     } finally {
@@ -791,11 +793,11 @@ export function CeoUsersPage() {
       const refreshedDashboard = await dashboardQuery.refetch()
       const updated = refreshedDashboard.users.find((u) => u.id === profileUser.id)
       if (updated) setProfileUser(updated)
-      showToast({ title: 'Profile image updated', tone: 'success' })
+      showToast({ title: lt('Profile image updated'), tone: 'success' })
     } catch (error) {
       showToast({
-        title: 'Image upload failed',
-        description: error instanceof Error ? error.message : 'Upload error.',
+        title: lt('Image upload failed'),
+        description: error instanceof Error ? error.message : lt('Upload error.'),
         tone: 'error',
       })
     } finally {
@@ -806,9 +808,9 @@ export function CeoUsersPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Users"
-        title="Users module loading"
-        description="Fetching CEO users list and permissions overview."
+        eyebrow={lt('CEO / Users')}
+        title={lt('Users module loading')}
+        description={lt('Fetching CEO users list and permissions overview.')}
       />
     )
   }
@@ -816,10 +818,10 @@ export function CeoUsersPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Users"
-        title="Users module failed to load"
-        description="Could not fetch user data. Please retry."
-        actionLabel="Retry"
+        eyebrow={lt('CEO / Users')}
+        title={lt('Users module failed to load')}
+        description={lt('Could not fetch user data. Please retry.')}
+        actionLabel={lt('Retry')}
         onAction={() => {
           void refreshAll()
         }}
@@ -830,56 +832,56 @@ export function CeoUsersPage() {
   return (
     <section className="space-y-8">
       <PageHeader
-        eyebrow="CEO / Users"
-        title="Users & Permissions"
+        eyebrow={lt('CEO / Users')}
+        title={lt('Users & Permissions')}
         actions={
           <>
             <Button variant="secondary" onClick={() => void refreshAll()}>
-              Refresh
+              {lt('Refresh')}
             </Button>
-            <Button onClick={openCreateUserModal}>Create user</Button>
+            <Button onClick={openCreateUserModal}>{lt('Create user')}</Button>
           </>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-4 stagger-children">
-        <MetricCard label="Users" value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
-        <MetricCard label="Active" value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
-        <MetricCard label="Inactive" value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} accent="warning" sparkBars={[3,2,3,2,2,2]} />
-        <MetricCard label="Messages" value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
+        <MetricCard label={lt('Users')} value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
+        <MetricCard label={lt('Active')} value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
+        <MetricCard label={lt('Inactive')} value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} accent="warning" sparkBars={[3,2,3,2,2,2]} />
+        <MetricCard label={lt('Messages')} value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
       </div>
 
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <SectionTitle
-            eyebrow="Users list"
-            title="CEO users table"
-            description="Search, edit, toggle status, manage permissions, and review message history directly from the table."
+            eyebrow={lt('Users list')}
+            title={lt('CEO users table')}
+            description={lt('Search, edit, toggle status, manage permissions, and review message history directly from the table.')}
           />
           <Input
             className="w-full md:w-80"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search by email, name, or role"
+            placeholder={lt('Search by email, name, or role')}
           />
         </div>
 
         <div className="mt-6">
           <DataTable
-            caption="CEO users table"
+            caption={lt('CEO users table')}
             rows={filteredUsers}
             getRowKey={(row) => String(row.id)}
             emptyState={
               <EmptyStateBlock
-                eyebrow="Users"
-            title="No users found"
-            description="There are no users matching your search or the database is empty."
+                eyebrow={lt('Users')}
+            title={lt('No users found')}
+            description={lt('There are no users matching your search or the database is empty.')}
               />
             }
             columns={[
               {
                 key: 'identity',
-                header: 'User',
+                header: lt('User'),
                 render: (row) => (
                   <div className="flex items-center gap-3">
                     <UserAvatar user={row} size="sm" />
@@ -895,7 +897,7 @@ export function CeoUsersPage() {
               },
               {
                 key: 'role',
-                header: 'Role',
+                header: lt('Role'),
                 render: (row) => (
                   <span
                     data-keep-color="true"
@@ -907,7 +909,7 @@ export function CeoUsersPage() {
               },
               {
                 key: 'permissions',
-                header: 'Permissions',
+                header: lt('Permissions'),
                 render: (row) => {
                   const perms = permissionsByUserId.get(row.id)
                   if (!perms) return <span className="text-xs text-zinc-500">—</span>
@@ -932,7 +934,7 @@ export function CeoUsersPage() {
               },
               {
                 key: 'messages',
-                header: 'Messages',
+                header: lt('Messages'),
                 width: '140px',
                 render: (row) => {
                   const conversation = conversationByUserId.get(row.id) ?? emptyConversationSummary
@@ -967,7 +969,7 @@ export function CeoUsersPage() {
                           {conversation.totalCount}
                         </span>
                       ) : (
-                        <span className="text-xs text-zinc-500">Send</span>
+                        <span className="text-xs text-zinc-500">{lt('Send')}</span>
                       )}
                     </button>
                   )
@@ -975,45 +977,45 @@ export function CeoUsersPage() {
               },
               {
                 key: 'status',
-                header: 'Status',
+                header: lt('Status'),
                 render: (row) => (
                   <span
                     data-keep-color="true"
                     className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}
                   >
-                    {row.is_active ? 'Active' : 'Inactive'}
+                    {row.is_active ? lt('Active') : lt('Inactive')}
                   </span>
                 ),
               },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: lt('Actions'),
                 render: (row) => (
                   <ActionsMenu
-                    label={`Open actions for ${row.email}`}
+                    label={`${lt('Open actions for')} ${row.email}`}
                     items={[
                       {
-                        label: 'Profile',
+                        label: lt('Profile'),
                         onSelect: () => openProfileDialog(row),
                       },
                       {
-                        label: 'Salary detail',
+                        label: lt('Salary detail'),
                         onSelect: () => openSalaryDetail(row),
                       },
                       {
-                        label: 'Edit',
+                        label: lt('Edit'),
                         onSelect: () => openEditUserModal(row),
                       },
                       {
-                        label: 'Permissions',
+                        label: lt('Permissions'),
                         onSelect: () => openPermissionModal(row),
                       },
                       {
-                        label: row.is_active ? 'Deactivate' : 'Activate',
+                        label: row.is_active ? lt('Deactivate') : lt('Activate'),
                         onSelect: () => void handleToggleUser(row),
                       },
                       {
-                        label: 'Delete',
+                        label: lt('Delete'),
                         onSelect: () => void handleDeleteUser(row),
                         tone: 'danger',
                       },
@@ -1064,8 +1066,8 @@ export function CeoUsersPage() {
         title={messageThreadUser ? `Messages with ${getUserDisplayName(messageThreadUser)}` : 'Message thread'}
         description={
           messageThreadUser
-            ? `${activeConversation.outgoingCount} sent / ${activeConversation.incomingCount} incoming`
-            : 'Review prior conversation and send a new message.'
+            ? `${activeConversation.outgoingCount} ${lt('sent')} / ${activeConversation.incomingCount} ${lt('incoming')}`
+            : lt('Review prior conversation and send a new message.')
         }
         size="xl"
       >
@@ -1073,12 +1075,12 @@ export function CeoUsersPage() {
           <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-4">
               <div>
-                <p className="text-sm font-semibold text-white">Conversation</p>
+                <p className="text-sm font-semibold text-white">{lt('Conversation')}</p>
                 <p className="mt-1 text-xs text-zinc-500">
-                  Oldingi yozishmalar va oxirgi activity shu yerda korinadi.
+                  {lt('Previous messages and latest activity appear here.')}
                 </p>
               </div>
-              <Badge variant="outline">{activeConversation.totalCount} entries</Badge>
+              <Badge variant="outline">{activeConversation.totalCount} {lt('entries')}</Badge>
             </div>
 
             <div className="mt-4 max-h-[440px] space-y-3 overflow-y-auto pr-1">

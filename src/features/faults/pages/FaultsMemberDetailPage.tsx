@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type {
   MemberDeliveryBonusPayload,
   MemberDeliveryBonusRecord,
@@ -252,19 +253,20 @@ export function FaultsMemberDetailPage({
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
+  const lt = translateCurrentLiteral
 
   const isMemberUpdatesMode = mode === 'member-updates'
   const memberId = memberIdOverride ?? Number(params.memberId)
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
-  const pageEyebrow = isMemberUpdatesMode ? 'Updates / My Detail' : 'CEO / Salary / Detail'
-  const loadingTitle = isMemberUpdatesMode ? 'Loading your update detail' : 'Loading member salary detail'
+  const pageEyebrow = isMemberUpdatesMode ? lt('Updates / My Detail') : lt('CEO / Salary / Detail')
+  const loadingTitle = isMemberUpdatesMode ? lt('Loading your update detail') : lt('Loading member salary detail')
   const loadingDescription = isMemberUpdatesMode
-    ? 'Retrieving your monthly update context, estimate snapshot and activity details.'
-    : 'Retrieving member estimate, penalties, bonuses, and monthly update context.'
-  const errorActionLabel = isMemberUpdatesMode ? 'Back to dashboard' : 'Back to salary estimates'
+    ? lt('Retrieving your monthly update context, estimate snapshot and activity details.')
+    : lt('Retrieving member estimate, penalties, bonuses, and monthly update context.')
+  const errorActionLabel = isMemberUpdatesMode ? lt('Back to dashboard') : lt('Back to salary estimates')
   const backTarget = isMemberUpdatesMode ? '/member/dashboard' : `/faults?year=${year}&month=${month}`
-  const topHeaderEyebrow = isMemberUpdatesMode ? 'My Update Detail' : 'CEO Salary Detail'
+  const topHeaderEyebrow = isMemberUpdatesMode ? lt('My Update Detail') : lt('CEO Salary Detail')
   const showCompensationActions = !isMemberUpdatesMode
 
   const reviewerOptionsQuery = useAsyncData(
@@ -285,14 +287,14 @@ export function FaultsMemberDetailPage({
   const reviewerOptions = (allUsersQuery.data?.length
     ? allUsersQuery.data.map((user) => ({
         value: String(user.id),
-        label: `${user.name} ${user.surname}`.trim() || user.email || `Reviewer #${user.id}`,
+        label: `${user.name} ${user.surname}`.trim() || user.email || `${lt('Reviewer')} #${user.id}`,
       }))
     : (reviewerOptionsQuery.data ?? []).map((member) => ({
         value: String(member.id),
-        label: member.full_name || `${member.name} ${member.surname}`.trim() || `Reviewer #${member.id}`,
+        label: member.full_name || `${member.name} ${member.surname}`.trim() || `${lt('Reviewer')} #${member.id}`,
       })))
   const projectOptions = [
-    { value: '0', label: 'No project' },
+    { value: '0', label: lt('No project') },
     ...((projectsQuery.data?.projects ?? []).map((project) => ({
       value: String(project.id),
       label: project.project_name,
@@ -359,7 +361,7 @@ export function FaultsMemberDetailPage({
               ...createVirtualUser({
                 userId: memberId,
                 userName: resolvedUserName,
-                roleLabel: historyReport?.roleLabel ?? 'Member',
+                roleLabel: historyReport?.roleLabel ?? lt('Member'),
                 baseSalary:
                   typeof historyEmployeeRecord?.default_salary === 'number'
                     ? historyEmployeeRecord.default_salary
@@ -444,13 +446,13 @@ export function FaultsMemberDetailPage({
         showCompensationActions ? allUsersQuery.refetch() : Promise.resolve(undefined),
       ])
       showToast({
-        title: 'Member detail refreshed',
-        description: `${detail?.report.fullName ?? 'Member'} synced for ${getMonthName(month)} ${year}.`,
+        title: lt('Member detail refreshed'),
+        description: `${detail?.report.fullName ?? lt('Member')} ${lt('synced for')} ${getMonthName(month)} ${year}.`,
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Member detail refresh failed',
+        title: lt('Member detail refresh failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -514,8 +516,8 @@ export function FaultsMemberDetailPage({
 
     if (!reviewerId) {
       showToast({
-        title: 'Reviewer is required',
-        description: 'Select a valid reviewer before saving this mistake incident.',
+        title: lt('Reviewer is required'),
+        description: lt('Select a valid reviewer before saving this mistake incident.'),
         tone: 'error',
       })
       return null
@@ -523,8 +525,8 @@ export function FaultsMemberDetailPage({
 
     if (!mistakeDraft.title.trim() || !mistakeDraft.category.trim() || !mistakeDraft.severity.trim()) {
       showToast({
-        title: 'Mistake details incomplete',
-        description: 'Title, category, and severity are required.',
+        title: lt('Mistake details incomplete'),
+        description: lt('Title, category, and severity are required.'),
         tone: 'error',
       })
       return null
@@ -551,8 +553,8 @@ export function FaultsMemberDetailPage({
 
     if (!deliveryBonusDraft.title.trim() || !deliveryBonusDraft.bonusType.trim()) {
       showToast({
-        title: 'Delivery bonus details incomplete',
-        description: 'Title and bonus type are required.',
+        title: lt('Delivery bonus details incomplete'),
+        description: lt('Title and bonus type are required.'),
         tone: 'error',
       })
       return null
@@ -585,13 +587,13 @@ export function FaultsMemberDetailPage({
       await detailQuery.refetch()
       closeMistakeDialog()
       showToast({
-        title: editingMistake ? 'Mistake updated' : 'Mistake added',
-        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
+        title: editingMistake ? lt('Mistake updated') : lt('Mistake added'),
+        description: getSuccessMessage(response, `${detail.report.fullName} ${lt('updated.')}`),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: editingMistake ? 'Mistake not updated' : 'Mistake not added',
+        title: editingMistake ? lt('Mistake not updated') : lt('Mistake not added'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -617,13 +619,13 @@ export function FaultsMemberDetailPage({
       await detailQuery.refetch()
       closeDeliveryBonusDialog()
       showToast({
-        title: editingDeliveryBonus ? 'Delivery bonus updated' : 'Delivery bonus added',
-        description: getSuccessMessage(response, `${detail.report.fullName} updated.`),
+        title: editingDeliveryBonus ? lt('Delivery bonus updated') : lt('Delivery bonus added'),
+        description: getSuccessMessage(response, `${detail.report.fullName} ${lt('updated.')}`),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: editingDeliveryBonus ? 'Delivery bonus not updated' : 'Delivery bonus not added',
+        title: editingDeliveryBonus ? lt('Delivery bonus not updated') : lt('Delivery bonus not added'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -647,14 +649,14 @@ export function FaultsMemberDetailPage({
 
       await detailQuery.refetch()
       showToast({
-        title: deleteTarget.kind === 'mistake' ? 'Mistake deleted' : 'Delivery bonus deleted',
-        description: getSuccessMessage(response, `${deleteTarget.record.title} removed.`),
+        title: deleteTarget.kind === 'mistake' ? lt('Mistake deleted') : lt('Delivery bonus deleted'),
+        description: getSuccessMessage(response, `${deleteTarget.record.title} ${lt('removed.')}`),
         tone: 'success',
       })
       setDeleteTarget(null)
     } catch (error) {
       showToast({
-        title: deleteTarget.kind === 'mistake' ? 'Mistake not deleted' : 'Delivery bonus not deleted',
+        title: deleteTarget.kind === 'mistake' ? lt('Mistake not deleted') : lt('Delivery bonus not deleted'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -667,8 +669,8 @@ export function FaultsMemberDetailPage({
     return (
       <ErrorStateBlock
         eyebrow={pageEyebrow}
-        title="Invalid member ID"
-        description="The member identifier in the route is invalid."
+        title={lt('Invalid member ID')}
+        description={lt('The member identifier in the route is invalid.')}
         actionLabel={errorActionLabel}
         onAction={() => navigate(backTarget)}
       />
@@ -689,8 +691,8 @@ export function FaultsMemberDetailPage({
     return (
       <ErrorStateBlock
         eyebrow={pageEyebrow}
-        title="Member detail unavailable"
-        description="Could not build a salary detail page for this member."
+        title={lt('Member detail unavailable')}
+        description={lt('Could not build a salary detail page for this member.')}
         actionLabel={errorActionLabel}
         onAction={() => navigate(backTarget)}
       />
@@ -739,44 +741,44 @@ export function FaultsMemberDetailPage({
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge variant="blue">Employee API detail</Badge>
+                  <Badge variant="blue">{lt('Employee API detail')}</Badge>
                   <Badge variant={detail.report.hasPenalty ? 'danger' : 'outline'}>
-                    {detail.report.hasPenalty ? 'Penalty applied' : 'No penalties'}
+                    {detail.report.hasPenalty ? lt('Penalty applied') : lt('No penalties')}
                   </Badge>
                   <Badge variant={detail.report.hasBonus ? 'blue' : 'outline'}>
-                    {detail.report.hasBonus ? 'Bonus applied' : 'No bonuses'}
+                    {detail.report.hasBonus ? lt('Bonus applied') : lt('No bonuses')}
                   </Badge>
                   <Badge variant="outline">{detail.report.label}</Badge>
                 </div>
 
                 {detail.estimateError ? (
                   <p className="mt-4 text-xs leading-5 text-amber-300">
-                    Estimate API unavailable: {detail.estimateError}
+                    {lt('Estimate API unavailable')}: {detail.estimateError}
                   </p>
                 ) : null}
                 {detail.policyError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
-                    Compensation policy unavailable: {detail.policyError}
+                    {lt('Compensation policy unavailable')}: {detail.policyError}
                   </p>
                 ) : null}
                 {detail.mistakesError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
-                    Mistake incidents unavailable: {detail.mistakesError}
+                    {lt('Mistake incidents unavailable')}: {detail.mistakesError}
                   </p>
                 ) : null}
                 {detail.deliveryBonusesError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
-                    Delivery bonuses unavailable: {detail.deliveryBonusesError}
+                    {lt('Delivery bonuses unavailable')}: {detail.deliveryBonusesError}
                   </p>
                 ) : null}
                 {detail.updatesError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
-                    Update statistics unavailable: {detail.updatesError}
+                    {lt('Update statistics unavailable')}: {detail.updatesError}
                   </p>
                 ) : null}
                 {detail.calendarError ? (
                   <p className="mt-2 text-xs leading-5 text-amber-300">
-                    Daily update calendar unavailable: {detail.calendarError}
+                    {lt('Daily update calendar unavailable')}: {detail.calendarError}
                   </p>
                 ) : null}
               </div>
@@ -784,12 +786,12 @@ export function FaultsMemberDetailPage({
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                 {showCompensationActions ? (
                   <Button variant="ghost" size="sm" onClick={() => openMistakeDialog()} className="rounded-xl">
-                    Add mistake
+                    {lt('Add mistake')}
                   </Button>
                 ) : null}
                 {showCompensationActions ? (
                   <Button variant="success" size="sm" onClick={() => openDeliveryBonusDialog()} className="rounded-xl">
-                    Add delivery bonus
+                    {lt('Add delivery bonus')}
                   </Button>
                 ) : null}
                 <Button
@@ -800,14 +802,14 @@ export function FaultsMemberDetailPage({
                   loading={detailQuery.isLoading}
                   className="rounded-xl"
                 >
-                  Refresh details
+                  {lt('Refresh details')}
                 </Button>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Year</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Year')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -819,7 +821,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Month</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Month')}</label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -839,13 +841,13 @@ export function FaultsMemberDetailPage({
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <DetailStatTile label="Final salary" value={formatAmount(detail.report.finalSalary)} />
-        <DetailStatTile label="Estimated salary" value={formatAmount(detail.report.estimatedSalary)} />
-        <DetailStatTile label="Deduction" value={formatAmount(detail.report.deductionAmount)} tone="danger" />
-        <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="blue" />
-        <DetailStatTile label="Bonus %" value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
+        <DetailStatTile label={lt('Final salary')} value={formatAmount(detail.report.finalSalary)} />
+        <DetailStatTile label={lt('Estimated salary')} value={formatAmount(detail.report.estimatedSalary)} />
+        <DetailStatTile label={lt('Deduction')} value={formatAmount(detail.report.deductionAmount)} tone="danger" />
+        <DetailStatTile label={lt('Bonus amount')} value={formatAmount(detail.report.bonusAmount)} tone="blue" />
+        <DetailStatTile label={lt('Bonus %')} value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
         <DetailStatTile
-          label="Productivity"
+          label={lt('Productivity')}
           value={Number.isFinite(detail.report.productivityPercentage)
             ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)} / ${formatPercent(detail.report.productivityPercentage)}`
             : '-'}
@@ -859,24 +861,24 @@ export function FaultsMemberDetailPage({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              Compensation flow
+              {lt('Compensation flow')}
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              How the final salary is built
+              {lt('How the final salary is built')}
             </h2>
           </div>
           <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
-            {formatPercent(detail.report.penaltyPercentage)} penalty impact
+            {formatPercent(detail.report.penaltyPercentage)} {lt('penalty impact')}
           </Badge>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
-          <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
-          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="blue" />
-          <DetailStatTile label="Mistakes" value={formatCount(detail.report.mistakesCount)} tone="danger" />
-          <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
+          <DetailStatTile label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
+          <DetailStatTile label={lt('After penalty')} value={formatAmount(detail.report.afterPenalty)} />
+          <DetailStatTile label={lt('Penalty points')} value={formatCount(detail.report.penaltyPoints)} tone="danger" />
+          <DetailStatTile label={lt('Bonus entries')} value={formatCount(detail.report.bonusEntries)} tone="blue" />
+          <DetailStatTile label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
+          <DetailStatTile label={lt('Delivery bonuses')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
         <div className="mt-5 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
@@ -893,8 +895,8 @@ export function FaultsMemberDetailPage({
           </div>
           <p className="mt-3 text-xs text-[var(--muted-strong)]">
             {detail.report.qualifiesProductivityBonus
-              ? 'Productivity bonus qualified for this period.'
-              : 'Productivity bonus did not qualify for this period.'}
+              ? lt('Productivity bonus qualified for this period.')
+              : lt('Productivity bonus did not qualify for this period.')}
           </p>
           <div className="mt-4 h-2 rounded-full bg-[var(--surface-elevated)] dark:bg-white/8">
             <div
@@ -909,29 +911,29 @@ export function FaultsMemberDetailPage({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              Monthly execution
+              {lt('Monthly execution')}
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              Salary context and update performance
+              {lt('Salary context and update performance')}
             </h2>
           </div>
           <Badge
             variant={updatesSummary ? 'blue' : 'outline'}
           >
             {updatesSummary
-              ? `${formatPercent(updatesSummary.completionPercentage)} completion`
-              : 'No update stats'}
+              ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
+              : lt('No update stats')}
           </Badge>
         </div>
 
         {updatesSummary ? (
           <>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <DetailStatTile label="Logged updates" value={formatCount(updatesSummary.submittedCount)} />
-              <DetailStatTile label="Missing days" value={formatCount(updatesSummary.missingCount)} tone="danger" />
-              <DetailStatTile label="Total updates" value={formatCount(updatesSummary.totalUpdates)} />
+              <DetailStatTile label={lt('Logged updates')} value={formatCount(updatesSummary.submittedCount)} />
+              <DetailStatTile label={lt('Missing days')} value={formatCount(updatesSummary.missingCount)} tone="danger" />
+              <DetailStatTile label={lt('Total updates')} value={formatCount(updatesSummary.totalUpdates)} />
               <DetailStatTile
-                label="Update percentage"
+                label={lt('Update percentage')}
                 value={formatPercent(updatesCompletion)}
                 tone={updatesSummary ? 'blue' : 'default'}
               />
@@ -939,23 +941,23 @@ export function FaultsMemberDetailPage({
 
             <div className="mt-4 grid gap-3 xl:grid-cols-3">
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">Last update</p>
+                <p className="text-xs text-[var(--muted-strong)]">{lt('Last update')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {formatDetailDate(updatesSummary!.lastUpdateDate)}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">Next payment date</p>
+                <p className="text-xs text-[var(--muted-strong)]">{lt('Next payment date')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {formatDetailDate(updatesSummary!.nextPaymentDate)}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">Salary amount in update record</p>
+                <p className="text-xs text-[var(--muted-strong)]">{lt('Salary amount in update record')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {typeof updatesSummary!.salaryAmount === 'number'
                     ? formatAmount(updatesSummary!.salaryAmount)
-                    : 'Not returned'}
+                    : lt('Not returned')}
                 </p>
               </div>
             </div>
@@ -963,7 +965,7 @@ export function FaultsMemberDetailPage({
             {updatesSummary!.note ? (
               <div className="mt-4 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Manager note
+                  {lt('Manager note')}
                 </p>
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
                   {updatesSummary!.note}
@@ -980,14 +982,14 @@ export function FaultsMemberDetailPage({
               />
             ) : detail.calendarError ? (
               <div className="mt-4 rounded-[18px] border border-dashed border-amber-500/30 bg-amber-500/8 px-4 py-5 text-sm text-amber-100/80">
-                Monthly calendar could not be loaded from the CEO employee updates endpoint.
+                {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}
           </>
         ) : (
           <>
             <div className="mt-4 rounded-[18px] border border-dashed border-[var(--border)] bg-white px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-white/10 dark:bg-black/10">
-              No monthly update statistics were returned for this member.
+              {lt('No monthly update statistics were returned for this member.')}
             </div>
 
             {detail.updateCalendar ? (
@@ -999,7 +1001,7 @@ export function FaultsMemberDetailPage({
               />
             ) : detail.calendarError ? (
               <div className="mt-4 rounded-[18px] border border-dashed border-amber-500/30 bg-amber-500/8 px-4 py-5 text-sm text-amber-100/80">
-                Monthly calendar could not be loaded from the CEO employee updates endpoint.
+                {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}
           </>
@@ -1011,14 +1013,14 @@ export function FaultsMemberDetailPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
-                Penalty ledger
+                {lt('Penalty ledger')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                Penalty entries for this month
+                {lt('Penalty entries for this month')}
               </h2>
             </div>
             <Badge variant={detail.penalties.length > 0 ? 'danger' : 'outline'}>
-              {detail.penalties.length} entries
+              {detail.penalties.length} {lt('entries')}
             </Badge>
           </div>
 
@@ -1034,7 +1036,7 @@ export function FaultsMemberDetailPage({
                       </p>
                     ) : null}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {item.points ? <Badge variant="danger">{item.points} points</Badge> : null}
+                      {item.points ? <Badge variant="danger">{item.points} {lt('points')}</Badge> : null}
                       {item.percentage ? <Badge variant="outline">{formatPercent(item.percentage)}</Badge> : null}
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
@@ -1046,7 +1048,7 @@ export function FaultsMemberDetailPage({
               </div>
             )) : (
               <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-                No penalty line-items were returned for this member in the selected month.
+                {lt('No penalty line-items were returned for this member in the selected month.')}
               </div>
             )}
           </div>
@@ -1056,14 +1058,14 @@ export function FaultsMemberDetailPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
-                Bonus ledger
+                {lt('Bonus ledger')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                Bonus entries for this month
+                {lt('Bonus entries for this month')}
               </h2>
             </div>
             <Badge variant={detail.bonuses.length > 0 ? 'success' : 'outline'}>
-              {detail.bonuses.length} entries
+              {detail.bonuses.length} {lt('entries')}
             </Badge>
           </div>
 
@@ -1089,7 +1091,7 @@ export function FaultsMemberDetailPage({
               </div>
             )) : (
               <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-                No bonus line-items were returned for this member in the selected month.
+                {lt('No bonus line-items were returned for this member in the selected month.')}
               </div>
             )}
           </div>
@@ -1117,28 +1119,28 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={isMistakeDialogOpen}
           onClose={closeMistakeDialog}
-          title={`${editingMistake ? 'Edit' : 'Add'} mistake for ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} compensation mistake incident.`}
+          title={`${editingMistake ? lt('Edit') : lt('Add')} ${lt('mistake for')} ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} ${lt('compensation mistake incident.')}`}
           footer={
             <>
               <Button variant="secondary" onClick={closeMistakeDialog} disabled={isMistakeSubmitting}>
-                Cancel
+                {lt('Cancel')}
               </Button>
               <Button variant="danger" onClick={() => void handleSubmitMistake()} loading={isMistakeSubmitting}>
-                {editingMistake ? 'Update mistake' : 'Save mistake'}
+                {editingMistake ? lt('Update mistake') : lt('Save mistake')}
               </Button>
             </>
           }
         >
           <div className="grid gap-4">
             <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="text-xs text-[var(--muted-strong)]">{lt('Employee')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Reviewer</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Reviewer')}</label>
                 {reviewerOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.reviewerId}
@@ -1152,13 +1154,13 @@ export function FaultsMemberDetailPage({
                     min="1"
                     value={mistakeDraft.reviewerId}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
-                    placeholder="Reviewer ID"
+                    placeholder={lt('Reviewer ID')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Project')}</label>
                 {projectOptions.length > 1 ? (
                   <SelectField
                     value={mistakeDraft.projectId}
@@ -1172,7 +1174,7 @@ export function FaultsMemberDetailPage({
                     min="0"
                     value={mistakeDraft.projectId}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
-                    placeholder="0 for no project"
+                    placeholder={lt('0 for no project')}
                   />
                 )}
               </div>
@@ -1180,7 +1182,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Category</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Category')}</label>
                 {mistakeCategoryOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.category}
@@ -1192,13 +1194,13 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={mistakeDraft.category}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
-                    placeholder="AI Integration"
+                    placeholder={lt('AI Integration')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Severity</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Severity')}</label>
                 {severityOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.severity}
@@ -1210,7 +1212,7 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={mistakeDraft.severity}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
-                    placeholder="Minor"
+                    placeholder={lt('Minor')}
                   />
                 )}
               </div>
@@ -1218,16 +1220,16 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_180px]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Title')}</label>
                 <Input
                   value={mistakeDraft.title}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
-                  placeholder="Short mistake title"
+                  placeholder={lt('Short mistake title')}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Incident date</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Incident date')}</label>
                 <Input
                   type="date"
                   value={mistakeDraft.incidentDate}
@@ -1237,11 +1239,11 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Description')}</label>
               <Textarea
                 value={mistakeDraft.description}
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Describe what happened"
+                placeholder={lt('Describe what happened')}
               />
             </div>
 
@@ -1253,7 +1255,7 @@ export function FaultsMemberDetailPage({
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
-                Reached client
+                {lt('Reached client')}
               </label>
 
               <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
@@ -1263,7 +1265,7 @@ export function FaultsMemberDetailPage({
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
-                Unclear task
+                {lt('Unclear task')}
               </label>
             </div>
           </div>
@@ -1274,28 +1276,28 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={isDeliveryBonusDialogOpen}
           onClose={closeDeliveryBonusDialog}
-          title={`${editingDeliveryBonus ? 'Edit' : 'Add'} delivery bonus for ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} delivery bonus record.`}
+          title={`${editingDeliveryBonus ? lt('Edit') : lt('Add')} ${lt('delivery bonus for')} ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} ${lt('delivery bonus record.')}`}
           footer={
             <>
               <Button variant="secondary" onClick={closeDeliveryBonusDialog} disabled={isDeliveryBonusSubmitting}>
-                Cancel
+                {lt('Cancel')}
               </Button>
               <Button variant="success" onClick={() => void handleSubmitDeliveryBonus()} loading={isDeliveryBonusSubmitting}>
-                {editingDeliveryBonus ? 'Update delivery bonus' : 'Save delivery bonus'}
+                {editingDeliveryBonus ? lt('Update delivery bonus') : lt('Save delivery bonus')}
               </Button>
             </>
           }
         >
           <div className="grid gap-4">
             <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+              <p className="text-xs text-[var(--muted-strong)]">{lt('Employee')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Bonus type</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Bonus type')}</label>
                 {deliveryBonusTypeOptions.length > 0 ? (
                   <SelectField
                     value={deliveryBonusDraft.bonusType}
@@ -1307,13 +1309,13 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={deliveryBonusDraft.bonusType}
                     onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
-                    placeholder="early_delivery"
+                    placeholder={lt('early_delivery')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Award date</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Award date')}</label>
                 <Input
                   type="date"
                   value={deliveryBonusDraft.awardDate}
@@ -1323,16 +1325,16 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Title')}</label>
               <Input
                 value={deliveryBonusDraft.title}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
-                placeholder="Short bonus title"
+                placeholder={lt('Short bonus title')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Project')}</label>
               {projectOptions.length > 1 ? (
                 <SelectField
                   value={deliveryBonusDraft.projectId}
@@ -1346,17 +1348,17 @@ export function FaultsMemberDetailPage({
                   min="0"
                   value={deliveryBonusDraft.projectId}
                   onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, projectId: event.target.value }))}
-                  placeholder="0 for no project"
+                  placeholder={lt('0 for no project')}
                 />
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Description')}</label>
               <Textarea
                 value={deliveryBonusDraft.description}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
-                placeholder="Describe why this delivery bonus was awarded"
+                placeholder={lt('Describe why this delivery bonus was awarded')}
               />
             </div>
           </div>
@@ -1367,16 +1369,16 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={Boolean(deleteTarget)}
           onClose={() => setDeleteTarget(null)}
-          title={deleteTarget?.kind === 'mistake' ? 'Delete mistake incident' : 'Delete delivery bonus'}
-          description={deleteTarget ? `This will remove "${deleteTarget.record.title}" from the selected month.` : undefined}
+          title={deleteTarget?.kind === 'mistake' ? lt('Delete mistake incident') : lt('Delete delivery bonus')}
+          description={deleteTarget ? `${lt('This will remove')} "${deleteTarget.record.title}" ${lt('from the selected month.')}` : undefined}
           tone="danger"
           footer={
             <>
               <Button variant="secondary" onClick={() => setDeleteTarget(null)} disabled={isDeleteSubmitting}>
-                Cancel
+                {lt('Cancel')}
               </Button>
               <Button variant="danger" onClick={() => void handleDeleteCompensationRecord()} loading={isDeleteSubmitting}>
-                Delete record
+                {lt('Delete record')}
               </Button>
             </>
           }
@@ -1385,8 +1387,8 @@ export function FaultsMemberDetailPage({
             <p className="font-semibold text-[var(--foreground)] dark:text-white">{deleteTarget?.record.title}</p>
             <p className="mt-2 text-sm text-[var(--muted-strong)] dark:text-white/72">
               {deleteTarget?.kind === 'mistake'
-                ? 'The mistake incident entry will be permanently removed from this employee history.'
-                : 'The delivery bonus record will be permanently removed from this employee history.'}
+                ? lt('The mistake incident entry will be permanently removed from this employee history.')
+                : lt('The delivery bonus record will be permanently removed from this employee history.')}
             </p>
           </div>
         </Dialog>

@@ -125,6 +125,10 @@ function getActivityStatusLabel(status: DayStatus) {
   }
 }
 
+function getLocalizedDayStatusTitle(day: number, status: DayStatus) {
+  return `${translateCurrentLiteral('Day')} ${day}: ${getActivityStatusLabel(status)}`
+}
+
 function buildMonthlyActivityStatuses(
   employee: Pick<EmployeeMonthlyStats, 'daily_statuses' | 'submitted_count' | 'missing_count' | 'completion_percentage' | 'last_update_date'>,
   month: number,
@@ -260,7 +264,7 @@ function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlySta
             {week.map((entry) => (
               <span
                 key={entry.day}
-                title={entry.label ?? `Day ${entry.day}: ${getActivityStatusLabel(entry.status)}`}
+                title={entry.label ?? getLocalizedDayStatusTitle(entry.day, entry.status)}
                 className={cn('min-w-[0.34rem] flex-1', activitySegmentStyle[entry.status])}
               />
             ))}
@@ -342,15 +346,18 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
 }
 
 function getOverrideTypeLabel(dayType: string | null | undefined) {
-  return normalizeOverrideDayType(dayType) === 'short_day' ? 'Short Day' : 'Holiday'
+  return normalizeOverrideDayType(dayType) === 'short_day'
+    ? translateCurrentLiteral('Short Day')
+    : translateCurrentLiteral('Holiday')
 }
 
 function getOverrideScopeLabel(item: WorkdayOverrideRecord) {
   if (item.target_type === 'all') {
-    return 'All members'
+    return translateCurrentLiteral('All members')
   }
 
-  return item.member_name?.trim() || (item.member_id ? `Member #${item.member_id}` : 'Selected members')
+  return item.member_name?.trim()
+    || (item.member_id ? `${translateCurrentLiteral('Member')} #${item.member_id}` : translateCurrentLiteral('Selected members'))
 }
 
 function formatCurrency(value: number) {
@@ -1841,21 +1848,25 @@ export function CeoTeamUpdatesPage() {
 
     if (failed?.status === 'rejected') {
       showToast({
-        title: 'Refresh failed',
+        title: translateCurrentLiteral('Refresh failed'),
         description: getApiErrorMessage(failed.reason),
         tone: 'error',
       })
       return
     }
 
-    showToast({ title: 'Refreshed', description: 'Team monthly data reloaded.', tone: 'success' })
+    showToast({
+      title: translateCurrentLiteral('Refreshed'),
+      description: translateCurrentLiteral('Team monthly data reloaded.'),
+      tone: 'success',
+    })
   }
 
   function openMemberDetail(employee: EmployeeMonthlyStats) {
     if (!Number.isFinite(employee.user_id) || employee.user_id <= 0) {
       showToast({
-        title: 'Member detail unavailable',
-        description: 'This employee row does not include a valid member ID.',
+        title: translateCurrentLiteral('Member detail unavailable'),
+        description: translateCurrentLiteral('This employee row does not include a valid member ID.'),
         tone: 'error',
       })
       return
@@ -1891,6 +1902,7 @@ export function CeoTeamUpdatesPage() {
   )
 
   const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
+  const lt = translateCurrentLiteral
 
   if (
     (memberOptionsQuery.isLoading && historyQuery.isLoading && !hasRosterData) ||
@@ -1898,9 +1910,9 @@ export function CeoTeamUpdatesPage() {
   ) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Team Updates"
-        title="Loading team monthly data"
-        description="Fetching employee update statistics for the selected period."
+        eyebrow={lt('CEO / Team Updates')}
+        title={lt('Loading team monthly data')}
+        description={lt('Fetching employee update statistics for the selected period.')}
       />
     )
   }
@@ -1911,10 +1923,10 @@ export function CeoTeamUpdatesPage() {
   ) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Team Updates"
-        title="Team data unavailable"
-        description="Could not load monthly team update statistics."
-        actionLabel="Retry"
+        eyebrow={lt('CEO / Team Updates')}
+        title={lt('Team data unavailable')}
+        description={lt('Could not load monthly team update statistics.')}
+        actionLabel={lt('Retry')}
         onAction={() => void handleRefresh()}
       />
     )
@@ -1964,20 +1976,20 @@ export function CeoTeamUpdatesPage() {
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-blue-400/80">
-                CEO Dashboard
+                {lt('CEO Dashboard')}
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
-                Team Monthly Updates
+                {lt('Team Monthly Updates')}
               </h1>
               <p className="mt-1.5 text-[13px] text-(--muted)">
-                Monitor employee update activity by month.
+                {lt('Monitor employee update activity by month.')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               {typeof missingTodayCount === 'number' ? (
                 <Badge variant={missingTodayCount > 0 ? 'warning' : 'success'} dot>
-                  {missingTodayCount} missing today
+                  {missingTodayCount} {lt('missing today')}
                 </Badge>
               ) : null}
               <Button
@@ -1986,10 +1998,10 @@ export function CeoTeamUpdatesPage() {
                 onClick={() => navigate('/ceo/workday-overrides')}
                 className="min-h-[42px] rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-white hover:border-white/15 hover:bg-white/6"
               >
-                Workday overrides
+                {lt('Workday overrides')}
               </Button>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -2001,7 +2013,7 @@ export function CeoTeamUpdatesPage() {
               </div>
 
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</label>
                 <SelectField
                   value={String(month)}
                   options={MONTH_OPTIONS}
@@ -2020,7 +2032,7 @@ export function CeoTeamUpdatesPage() {
                   <path d="M1.5 8a6.5 6.5 0 1 1 1.2 3.8" />
                   <path d="M1.5 12.5V8.5h4" />
                 </svg>
-                Refresh
+                {lt('Refresh')}
               </Button>
             </div>
           </div>
@@ -2109,18 +2121,18 @@ export function CeoTeamUpdatesPage() {
       <Card variant="glass" className="p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
-            title="Workday Overrides"
-            description="Holiday va short day yozuvlari monthly update expectation bilan birga ko'rinadi."
+            title={lt('Workday Overrides')}
+            description={lt('Holiday and short-day rules are shown together with monthly update expectations.')}
           />
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="blue">{workdayOverrides.length} entries</Badge>
+            <Badge variant="blue">{workdayOverrides.length} {lt('entries')}</Badge>
             <Button
               variant="secondary"
               size="sm"
               onClick={() => navigate('/ceo/workday-overrides')}
               className="rounded-xl"
             >
-              Open overrides page
+              {lt('Open overrides page')}
             </Button>
           </div>
         </div>
@@ -2180,7 +2192,7 @@ export function CeoTeamUpdatesPage() {
         <div className="mt-5">
           {workdayOverridesQuery.isError ? (
             <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.08] px-4 py-4 text-sm text-amber-100/82">
-              Workday overrides endpointdan ma'lumot olinmadi. Team table ishlashda davom etadi, lekin override section bo'sh qoladi.
+              {lt('Workday overrides could not be loaded. The team table remains available, but the overrides section is empty.')}
             </div>
           ) : workdayOverrides.length > 0 ? (
             <div className="grid gap-3 xl:grid-cols-2">
@@ -2195,7 +2207,7 @@ export function CeoTeamUpdatesPage() {
                       {getOverrideTypeLabel(item.day_type)}
                     </Badge>
                     <Badge variant={item.update_required ? 'success' : 'outline'}>
-                      {item.update_required ? 'Update required' : 'No update required'}
+                      {item.update_required ? lt('Update required') : lt('No update required')}
                     </Badge>
                   </div>
                   <p className="mt-2 text-sm text-(--muted-strong)">{formatShortDate(item.special_date)}</p>
@@ -2205,7 +2217,7 @@ export function CeoTeamUpdatesPage() {
                   ) : null}
                   {item.workday_hours ? (
                     <p className="mt-2 text-xs uppercase tracking-[0.16em] text-blue-300/70">
-                      {item.workday_hours}h workday
+                      {lt('Workday hours')}: {item.workday_hours}h
                     </p>
                   ) : null}
                 </div>
@@ -2213,7 +2225,7 @@ export function CeoTeamUpdatesPage() {
             </div>
           ) : (
             <div className="rounded-[20px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
-              {selectedMonthName} {year} uchun override yozuvlari topilmadi.
+              {lt('No override records were found for this period.')}
             </div>
           )}
         </div>
@@ -2221,7 +2233,7 @@ export function CeoTeamUpdatesPage() {
 
       <Card variant="glass" className="p-5">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <SectionTitle title="Filters and Comparison Controls" />
+          <SectionTitle title={lt('Filters and Comparison Controls')} />
           <Badge variant="blue">
             {translateCurrentLiteral('Showing')} {employees.length} {translateCurrentLiteral('of')} {totalEmployees} {translateCurrentLiteral('employees')}
           </Badge>
