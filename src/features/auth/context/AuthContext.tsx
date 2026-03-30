@@ -10,6 +10,7 @@ import {
 import { authService } from '../../../shared/api/services/auth.service'
 import type { CurrentUser, TokenResponse } from '../../../shared/api/types'
 import {
+  canAccessPath,
   getDefaultDashboardPath,
   hasPermission as canAccess,
   isKnownProtectedPath,
@@ -186,7 +187,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const response = await authService.dashboardRedirect()
       const normalizedPath = normalizeRedirectPath(response.redirect_url)
 
-      return normalizedPath || fallbackPath
+      if (!normalizedPath || normalizedPath === '/' || normalizedPath === '/dashboard-redirect') {
+        return fallbackPath
+      }
+
+      return canAccessPath(user, normalizedPath) ? normalizedPath : fallbackPath
     } catch {
       return fallbackPath
     }
