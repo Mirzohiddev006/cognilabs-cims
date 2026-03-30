@@ -31,6 +31,26 @@ const recentIgnoredTextKeys = new Set([
   'role',
   'month_name',
 ])
+const lt = translateCurrentLiteral
+const tr = (key: string, uzFallback: string, ruFallback: string) => {
+  const value = lt(key)
+
+  if (value !== key) {
+    return value
+  }
+
+  const locale = getIntlLocale()
+
+  if (locale.startsWith('ru')) {
+    return ruFallback
+  }
+
+  if (locale.startsWith('en')) {
+    return key
+  }
+
+  return uzFallback
+}
 
 type UnknownRecord = Record<string, unknown>
 
@@ -1079,7 +1099,7 @@ function getCalendarCellHint(day: CalendarDay) {
       return `${day.updates_count} updates captured`
     }
 
-    return 'Update captured'
+    return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
   }
 
   if (day.workdayOverride) {
@@ -1110,7 +1130,7 @@ function getCalendarWorkedDurationLabel(day: CalendarDay) {
   const checkOutMinutes = getMinutesFromCalendarTime(day.checkOutTime)
 
   if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
-    return 'Hours not returned'
+    return tr('Hours not returned', 'Ish soatlari qaytmadi', 'Chasy raboty ne vernulis')
   }
 
   const totalMinutes = checkOutMinutes - checkInMinutes
@@ -1516,7 +1536,11 @@ export function UpdateTrackingPage() {
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <SectionTitle
                 title={`${selectedMonthName} ${year} Calendar`}
-                description="Reference-driven monthly board with dense day cards, week rails, and one-click inspection."
+                description={tr(
+                  'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
+                  'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
+                  'Mesyachnaya doska po referensu s plotnymi kartami dnei, liniyami nedel i proverkoj v odin klik.',
+                )}
               />
               {calendar ? (
                 <div className="flex flex-wrap items-center gap-2">
@@ -1562,7 +1586,11 @@ export function UpdateTrackingPage() {
                           </Badge>
                         </div>
                         <p className="mt-2 text-[12px] leading-5 text-(--muted)">
-                          Dense monthly board for fast scanning, modeled after the reference calendar layout.
+                          {tr(
+                            'Dense monthly board for fast scanning, modeled after the reference calendar layout.',
+                            'Tez korib chiqish uchun zich oylik taxta, referens kalendar asosida tuzilgan.',
+                            'Plotnaya mesyachnaya doska dlya bystrogo prosmotra, postroennaya po etalonnomu kalendaryu.',
+                          )}
                         </p>
                       </div>
 
@@ -1626,7 +1654,9 @@ export function UpdateTrackingPage() {
                             Completion To Date
                           </p>
                           <p className="mt-1 text-[11px] text-[var(--muted-strong)] dark:text-white/72">
-                            {elapsedWorkingDays > 0 ? `${calendarCounts.submitted} of ${elapsedWorkingDays} completed workdays updated.` : 'No completed workdays yet.'}
+                            {elapsedWorkingDays > 0
+                              ? `${calendarCounts.submitted} ${tr('of', 'dan', 'iz')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'zavershennykh rabochikh dney obnovleno.')}`
+                              : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Zavershennykh rabochikh dney poka net.')}
                           </p>
                         </div>
                         <div className="w-22 shrink-0">

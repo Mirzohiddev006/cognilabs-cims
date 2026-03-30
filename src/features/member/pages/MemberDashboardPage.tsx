@@ -5,6 +5,7 @@ import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
@@ -224,6 +225,25 @@ function MetricPanel({
 }
 
 export function MemberDashboardPage() {
+  const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
   const { user } = useAuth()
   const { showToast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -498,11 +518,8 @@ export function MemberDashboardPage() {
           <DetailStatTile label="Bonus %" value={formatPercent(detail.report.totalBonusPercent)} tone="success" />
         </div>
 
-        <div className="mt-4 grid gap-4 xl:grid-cols-8">
-          <DetailStatTile label="Penalty entries" value={formatCount(detail.report.penaltyEntries)} tone="danger" />
-          <DetailStatTile label="Bonus entries" value={formatCount(detail.report.bonusEntries)} tone="success" />
-          <DetailStatTile label="Penalty points" value={formatCount(detail.report.penaltyPoints)} tone="danger" />
-          <DetailStatTile label="After penalty" value={formatAmount(detail.report.afterPenalty)} />
+        <div className="mt-4 grid gap-4 xl:grid-cols-5">
+          <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label="Mistakes" value={formatCount(detail.report.mistakesCount)} tone="danger" />
           <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
           <DetailStatTile
@@ -513,12 +530,12 @@ export function MemberDashboardPage() {
             tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
           />
           <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
-            <p className="text-xs text-rose-600 dark:text-rose-100/78">Penalty percentage</p>
+            <p className="text-xs text-rose-600 dark:text-rose-100/78">{tr('Deduction percentage', 'Ayirma foizi', 'Процент удержания')}</p>
             <div className="mt-2 flex items-center justify-between gap-3">
               <p className="text-[1.05rem] font-semibold tracking-tight text-rose-600 dark:text-rose-300">
                 {formatPercent(detail.report.penaltyPercentage)}
               </p>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-rose-500/80 dark:text-rose-200/62">impact</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-rose-500/80 dark:text-rose-200/62">{tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}</span>
             </div>
             <div className="mt-3">
               <ProgressBar value={Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0} tone={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'violet'} />
@@ -530,9 +547,9 @@ export function MemberDashboardPage() {
           <div className="rounded-[22px] border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">Penalty history</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">{tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-strong)]">
-                  {detail.penalties.length > 0 ? `${detail.penalties.length} entries in this period.` : 'No penalty records returned.'}
+                  {detail.penalties.length > 0 ? `${detail.penalties.length} ${lt('entries')}` : tr('No deductions were recorded for this period.', 'Bu davr uchun ayirma qayd etilmadi.', 'За этот период удержания не зафиксированы.')}
                 </p>
               </div>
               <Badge variant={detail.penalties.length > 0 ? 'danger' : 'outline'}>
@@ -546,18 +563,17 @@ export function MemberDashboardPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{item.title}</p>
-                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? 'No reason provided.'}</p>
+                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? tr('No reason provided.', 'Sabab ko‘rsatilmagan.', 'Причина не указана.')}</p>
                     </div>
                     <p className="text-sm font-semibold text-rose-600 dark:text-rose-300">{formatDetailDate(item.createdAt)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {item.points ? <Badge variant="danger">{item.points} points</Badge> : null}
                     <Badge variant="outline">{formatAmount(item.amount)}</Badge>
                   </div>
                 </div>
               )) : (
                 <div className="rounded-[16px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-                  No penalty line-items were returned for the selected month.
+                  {tr('No deduction line-items were returned for the selected month.', 'Tanlangan oy uchun ayirma yozuvlari qaytmadi.', 'За выбранный месяц не вернулись записи удержаний.')}
                 </div>
               )}
             </div>
@@ -566,9 +582,9 @@ export function MemberDashboardPage() {
           <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">Bonus history</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-strong)]">
-                  {detail.bonuses.length > 0 ? `${detail.bonuses.length} entries in this period.` : 'No bonus records returned.'}
+                  {detail.bonuses.length > 0 ? `${detail.bonuses.length} ${lt('entries')}` : tr('No bonus records returned.', 'Bonus yozuvlari qaytmadi.', 'Записи бонусов не вернулись.')}
                 </p>
               </div>
               <Badge variant={detail.bonuses.length > 0 ? 'success' : 'outline'}>
@@ -582,7 +598,7 @@ export function MemberDashboardPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-200">{item.title}</p>
-                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? 'No reason provided.'}</p>
+                      <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? tr('No reason provided.', 'Sabab ko‘rsatilmagan.', 'Причина не указана.')}</p>
                     </div>
                     <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">{formatDetailDate(item.createdAt)}</p>
                   </div>
@@ -592,7 +608,7 @@ export function MemberDashboardPage() {
                 </div>
               )) : (
                 <div className="rounded-[16px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-                  No bonus line-items were returned for the selected month.
+                  {tr('No bonus line-items were returned for the selected month.', 'Tanlangan oy uchun bonus yozuvlari qaytmadi.', 'За выбранный месяц не вернулись записи бонусов.')}
                 </div>
               )}
             </div>

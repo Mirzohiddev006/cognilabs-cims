@@ -1875,6 +1875,10 @@ export function CeoTeamUpdatesPage() {
     navigate(`/faults/members/${employee.user_id}?year=${year}&month=${month}`)
   }
 
+  function canOpenMemberDetail(employee: EmployeeMonthlyStats) {
+    return Number.isFinite(employee.user_id) && employee.user_id > 0
+  }
+
   const statsEmployees = useMemo(() => {
     const hasUsefulStats = (employeesList: EmployeeMonthlyStats[]) => employeesList.some((employee) => hasUsefulMonthlyStats(employee))
 
@@ -1903,6 +1907,24 @@ export function CeoTeamUpdatesPage() {
 
   const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   if (
     (memberOptionsQuery.isLoading && historyQuery.isLoading && !hasRosterData) ||
@@ -2140,7 +2162,7 @@ export function CeoTeamUpdatesPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SummaryCard
             accent="warning"
-            label="Holiday Rules"
+            label={tr('Holiday Rules', 'Bayram qoidalari', 'Pravila prazdnichnykh dnei')}
             value={holidayOverrides.length}
             icon={
               <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -2154,7 +2176,7 @@ export function CeoTeamUpdatesPage() {
           />
           <SummaryCard
             accent="blue"
-            label="Short Day Rules"
+            label={tr('Short Day Rules', 'Qisqa kun qoidalari', 'Pravila korotkogo dnya')}
             value={shortDayOverrides.length}
             icon={
               <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -2165,7 +2187,7 @@ export function CeoTeamUpdatesPage() {
           />
           <SummaryCard
             accent="success"
-            label="No Update Required"
+            label={tr('No Update Required', 'Yangilanish talab qilinmaydi', 'Obnovlenie ne trebuetsya')}
             value={noUpdateOverrides.length}
             icon={
               <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -2176,7 +2198,7 @@ export function CeoTeamUpdatesPage() {
           />
           <SummaryCard
             accent="default"
-            label="Specific Scope"
+            label={tr('Specific Scope', 'Aniq qamrov', 'Tochnyi okhvat')}
             value={scopedOverrideCount}
             icon={
               <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -2324,8 +2346,27 @@ export function CeoTeamUpdatesPage() {
                     key={emp.user_id}
                     className={cn(
                       'table-row-hover border-b border-(--border) last:border-b-0',
+                      canOpenMemberDetail(emp) && 'cursor-pointer',
                       idx % 2 === 0 && 'bg-white/[0.012]',
                     )}
+                    onClick={() => {
+                      if (canOpenMemberDetail(emp)) {
+                        openMemberDetail(emp)
+                      }
+                    }}
+                    onKeyDown={(event) => {
+                      if (!canOpenMemberDetail(emp)) {
+                        return
+                      }
+
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        openMemberDetail(emp)
+                      }
+                    }}
+                    tabIndex={canOpenMemberDetail(emp) ? 0 : -1}
+                    role={canOpenMemberDetail(emp) ? 'link' : undefined}
+                    aria-label={canOpenMemberDetail(emp) ? `${translateCurrentLiteral('Open salary details for')} ${emp.user_name}` : undefined}
                   >
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-3">
@@ -2365,8 +2406,11 @@ export function CeoTeamUpdatesPage() {
                         variant="secondary"
                         size="sm"
                         className="whitespace-nowrap rounded-lg"
-                        onClick={() => openMemberDetail(emp)}
-                        disabled={!Number.isFinite(emp.user_id) || emp.user_id <= 0}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          openMemberDetail(emp)
+                        }}
+                        disabled={!canOpenMemberDetail(emp)}
                       >
                         {translateCurrentLiteral('View Details')}
                       </Button>

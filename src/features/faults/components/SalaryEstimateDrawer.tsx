@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from '../../../app/hooks/useTheme'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -34,6 +34,24 @@ export function SalaryEstimateDrawer({
   const { theme } = useTheme()
   const isLight = theme === 'light'
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   useEffect(() => {
     if (!open) {
@@ -167,14 +185,11 @@ export function SalaryEstimateDrawer({
               <DetailStatTile label={lt('Final salary')} value={formatAmount(report.finalSalary)} theme={theme} />
               <DetailStatTile label={lt('Estimated salary')} value={formatAmount(report.estimatedSalary)} theme={theme} />
               <DetailStatTile label={lt('Base salary')} value={formatAmount(report.baseSalary)} theme={theme} />
-              <DetailStatTile label={lt('After penalty')} value={formatAmount(report.afterPenalty)} theme={theme} />
+              <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(report.afterPenalty)} theme={theme} />
               <DetailStatTile label={lt('Deduction')} value={formatAmount(report.deductionAmount)} tone="danger" theme={theme} />
               <DetailStatTile label={lt('Bonus amount')} value={formatAmount(report.bonusAmount)} tone="success" theme={theme} />
               <DetailStatTile label={lt('Bonus %')} value={formatPercent(report.totalBonusPercent)} tone="success" theme={theme} />
-              <DetailStatTile label={lt('Penalty %')} value={formatPercent(report.penaltyPercentage)} tone="danger" theme={theme} />
-              <DetailStatTile label={lt('Penalty points')} value={formatCount(report.penaltyPoints)} tone="danger" theme={theme} />
-              <DetailStatTile label={lt('Penalty entries')} value={formatCount(report.penaltyEntries)} tone="danger" theme={theme} />
-              <DetailStatTile label={lt('Bonus entries')} value={formatCount(report.bonusEntries)} tone="success" theme={theme} />
+              <DetailStatTile label={tr('Deduction %', 'Ayirma %', 'Удержание %')} value={formatPercent(report.penaltyPercentage)} tone="danger" theme={theme} />
               <DetailStatTile label={lt('Mistakes')} value={formatCount(report.mistakesCount)} tone="danger" theme={theme} />
               <DetailStatTile label={lt('Delivery bonuses')} value={formatCount(report.deliveryBonusCount)} tone="success" theme={theme} />
               <DetailStatTile label={lt('Working days')} value={formatCount(report.workingDays)} theme={theme} />
@@ -199,7 +214,7 @@ export function SalaryEstimateDrawer({
                 )}
               >
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className={cn(isLight ? 'text-rose-600' : 'text-[var(--danger-text)]')}>{lt('Penalty pressure')}</span>
+                  <span className={cn(isLight ? 'text-rose-600' : 'text-[var(--danger-text)]')}>{tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}</span>
                   <span className={cn('font-semibold', penaltyProgress > 0 ? (isLight ? 'text-rose-600' : 'text-[var(--danger-text)]') : 'text-[var(--foreground)]')}>
                     {formatPercent(report.penaltyPercentage)}
                   </span>
@@ -211,9 +226,9 @@ export function SalaryEstimateDrawer({
                   />
                 </div>
                 <p className="mt-3 text-xs leading-6 text-[var(--muted)]">
-                  {report.penaltyEntries > 0
-                    ? `${formatCount(report.penaltyEntries)} ${lt('penalties')} ${lt('and')} ${formatCount(report.penaltyPoints)} ${lt('points reduced this month.')}`
-                    : lt('No penalty entries were recorded for this period.')}
+                  {report.deductionAmount > 0
+                    ? `${formatAmount(report.deductionAmount)} ${tr('deducted in this period.', 'shu davrda ayirilgan.', 'удержано за этот период.')}`
+                    : tr('No deductions were recorded for this period.', 'Bu davr uchun ayirma qayd etilmadi.', 'За этот период удержания не зафиксированы.')}
                 </p>
               </div>
 

@@ -2,7 +2,7 @@ import type {
   MemberDeliveryBonusRecord,
   MemberMistakeRecord,
 } from '../../../shared/api/types'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
@@ -11,6 +11,25 @@ import { Card } from '../../../shared/ui/card'
 import { formatDetailDate } from '../lib/salaryEstimates'
 
 const lt = translateCurrentLiteral
+const tr = (key: string, uzFallback: string, ruFallback: string) => {
+  const value = lt(key)
+
+  if (value !== key) {
+    return value
+  }
+
+  const locale = getIntlLocale()
+
+  if (locale.startsWith('ru')) {
+    return ruFallback
+  }
+
+  if (locale.startsWith('en')) {
+    return key
+  }
+
+  return uzFallback
+}
 
 function renderProjectLabel(projectName?: string | null, projectId?: number | null) {
   if (projectName?.trim()) {
@@ -58,10 +77,10 @@ export function MistakeIncidentSection({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
-            {lt('Mistake incidents')}
+            {tr('Mistake incidents', 'Xato holatlari', 'Sluchai oshibok')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            {lt('Recorded compensation mistakes')}
+            {tr('Recorded compensation mistakes', 'Qayd etilgan kompensatsiya xatolari', 'Zafiksirovannye oshibki kompensatsii')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -70,7 +89,7 @@ export function MistakeIncidentSection({
           </Badge>
           {editable && onAdd ? (
             <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-rose-600 hover:text-rose-700 dark:text-rose-100/88 dark:hover:text-white">
-              {lt('Add mistake')}
+              {tr('Add mistake', 'Xato qoshish', 'Dobavit oshibku')}
             </Button>
           ) : null}
         </div>
@@ -115,7 +134,7 @@ export function MistakeIncidentSection({
           </div>
         )) : (
           <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-            {lt('No mistake incidents were returned for the selected month.')}
+            {tr('No mistake incidents were returned for the selected month.', 'Tanlangan oy uchun xato holatlari qaytmadi.', 'Za vybrannyi mesyats zapisi ob oshibkakh ne vernulis.')}
           </div>
         )}
       </div>
@@ -145,10 +164,10 @@ export function DeliveryBonusSection({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
-            {lt('Delivery bonuses')}
+            {tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            {lt('Recorded delivery bonus events')}
+            {tr('Recorded delivery bonus events', 'Qayd etilgan topshirish bonuslari', 'Zafiksirovannye sobytiya bonusov za sdachu')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -157,7 +176,7 @@ export function DeliveryBonusSection({
           </Badge>
           {editable && onAdd ? (
             <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-emerald-600 hover:text-emerald-700 dark:text-emerald-100/88 dark:hover:text-white">
-              {lt('Add delivery bonus')}
+              {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
             </Button>
           ) : null}
         </div>
@@ -198,7 +217,7 @@ export function DeliveryBonusSection({
           </div>
         )) : (
           <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-            {lt('No delivery bonus records were returned for the selected month.')}
+            {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
           </div>
         )}
       </div>

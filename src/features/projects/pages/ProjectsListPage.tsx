@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -34,6 +34,24 @@ export function ProjectsListPage() {
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
   const [searchParams, setSearchParams] = useSearchParams()
 
   const canManageProjects = hasPermission('projects')
@@ -364,9 +382,9 @@ export function ProjectsListPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Members')}</p>
-                <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">{lt('Project members overview')}</h2>
+                <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">{tr('Project members overview', 'Loyiha azolari korinishi', 'Obzor uchastnikov proekta')}</h2>
                 <p className="mt-1 text-sm text-[var(--muted)]">
-                  {lt('Click a member to see the projects they are part of and the tasks assigned to them.')}
+                  {tr('Click a member to see the projects they are part of and the tasks assigned to them.', 'Azoni bosing va u qatnashayotgan loyihalar hamda unga biriktirilgan vazifalarni koring.', 'Nazhmi na uchastnika, chtoby uvidet proekty, v kotorykh on uchastvuet, i ego zadachi.')}
                 </p>
               </div>
 

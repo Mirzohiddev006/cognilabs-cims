@@ -16,7 +16,7 @@ import type {
 } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
@@ -264,6 +264,24 @@ export function CeoManagementPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
   const [activeTab, setActiveTab] = useState<ManagementTab>('statuses')
 
   const [pageDialogMode, setPageDialogMode] = useState<'create' | 'edit'>('create')
@@ -1272,30 +1290,30 @@ export function CeoManagementPage() {
       {activeTab === 'images' ? (
         <Card className="p-6">
           <SectionTitle
-            title="Images Cleanup"
-            description="Image library, detail preview va selection-based cleanup shu section ichida ishlaydi."
+            title={tr('Images Cleanup', 'Rasmlarni tozalash', 'Ochistka izobrazhenii')}
+            description={tr('Image library, detail preview va selection-based cleanup shu section ichida ishlaydi.', 'Rasm kutubxonasi, detal korinishi va tanlov boyicha tozalash shu bolim ichida ishlaydi.', 'Biblioteka izobrazhenii, detalnyi predprosmotr i ochistka po vyboru rabotayut v etom razdele.')}
           />
 
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
-              label="Images loaded"
+              label={tr('Images loaded', 'Yuklangan rasmlar', 'Zagruzhennye izobrazheniya')}
               value={imagesQuery.data?.total_count ?? imageItems.length}
-              hint="Current category and reference filters bilan yuklangan rasmlar."
+              hint={tr('Current category and reference filters bilan yuklangan rasmlar.', 'Joriy kategoriya va boglanish filtrlari bilan yuklangan rasmlar.', 'Izobrazheniya, zagruzhennye s tekushchimi filtrami kategorii i ssylok.')}
             />
             <SummaryCard
-              label="Referenced"
+              label={tr('Referenced', 'Boglangan', 'Svyazannye')}
               value={referencedImagesCount}
-              hint="DB ichida kamida bitta reference bor."
+              hint={tr('DB ichida kamida bitta reference bor.', 'DB ichida kamida bitta boglanish bor.', 'V BD est khotya by odna svyaz.')}
             />
             <SummaryCard
-              label="Unreferenced"
+              label={tr('Unreferenced', 'Boglanmagan', 'Nesvyazannye')}
               value={unreferencedImagesCount}
-              hint="DB da ishlatilmayotgan rasmlar."
+              hint={tr('DB da ishlatilmayotgan rasmlar.', 'DB da ishlatilmayotgan rasmlar.', 'Izobrazheniya, kotorye ne ispolzuyutsya v BD.')}
             />
             <SummaryCard
-              label="Selected"
+              label={tr('Selected', 'Tanlangan', 'Vybrannye')}
               value={selectedImagePaths.length}
-              hint="Bulk delete uchun tanlangan rasmlar."
+              hint={tr('Bulk delete uchun tanlangan rasmlar.', 'Ommaviy ochirish uchun tanlangan rasmlar.', 'Izobrazheniya, vybrannye dlya massovogo udaleniya.')}
             />
           </div>
 
@@ -1347,16 +1365,40 @@ export function CeoManagementPage() {
                 <label className="mb-2 block text-sm font-semibold text-white">{lt('Category')}</label>
                 <SelectField
                   value={imageCategoryFilter}
-                  options={imageCategoryOptions.map((option) => ({ ...option, label: lt(option.label) }))}
+                  options={imageCategoryOptions.map((option) => ({
+                    ...option,
+                    label:
+                      option.label === 'All categories'
+                        ? tr('All categories', 'Barcha toifalar', 'Vse kategorii')
+                        : option.label === 'Project images'
+                          ? tr('Project images', 'Loyiha rasmlari', 'Izobrazheniya proekta')
+                          : option.label === 'Card images'
+                            ? tr('Card images', 'Karta rasmlari', 'Izobrazheniya kart')
+                            : option.label === 'Profile images'
+                              ? tr('Profile images', 'Profil rasmlari', 'Izobrazheniya profilya')
+                              : option.label === 'Profil images (legacy)'
+                                ? tr('Profil images (legacy)', 'Profil rasmlari (eski)', 'Izobrazheniya profilya (legacy)')
+                                : lt(option.label),
+                  }))}
                   onValueChange={(value) => setImageCategoryFilter(value)}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Reference filter')}</label>
+                <label className="mb-2 block text-sm font-semibold text-white">{tr('Reference filter', 'Boglanish filtri', 'Filtr svyazei')}</label>
                 <SelectField
                   value={imageReferenceFilter}
-                  options={imageReferenceFilterOptions.map((option) => ({ ...option, label: lt(option.label) }))}
+                  options={imageReferenceFilterOptions.map((option) => ({
+                    ...option,
+                    label:
+                      option.label === 'All images'
+                        ? tr('All images', 'Barcha rasmlar', 'Vse izobrazheniya')
+                        : option.label === 'Referenced only'
+                          ? tr('Referenced only', 'Faqat boglanganlar', 'Tolko svyazannye')
+                          : option.label === 'Unreferenced only'
+                            ? tr('Unreferenced only', 'Faqat boglanmaganlar', 'Tolko nesvyazannye')
+                            : lt(option.label),
+                  }))}
                   onValueChange={(value) => setImageReferenceFilter(value as ImageReferenceFilter)}
                 />
               </div>

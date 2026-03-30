@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type {
   MemberDeliveryBonusPayload,
   MemberDeliveryBonusRecord,
@@ -254,6 +254,24 @@ export function FaultsMemberDetailPage({
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   const isMemberUpdatesMode = mode === 'member-updates'
   const memberId = memberIdOverride ?? Number(params.memberId)
@@ -786,12 +804,12 @@ export function FaultsMemberDetailPage({
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                 {showCompensationActions ? (
                   <Button variant="ghost" size="sm" onClick={() => openMistakeDialog()} className="rounded-xl">
-                    {lt('Add mistake')}
+                    {tr('Add mistake', 'Xato qoshish', 'Dobavit oshibku')}
                   </Button>
                 ) : null}
                 {showCompensationActions ? (
                   <Button variant="success" size="sm" onClick={() => openDeliveryBonusDialog()} className="rounded-xl">
-                    {lt('Add delivery bonus')}
+                    {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
                   </Button>
                 ) : null}
                 <Button
@@ -864,21 +882,19 @@ export function FaultsMemberDetailPage({
               {lt('Compensation flow')}
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              {lt('How the final salary is built')}
+              {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Kak formiruetsya itogovaya zarplata')}
             </h2>
           </div>
           <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
-            {formatPercent(detail.report.penaltyPercentage)} {lt('penalty impact')}
+            {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
           </Badge>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DetailStatTile label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
-          <DetailStatTile label={lt('After penalty')} value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label={lt('Penalty points')} value={formatCount(detail.report.penaltyPoints)} tone="danger" />
-          <DetailStatTile label={lt('Bonus entries')} value={formatCount(detail.report.bonusEntries)} tone="blue" />
+          <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
-          <DetailStatTile label={lt('Delivery bonuses')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
+          <DetailStatTile label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
         <div className="mt-5 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
@@ -941,23 +957,23 @@ export function FaultsMemberDetailPage({
 
             <div className="mt-4 grid gap-3 xl:grid-cols-3">
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{lt('Last update')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Last update', 'Oxirgi yangilanish', 'Poslednee obnovlenie')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {formatDetailDate(updatesSummary!.lastUpdateDate)}
+                  {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano')}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{lt('Next payment date')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Next payment date', 'Keyingi tolov sanasi', 'Data sleduyushchei oplaty')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {formatDetailDate(updatesSummary!.nextPaymentDate)}
+                  {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano')}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{lt('Salary amount in update record')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Salary amount in update record', 'Yangilanish yozuvidagi maosh summasi', 'Summa zarplaty v zapisi ob obnovlenii')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {typeof updatesSummary!.salaryAmount === 'number'
                     ? formatAmount(updatesSummary!.salaryAmount)
-                    : lt('Not returned')}
+                    : tr('Not returned', 'Qaytmadi', 'Ne vernulos')}
                 </p>
               </div>
             </div>
@@ -1013,10 +1029,10 @@ export function FaultsMemberDetailPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
-                {lt('Penalty ledger')}
+                {tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                {lt('Penalty entries for this month')}
+                {tr('Deduction records for this month', 'Bu oy uchun ayirma yozuvlari', 'Записи удержаний за этот месяц')}
               </h2>
             </div>
             <Badge variant={detail.penalties.length > 0 ? 'danger' : 'outline'}>
@@ -1036,7 +1052,6 @@ export function FaultsMemberDetailPage({
                       </p>
                     ) : null}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {item.points ? <Badge variant="danger">{item.points} {lt('points')}</Badge> : null}
                       {item.percentage ? <Badge variant="outline">{formatPercent(item.percentage)}</Badge> : null}
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
@@ -1048,7 +1063,7 @@ export function FaultsMemberDetailPage({
               </div>
             )) : (
               <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-                {lt('No penalty line-items were returned for this member in the selected month.')}
+                {tr('No deduction line-items were returned for this member in the selected month.', 'Tanlangan oy uchun bu xodim bo‘yicha ayirma yozuvlari qaytmadi.', 'За выбранный месяц для этого сотрудника не вернулись записи удержаний.')}
               </div>
             )}
           </div>
@@ -1058,10 +1073,10 @@ export function FaultsMemberDetailPage({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
-                {lt('Bonus ledger')}
+                {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                {lt('Bonus entries for this month')}
+                {tr('Bonuses for this month', 'Bu oy uchun bonuslar', 'Бонусы за этот месяц')}
               </h2>
             </div>
             <Badge variant={detail.bonuses.length > 0 ? 'success' : 'outline'}>

@@ -11,7 +11,7 @@ import {
 } from '../../../shared/api/services/ceo.service'
 import type { PermissionMap } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { formatCompactNumber, formatShortDate } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
@@ -304,6 +304,24 @@ export function CeoUsersPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
   const permissionsOverviewQuery = useAsyncData(() => ceoService.permissionsOverview(), [])
@@ -862,16 +880,16 @@ export function CeoUsersPage() {
             <Button variant="secondary" onClick={() => void refreshAll()}>
               {lt('Refresh')}
             </Button>
-            <Button onClick={openCreateUserModal}>{lt('Create user')}</Button>
+            <Button onClick={openCreateUserModal}>{tr('Create user', 'Foydalanuvchi yaratish', 'Создать пользователя')}</Button>
           </>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-4 stagger-children">
         <MetricCard label={lt('Users')} value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
-        <MetricCard label={lt('Active')} value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
-        <MetricCard label={lt('Inactive')} value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} accent="warning" sparkBars={[3,2,3,2,2,2]} />
-        <MetricCard label={lt('Messages')} value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
+        <MetricCard label={tr('Active', 'Faol', 'Активные')} value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
+        <MetricCard label={tr('Inactive', 'Nofaol', 'Неактивные')} value={formatCompactNumber(statistics?.inactive_user_count ?? 0)} accent="warning" sparkBars={[3,2,3,2,2,2]} />
+        <MetricCard label={tr('Messages', 'Xabarlar', 'Сообщения')} value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
       </div>
 
       <Card className="p-6">
@@ -879,7 +897,11 @@ export function CeoUsersPage() {
           <SectionTitle
             eyebrow={lt('Users list')}
             title={lt('CEO users table')}
-            description={lt('Search, edit, toggle status, manage permissions, and review message history directly from the table.')}
+            description={tr(
+              'Search, edit, toggle status, manage permissions, and review message history directly from the table.',
+              'Jadvalning o‘zidan qidirish, tahrirlash, statusni almashtirish, ruxsatlarni boshqarish va xabarlar tarixini ko‘rish mumkin.',
+              'Прямо из таблицы можно искать, редактировать, менять статус, управлять разрешениями и просматривать историю сообщений.',
+            )}
           />
           <Input
             className="w-full md:w-80"
@@ -957,7 +979,7 @@ export function CeoUsersPage() {
               },
               {
                 key: 'messages',
-                header: lt('Messages'),
+                header: tr('Messages', 'Xabarlar', 'Сообщения'),
                 width: '140px',
                 render: (row) => {
                   const conversation = conversationByUserId.get(row.id) ?? emptyConversationSummary
@@ -1006,7 +1028,7 @@ export function CeoUsersPage() {
                     data-keep-color="true"
                     className={cn('text-xs font-bold uppercase tracking-wider', row.is_active ? 'text-emerald-400' : 'text-rose-500')}
                   >
-                    {row.is_active ? lt('Active') : lt('Inactive')}
+                    {row.is_active ? tr('Active', 'Faol', 'Активные') : tr('Inactive', 'Nofaol', 'Неактивные')}
                   </span>
                 ),
               },

@@ -12,6 +12,25 @@ import type {
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const boardWeekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const lt = translateCurrentLiteral
+const tr = (key: string, uzFallback: string, ruFallback: string) => {
+  const value = lt(key)
+
+  if (value !== key) {
+    return value
+  }
+
+  const locale = getIntlLocale()
+
+  if (locale.startsWith('ru')) {
+    return ruFallback
+  }
+
+  if (locale.startsWith('en')) {
+    return key
+  }
+
+  return uzFallback
+}
 
 const dayStyle: Record<DayStatus, string> = {
   submitted: 'cal-day-submitted',
@@ -158,7 +177,7 @@ function getWorkedDurationLabel(day: MemberMonthlyUpdateDay) {
   const checkOutMinutes = getMinutesFromTime(day.checkOutTime)
 
   if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
-    return lt('Hours not returned')
+    return tr('Hours not returned', 'Ish soatlari qaytmadi', 'Chasy raboty ne vernulis')
   }
 
   const totalMinutes = checkOutMinutes - checkInMinutes
@@ -266,18 +285,18 @@ function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null
 function getCalendarCellStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return lt('Updated')
-  if (status === 'missing') return lt('Missed')
-  if (status === 'sunday') return specialLabel ?? lt('Off Day')
-  if (status === 'future') return lt('Soon')
-  return lt('Open')
+  if (status === 'submitted') return tr('Updated', 'Yangilangan', 'Obnovleno')
+  if (status === 'missing') return tr('Missed', 'Otib yuborilgan', 'Propushcheno')
+  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Vyhodnoi den')
+  if (status === 'future') return tr('Soon', 'Yaqinda', 'Skoro')
+  return tr('Open', 'Ochiq', 'Otkryto')
 }
 
 function getCalendarCellHint(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return lt('Update captured')
+  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
   if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
   if (day.status === 'missing') return lt('Needs submission')
-  if (day.status === 'sunday') return isHolidayDay(day) ? lt('Holiday schedule') : lt('Weekend / off day')
+  if (day.status === 'sunday') return isHolidayDay(day) ? tr('Holiday schedule', 'Bayram jadvali', 'Prazdnichnyi grafik') : tr('Weekend / off day', 'Dam olish / off day', 'Vyhodnoi / off day')
   if (day.status === 'future') return lt('Awaiting date')
   return lt('No update yet')
 }
@@ -301,10 +320,10 @@ function getShortWeekday(day: MemberMonthlyUpdateDay) {
 }
 
 function getDaySummary(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return lt('Update captured')
+  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
   if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
   if (day.status === 'missing') return lt('Needs submission')
-  if (day.status === 'sunday') return isHolidayDay(day) ? lt('Holiday') : lt('Off day')
+  if (day.status === 'sunday') return isHolidayDay(day) ? tr('Holiday', 'Bayram', 'Prazdnik') : tr('Off day', 'Dam olish kuni', 'Vyhodnoi den')
   if (day.status === 'future') return lt('Awaiting date')
   return lt('No explicit status returned')
 }
@@ -467,8 +486,8 @@ export function MemberMonthlyUpdateCalendarBoard({
       ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
       : lt('None')
   const completionSummaryText = elapsedWorkingDays > 0
-    ? `${counts.submitted} ${lt('of')} ${elapsedWorkingDays} ${lt('completed workdays updated.')}`
-    : lt('No completed workdays yet.')
+    ? `${counts.submitted} ${tr('of', 'dan', 'iz')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'zavershennykh rabochikh dney obnovleno.')}`
+    : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Zavershennykh rabochikh dney poka net.')
 
   return (
     <div className={cn('w-full', className)}>
@@ -480,7 +499,11 @@ export function MemberMonthlyUpdateCalendarBoard({
                 {selectedMonthName} {calendar.year} {lt('Calendar')}
               </h3>
               <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-                {lt('Reference-driven monthly board with dense day cards, week rails, and one-click inspection.')}
+                {tr(
+                  'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
+                  'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
+                  'Mesyachnaya doska po referensu s plotnymi kartami dnei, liniyami nedel i proverkoj v odin klik.',
+                )}
               </p>
             </div>
 
@@ -497,7 +520,7 @@ export function MemberMonthlyUpdateCalendarBoard({
         <div className="px-4 py-4 sm:px-5">
           <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
             <div className="cal-inner overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-3.5 sm:p-5">
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(290px,330px)] lg:items-center">
                 <div className="min-w-0 max-w-2xl">
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
                     {lt('Calendar System')}
@@ -514,11 +537,15 @@ export function MemberMonthlyUpdateCalendarBoard({
                     </Badge>
                   </div>
                   <p className="mt-2 text-[12px] leading-5 text-[var(--muted)]">
-                    {lt('Dense monthly board for fast scanning, modeled after the reference calendar layout.')}
+                    {tr(
+                      'Dense monthly board for fast scanning, modeled after the reference calendar layout.',
+                      'Tez korib chiqish uchun zich oylik taxta, referens kalendar asosida tuzilgan.',
+                      'Plotnaya mesyachnaya doska dlya bystrogo prosmotra, postroennaya po etalonnomu kalendaryu.',
+                    )}
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3 md:items-end">
+                <div className="flex justify-center lg:justify-self-center">
                   <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-[var(--border)] bg-white p-1.5 shadow-[0_10px_24px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                     <Button
                       variant="secondary"
@@ -552,31 +579,31 @@ export function MemberMonthlyUpdateCalendarBoard({
                       </svg>
                     </Button>
                   </div>
+                </div>
 
-                  <div className="hidden rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 md:block md:min-w-[290px] dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
-                          {lt('Completion To Date')}
-                        </p>
-                        <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
-                          {completionSummaryText}
-                        </p>
-                      </div>
-
-                      <div className="shrink-0 text-right">
-                        <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
-                          {counts.submitted}/{elapsedWorkingDays || 0}
-                        </p>
-                        <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
-                          {monthProgressPct.toFixed(0)}%
-                        </p>
-                      </div>
+                <div className="hidden rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 lg:block dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
+                        {lt('Completion To Date')}
+                      </p>
+                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
+                        {completionSummaryText}
+                      </p>
                     </div>
 
-                    <div className="mt-3">
-                      <CompletionBar pct={monthProgressPct} />
+                    <div className="shrink-0 text-right">
+                      <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
+                        {counts.submitted}/{elapsedWorkingDays || 0}
+                      </p>
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
+                        {monthProgressPct.toFixed(0)}%
+                      </p>
                     </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <CompletionBar pct={monthProgressPct} />
                   </div>
                 </div>
               </div>
@@ -584,20 +611,20 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                   <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.submitted} {lt('updated')}
+                    {counts.submitted} {tr('updated', 'yangilangan', 'obnovleno')}
                   </Badge>
                   <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.missing} {lt('missed')}
+                    {counts.missing} {tr('missed', 'otib yuborilgan', 'propushcheno')}
                   </Badge>
                   <Badge variant="secondary" className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {attentionDays} {lt('attention')}
+                    {attentionDays} {tr('attention', 'etibor', 'vnimanie')}
                   </Badge>
                   <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
-                    <span className="truncate">{lt('Next')}: {nextDayLabel}</span>
+                    <span className="truncate">{tr('Next', 'Keyingi', 'Sleduyushchii')}: {nextDayLabel}</span>
                   </Badge>
                 </div>
 
-                <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 md:hidden dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
+                <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 lg:hidden dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
@@ -655,6 +682,8 @@ export function MemberMonthlyUpdateCalendarBoard({
                         const entryCount = getEntryCount(day)
                         const isSelected = selectedKey === day.date
                         const isToday = day.date === todayKey
+                        const showTimePanel = shouldShowTimePanel(day)
+                        const isCheckoutMissing = Boolean(day.checkInTime) && !day.checkOutTime
 
                         return (
                           <button
@@ -664,11 +693,12 @@ export function MemberMonthlyUpdateCalendarBoard({
                             aria-pressed={isSelected}
                             className={cn(
                               'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200',
+                              showTimePanel && 'min-h-[164px]',
                               getDaySurfaceClass(day),
                               isSelected
                                 ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
                                 : 'hover:-translate-y-[1px] hover:border-white/14',
-                              isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
+                              isToday && !isSelected && 'border-sky-400 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] shadow-[inset_0_0_0_1px_rgba(96,165,250,0.92),0_0_0_3px_rgba(191,219,254,0.78),0_14px_30px_rgba(59,130,246,0.18)] dark:border-[var(--border)] dark:bg-transparent dark:shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                             )}
                             title={`${isSelected ? `${lt('Selected')}: ` : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
                           >
@@ -697,15 +727,15 @@ export function MemberMonthlyUpdateCalendarBoard({
                                   </span>
                                 ) : null}
                                 {isToday ? (
-                                  <span className="grid h-6 w-6 place-items-center rounded-full border border-sky-400/30 bg-sky-500/10">
-                                    <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_12px_rgba(125,211,252,0.70)]" />
+                                  <span className="grid h-6 w-6 place-items-center rounded-full border border-sky-400 bg-white shadow-[0_0_0_2px_rgba(219,234,254,0.95),0_10px_20px_rgba(59,130,246,0.16)] dark:border-sky-400/30 dark:bg-sky-500/10 dark:shadow-none">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-sky-500 shadow-[0_0_0_5px_rgba(219,234,254,0.98),0_0_16px_rgba(59,130,246,0.42)] dark:h-2 dark:w-2 dark:bg-sky-300 dark:shadow-[0_0_12px_rgba(125,211,252,0.70)]" />
                                   </span>
                                 ) : null}
                               </div>
                             </div>
 
-                            {shouldShowTimePanel(day) ? (
-                              <div className="relative mt-2.5 space-y-1.5">
+                            {showTimePanel ? (
+                              <div className="relative mt-3 w-full max-w-[112px] self-center space-y-1.5 text-center">
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
@@ -716,8 +746,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     </p>
                                   </div>
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                      {lt('Out')}
+                                    <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
+                                      <span>{lt('Out')}</span>
+                                      {isCheckoutMissing ? (
+                                        <span aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')} title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}>
+                                          🚷
+                                        </span>
+                                      ) : null}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkOutTime)}
@@ -730,17 +765,18 @@ export function MemberMonthlyUpdateCalendarBoard({
                               </div>
                             ) : null}
 
-                            <div className="relative mt-auto">
+                            <div className={cn('relative mt-auto pt-2', showTimePanel && 'flex flex-col items-center text-center')}>
                               <span
                                 className={cn(
                                   'inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 text-[9px] font-semibold uppercase tracking-[0.14em]',
+                                  showTimePanel && 'justify-center',
                                   getDayPillClass(day),
                                 )}
                               >
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', getDayDotClass(day))} />
                                 {getCalendarCellStatusLabel(day.status, day)}
                               </span>
-                              <p className="mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white/76">
+                              <p className={cn('mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white/76', showTimePanel && 'max-w-[112px] text-center')}>
                                 {getCalendarCellHint(day)}
                               </p>
                             </div>

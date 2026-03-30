@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
@@ -40,6 +40,24 @@ export function ProjectDetailPage() {
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   const id = Number(projectId)
   const canManageProjects = hasPermission('projects')
@@ -475,10 +493,10 @@ export function ProjectDetailPage() {
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
                 <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                  {lt('Assigned Members')}
+                  {tr('Assigned Members', 'Biriktirilgan azolar', 'Naznachennye uchastniki')}
                 </h2>
                 <p className="text-sm text-[var(--muted)]">
-                  {lt('Click a member to open the tasks assigned to them inside this project.')}
+                  {tr('Click a member to open the tasks assigned to them inside this project.', 'Azoni bosing va shu loyiha ichidagi unga biriktirilgan vazifalarni oching.', 'Nazhmi na uchastnika, chtoby otkryt ego zadachi vnutri etogo proekta.')}
                 </p>
               </div>
 
@@ -655,7 +673,7 @@ export function ProjectDetailPage() {
                 </div>
               ) : (
                 <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]">
-                  {lt('Pick one of the members above to open their tasks inside this project here.')}
+                  {tr('Pick one of the members above to open their tasks inside this project here.', 'Yuqoridagi azolardan birini tanlang va uning shu loyiha ichidagi vazifalarini shu yerda oching.', 'Vyberite odnogo iz uchastnikov vyshe, chtoby otkryt ego zadachi v etom proekte zdes.')}
                 </div>
               )}
             </div>
@@ -666,10 +684,10 @@ export function ProjectDetailPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                {lt('Project Lists')}
+                {tr('Project Lists', 'Loyiha royxatlari', 'Spiski proekta')}
               </h2>
               <p className="mt-1 text-sm text-[var(--muted)]">
-                {lt('Open the project and work with its lists directly here without an extra board layer.')}
+                {tr('Open the project and work with its lists directly here without an extra board layer.', 'Qoshimcha board qatlamsiz loyihani ochib, royxatlari bilan shu yerda ishlang.', 'Otkroite proekt i rabotaite s ego spiskami pryamo zdes bez dopolnitelnogo sloya board.')}
               </p>
             </div>
             {canManageProjects ? (
@@ -683,7 +701,7 @@ export function ProjectDetailPage() {
                   </svg>
                 )}
               >
-                {lt('New board')}
+                {tr('New board', 'Yangi board', 'Novyi board')}
               </Button>
             ) : null}
           </div>

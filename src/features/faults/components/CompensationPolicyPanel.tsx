@@ -1,6 +1,6 @@
 import { Badge } from '../../../shared/ui/badge'
 import { Card } from '../../../shared/ui/card'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { DetailStatTile } from './SalaryEstimatePrimitives'
 import {
   type EmployeeCompensationPolicy,
@@ -18,6 +18,24 @@ export function CompensationPolicyPanel({
   className,
 }: CompensationPolicyPanelProps) {
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   if (!policy) {
     return (
@@ -96,7 +114,13 @@ export function CompensationPolicyPanel({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">{lt('Bonus rates')}</p>
-              <p className="mt-1 text-sm text-[var(--muted-strong)]">{lt('Configured percentage rules for bonus triggers.')}</p>
+              <p className="mt-1 text-sm text-[var(--muted-strong)]">
+                {tr(
+                  'Configured percentage rules for bonus triggers.',
+                  'Bonus ishga tushishi uchun foiz qoidalari sozlangan.',
+                  'Nastroeny protsentnye pravila dlya zapuska bonusov.',
+                )}
+              </p>
             </div>
             <Badge variant="outline">{policy.bonusRates.length}</Badge>
           </div>
