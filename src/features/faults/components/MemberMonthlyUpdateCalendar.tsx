@@ -749,7 +749,11 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
                                       <span>{lt('Out')}</span>
                                       {isCheckoutMissing ? (
-                                        <span aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')} title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}>
+                                        <span
+                                          className="inline-flex h-4 min-w-4 items-center justify-center text-[13px] leading-none"
+                                          aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
+                                          title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
+                                        >
                                           🚷
                                         </span>
                                       ) : null}
