@@ -748,19 +748,20 @@ export function MemberMonthlyUpdateCalendarBoard({
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
                                       <span>{lt('Out')}</span>
-                                      {isCheckoutMissing ? (
-                                        <span
-                                          className="inline-flex h-4 min-w-4 items-center justify-center text-[13px] leading-none"
-                                          aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
-                                          title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
-                                        >
-                                          🚷
-                                        </span>
-                                      ) : null}
                                     </p>
-                                    <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
-                                      {formatWorkTime(day.checkOutTime)}
-                                    </p>
+                                    {isCheckoutMissing ? (
+                                      <p
+                                        className="mt-1 inline-flex w-full items-center justify-center text-[18px] leading-none"
+                                        aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
+                                        title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
+                                      >
+                                        🚷
+                                      </p>
+                                    ) : (
+                                      <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
+                                        {formatWorkTime(day.checkOutTime)}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                                 <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white/76">
