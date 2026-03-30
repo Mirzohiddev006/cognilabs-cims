@@ -369,7 +369,10 @@ export function CeoManagementPage() {
   }, [imageDetailPath, imageDetailQuery.data, imageItems])
 
   useEffect(() => {
-    setSelectedImagePaths((current) => current.filter((path) => imageItems.some((image) => image.path === path)))
+    setSelectedImagePaths((current) => {
+      const next = current.filter((path) => imageItems.some((image) => image.path === path))
+      return next.length === current.length && next.every((path, index) => path === current[index]) ? current : next
+    })
   }, [imageItems])
 
   const isInitialLoading =

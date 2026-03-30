@@ -67,6 +67,7 @@ export function ProjectDetailPage() {
   const priorityConfigMap = getPriorityConfig()
 
   const selectedBoardId = parseBoardId(searchParams.get('board'))
+  const selectedBoardParam = searchParams.get('board')
   const activeBoards = project?.boards.filter((board) => !board.is_archived) ?? []
   const archivedBoards = project?.boards.filter((board) => board.is_archived) ?? []
   const allBoards = project?.boards ?? []
@@ -159,29 +160,22 @@ export function ProjectDetailPage() {
       return
     }
 
-    if (!selectedBoard) {
-      if (selectedBoardId === null) {
-        return
-      }
+    const nextBoardParam = selectedBoard ? String(selectedBoard.id) : null
 
-      setSearchParams((current) => {
-        const next = new URLSearchParams(current)
-        next.delete('board')
-        return next
-      }, { replace: true })
+    if ((selectedBoardParam ?? null) === nextBoardParam) {
       return
     }
 
-    if (selectedBoard.id === selectedBoardId) {
-      return
+    const nextSearchParams = new URLSearchParams(searchParams)
+
+    if (nextBoardParam === null) {
+      nextSearchParams.delete('board')
+    } else {
+      nextSearchParams.set('board', nextBoardParam)
     }
 
-    setSearchParams((current) => {
-      const next = new URLSearchParams(current)
-      next.set('board', String(selectedBoard.id))
-      return next
-    }, { replace: true })
-  }, [project, selectedBoard, selectedBoardId, setSearchParams])
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [project, searchParams, selectedBoard, selectedBoardParam, setSearchParams])
 
   useEffect(() => {
     if (projectMembers.length === 0) {
@@ -197,6 +191,12 @@ export function ProjectDetailPage() {
   }, [expandedMemberId, projectMembers])
 
   function selectBoard(boardIdToSelect: number | null) {
+    const nextBoardParam = boardIdToSelect === null ? null : String(boardIdToSelect)
+
+    if ((selectedBoardParam ?? null) === nextBoardParam) {
+      return
+    }
+
     setSearchParams((current) => {
       const next = new URLSearchParams(current)
 

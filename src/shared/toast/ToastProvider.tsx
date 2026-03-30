@@ -1,4 +1,4 @@
-import { useState, type PropsWithChildren, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type PropsWithChildren, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from '../../app/hooks/useTheme'
 import { translateCurrentLiteral } from '../i18n/translations'
@@ -102,21 +102,23 @@ export function ToastProvider({ children }: PropsWithChildren) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const toneStyles = theme === 'light' ? lightToneStyles : darkToneStyles
 
-  function removeToast(id: number) {
+  const removeToast = useCallback((id: number) => {
     setToasts((current) => current.filter((toast) => toast.id !== id))
-  }
+  }, [])
 
-  function showToast(input: ToastInput) {
+  const showToast = useCallback((input: ToastInput) => {
     const id = Date.now() + Math.floor(Math.random() * 1000)
     setToasts((current) => [...current, { id, ...input }])
 
     window.setTimeout(() => {
       removeToast(id)
     }, 3600)
-  }
+  }, [removeToast])
+
+  const contextValue = useMemo(() => ({ showToast }), [showToast])
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       {createPortal(
         <div className="pointer-events-none fixed right-4 top-4 z-[90] flex w-[min(92vw,420px)] flex-col gap-3">

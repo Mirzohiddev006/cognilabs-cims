@@ -87,6 +87,21 @@ const emptyConversationSummary: UserConversationSummary = {
   totalCount: 0,
 }
 
+function areStringArraysEqual(left: string[], right: string[]) {
+  return left.length === right.length && left.every((value, index) => value === right[index])
+}
+
+function arePermissionMapsEqual(left: PermissionMap, right: PermissionMap) {
+  const leftEntries = Object.entries(left)
+  const rightEntries = Object.entries(right)
+
+  if (leftEntries.length !== rightEntries.length) {
+    return false
+  }
+
+  return leftEntries.every(([key, value]) => right[key] === value)
+}
+
 type MessagePresentation = {
   headline: string
   preview: string | null
@@ -434,9 +449,15 @@ export function CeoUsersPage() {
           return
         }
 
-        setPermissionState(response.permissions)
-        setActivePermissionsCount(response.active_permissions_count)
-        setTotalAvailablePages(response.total_available_pages)
+        setPermissionState((current) => (
+          arePermissionMapsEqual(current, response.permissions) ? current : response.permissions
+        ))
+        setActivePermissionsCount((current) => (
+          current === response.active_permissions_count ? current : response.active_permissions_count
+        ))
+        setTotalAvailablePages((current) => (
+          current === response.total_available_pages ? current : response.total_available_pages
+        ))
 
         const overviewPermissions = permissionsOverviewQuery.data?.available_pages ?? []
         const mergedPermissions = Array.from(
@@ -446,7 +467,9 @@ export function CeoUsersPage() {
             ...permissionCatalog.map((item) => item.key),
           ]),
         )
-        setAvailablePermissions(mergedPermissions)
+        setAvailablePermissions((current) => (
+          areStringArraysEqual(current, mergedPermissions) ? current : mergedPermissions
+        ))
       } catch (error) {
         if (!isActive) {
           return
@@ -469,7 +492,7 @@ export function CeoUsersPage() {
     return () => {
       isActive = false
     }
-  }, [isPermissionModalOpen, permissionTargetUser, permissionsOverviewQuery.data?.available_pages, showToast])
+  }, [isPermissionModalOpen, lt, permissionTargetUser, permissionsOverviewQuery.data?.available_pages, showToast])
 
   function refreshAll() {
     return Promise.all([
