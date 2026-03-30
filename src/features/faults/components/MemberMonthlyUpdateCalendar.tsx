@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { DayStatus } from '../../../shared/api/types'
-import { getIntlLocale } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -10,7 +10,8 @@ import type {
 } from '../lib/salaryEstimates'
 
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const boardWeekdayLabels = ['YAK', 'DUS', 'SES', 'CHO', 'PAY', 'JUM', 'SHA']
+const boardWeekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const lt = translateCurrentLiteral
 
 const dayStyle: Record<DayStatus, string> = {
   submitted: 'cal-day-submitted',
@@ -157,7 +158,7 @@ function getWorkedDurationLabel(day: MemberMonthlyUpdateDay) {
   const checkOutMinutes = getMinutesFromTime(day.checkOutTime)
 
   if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
-    return 'Hours not returned'
+    return lt('Hours not returned')
   }
 
   const totalMinutes = checkOutMinutes - checkInMinutes
@@ -184,7 +185,7 @@ function getSpecialDayLabel(day: MemberMonthlyUpdateDay | null | undefined) {
     return null
   }
 
-  return day.workdayOverride.day_type === 'short_day' ? 'Short Day' : 'Holiday'
+  return day.workdayOverride.day_type === 'short_day' ? lt('Short Day') : lt('Holiday')
 }
 
 function isHolidayDay(day: MemberMonthlyUpdateDay | null | undefined) {
@@ -246,11 +247,11 @@ function getDayFocusClass(day: MemberMonthlyUpdateDay | null) {
 function getStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Submitted'
-  if (status === 'missing') return 'Missing'
-  if (status === 'sunday') return specialLabel ?? 'Off Day'
-  if (status === 'future') return 'Upcoming'
-  return 'Open'
+  if (status === 'submitted') return lt('Submitted')
+  if (status === 'missing') return lt('Missing')
+  if (status === 'sunday') return specialLabel ?? lt('Off Day')
+  if (status === 'future') return lt('Upcoming')
+  return lt('Open')
 }
 
 function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
@@ -265,20 +266,20 @@ function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null
 function getCalendarCellStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Updated'
-  if (status === 'missing') return 'Missed'
-  if (status === 'sunday') return specialLabel ?? 'Off Day'
-  if (status === 'future') return 'Soon'
-  return 'Open'
+  if (status === 'submitted') return lt('Updated')
+  if (status === 'missing') return lt('Missed')
+  if (status === 'sunday') return specialLabel ?? lt('Off Day')
+  if (status === 'future') return lt('Soon')
+  return lt('Open')
 }
 
 function getCalendarCellHint(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return 'Update captured'
-  if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
-  if (day.status === 'missing') return 'Needs submission'
-  if (day.status === 'sunday') return isHolidayDay(day) ? 'Holiday schedule' : 'Weekend / off day'
-  if (day.status === 'future') return 'Awaiting date'
-  return 'No update yet'
+  if (day.hasUpdate) return lt('Update captured')
+  if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
+  if (day.status === 'missing') return lt('Needs submission')
+  if (day.status === 'sunday') return isHolidayDay(day) ? lt('Holiday schedule') : lt('Weekend / off day')
+  if (day.status === 'future') return lt('Awaiting date')
+  return lt('No update yet')
 }
 
 function getEntryCount(day: MemberMonthlyUpdateDay) {
@@ -292,7 +293,7 @@ function getBoardWeekday(day: MemberMonthlyUpdateDay) {
     return day.weekdayShort.toUpperCase()
   }
 
-  return boardWeekdayLabels[parsed.getDay()]
+  return lt(boardWeekdayLabels[parsed.getDay()])
 }
 
 function getShortWeekday(day: MemberMonthlyUpdateDay) {
@@ -300,12 +301,12 @@ function getShortWeekday(day: MemberMonthlyUpdateDay) {
 }
 
 function getDaySummary(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return 'Update captured'
-  if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
-  if (day.status === 'missing') return 'Needs submission'
-  if (day.status === 'sunday') return isHolidayDay(day) ? 'Holiday' : 'Off day'
-  if (day.status === 'future') return 'Awaiting date'
-  return 'No explicit status returned'
+  if (day.hasUpdate) return lt('Update captured')
+  if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
+  if (day.status === 'missing') return lt('Needs submission')
+  if (day.status === 'sunday') return isHolidayDay(day) ? lt('Holiday') : lt('Off day')
+  if (day.status === 'future') return lt('Awaiting date')
+  return lt('No explicit status returned')
 }
 
 function shouldShowTimePanel(day: MemberMonthlyUpdateDay) {
@@ -314,14 +315,14 @@ function shouldShowTimePanel(day: MemberMonthlyUpdateDay) {
 
 function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
   if (!day) {
-    return 'Select a calendar day to inspect the update returned by the API.'
+    return lt('Select a calendar day to inspect the update returned by the API.')
   }
 
   if (day.entries.length > 0) {
     return day.entries
       .map((entry, index) => {
-        const title = entry.title?.trim() || `Update entry #${index + 1}`
-        const text = entry.text?.trim() || 'Update submitted for this date.'
+        const title = entry.title?.trim() || `${lt('Update entry')} #${index + 1}`
+        const text = entry.text?.trim() || lt('Update submitted for this date.')
         const timestamp = formatEntryTimestamp(entry.createdAt)
 
         return `${title}${timestamp ? ` (${timestamp})` : ''}\n${text}`
@@ -335,13 +336,13 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
 
   if (day.workdayOverride) {
     const specialLabel = getSpecialDayLabel(day)
-    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? 'Special day'} is configured for this date.`
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? lt('Special day')} ${lt('is configured for this date.')}`
   }
 
-  if (day.status === 'missing') return 'No update was submitted for this working day.'
-  if (day.status === 'sunday') return isHolidayDay(day) ? 'This date is marked as a holiday.' : 'This date is an off day.'
-  if (day.status === 'future') return 'This date is still in the future.'
-  return 'No update content was returned by the API for this date.'
+  if (day.status === 'missing') return lt('No update was submitted for this working day.')
+  if (day.status === 'sunday') return isHolidayDay(day) ? lt('This date is marked as a holiday.') : lt('This date is an off day.')
+  if (day.status === 'future') return lt('This date is still in the future.')
+  return lt('No update content was returned by the API for this date.')
 }
 
 function CompletionBar({ pct }: { pct: number }) {
@@ -421,7 +422,7 @@ export function MemberMonthlyUpdateCalendarBoard({
   }, [calendar.days, selectedDate, todayKey])
 
   const selectedKey = selectedDay?.date ?? null
-  const selectedLabel = selectedDay ? formatLongDate(selectedDay.date) : 'No date selected'
+  const selectedLabel = selectedDay ? formatLongDate(selectedDay.date) : lt('No date selected')
   const latestSubmittedDay = useMemo(() => (
     [...calendar.days]
       .filter((day) => day.status === 'submitted')
@@ -464,10 +465,10 @@ export function MemberMonthlyUpdateCalendarBoard({
     ? `${getShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
     : latestSubmittedDay
       ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
-      : 'None'
+      : lt('None')
   const completionSummaryText = elapsedWorkingDays > 0
-    ? `${counts.submitted} of ${elapsedWorkingDays} completed workdays updated.`
-    : 'No completed workdays yet.'
+    ? `${counts.submitted} ${lt('of')} ${elapsedWorkingDays} ${lt('completed workdays updated.')}`
+    : lt('No completed workdays yet.')
 
   return (
     <div className={cn('w-full', className)}>
@@ -476,19 +477,19 @@ export function MemberMonthlyUpdateCalendarBoard({
           <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
-                {selectedMonthName} {calendar.year} Calendar
+                {selectedMonthName} {calendar.year} {lt('Calendar')}
               </h3>
               <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-                Reference-driven monthly board with dense day cards, week rails, and one-click inspection.
+                {lt('Reference-driven monthly board with dense day cards, week rails, and one-click inspection.')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success" dot>{counts.submitted} submitted</Badge>
-              <Badge variant="danger" dot>{counts.missing} missing</Badge>
-              {counts.holiday > 0 ? <Badge variant="blue" dot>{counts.holiday} holidays</Badge> : null}
-              <Badge variant="warning" dot>{counts.offDay} off days</Badge>
-              {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} upcoming</Badge> : null}
+              <Badge variant="success" dot>{counts.submitted} {lt('submitted')}</Badge>
+              <Badge variant="danger" dot>{counts.missing} {lt('missing')}</Badge>
+              {counts.holiday > 0 ? <Badge variant="blue" dot>{counts.holiday} {lt('holidays')}</Badge> : null}
+              <Badge variant="warning" dot>{counts.offDay} {lt('off days')}</Badge>
+              {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} {lt('upcoming')}</Badge> : null}
             </div>
           </div>
         </div>
@@ -499,7 +500,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                 <div className="min-w-0 max-w-2xl">
                   <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
-                    Calendar System
+                    {lt('Calendar System')}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <h4 className="text-[1.45rem] font-semibold tracking-tight text-white sm:text-[1.65rem]">
@@ -509,11 +510,11 @@ export function MemberMonthlyUpdateCalendarBoard({
                       variant="violet"
                       className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]"
                     >
-                      {monthProgressPct.toFixed(0)}% pace
+                      {monthProgressPct.toFixed(0)}{lt('% pace')}
                     </Badge>
                   </div>
                   <p className="mt-2 text-[12px] leading-5 text-[var(--muted)]">
-                    Dense monthly board for fast scanning, modeled after the reference calendar layout.
+                    {lt('Dense monthly board for fast scanning, modeled after the reference calendar layout.')}
                   </p>
                 </div>
 
@@ -556,7 +557,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
-                          Completion To Date
+                          {lt('Completion To Date')}
                         </p>
                         <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
                           {completionSummaryText}
@@ -583,16 +584,16 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                   <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.submitted} updated
+                    {counts.submitted} {lt('updated')}
                   </Badge>
                   <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.missing} missed
+                    {counts.missing} {lt('missed')}
                   </Badge>
                   <Badge variant="secondary" className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {attentionDays} attention
+                    {attentionDays} {lt('attention')}
                   </Badge>
                   <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
-                    <span className="truncate">Next: {nextDayLabel}</span>
+                    <span className="truncate">{lt('Next')}: {nextDayLabel}</span>
                   </Badge>
                 </div>
 
@@ -600,7 +601,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
-                        Completion To Date
+                        {lt('Completion To Date')}
                       </p>
                       <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
                         {completionSummaryText}
@@ -632,7 +633,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       key={label}
                       className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                     >
-                      {label}
+                      {lt(label)}
                     </div>
                   ))}
                 </div>
@@ -669,7 +670,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 : 'hover:-translate-y-[1px] hover:border-white/14',
                               isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                             )}
-                            title={`${isSelected ? 'Selected: ' : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
+                            title={`${isSelected ? `${lt('Selected')}: ` : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
                           >
                             <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', getDayAccentClass(day))} />
                             <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
@@ -708,7 +709,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                      In
+                                      {lt('In')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkInTime)}
@@ -716,7 +717,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                   </div>
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                      Out
+                                      {lt('Out')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkOutTime)}
@@ -755,23 +756,23 @@ export function MemberMonthlyUpdateCalendarBoard({
             <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-[var(--muted)]">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.55)]" />
-                Selected
+                {lt('Selected')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_8px_rgba(125,211,252,0.55)]" />
-                Today
+                {lt('Today')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
-                Updated
+                {lt('Updated')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-rose-500/30 bg-rose-500/20" />
-                Missed
+                {lt('Missed')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/4" />
-                Open or upcoming
+                {lt('Open or upcoming')}
               </span>
             </div>
             <div className="mt-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 sm:p-5">
@@ -788,13 +789,13 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-blue-300/72">
-                      Focus Day
+                      {lt('Focus Day')}
                     </p>
                     <h4 className="mt-2 text-lg font-semibold tracking-tight text-(--foreground)">
                       {selectedLabel}
                     </h4>
                     <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-[var(--muted)]">
-                      {selectedDay ? getDaySummary(selectedDay) : 'Pick a date from the month grid to inspect details.'}
+                      {selectedDay ? getDaySummary(selectedDay) : lt('Pick a date from the month grid to inspect details.')}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {selectedDay ? (
@@ -806,14 +807,14 @@ export function MemberMonthlyUpdateCalendarBoard({
                         <Badge variant="secondary">{selectedDay.weekdayLabel}</Badge>
                       ) : null}
                       {selectedDay?.date === todayKey ? (
-                        <Badge variant="blue">Today</Badge>
+                        <Badge variant="blue">{lt('Today')}</Badge>
                       ) : null}
                       {selectedDay?.hasUpdate ? (
-                        <Badge variant="violet">Payload available</Badge>
+                        <Badge variant="violet">{lt('Payload available')}</Badge>
                       ) : null}
                       {selectedDay?.workdayOverride ? (
                         <Badge variant={isHolidayDay(selectedDay) ? 'blue' : 'warning'}>
-                          {getSpecialDayLabel(selectedDay) ?? 'Special day'}
+                          {getSpecialDayLabel(selectedDay) ?? lt('Special day')}
                         </Badge>
                       ) : null}
                     </div>
@@ -822,19 +823,19 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                 <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[420px] xl:max-w-[480px]">
                   <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                    <p>Status</p>
+                    <p>{lt('Status')}</p>
                     <p className="mt-1 font-medium text-(--foreground)">
-                      {selectedDay ? getStatusLabel(selectedDay.status, selectedDay) : 'N/A'}
+                      {selectedDay ? getStatusLabel(selectedDay.status, selectedDay) : lt('N/A')}
                     </p>
                   </div>
                   <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                    <p>Submission</p>
+                    <p>{lt('Submission')}</p>
                     <p className="mt-1 font-medium text-(--foreground)">
-                      {selectedDay?.hasUpdate ? 'Available' : 'None'}
+                      {selectedDay?.hasUpdate ? lt('Available') : lt('None')}
                     </p>
                   </div>
                   <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                    <p>Validation</p>
+                    <p>{lt('Validation')}</p>
                     <p
                       className={cn(
                         'mt-1 font-medium',
@@ -845,11 +846,11 @@ export function MemberMonthlyUpdateCalendarBoard({
                             : 'text-(--foreground)',
                       )}
                     >
-                      {selectedDay?.isValid === false ? 'Needs review' : selectedDay?.isValid === true ? 'Valid' : 'N/A'}
+                      {selectedDay?.isValid === false ? lt('Needs review') : selectedDay?.isValid === true ? lt('Valid') : lt('N/A')}
                     </p>
                   </div>
                   <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-[var(--muted)]">
-                    <p>Entries</p>
+                    <p>{lt('Entries')}</p>
                     <p className="mt-1 font-medium text-(--foreground)">
                       {selectedDay ? getEntryCount(selectedDay) : 0}
                     </p>
@@ -862,17 +863,17 @@ export function MemberMonthlyUpdateCalendarBoard({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
-                        {selectedDay?.hasUpdate ? 'Update Content' : 'Special Day'}
+                        {selectedDay?.hasUpdate ? lt('Update Content') : lt('Special Day')}
                       </p>
                       <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
-                        {selectedDay?.hasUpdate ? 'Returned content for this date' : 'Details for this date'}
+                        {selectedDay?.hasUpdate ? lt('Returned content for this date') : lt('Details for this date')}
                       </h4>
                     </div>
                     {selectedDay?.hasUpdate ? (
-                      <Badge variant="blue">API payload</Badge>
+                      <Badge variant="blue">{lt('API payload')}</Badge>
                     ) : selectedDay?.workdayOverride ? (
                       <Badge variant={isHolidayDay(selectedDay) ? 'blue' : 'warning'}>
-                        {getSpecialDayLabel(selectedDay) ?? 'Special day'}
+                        {getSpecialDayLabel(selectedDay) ?? lt('Special day')}
                       </Badge>
                     ) : null}
                   </div>
@@ -885,7 +886,7 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                   {selectedDay?.isValid === false ? (
                     <p className="mt-3 text-xs text-amber-300">
-                      This update was returned with an invalid flag by the API.
+                      {lt('This update was returned with an invalid flag by the API.')}
                     </p>
                   ) : null}
                 </div>

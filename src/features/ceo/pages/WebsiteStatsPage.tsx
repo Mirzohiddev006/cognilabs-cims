@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { websiteStatsService, type WebsiteAnalyticsRow } from '../../../shared/api/services/website-stats.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -16,9 +17,9 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { MetricCard } from '../components/MetricCard'
 
 const analyticsRangeOptions: SelectFieldOption[] = [
-  { value: '7', label: 'Last 7 days' },
-  { value: '30', label: 'Last 30 days' },
-  { value: '90', label: 'Last 90 days' },
+  { value: '7', label: 'ceo.website.range.last_7_days' },
+  { value: '30', label: 'ceo.website.range.last_30_days' },
+  { value: '90', label: 'ceo.website.range.last_90_days' },
 ]
 const trackedWebsiteUrl = 'https://www.cognilabs.org/en'
 
@@ -112,6 +113,7 @@ function getWebsiteStatsErrorMessage(error: unknown, fallback: string) {
 }
 
 export function WebsiteStatsPage() {
+  const { t } = useTranslation()
   const { isAuthenticated } = useAuth()
   const { showToast } = useToast()
   const [analyticsRange, setAnalyticsRange] = useState('30')
@@ -175,16 +177,16 @@ export function WebsiteStatsPage() {
 
     if (failed?.status === 'rejected') {
       showToast({
-        title: 'Refresh failed',
-        description: getWebsiteStatsErrorMessage(failed.reason, 'Analytics data yangilanmadi.'),
+        title: t('ceo.website.refresh_failed'),
+        description: getWebsiteStatsErrorMessage(failed.reason, t('ceo.website.refresh_failed_description')),
         tone: 'error',
       })
       return
     }
 
     showToast({
-      title: 'Analytics refreshed',
-      description: "Website traffic ma'lumotlari qayta yuklandi.",
+      title: t('ceo.website.refreshed'),
+      description: t('ceo.website.refreshed_description'),
       tone: 'success',
     })
   }
@@ -193,43 +195,43 @@ export function WebsiteStatsPage() {
     <section className="space-y-8">
       <PageHeader
         eyebrow="CEO / Web"
-        title="Website Stats"
-        description={`Google Analytics overview for ${trackedWebsiteUrl}. Blog va admin CRUD oqimlari bu sahifadan olib tashlangan.`}
+        title={t('ceo.website.header.title')}
+        description={t('ceo.website.header.description', { url: trackedWebsiteUrl })}
         meta={[
           {
-            label: 'Tracked site',
+            label: t('ceo.website.meta.tracked_site'),
             value: 'cognilabs.org/en',
             hint: trackedWebsiteUrl,
             tone: 'neutral',
           },
           {
-            label: 'Range',
+            label: t('ceo.website.meta.range'),
             value: `${analyticsWindow.days} days`,
             hint: `${analyticsWindow.startDate} to ${analyticsWindow.endDate}`,
             tone: 'neutral',
           },
           {
-            label: 'Page views',
+            label: t('ceo.website.meta.page_views'),
             value: formatCompactNumber(pageViewsMetric),
-            hint: 'From /api/analytics summary',
+            hint: t('ceo.website.meta.page_views_hint'),
             tone: 'blue',
           },
           {
-            label: 'Users',
+            label: t('ceo.website.meta.users'),
             value: formatCompactNumber(totalUsersMetric),
-            hint: 'Selected date window',
+            hint: t('ceo.website.meta.users_hint'),
             tone: 'success',
           },
           {
-            label: 'Realtime active',
+            label: t('ceo.website.meta.realtime_active'),
             value: formatCompactNumber(realtimeActiveUsersMetric),
-            hint: 'From /api/analytics/realtime',
+            hint: t('ceo.website.meta.realtime_active_hint'),
             tone: 'warning',
           },
         ]}
         actions={(
           <Button variant="secondary" onClick={() => void handleRefresh()}>
-            Refresh analytics
+            {t('ceo.website.actions.refresh')}
           </Button>
         )}
       />
@@ -237,14 +239,14 @@ export function WebsiteStatsPage() {
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
-            eyebrow="Analytics"
-            title="Google Analytics Snapshot"
-            description={`Aynan ${trackedWebsiteUrl} statistikasi. Frontend faqat protected analytics hostga ulanadi, Google credentiallar browserga chiqmaydi.`}
+            eyebrow={t('ceo.website.section.analytics_eyebrow')}
+            title={t('ceo.website.section.analytics_title')}
+            description={t('ceo.website.section.analytics_description', { url: trackedWebsiteUrl })}
           />
           <div className="w-full max-w-[180px]">
             <SelectField
               value={analyticsRange}
-              options={analyticsRangeOptions}
+              options={analyticsRangeOptions.map((option) => ({ ...option, label: t(option.label) }))}
               onValueChange={setAnalyticsRange}
             />
           </div>
@@ -252,30 +254,30 @@ export function WebsiteStatsPage() {
 
         <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
-            label="Page views"
+            label={t('ceo.website.metric.page_views')}
             value={formatCompactNumber(pageViewsMetric)}
             caption={`${analyticsWindow.startDate} to ${analyticsWindow.endDate}`}
             accent="blue"
             sparkBars={[1, Math.max(pageViewsMetric * 0.35, 1), Math.max(pageViewsMetric * 0.58, 1), Math.max(pageViewsMetric * 0.82, 1), Math.max(pageViewsMetric, 1)]}
           />
           <MetricCard
-            label="Users"
+            label={t('ceo.website.metric.users')}
             value={formatCompactNumber(totalUsersMetric)}
-            caption="Total users in selected range"
+            caption={t('ceo.website.metric.users_caption')}
             accent="success"
             sparkBars={[1, Math.max(totalUsersMetric * 0.32, 1), Math.max(totalUsersMetric * 0.54, 1), Math.max(totalUsersMetric * 0.78, 1), Math.max(totalUsersMetric, 1)]}
           />
           <MetricCard
-            label="Sessions"
+            label={t('ceo.website.metric.sessions')}
             value={formatCompactNumber(sessionsMetric)}
-            caption="Tracked sessions"
+            caption={t('ceo.website.metric.sessions_caption')}
             accent="violet"
             sparkBars={[1, Math.max(sessionsMetric * 0.3, 1), Math.max(sessionsMetric * 0.56, 1), Math.max(sessionsMetric * 0.8, 1), Math.max(sessionsMetric, 1)]}
           />
           <MetricCard
-            label="Realtime active"
+            label={t('ceo.website.metric.realtime_active')}
             value={formatCompactNumber(realtimeActiveUsersMetric)}
-            caption="Current live users"
+            caption={t('ceo.website.metric.realtime_caption')}
             accent="warning"
             sparkBars={[1, Math.max(realtimeActiveUsersMetric * 0.4, 1), Math.max(realtimeActiveUsersMetric * 0.7, 1), Math.max(realtimeActiveUsersMetric, 1)]}
           />
@@ -286,49 +288,49 @@ export function WebsiteStatsPage() {
         <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-white/10 px-6 py-5">
             <SectionTitle
-              eyebrow="Top pages"
-              title="Most visited pages"
-              description="Normalized from /api/analytics rows using title and path dimensions when available."
+              eyebrow={t('ceo.website.top_pages_eyebrow')}
+              title={t('ceo.website.top_pages_title')}
+              description={t('ceo.website.top_pages_description')}
             />
           </div>
           <div className="px-6 py-5">
             {analyticsQuery.isLoading && !analyticsQuery.data ? (
               <LoadingStateBlock
-                eyebrow="Analytics"
-                title="Loading analytics report"
-                description="Fetching summary and top pages from /api/analytics."
+                eyebrow={t('ceo.website.section.analytics_eyebrow')}
+                title={t('ceo.website.loading_title')}
+                description={t('ceo.website.loading_description')}
               />
             ) : analyticsQuery.isError && !analyticsQuery.data ? (
               <ErrorStateBlock
-                eyebrow="Analytics"
-                title="Analytics report unavailable"
+                eyebrow={t('ceo.website.section.analytics_eyebrow')}
+                title={t('ceo.website.error_title')}
                 description={getWebsiteStatsErrorMessage(
                   analyticsQuery.error,
                   '/api/analytics did not return a usable payload.',
                 )}
-                actionLabel="Retry"
+                actionLabel={t('common.retry')}
                 onAction={() => {
                   void analyticsQuery.refetch().catch(() => null)
                 }}
               />
             ) : (
               <DataTable
-                caption="Google Analytics top pages"
+                caption={t('ceo.website.top_pages_title')}
                 rows={analyticsTopPages}
                 getRowKey={(row) => row.id}
                 pageSize={8}
                 zebra
                 emptyState={(
                   <EmptyStateBlock
-                    eyebrow="Analytics"
-                    title="No page data"
-                    description="The selected range returned no page-level rows."
+                    eyebrow={t('ceo.website.section.analytics_eyebrow')}
+                    title={t('ceo.website.empty_title')}
+                    description={t('ceo.website.empty_description')}
                   />
                 )}
                 columns={[
                   {
                     key: 'page',
-                    header: 'Page',
+                    header: t('ceo.website.table.page'),
                     width: '320px',
                     render: (row) => (
                       <div className="max-w-[320px]">
@@ -339,19 +341,19 @@ export function WebsiteStatsPage() {
                   },
                   {
                     key: 'views',
-                    header: 'Views',
+                    header: t('ceo.website.table.views'),
                     align: 'right',
                     render: (row) => formatCompactNumber(row.views),
                   },
                   {
                     key: 'users',
-                    header: 'Users',
+                    header: t('ceo.website.table.users'),
                     align: 'right',
                     render: (row) => formatCompactNumber(row.users),
                   },
                   {
                     key: 'sessions',
-                    header: 'Sessions',
+                    header: t('ceo.website.table.sessions'),
                     align: 'right',
                     render: (row) => formatCompactNumber(row.sessions),
                   },
@@ -364,36 +366,36 @@ export function WebsiteStatsPage() {
         <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-white/10 px-6 py-5">
             <SectionTitle
-              eyebrow="Realtime"
-              title="Live traffic"
-              description="Latest active pages and users from /api/analytics/realtime."
+              eyebrow={t('ceo.website.realtime_eyebrow')}
+              title={t('ceo.website.realtime_title')}
+              description={t('ceo.website.realtime_description')}
             />
           </div>
           <div className="px-6 py-5">
             {realtimeAnalyticsQuery.isLoading && !realtimeAnalyticsQuery.data ? (
               <LoadingStateBlock
-                eyebrow="Realtime"
-                title="Loading live traffic"
-                description="Fetching current active users and events."
+                eyebrow={t('ceo.website.realtime_eyebrow')}
+                title={t('ceo.website.realtime_loading_title')}
+                description={t('ceo.website.realtime_loading_description')}
               />
             ) : realtimeAnalyticsQuery.isError && !realtimeAnalyticsQuery.data ? (
               <ErrorStateBlock
-                eyebrow="Realtime"
-                title="Realtime report unavailable"
+                eyebrow={t('ceo.website.realtime_eyebrow')}
+                title={t('ceo.website.realtime_error_title')}
                 description={getWebsiteStatsErrorMessage(
                   realtimeAnalyticsQuery.error,
                   '/api/analytics/realtime did not return a usable payload.',
                 )}
-                actionLabel="Retry"
+                actionLabel={t('common.retry')}
                 onAction={() => {
                   void realtimeAnalyticsQuery.refetch().catch(() => null)
                 }}
               />
             ) : realtimeRows.length === 0 ? (
               <EmptyStateBlock
-                eyebrow="Realtime"
-                title="No live traffic rows"
-                description="Realtime endpoint responded, but there are no active rows right now."
+                eyebrow={t('ceo.website.realtime_eyebrow')}
+                title={t('ceo.website.realtime_empty_title')}
+                description={t('ceo.website.realtime_empty_description')}
               />
             ) : (
               <div className="space-y-3">
@@ -408,10 +410,10 @@ export function WebsiteStatsPage() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="warning" dot>
-                        {formatCompactNumber(row.activeUsers)} active
+                        {t('ceo.website.badge.active', { count: formatCompactNumber(row.activeUsers) })}
                       </Badge>
                       <Badge variant="secondary">
-                        {formatCompactNumber(row.views)} events
+                        {t('ceo.website.badge.events', { count: formatCompactNumber(row.views) })}
                       </Badge>
                     </div>
                   </div>

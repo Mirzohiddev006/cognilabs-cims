@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ceoService, type CeoMessageRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { PaymentItem } from '../../../shared/api/types'
@@ -91,6 +92,7 @@ function toCompanyPaymentFormValues(payment?: CompanyPaymentRecord | null): Comp
 }
 
 export function CeoDashboardPage() {
+  const { t } = useTranslation()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
 
@@ -161,8 +163,8 @@ export function CeoDashboardPage() {
   async function handleSendBroadcast() {
     if (!broadcastValues.subject.trim() || !broadcastValues.body.trim()) {
       showToast({
-        title: "Message to'liq emas",
-        description: "Subject va body to'ldirilishi kerak.",
+        title: t('ceo.dashboard.validation.broadcast_title'),
+        description: t('ceo.dashboard.validation.broadcast_description'),
         tone: 'error',
       })
       return
@@ -179,14 +181,14 @@ export function CeoDashboardPage() {
       setBroadcastValues(initialBroadcastMessage)
       setIsBroadcastOpen(false)
       showToast({
-        title: 'Broadcast yuborildi',
-        description: "Barcha userlarga xabar jo'natildi.",
+        title: t('ceo.dashboard.toast.broadcast_sent_title'),
+        description: t('ceo.dashboard.toast.broadcast_sent_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Broadcast yuborilmadi',
-        description: error instanceof Error ? error.message : 'Send-message-all flow xato berdi.',
+        title: t('ceo.dashboard.toast.broadcast_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.broadcast_failed_description'),
         tone: 'error',
       })
     } finally {
@@ -225,8 +227,8 @@ export function CeoDashboardPage() {
   async function handleSubmitPayment() {
     if (!paymentValues.project.trim() || !paymentValues.date.trim()) {
       showToast({
-        title: "Payment form to'liq emas",
-        description: 'Project va date majburiy.',
+        title: t('ceo.dashboard.validation.payment_title'),
+        description: t('ceo.dashboard.validation.payment_description'),
         tone: 'error',
       })
       return
@@ -254,14 +256,16 @@ export function CeoDashboardPage() {
       await paymentsQuery.refetch()
       setIsPaymentOpen(false)
       showToast({
-        title: paymentMode === 'create' ? 'Payment yaratildi' : 'Payment yangilandi',
-        description: "CEO payments ro'yxati yangilandi.",
+        title: paymentMode === 'create'
+          ? t('ceo.dashboard.toast.payment_created_title')
+          : t('ceo.dashboard.toast.payment_updated_title'),
+        description: t('ceo.dashboard.toast.payment_saved_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Payment saqlanmadi',
-        description: error instanceof Error ? error.message : 'Payment create/edit xatolikka uchradi.',
+        title: t('ceo.dashboard.toast.payment_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_failed_description'),
         tone: 'error',
       })
     } finally {
@@ -272,8 +276,8 @@ export function CeoDashboardPage() {
   async function handleSubmitCompanyPayment() {
     if (!companyPaymentValues.title.trim()) {
       showToast({
-        title: "Reminder form to'liq emas",
-        description: 'Title majburiy.',
+        title: t('ceo.dashboard.validation.reminder_title'),
+        description: t('ceo.dashboard.validation.reminder_description'),
         tone: 'error',
       })
       return
@@ -300,14 +304,16 @@ export function CeoDashboardPage() {
       await companyPaymentsQuery.refetch()
       setIsCompanyPaymentOpen(false)
       showToast({
-        title: companyPaymentMode === 'create' ? 'Recurring payment yaratildi' : 'Recurring payment yangilandi',
-        description: "Company payment reminderlar ro'yxati yangilandi.",
+        title: companyPaymentMode === 'create'
+          ? t('ceo.dashboard.toast.reminder_created_title')
+          : t('ceo.dashboard.toast.reminder_updated_title'),
+        description: t('ceo.dashboard.toast.reminder_saved_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Recurring payment saqlanmadi',
-        description: error instanceof Error ? error.message : 'Company recurring payment flow xatolikka uchradi.',
+        title: t('ceo.dashboard.toast.reminder_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_failed_description'),
         tone: 'error',
       })
     } finally {
@@ -317,10 +323,10 @@ export function CeoDashboardPage() {
 
   async function handleDeleteMessage(message: CeoMessageRecord) {
     const approved = await confirm({
-      title: "Message o'chirilsinmi?",
-      description: `${message.receiver_email} ga yuborilgan xabar o'chiriladi.`,
-      confirmLabel: 'Delete message',
-      cancelLabel: 'Cancel',
+      title: t('ceo.dashboard.confirm.message_delete_title'),
+      description: t('ceo.dashboard.confirm.message_delete_description', { email: message.receiver_email }),
+      confirmLabel: t('ceo.dashboard.confirm.message_delete_confirm'),
+      cancelLabel: t('common.cancel'),
       tone: 'danger',
     })
 
@@ -332,14 +338,14 @@ export function CeoDashboardPage() {
       await ceoService.deleteMessage(message.id)
       await Promise.all([messagesQuery.refetch(), dashboardQuery.refetch()])
       showToast({
-        title: "Message o'chirildi",
-        description: 'CEO messages list yangilandi.',
+        title: t('ceo.dashboard.toast.message_deleted_title'),
+        description: t('ceo.dashboard.toast.message_deleted_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: "Message o'chirilmadi",
-        description: error instanceof Error ? error.message : 'Delete message flow xato berdi.',
+        title: t('ceo.dashboard.toast.message_delete_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.message_delete_failed_description'),
         tone: 'error',
       })
     }
@@ -350,14 +356,14 @@ export function CeoDashboardPage() {
       await ceoService.togglePayment(payment.id)
       await paymentsQuery.refetch()
       showToast({
-        title: 'Payment holati yangilandi',
-        description: `${payment.project} payment status o'zgartirildi.`,
+        title: t('ceo.dashboard.toast.payment_status_title'),
+        description: t('ceo.dashboard.toast.payment_status_description', { project: payment.project }),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Payment toggle ishlamadi',
-        description: error instanceof Error ? error.message : 'Payment toggle flow xatolikka uchradi.',
+        title: t('ceo.dashboard.toast.payment_toggle_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_toggle_failed_description'),
         tone: 'error',
       })
     }
@@ -365,10 +371,10 @@ export function CeoDashboardPage() {
 
   async function handleDeletePayment(payment: PaymentItem) {
     const approved = await confirm({
-      title: `${payment.project} payment o'chirilsinmi?`,
-      description: "To'lov yozuvi butunlay o'chiriladi.",
-      confirmLabel: 'Delete payment',
-      cancelLabel: 'Cancel',
+      title: t('ceo.dashboard.confirm.payment_delete_title', { project: payment.project }),
+      description: t('ceo.dashboard.confirm.payment_delete_description'),
+      confirmLabel: t('ceo.dashboard.confirm.payment_delete_confirm'),
+      cancelLabel: t('common.cancel'),
       tone: 'danger',
     })
 
@@ -380,14 +386,14 @@ export function CeoDashboardPage() {
       await ceoService.deletePayment(payment.id)
       await paymentsQuery.refetch()
       showToast({
-        title: "Payment o'chirildi",
-        description: "Payments ro'yxati yangilandi.",
+        title: t('ceo.dashboard.toast.payment_deleted_title'),
+        description: t('ceo.dashboard.toast.payment_deleted_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: "Payment o'chirilmadi",
-        description: error instanceof Error ? error.message : 'Delete payment flow xatolikka uchradi.',
+        title: t('ceo.dashboard.toast.payment_delete_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_delete_failed_description'),
         tone: 'error',
       })
     }
@@ -395,10 +401,10 @@ export function CeoDashboardPage() {
 
   async function handleDeleteCompanyPayment(payment: CompanyPaymentRecord) {
     const approved = await confirm({
-      title: `${payment.title} reminder o'chirilsinmi?`,
-      description: "Company recurring payment reminder butunlay o'chiriladi.",
-      confirmLabel: 'Delete reminder',
-      cancelLabel: 'Cancel',
+      title: t('ceo.dashboard.confirm.reminder_delete_title', { title: payment.title }),
+      description: t('ceo.dashboard.confirm.reminder_delete_description'),
+      confirmLabel: t('ceo.dashboard.confirm.reminder_delete_confirm'),
+      cancelLabel: t('common.cancel'),
       tone: 'danger',
     })
 
@@ -410,14 +416,14 @@ export function CeoDashboardPage() {
       await ceoService.deleteCompanyPayment(payment.id)
       await companyPaymentsQuery.refetch()
       showToast({
-        title: "Recurring payment o'chirildi",
-        description: "Reminderlar ro'yxati yangilandi.",
+        title: t('ceo.dashboard.toast.reminder_deleted_title'),
+        description: t('ceo.dashboard.toast.reminder_deleted_description'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: "Recurring payment o'chirilmadi",
-        description: error instanceof Error ? error.message : 'Delete recurring payment flow xatolikka uchradi.',
+        title: t('ceo.dashboard.toast.reminder_delete_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_delete_failed_description'),
         tone: 'error',
       })
     }
@@ -427,8 +433,8 @@ export function CeoDashboardPage() {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Day 6"
-        title="CEO dashboard yuklanmoqda"
-        description="Statistics, metrics, messages va payments ma`lumotlari olib kelinmoqda."
+        title={t('ceo.dashboard.loading.title')}
+        description={t('ceo.dashboard.loading.description')}
       />
     )
   }
@@ -437,9 +443,9 @@ export function CeoDashboardPage() {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Day 6"
-        title="CEO dashboard ochilmadi"
-        description="Dashboard ma`lumotlari olinmadi. Retry qilib qayta urinib ko`ring."
-        actionLabel="Retry"
+        title={t('ceo.dashboard.error.title')}
+        description={t('ceo.dashboard.error.description')}
+        actionLabel={t('common.retry')}
         onAction={() => {
           void refreshAll()
         }}
@@ -451,20 +457,20 @@ export function CeoDashboardPage() {
     <section className="space-y-8">
       <PageHeader
         eyebrow="CEO / Day 6"
-        title="Dashboard, messages va payments"
+        title={t('ceo.dashboard.header.title')}
         actions={
           <div className="grid w-full gap-2 sm:grid-cols-2 xl:w-[28rem]">
             <Button className="w-full justify-center" variant="secondary" onClick={() => void refreshAll()}>
-              Refresh
+              {t('common.refresh')}
             </Button>
             <Button className="w-full justify-center" variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
-              Send message all
+              {t('ceo.dashboard.actions.send_broadcast')}
             </Button>
             <Button className="w-full justify-center" variant="ghost" onClick={openCreateCompanyPaymentModal}>
-              Add recurring payment
+              {t('ceo.dashboard.actions.add_recurring')}
             </Button>
             <Button className="w-full justify-center" onClick={openCreatePaymentModal}>
-              Create payment
+              {t('ceo.dashboard.actions.create_payment')}
             </Button>
           </div>
         }
@@ -473,81 +479,84 @@ export function CeoDashboardPage() {
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
-            eyebrow="Recurring payments"
-            title="Company payment reminders"
+            eyebrow={t('ceo.dashboard.recurring.eyebrow')}
+            title={t('ceo.dashboard.recurring.title')}
           />
           <div className="flex flex-wrap gap-2">
             <Badge variant="success" dot>
-              {activeRecurringPayments} active
+              {t('ceo.dashboard.recurring.active_count', { count: activeRecurringPayments })}
             </Badge>
             <Badge variant="secondary" dot>
-              {companyPayments.length - activeRecurringPayments} inactive
+              {t('ceo.dashboard.recurring.inactive_count', { count: companyPayments.length - activeRecurringPayments })}
             </Badge>
             <Badge variant="blue" dot>
-              {formatCurrency(totalRecurringPaymentsAmount)} total
+              {t('ceo.dashboard.recurring.total_amount', { amount: formatCurrency(totalRecurringPaymentsAmount) })}
             </Badge>
             <Button size="sm" onClick={openCreateCompanyPaymentModal}>
-              Create reminder
+              {t('ceo.dashboard.recurring.create')}
             </Button>
           </div>
         </div>
         <div className="mt-6">
           <DataTable
-            caption="Company payment reminders"
+            caption={t('ceo.dashboard.recurring.title')}
             rows={companyPayments}
             getRowKey={(row) => String(row.id)}
             zebra
             emptyState={
               <EmptyStateBlock
-                eyebrow="Recurring payments"
-                title="Reminderlar yo'q"
-                description="Company recurring payment endpoint hozircha bo'sh ro'yxat qaytardi."
+                eyebrow={t('ceo.dashboard.recurring.eyebrow')}
+                title={t('ceo.dashboard.recurring.empty_title')}
+                description={t('ceo.dashboard.recurring.empty_description')}
               />
             }
             columns={[
               {
                 key: 'title',
-                header: 'Title',
+                header: t('ceo.dashboard.table.title'),
                 render: (row) => (
                   <div className="max-w-[320px]">
                     <p className="font-semibold text-(--foreground)">{row.title}</p>
-                    <p className="text-xs text-(--muted)">{row.note?.trim() || 'No note'}</p>
+                    <p className="text-xs text-(--muted)">{row.note?.trim() || t('ceo.dashboard.recurring.no_note')}</p>
                   </div>
                 ),
               },
               {
                 key: 'schedule',
-                header: 'Schedule',
-                render: (row) => `Day ${row.payment_day} • ${formatCompanyPaymentTime(row.payment_time)}`,
+                header: t('ceo.dashboard.table.schedule'),
+                render: (row) => t('ceo.dashboard.recurring.schedule', {
+                  day: row.payment_day,
+                  time: formatCompanyPaymentTime(row.payment_time),
+                }),
               },
               {
                 key: 'amount',
-                header: 'Amount',
+                header: t('ceo.dashboard.table.amount'),
                 align: 'right',
                 render: (row) => formatCurrency(Number(row.amount ?? 0)),
               },
               {
                 key: 'status',
-                header: 'Status',
+                header: t('common.status'),
                 render: (row) => (
                   <Badge variant={row.is_active ? 'success' : 'secondary'} dot>
-                    {row.is_active ? 'Active' : 'Inactive'}
+                    {row.is_active ? t('status.active') : t('status.inactive')}
                   </Badge>
                 ),
               },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('common.actions'),
                 render: (row) => (
                   <ActionsMenu
-                    label={`Open actions for ${row.title}`}
+                    label={t('ceo.dashboard.actions.open_row', { name: row.title })}
                     items={[
                       {
-                        label: 'Edit',
+                        label: t('common.edit'),
                         onSelect: () => openEditCompanyPaymentModal(row),
                       },
                       {
-                        label: 'Delete',
+                        label: t('customers.actions.delete'),
                         onSelect: () => void handleDeleteCompanyPayment(row),
                         tone: 'danger',
                       },
@@ -576,31 +585,31 @@ export function CeoDashboardPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              eyebrow="Messages"
-              title="CEO sent messages"
-              description="Broadcast va userga yuborilgan xabarlar shu listdan delete qilinadi."
+              eyebrow={t('ceo.dashboard.messages.eyebrow')}
+              title={t('ceo.dashboard.messages.title')}
+              description={t('ceo.dashboard.messages.description')}
             />
             <Badge variant="violet" dot>
-              {messages.length} entries
+              {t('ceo.dashboard.messages.entries', { count: messages.length })}
             </Badge>
           </div>
           <div className="mt-6">
             <DataTable
-              caption="CEO messages list"
+              caption={t('ceo.dashboard.messages.title')}
               rows={messages}
               getRowKey={(row) => String(row.id)}
               zebra
               emptyState={
                 <EmptyStateBlock
-                  eyebrow="Messages"
-                  title="Xabarlar yo'q"
-                  description="Hozircha CEO tomonidan yuborilgan message topilmadi."
+                  eyebrow={t('ceo.dashboard.messages.eyebrow')}
+                  title={t('ceo.dashboard.messages.empty_title')}
+                  description={t('ceo.dashboard.messages.empty_description')}
                 />
               }
               columns={[
                 {
                   key: 'receiver',
-                  header: 'Receiver',
+                  header: t('ceo.dashboard.table.receiver'),
                   render: (row) => (
                     <div>
                       <p className="font-semibold text-(--foreground)">{row.receiver_name}</p>
@@ -610,7 +619,7 @@ export function CeoDashboardPage() {
                 },
                 {
                   key: 'subject',
-                  header: 'Subject',
+                  header: t('ceo.dashboard.table.subject'),
                   render: (row) => (
                     <div className="max-w-[260px]">
                       <p className="truncate font-medium text-white">{row.subject}</p>
@@ -619,18 +628,18 @@ export function CeoDashboardPage() {
                 },
                 {
                   key: 'sent_at',
-                  header: 'Sent at',
+                  header: t('ceo.dashboard.table.sent_at'),
                   render: (row) => formatShortDate(row.sent_at),
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                  header: t('common.actions'),
                   render: (row) => (
                     <ActionsMenu
-                      label={`Open actions for ${row.receiver_email}`}
+                      label={t('ceo.dashboard.actions.open_row', { name: row.receiver_email })}
                       items={[
                         {
-                          label: 'Delete',
+                          label: t('customers.actions.delete'),
                           onSelect: () => void handleDeleteMessage(row),
                           tone: 'danger',
                         },
@@ -646,75 +655,75 @@ export function CeoDashboardPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              eyebrow="Payments"
-              title="CEO payments list"
-              description="Create, edit, toggle va delete amallari payments table ichida ulandi."
+              eyebrow={t('ceo.dashboard.payments.eyebrow')}
+              title={t('ceo.dashboard.payments.title')}
+              description={t('ceo.dashboard.payments.description')}
             />
             <div className="flex flex-wrap gap-2">
               <Badge variant="success" dot>
-                {payments.filter((row) => row.payment).length} paid
+                {t('ceo.dashboard.payments.paid_count', { count: payments.filter((row) => row.payment).length })}
               </Badge>
               <Badge variant="warning" dot pulse={payments.some((row) => !row.payment)}>
-                {payments.filter((row) => !row.payment).length} pending
+                {t('ceo.dashboard.payments.pending_count', { count: payments.filter((row) => !row.payment).length })}
               </Badge>
             </div>
           </div>
           <div className="mt-6">
             <DataTable
-              caption="CEO payments list"
+              caption={t('ceo.dashboard.payments.title')}
               rows={payments}
               getRowKey={(row) => String(row.id)}
               zebra
               emptyState={
                 <EmptyStateBlock
-                  eyebrow="Payments"
-                  title="To'lovlar yo'q"
-                  description="Hozircha CEO payments endpoint bo'sh ro'yxat qaytardi."
+                  eyebrow={t('ceo.dashboard.payments.eyebrow')}
+                  title={t('ceo.dashboard.payments.empty_title')}
+                  description={t('ceo.dashboard.payments.empty_description')}
                 />
               }
               columns={[
                 {
                   key: 'project',
-                  header: 'Project',
+                  header: t('ceo.dashboard.table.project'),
                   render: (row) => row.project,
                 },
                 {
                   key: 'date',
-                  header: 'Date',
+                  header: t('ceo.dashboard.table.date'),
                   render: (row) => (row.date ? formatShortDate(row.date) : '-'),
                 },
                 {
                   key: 'amount',
-                  header: 'Amount',
+                  header: t('ceo.dashboard.table.amount'),
                   align: 'right',
                   render: (row) => formatCurrency(Number(row.summ ?? 0)),
                 },
                 {
                   key: 'status',
-                  header: 'Status',
+                  header: t('common.status'),
                   render: (row) => (
                     <Badge variant={row.payment ? 'success' : 'warning'} dot pulse={!row.payment}>
-                      {row.payment ? 'Paid' : 'Pending'}
+                      {row.payment ? t('status.paid') : t('status.pending')}
                     </Badge>
                   ),
                 },
                 {
                   key: 'actions',
-                  header: 'Actions',
+                  header: t('common.actions'),
                   render: (row) => (
                     <ActionsMenu
-                      label={`Open actions for ${row.project}`}
+                      label={t('ceo.dashboard.actions.open_row', { name: row.project })}
                       items={[
                         {
-                          label: 'Edit',
+                          label: t('common.edit'),
                           onSelect: () => openEditPaymentModal(row),
                         },
                         {
-                          label: 'Toggle',
+                          label: t('ceo.dashboard.actions.toggle'),
                           onSelect: () => void handleTogglePayment(row),
                         },
                         {
-                          label: 'Delete',
+                          label: t('customers.actions.delete'),
                           onSelect: () => void handleDeletePayment(row),
                           tone: 'danger',
                         },

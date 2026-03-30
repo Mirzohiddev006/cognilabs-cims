@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
@@ -294,10 +295,7 @@ function buildStatusFilterOptions(
   statusOptions.forEach((option) => registerOption(option.value, option.label))
   customers.forEach((customer) => registerOption(customer.status, customer.status))
 
-  return [
-    { value: '', label: 'All statuses' },
-    ...Array.from(optionsByKey.values()).sort((left, right) => left.label.localeCompare(right.label)),
-  ]
+  return Array.from(optionsByKey.values()).sort((left, right) => left.label.localeCompare(right.label))
 }
 
 function getCustomerStatusKeys(customer: CustomerSummary, statusMetaMap: Map<string, DynamicStatusOption>) {
@@ -350,6 +348,7 @@ function StatusBadge({
 }
 
 function TableAudioControl({ src }: { src: string }) {
+  const { t } = useTranslation()
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
 
@@ -403,7 +402,7 @@ function TableAudioControl({ src }: { src: string }) {
             ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
             : 'border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
         )}
-        aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+        aria-label={isPlaying ? t('common.pause', 'Pause') : t('common.play', 'Play')}
       >
         <span className="grid h-5 w-5 place-items-center rounded-full bg-white/8">
           {isPlaying ? (
@@ -416,7 +415,7 @@ function TableAudioControl({ src }: { src: string }) {
             </svg>
           )}
         </span>
-        {isPlaying ? 'Pause' : 'Play'}
+        {isPlaying ? t('common.pause', 'Pause') : t('common.play', 'Play')}
       </button>
     </div>
   )
@@ -463,6 +462,7 @@ function MetricCard({
 
 
 export function CrmDashboardPage() {
+  const { t } = useTranslation()
   const { isSidebarCollapsed } = useAppShell()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
@@ -496,8 +496,11 @@ export function CrmDashboardPage() {
 
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
   const statusFilterOptions = useMemo(
-    () => buildStatusFilterOptions(dashboardQuery.data?.status_choices ?? [], statusOptions, customers),
-    [customers, dashboardQuery.data?.status_choices, statusOptions],
+    () => [
+      { value: '', label: t('customers.filters.all_statuses', 'All statuses') },
+      ...buildStatusFilterOptions(dashboardQuery.data?.status_choices ?? [], statusOptions, customers),
+    ],
+    [customers, dashboardQuery.data?.status_choices, statusOptions, t],
   )
 
   const availablePlatforms = useMemo(() => {
@@ -613,10 +616,10 @@ export function CrmDashboardPage() {
   async function handleDeleteCustomer(customer: CustomerSummary) {
     const customerName = getCustomerDisplayName(customer)
     const approved = await confirm({
-      title: `Delete ${customerName}?`,
-      description: 'The customer record will be permanently removed and cannot be undone.',
-      confirmLabel: 'Delete customer',
-      cancelLabel: 'Cancel',
+      title: t('customers.confirm.delete_title', 'Delete {{name}}?', { name: customerName }),
+      description: t('customers.confirm.delete_description', 'The customer record will be permanently removed and cannot be undone.'),
+      confirmLabel: t('customers.confirm.delete_confirm', 'Delete customer'),
+      cancelLabel: t('common.cancel', 'Cancel'),
       tone: 'danger',
     })
 
@@ -628,13 +631,13 @@ export function CrmDashboardPage() {
       await crmService.deleteCustomer(customer.id)
       await Promise.allSettled([dashboardQuery.refetch(), summaryQuery.refetch()])
       showToast({
-        title: 'Customer deleted',
-        description: `${customerName} has been removed from the CRM list.`,
+        title: t('customers.toast.deleted.title', 'Customer deleted'),
+        description: t('customers.toast.deleted.description', '{{name}} has been removed from the CRM list.', { name: customerName }),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delete failed',
+        title: t('customers.errors.delete_failed', 'Delete failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -649,8 +652,8 @@ export function CrmDashboardPage() {
       !formValues.status.trim()
     ) {
       showToast({
-        title: 'Required fields missing',
-        description: 'Full name, platform, phone number, and status are required.',
+        title: t('customers.errors.required_fields.title', 'Required fields missing'),
+        description: t('customers.errors.required_fields.description', 'Full name, platform, phone number, and status are required.'),
         tone: 'error',
       })
       return
@@ -690,15 +693,17 @@ export function CrmDashboardPage() {
       }
 
       showToast({
-        title: modalMode === 'create' ? 'Customer created' : 'Customer updated',
+        title: modalMode === 'create'
+          ? t('customers.toast.created.title', 'Customer created')
+          : t('customers.toast.updated.title', 'Customer updated'),
         description: updatedCustomer
-          ? 'Customer row and detail panel were refreshed.'
-          : 'The CRM list has been refreshed.',
+          ? t('customers.toast.saved.synced_description', 'The customer row and detail panel were refreshed.')
+          : t('customers.toast.saved.refreshed_description', 'The CRM list has been refreshed.'),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Save failed',
+        title: t('customers.errors.save_failed', 'Save failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -710,9 +715,9 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM"
-        title="CRM dashboard loading"
-        description="Retrieving customers and summary statistics."
+        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+        title={t('customers.loading.dashboard.title', 'CRM dashboard loading')}
+        description={t('customers.loading.dashboard.description', 'Retrieving customers and summary statistics.')}
       />
     )
   }
@@ -720,10 +725,10 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM"
-        title="CRM dashboard failed to load"
-        description="Could not retrieve CRM data. Please retry."
-        actionLabel="Retry"
+        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+        title={t('customers.errors.dashboard.title', 'CRM dashboard failed to load')}
+        description={t('customers.errors.dashboard.description', 'Could not retrieve CRM data. Please retry.')}
+        actionLabel={t('common.retry', 'Retry')}
         onAction={() => {
           void refreshAll()
         }}
@@ -733,14 +738,14 @@ export function CrmDashboardPage() {
 
   const stats = summaryQuery.data
   const platformFilterOptions = [
-    { value: '', label: 'All platforms' },
+    { value: '', label: t('customers.filters.all_platforms', 'All platforms') },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
   ]
   const pageSizeOptions: SelectFieldOption[] = [
-    { value: '10', label: '10 per page' },
-    { value: '20', label: '20 per page' },
-    { value: '50', label: '50 per page' },
-    { value: '75', label: '75 per page' },
+    { value: '10', label: t('common.per_page', '{{count}} per page', { count: 10 }) },
+    { value: '20', label: t('common.per_page', '{{count}} per page', { count: 20 }) },
+    { value: '50', label: t('common.per_page', '{{count}} per page', { count: 50 }) },
+    { value: '75', label: t('common.per_page', '{{count}} per page', { count: 75 }) },
   ]
   const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
   const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
@@ -748,65 +753,64 @@ export function CrmDashboardPage() {
   return (
     <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
       <PageHeader
-        eyebrow="CRM workspace"
-        title="Client operations dashboard"
+        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+        title={t('customers.page.title', 'Customer operations dashboard')}
         actions={
           <>
             <Button variant="secondary" onClick={() => void refreshAll()}>
-              Refresh
+              {t('customers.actions.refresh', 'Refresh')}
             </Button>
-            <Button onClick={openCreateModal}>Add client</Button>
+            <Button onClick={openCreateModal}>{t('customers.actions.add', 'Add customer')}</Button>
           </>
         }
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard
-          label="Total Customers"
-          value={typeof stats?.total_customers === 'number' ? stats.total_customers : '—'}
-          description="Total clients in CRM"
+          label={t('customers.metrics.total.title', 'Total customers')}
+          value={typeof stats?.total_customers === 'number' ? stats.total_customers : '-'}
+          description={t('customers.metrics.total.description', 'Total customers currently in CRM')}
           tone="blue"
         />
         <MetricCard
-          label="Need to Call"
-          value={typeof stats?.need_to_call === 'number' ? stats.need_to_call : '—'}
-          description="Leads to be contacted"
+          label={t('status.need_to_call', 'Need to Call')}
+          value={typeof stats?.need_to_call === 'number' ? stats.need_to_call : '-'}
+          description={t('customers.metrics.need_to_call.description', 'Customers who need a follow-up call')}
           tone="warning"
         />
         <MetricCard
-          label="Contacted"
-          value={typeof stats?.contacted === 'number' ? stats.contacted : '—'}
-          description="Initial contact made"
+          label={t('status.contacted', 'Contacted')}
+          value={typeof stats?.contacted === 'number' ? stats.contacted : '-'}
+          description={t('customers.metrics.contacted.description', 'Customers already contacted')}
           tone="blue"
         />
         <MetricCard
-          label="Project Started"
-          value={typeof stats?.project_started === 'number' ? stats.project_started : '—'}
-          description="Projects in kickoff phase"
+          label={t('status.project_started', 'Project Started')}
+          value={typeof stats?.project_started === 'number' ? stats.project_started : '-'}
+          description={t('customers.metrics.project_started.description', 'Projects currently in kickoff')}
           tone="violet"
         />
         <MetricCard
-          label="Continuing"
-          value={typeof stats?.continuing === 'number' ? stats.continuing : '—'}
-          description="Ongoing projects"
+          label={t('status.continuing', 'Continuing')}
+          value={typeof stats?.continuing === 'number' ? stats.continuing : '-'}
+          description={t('customers.metrics.continuing.description', 'Active ongoing projects')}
           tone="success"
         />
         <MetricCard
-          label="Finished"
-          value={typeof stats?.finished === 'number' ? stats.finished : '—'}
-          description="Projects successfully completed"
+          label={t('status.finished', 'Finished')}
+          value={typeof stats?.finished === 'number' ? stats.finished : '-'}
+          description={t('customers.metrics.finished.description', 'Successfully completed projects')}
           tone="success"
         />
         <MetricCard
-          label="Rejected"
-          value={typeof stats?.rejected === 'number' ? stats.rejected : '—'}
-          description="Deals not closed"
+          label={t('status.rejected', 'Rejected')}
+          value={typeof stats?.rejected === 'number' ? stats.rejected : '-'}
+          description={t('customers.metrics.rejected.description', 'Deals that did not close')}
           tone="danger"
         />
       </div>
 
       <Card noPadding className="flex flex-1 flex-col overflow-hidden">
-        {/* ── Card header ─────────────────────────── */}
         <div
           className={cn(
             'flex flex-wrap items-center justify-between gap-3 border-b border-(--border) py-5',
@@ -814,20 +818,24 @@ export function CrmDashboardPage() {
           )}
         >
           <div>
-            <h2 className="text-lg font-semibold text-white">Clients</h2>
+            <h2 className="text-lg font-semibold text-white">{t('customers.section.list.title', 'Customers')}</h2>
             <p className="mt-0.5 text-[13px] text-(--muted)">
-              Manage your clients ({formatCompactNumber(displayedCustomers.length)} of {formatCompactNumber(totalCustomerCount)} records)
+              {t('customers.section.list.description', 'Manage your customers ({{visible}} of {{total}} records)', {
+                visible: formatCompactNumber(displayedCustomers.length),
+                total: formatCompactNumber(totalCustomerCount),
+              })}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="blue" dot>{displayedCustomers.length} visible</Badge>
+            <Badge variant="blue" dot>
+              {t('customers.section.list.visible_badge', '{{count}} visible', { count: displayedCustomers.length })}
+            </Badge>
             <Badge variant={activeFilterCount > 0 ? 'warning' : 'outline'} dot={activeFilterCount > 0}>
-              {activeFilterCount} filters
+              {t('customers.section.list.filters_badge', '{{count}} filters', { count: activeFilterCount })}
             </Badge>
           </div>
         </div>
 
-        {/* ── Filters ─────────────────────────────── */}
         <div
           className={cn(
             'border-b border-(--border) bg-(--muted-surface)/40 py-4',
@@ -835,27 +843,33 @@ export function CrmDashboardPage() {
           )}
         >
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-(--muted)">Filters</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-(--muted)">
+              {t('customers.filters.title', 'Filters')}
+            </p>
             {activeFilterCount > 0 && (
               <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2 text-xs">
-                Clear
+                {t('common.clear', 'Clear')}
               </Button>
             )}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Search</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.search_label', 'Search')}
+              </label>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Name or username"
+                placeholder={t('customers.filters.search_placeholder', 'Name, username, note, or phone')}
                 className="h-9"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Status</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.status_label', 'Status')}
+              </label>
               <SelectField
                 key={`crm-status-filter-${statusFilter || 'all'}`}
                 value={statusFilter}
@@ -865,7 +879,9 @@ export function CrmDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Platform</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.platform_label', 'Platform')}
+              </label>
               <SelectField
                 key={`crm-platform-filter-${platformFilter || 'all'}`}
                 value={platformFilter}
@@ -875,27 +891,35 @@ export function CrmDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Phone</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.phone_label', 'Phone')}
+              </label>
               <Input
                 value={phoneFilter}
                 onChange={(event) => setPhoneFilter(event.target.value)}
-                placeholder="Search by phone"
+                placeholder={t('customers.filters.phone_placeholder', 'Search by phone')}
                 className="h-9"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Start date</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.start_date_label', 'Start date')}
+              </label>
               <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">End date</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.end_date_label', 'End date')}
+              </label>
               <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">Pagination</label>
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+                {t('customers.filters.pagination_label', 'Pagination')}
+              </label>
               <SelectField
                 key={`crm-page-size-${pageSize}`}
                 value={pageSize}
@@ -914,7 +938,7 @@ export function CrmDashboardPage() {
         >
           <DataTable
             key={`crm-table-${pageSizeValue}`}
-            caption="CRM customers table"
+            caption={t('customers.table.caption', 'CRM customers table')}
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
             pageSize={pageSizeValue}
@@ -924,19 +948,19 @@ export function CrmDashboardPage() {
             className="rounded-none border-x-0 border-b-0"
             emptyState={
               <EmptyStateBlock
-                eyebrow="CRM"
-                title="No clients found"
-                description="The current filters returned no client records."
+                eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+                title={t('customers.table.empty_title', 'No customers found')}
+                description={t('customers.table.empty_description', 'The current filters returned no customer records.')}
               />
             }
             columns={[
               {
                 key: 'client',
-                header: 'Client',
+                header: t('customers.table.client', 'Customer'),
                 minWidth: '280px',
                 render: (row) => {
                   const displayName = getCustomerDisplayName(row)
-                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? 'none'
+                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? t('common.none', 'None')
 
                   return (
                     <div className="min-w-0">
@@ -957,28 +981,30 @@ export function CrmDashboardPage() {
               },
               {
                 key: 'phone',
-                header: 'Phone',
+                header: t('customers.table.phone', 'Phone'),
                 render: (row) => row.phone_number ?? row.phone ?? '-',
               },
               {
                 key: 'status',
-                header: 'Status',
+                header: t('customers.table.status', 'Status'),
                 render: (row) => <StatusBadge status={row.status} statusMetaMap={statusMetaMap} />,
               },
               {
                 key: 'actions',
-                header: 'Actions',
+                header: t('customers.table.actions', 'Actions'),
                 render: (row) => (
                   <div onClick={(event) => event.stopPropagation()}>
                     <ActionsMenu
-                      label={`Open actions for ${getCustomerDisplayName(row)}`}
+                      label={t('customers.actions.open_actions', 'Open actions for {{name}}', {
+                        name: getCustomerDisplayName(row),
+                      })}
                       items={[
                         {
-                          label: 'Edit',
+                          label: t('customers.actions.edit', 'Edit'),
                           onSelect: () => openEditModal(row),
                         },
                         {
-                          label: 'Delete',
+                          label: t('customers.actions.delete', 'Delete'),
                           onSelect: () => void handleDeleteCustomer(row),
                           tone: 'danger',
                         },
@@ -989,12 +1015,12 @@ export function CrmDashboardPage() {
               },
               {
                 key: 'assistant',
-                header: 'Assistant',
+                header: t('customers.table.assistant', 'Assistant'),
                 render: (row) => row.assistant_name || '-',
               },
               {
                 key: 'audio',
-                header: 'Audio',
+                header: t('customers.table.audio', 'Audio'),
                 width: '140px',
                 render: (row) => {
                   const audioSource = resolveAudioUrl(row)
@@ -1008,7 +1034,7 @@ export function CrmDashboardPage() {
               },
               {
                 key: 'notes',
-                header: 'Notes',
+                header: t('customers.table.notes', 'Notes'),
                 width: '320px',
                 render: (row) => (
                   <span className="block max-w-[320px] truncate text-sm text-(--muted-strong) sm:text-[15px]" title={row.notes ?? undefined}>
@@ -1018,12 +1044,12 @@ export function CrmDashboardPage() {
               },
               {
                 key: 'recall',
-                header: 'Recall Time',
+                header: t('customers.table.recall', 'Recall time'),
                 render: (row) => formatDateTime(row.recall_time),
               },
               {
                 key: 'created',
-                header: 'Created',
+                header: t('customers.table.created', 'Created'),
                 render: (row) => formatDateTime(row.created_at),
               },
             ]}

@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
-import { env } from '../../../shared/config/env'
 import type { CustomerSummary } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import {
@@ -16,18 +16,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
-
-export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: string | null) {
-  if (audioUrl) {
-    return audioUrl
-  }
-
-  if (!audioFileId) {
-    return null
-  }
-
-  return new URL(`/crm/customers/audio/${audioFileId}`, env.apiBaseUrl).toString()
-}
+import { resolveCustomerAudioUrl } from '../lib/customerAudio'
 
 function formatCustomerNotes(notes?: string | null) {
   if (!notes) {
@@ -69,28 +58,46 @@ function formatCustomerNotes(notes?: string | null) {
     .filter(Boolean)
 }
 
+function formatConversationLanguageLabel(
+  t: (key: string, fallback: string) => string,
+  value?: string | null,
+) {
+  const normalized = (value ?? '').trim().toLowerCase()
+
+  if (normalized === 'uz' || normalized === 'ru' || normalized === 'en') {
+    return t(`common.language.${normalized}`, value ?? normalized)
+  }
+
+  return value || '-'
+}
+
 function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
+  const { t } = useTranslation()
+
   return (
     <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
       <div className="border-b border-[var(--border)] px-6 py-5">
-        <SectionTitle title="Audio" description="Listen to the customer audio attached to this CRM record." />
+        <SectionTitle
+          title={t('customers.detail.audio.title', 'Audio')}
+          description={t('customers.detail.audio.description', 'Listen to the audio attached to this customer record.')}
+        />
       </div>
       <div className="px-6 py-5">
         <div className="rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-4">
           <audio controls preload="none" src={audioSource} className="w-full">
-            Your browser does not support the audio element.
+            {t('customers.detail.audio.unsupported', 'Your browser does not support the audio element.')}
           </audio>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" asChild>
             <a href={audioSource} target="_blank" rel="noreferrer">
-              Open audio
+              {t('common.open_audio', 'Open audio')}
             </a>
           </Button>
           <Button variant="ghost" size="sm" asChild>
             <a href={audioSource} download>
-              Download
+              {t('common.download', 'Download')}
             </a>
           </Button>
         </div>
@@ -106,6 +113,7 @@ export function CustomerDetailContent({
   customer: CustomerSummary
   audioSource: string | null
 }) {
+  const { t } = useTranslation()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
 
@@ -118,7 +126,9 @@ export function CustomerDetailContent({
           <div className="relative z-10 flex flex-col gap-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">CRM / Customer</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
+                  {t('customers.detail.header_eyebrow', 'CRM / Customer')}
+                </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[2rem]">
                   {customerName}
                 </h2>
@@ -129,7 +139,11 @@ export function CustomerDetailContent({
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <StatusBadge status={customer.status} />
                   {customer.assistant_name ? <Badge variant="violet">{customer.assistant_name}</Badge> : null}
-                  {customer.conversation_language ? <Badge variant="outline">{customer.conversation_language}</Badge> : null}
+                  {customer.conversation_language ? (
+                    <Badge variant="outline">
+                      {formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language)}
+                    </Badge>
+                  ) : null}
                 </div>
               </div>
 
@@ -137,7 +151,7 @@ export function CustomerDetailContent({
                 {audioSource ? (
                   <Button variant="secondary" size="sm" asChild>
                     <a href={audioSource} target="_blank" rel="noreferrer">
-                      Open audio
+                      {t('common.open_audio', 'Open audio')}
                     </a>
                   </Button>
                 ) : null}
@@ -146,19 +160,19 @@ export function CustomerDetailContent({
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-[20px] border border-blue-500/16 bg-blue-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Platform</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.platform', 'Platform')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{getCustomerDisplayPlatform(customer) || '-'}</p>
               </div>
               <div className="rounded-[20px] border border-violet-500/16 bg-violet-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Username</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.username', 'Username')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatUsernameHandle(customer.username) || '-'}</p>
               </div>
               <div className="rounded-[20px] border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Recall</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('customers.table.recall', 'Recall time')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{customer.recall_time ? formatShortDate(customer.recall_time) : '-'}</p>
               </div>
               <div className="rounded-[20px] border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">Created</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.created', 'Created')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatShortDate(customer.created_at)}</p>
               </div>
             </div>
@@ -170,16 +184,22 @@ export function CustomerDetailContent({
         <div className="grid gap-5">
           <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
             <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle title="Profile" description="Core contact and routing metadata returned by the CRM detail endpoint." />
+              <SectionTitle
+                title={t('customers.detail.profile.title', 'Profile')}
+                description={t('customers.detail.profile.description', 'Core contact and routing metadata returned by the CRM detail endpoint.')}
+              />
             </div>
             <div className="grid gap-3 px-6 py-5">
               {[
-                ['Phone', customer.phone_number ?? customer.phone ?? '-'],
-                ['Platform', getCustomerDisplayPlatform(customer) || '-'],
-                ['Audio file ID', customer.audio_file_id || '-'],
-                ['Assistant', customer.assistant_name || '-'],
-                ['Conversation language', customer.conversation_language || '-'],
-                ['Recall time', customer.recall_time || '-'],
+                [t('common.phone', 'Phone'), customer.phone_number ?? customer.phone ?? '-'],
+                [t('common.platform', 'Platform'), getCustomerDisplayPlatform(customer) || '-'],
+                [t('customers.detail.audio_file_id', 'Audio file ID'), customer.audio_file_id || '-'],
+                [t('common.assistant', 'Assistant'), customer.assistant_name || '-'],
+                [
+                  t('common.conversation_language', 'Conversation language'),
+                  formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
+                ],
+                [t('common.recall_time', 'Recall time'), customer.recall_time || '-'],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
                   <span className="text-sm text-[var(--muted-strong)]">{label}</span>
@@ -195,7 +215,10 @@ export function CustomerDetailContent({
         <div className="grid gap-5">
           <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
             <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle title="Notes" description="Operator notes attached to the customer record." />
+              <SectionTitle
+                title={t('customers.detail.notes.title', 'Notes')}
+                description={t('customers.detail.notes.description', 'Operator notes attached to the customer record.')}
+              />
             </div>
             <div className="px-6 py-5">
               {formattedNotes.length > 0 ? (
@@ -207,20 +230,31 @@ export function CustomerDetailContent({
                   ))}
                 </div>
               ) : (
-                <EmptyStateBlock eyebrow="Notes" title="No notes" description="There are no notes for this customer." />
+                <EmptyStateBlock
+                  eyebrow={t('customers.detail.notes.title', 'Notes')}
+                  title={t('customers.detail.notes.empty_title', 'No notes')}
+                  description={t('customers.detail.notes.empty_description', 'There are no notes for this customer.')}
+                />
               )}
             </div>
           </Card>
 
           <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
             <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle title="AI Summary" description="CRM-generated summary snapshot for faster context recovery." />
+              <SectionTitle
+                title={t('customers.detail.ai_summary.title', 'AI summary')}
+                description={t('customers.detail.ai_summary.description', 'CRM-generated summary snapshot for faster context recovery.')}
+              />
             </div>
             <div className="px-6 py-5">
               {customer.aisummary ? (
                 <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.aisummary}</p>
               ) : (
-                <EmptyStateBlock eyebrow="AI" title="No AI summary" description="AI summary is not available for this record." />
+                <EmptyStateBlock
+                  eyebrow={t('customers.detail.ai_summary.title', 'AI summary')}
+                  title={t('customers.detail.ai_summary.empty_title', 'No AI summary')}
+                  description={t('customers.detail.ai_summary.empty_description', 'AI summary is not available for this record.')}
+                />
               )}
             </div>
           </Card>
@@ -241,6 +275,7 @@ export function CustomerDetailDrawer({
   initialCustomer?: CustomerSummary | null
   onClose: () => void
 }) {
+  const { t } = useTranslation()
   const detailQuery = useAsyncData(
     () => crmService.detail(customerId ?? 0),
     [customerId, open],
@@ -283,7 +318,7 @@ export function CustomerDetailDrawer({
     <div className="fixed inset-0 z-[90]">
       <button
         type="button"
-        aria-label="Close customer detail drawer"
+        aria-label={t('customers.detail.drawer_close', 'Close customer detail drawer')}
         className="absolute inset-0 bg-[radial-gradient(circle_at_left,rgba(59,130,246,0.10),transparent_24%),rgba(0,0,0,0.62)] backdrop-blur-md"
         onClick={onClose}
       />
@@ -292,9 +327,11 @@ export function CustomerDetailDrawer({
         <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
           <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">CRM drawer</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
+                {t('customers.detail.drawer_eyebrow', 'CRM drawer')}
+              </p>
               <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
-                {customer ? getCustomerDisplayName(customer) : 'Customer detail'}
+                {customer ? getCustomerDisplayName(customer) : t('customers.detail', 'Customer detail')}
               </h2>
             </div>
 
@@ -302,7 +339,7 @@ export function CustomerDetailDrawer({
               type="button"
               onClick={onClose}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
-              aria-label="Close detail drawer"
+              aria-label={t('customers.detail.close', 'Close detail drawer')}
             >
               <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                 <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
@@ -313,16 +350,16 @@ export function CustomerDetailDrawer({
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">
             {detailQuery.isLoading && !customer ? (
               <LoadingStateBlock
-                eyebrow="CRM / Detail"
-                title="Customer detail loading"
-                description="Preparing the right-side CRM detail drawer."
+                eyebrow={t('customers.detail', 'Customer detail')}
+                title={t('customers.loading.detail.title', 'Customer detail loading')}
+                description={t('customers.loading.detail.description', 'Preparing the CRM detail view.')}
               />
             ) : detailQuery.isError && !customer ? (
               <ErrorStateBlock
-                eyebrow="CRM / Detail"
-                title="Customer detail unavailable"
-                description="The CRM detail endpoint could not return this customer."
-                actionLabel="Retry"
+                eyebrow={t('customers.detail', 'Customer detail')}
+                title={t('customers.errors.detail_unavailable.title', 'Customer detail unavailable')}
+                description={t('customers.errors.detail_unavailable.description', 'The CRM detail endpoint could not return this customer.')}
+                actionLabel={t('common.retry', 'Retry')}
                 onAction={() => {
                   void detailQuery.refetch()
                 }}
@@ -331,9 +368,9 @@ export function CustomerDetailDrawer({
               <CustomerDetailContent customer={customer} audioSource={audioSource} />
             ) : (
               <EmptyStateBlock
-                eyebrow="CRM / Detail"
-                title="No customer selected"
-                description="Pick a CRM row to inspect the customer on the right side."
+                eyebrow={t('customers.detail', 'Customer detail')}
+                title={t('customers.detail.no_selection.title', 'No customer selected')}
+                description={t('customers.detail.no_selection.description', 'Pick a CRM row to inspect the customer on the right side.')}
               />
             )}
           </div>

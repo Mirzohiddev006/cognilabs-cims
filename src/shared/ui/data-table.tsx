@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { translateCurrentLiteral } from '../i18n/translations'
+import { translateCurrent, translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
 import { Button } from './button'
 
@@ -174,7 +174,11 @@ export function DataTable<T>({
       {totalPages > 1 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[var(--caption)] sm:text-[13px]">
-            {translateCurrentLiteral(`${startIndex + 1}-${endIndex} of ${rows.length} results`)}
+            {translateCurrent('common.results_range', '{{start}}-{{end}} of {{total}} results', {
+              start: startIndex + 1,
+              end: endIndex,
+              total: rows.length,
+            })}
           </p>
 
           <div className="flex flex-wrap items-center gap-1">
@@ -184,7 +188,7 @@ export function DataTable<T>({
               className="px-2"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
-              aria-label={translateCurrentLiteral('Previous page')}
+              aria-label={translateCurrent('common.previous_page', 'Previous page')}
             >
               <ChevronLeft />
             </Button>
@@ -224,7 +228,7 @@ export function DataTable<T>({
               className="px-2"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
-              aria-label={translateCurrentLiteral('Next page')}
+              aria-label={translateCurrent('common.next_page', 'Next page')}
             >
               <ChevronRight />
             </Button>

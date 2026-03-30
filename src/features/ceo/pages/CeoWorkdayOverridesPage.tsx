@@ -30,6 +30,7 @@ const DAY_TYPE_OPTIONS = [
   { value: 'holiday', label: 'Holiday' },
   { value: 'short_day', label: 'Short Day' },
 ] as const
+const lt = translateCurrentLiteral
 
 type OverrideFormState = {
   specialDate: string
@@ -80,7 +81,7 @@ function normalizeDayType(value: string | null | undefined): WorkdayOverrideDayT
 }
 
 function getOverrideTypeLabel(dayType: string | null | undefined) {
-  return normalizeDayType(dayType) === 'short_day' ? 'Short Day' : 'Holiday'
+  return normalizeDayType(dayType) === 'short_day' ? lt('Short Day') : lt('Holiday')
 }
 
 function getTypeBadgeVariant(dayType: string | null | undefined) {
@@ -89,10 +90,10 @@ function getTypeBadgeVariant(dayType: string | null | undefined) {
 
 function getOverrideTargetLabel(item: WorkdayOverrideRecord) {
   if (item.target_type === 'all') {
-    return 'All members'
+    return lt('All members')
   }
 
-  return item.member_name?.trim() || (item.member_id ? `Member #${item.member_id}` : 'Specific member')
+  return item.member_name?.trim() || (item.member_id ? `${lt('Member')} #${item.member_id}` : lt('Specific member'))
 }
 
 function createDefaultFormState(month: number, year: number): OverrideFormState {
@@ -223,11 +224,11 @@ function MemberPicker({
         </div>
       ) : null}
 
-      <Input
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={multiple ? 'Search members to include' : 'Search member'}
-      />
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={multiple ? lt('Search members to include') : lt('Search member')}
+        />
 
       <div className="max-h-56 overflow-y-auto rounded-[18px] border border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/20">
         {filteredMembers.length > 0 ? filteredMembers.map((member) => {
@@ -249,16 +250,16 @@ function MemberPicker({
                   {member.full_name || `${member.name} ${member.surname}`}
                 </p>
                 <p className="truncate text-[11px] text-[var(--muted)]">
-                  {member.role || 'Member'}
+                  {member.role || lt('Member')}
                   {member.telegram_id ? ` | @${member.telegram_id}` : ''}
                 </p>
               </div>
-              {selected ? <Badge variant="blue" size="sm">Selected</Badge> : null}
+              {selected ? <Badge variant="blue" size="sm">{lt('Selected')}</Badge> : null}
             </button>
           )
         }) : (
           <div className="px-4 py-8 text-center text-sm text-[var(--muted)]">
-            No members matched this search.
+            {lt('No members matched this search.')}
           </div>
         )}
       </div>
@@ -334,8 +335,8 @@ export function CeoWorkdayOverridesPage() {
     try {
       await Promise.all([overridesQuery.refetch(), memberOptionsQuery.refetch()])
       showToast({
-        title: 'Workday overrides refreshed',
-        description: `Overrides for ${getMonthName(month)} ${year} reloaded.`,
+        title: lt('Workday overrides refreshed'),
+        description: `${lt('Overrides for')} ${getMonthName(month)} ${year} ${lt('reloaded')}.`,
         tone: 'success',
       })
     } catch (error) {
@@ -349,10 +350,10 @@ export function CeoWorkdayOverridesPage() {
 
   async function handleDelete(item: WorkdayOverrideRecord) {
     const approved = await confirm({
-      title: 'Delete workday override?',
-      description: `${item.title} on ${formatShortDate(item.special_date)} will be permanently removed.`,
+      title: lt('Delete workday override?'),
+      description: `${item.title} ${lt('on')} ${formatShortDate(item.special_date)} ${lt('will be permanently removed.')}`,
       tone: 'danger',
-      confirmLabel: 'Delete override',
+      confirmLabel: lt('Delete override'),
     })
 
     if (!approved) {
@@ -363,8 +364,8 @@ export function CeoWorkdayOverridesPage() {
       await updateTrackingService.deleteWorkdayOverride(item.id)
       await overridesQuery.refetch()
       showToast({
-        title: 'Override deleted',
-        description: `${item.title} removed successfully.`,
+        title: lt('Override deleted'),
+        description: `${item.title} ${lt('removed successfully.')}`,
         tone: 'success',
       })
     } catch (error) {
@@ -382,22 +383,22 @@ export function CeoWorkdayOverridesPage() {
     const selectedMemberId = formState.memberIds[0]
 
     if (!formState.specialDate) {
-      showToast({ title: 'Date required', description: 'Select the holiday or short day date.', tone: 'error' })
+      showToast({ title: lt('Date required'), description: lt('Select the holiday or short day date.'), tone: 'error' })
       return
     }
 
     if (!title) {
-      showToast({ title: 'Title required', description: 'Enter a short title for this override.', tone: 'error' })
+      showToast({ title: lt('Title required'), description: lt('Enter a short title for this override.'), tone: 'error' })
       return
     }
 
     if (!formState.appliesToAll && formState.memberIds.length === 0) {
-      showToast({ title: 'Member required', description: 'Choose at least one member for this override.', tone: 'error' })
+      showToast({ title: lt('Member required'), description: lt('Choose at least one member for this override.'), tone: 'error' })
       return
     }
 
     if (editingOverride && !formState.appliesToAll && !selectedMemberId) {
-      showToast({ title: 'Member required', description: 'Select one member when editing a specific override.', tone: 'error' })
+      showToast({ title: lt('Member required'), description: lt('Select one member when editing a specific override.'), tone: 'error' })
       return
     }
 
@@ -407,7 +408,7 @@ export function CeoWorkdayOverridesPage() {
       : undefined
 
     if (formState.dayType === 'short_day' && (workdayHours === undefined || workdayHours <= 0)) {
-      showToast({ title: 'Hours required', description: 'Enter a valid workday hour count for a short day.', tone: 'error' })
+      showToast({ title: lt('Hours required'), description: lt('Enter a valid workday hour count for a short day.'), tone: 'error' })
       return
     }
 
@@ -427,8 +428,8 @@ export function CeoWorkdayOverridesPage() {
         })
 
         showToast({
-          title: 'Override updated',
-          description: `${title} was updated successfully.`,
+          title: lt('Override updated'),
+          description: `${title} ${lt('was updated successfully.')}`,
           tone: 'success',
         })
       } else {
@@ -444,8 +445,8 @@ export function CeoWorkdayOverridesPage() {
         })
 
         showToast({
-          title: 'Override created',
-          description: response.message || `${title} was created successfully.`,
+          title: lt('Override created'),
+          description: response.message || `${title} ${lt('was created successfully.')}`,
           tone: 'success',
         })
       }
@@ -454,7 +455,7 @@ export function CeoWorkdayOverridesPage() {
       closeDialog()
     } catch (error) {
       showToast({
-        title: editingOverride ? 'Update failed' : 'Create failed',
+        title: editingOverride ? lt('Update failed') : lt('Create failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -467,8 +468,8 @@ export function CeoWorkdayOverridesPage() {
     return (
       <LoadingStateBlock
         eyebrow="CEO / Workday Overrides"
-        title="Loading workday overrides"
-        description="Fetching holiday and short-day settings for the selected period."
+        title={lt('Loading workday overrides')}
+        description={lt('Fetching holiday and short-day settings for the selected period.')}
       />
     )
   }
@@ -477,19 +478,19 @@ export function CeoWorkdayOverridesPage() {
     return (
       <ErrorStateBlock
         eyebrow="CEO / Workday Overrides"
-        title="Overrides unavailable"
-        description="Could not load holiday and short-day overrides."
-        actionLabel="Retry"
+        title={lt('Overrides unavailable')}
+        description={lt('Could not load holiday and short-day overrides.')}
+        actionLabel={lt('Retry')}
         onAction={() => void overridesQuery.refetch()}
       />
     )
   }
 
   const memberOptions = memberOptionsQuery.data ?? []
-  const activeDialogTitle = editingOverride ? 'Edit workday override' : 'Create workday override'
+  const activeDialogTitle = editingOverride ? lt('Edit workday override') : lt('Create workday override')
   const activeDialogDescription = editingOverride
-    ? 'Update the selected holiday or short-day entry.'
-    : 'Create a holiday or short working day for all members or selected members.'
+    ? lt('Update the selected holiday or short-day entry.')
+    : lt('Create a holiday or short working day for all members or selected members.')
 
   return (
     <section className="space-y-6 page-enter">
@@ -504,16 +505,16 @@ export function CeoWorkdayOverridesPage() {
                 CEO Dashboard
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
-                Workday Overrides
+                {lt('Workday Overrides')}
               </h1>
               <p className="mt-1.5 text-[13px] text-(--muted)">
-                Configure holidays and short working days that affect update expectations.
+                {lt('Configure holidays and short working days that affect update expectations.')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -525,7 +526,7 @@ export function CeoWorkdayOverridesPage() {
               </div>
 
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</label>
                 <SelectField
                   value={String(month)}
                   options={MONTH_OPTIONS}
@@ -540,7 +541,7 @@ export function CeoWorkdayOverridesPage() {
                 onClick={() => void handleRefresh()}
                 className="min-h-9 rounded-xl"
               >
-                Refresh
+                {lt('Refresh')}
               </Button>
               <Button
                 variant="success"
@@ -548,7 +549,7 @@ export function CeoWorkdayOverridesPage() {
                 onClick={openCreateDialog}
                 className="min-h-9 rounded-xl"
               >
-                New override
+                {lt('New override')}
               </Button>
             </div>
           </div>
@@ -557,26 +558,26 @@ export function CeoWorkdayOverridesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
-          label="Overrides in period"
+          label={lt('Overrides in period')}
           value={overrides.length}
           hint={`${getMonthName(month)} ${year}`}
         />
         <SummaryCard
-          label="Holiday entries"
+          label={lt('Holiday entries')}
           value={holidayCount}
-          hint="Full day off or no update expected."
+          hint={lt('Full day off or no update expected.')}
           accent="warning"
         />
         <SummaryCard
-          label="Short day entries"
+          label={lt('Short day entries')}
           value={shortDayCount}
-          hint="Reduced working hours or shortened day."
+          hint={lt('Reduced working hours or shortened day.')}
           accent="blue"
         />
         <SummaryCard
-          label="Targeting"
+          label={lt('Targeting')}
           value={`${allMemberCount} all / ${specificMemberCount} specific`}
-          hint="How many overrides apply to all members vs selected members."
+          hint={lt('How many overrides apply to all members vs selected members.')}
           accent="success"
         />
       </div>
@@ -585,10 +586,10 @@ export function CeoWorkdayOverridesPage() {
         <Card variant="glass" className="p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <SectionTitle
-              title={`Overrides for ${getMonthName(month)} ${year}`}
-              description="Each entry changes how update tracking treats a specific date."
+              title={`${lt('Overrides for')} ${getMonthName(month)} ${year}`}
+              description={lt('Each entry changes how update tracking treats a specific date.')}
             />
-            <Badge variant="blue">{overrides.length} items</Badge>
+            <Badge variant="blue">{overrides.length} {lt('items')}</Badge>
           </div>
 
           {overrides.length > 0 ? (
@@ -611,7 +612,7 @@ export function CeoWorkdayOverridesPage() {
                           {getOverrideTargetLabel(item)}
                         </Badge>
                         <Badge variant={item.update_required ? 'success' : 'warning'}>
-                          {item.update_required ? 'Update required' : 'No update required'}
+                          {item.update_required ? lt('Update required') : lt('No update required')}
                         </Badge>
                         {item.workday_hours ? (
                           <Badge variant="blue">{item.workday_hours}h</Badge>
@@ -628,24 +629,24 @@ export function CeoWorkdayOverridesPage() {
                         </p>
                       ) : (
                         <p className="mt-3 text-sm text-[var(--muted)]">
-                          No note provided for this override.
+                          {lt('No note provided for this override.')}
                         </p>
                       )}
                     </div>
 
                     <ActionsMenu
-                      label={`Actions for ${item.title}`}
+                      label={`${lt('Actions for')} ${item.title}`}
                       items={[
-                        { label: 'Edit override', onSelect: () => openEditDialog(item) },
-                        { label: 'Delete override', onSelect: () => void handleDelete(item), tone: 'danger' },
+                        { label: lt('Edit override'), onSelect: () => openEditDialog(item) },
+                        { label: lt('Delete override'), onSelect: () => void handleDelete(item), tone: 'danger' },
                       ]}
                     />
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[var(--muted)]">
-                    <span>Created: {formatDateTime(item.created_at)}</span>
+                    <span>{lt('Created')}: {formatDateTime(item.created_at)}</span>
                     <span className="opacity-35">|</span>
-                    <span>Updated: {formatDateTime(item.updated_at)}</span>
+                    <span>{lt('Updated')}: {formatDateTime(item.updated_at)}</span>
                   </div>
                 </div>
               ))}
@@ -653,13 +654,13 @@ export function CeoWorkdayOverridesPage() {
           ) : (
             <div className="rounded-[22px] border border-dashed border-white/10 bg-black/10 px-5 py-8 text-center">
               <p className="text-base font-semibold text-white">
-                No overrides yet for {getMonthName(month)} {year}
+                {lt('No overrides yet for')} {getMonthName(month)} {year}
               </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                Create a holiday or short-day rule so calendars stop treating those dates as missing workdays.
+                {lt('Create a holiday or short-day rule so calendars stop treating those dates as missing workdays.')}
               </p>
               <Button variant="success" size="sm" className="mt-5 rounded-xl" onClick={openCreateDialog}>
-                Create first override
+                {lt('Create first override')}
               </Button>
             </div>
           )}

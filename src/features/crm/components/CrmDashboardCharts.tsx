@@ -3,7 +3,7 @@ import type {
   SalesDashboardChartsResponse,
   SalesDashboardTrendPoint,
 } from '../../../shared/api/types'
-import { getIntlLocale } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatCompactNumber } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
@@ -16,6 +16,8 @@ const customerTypeOptions: SelectFieldOption[] = [
   { value: 'local', label: 'Local' },
   { value: 'international', label: 'International' },
 ]
+
+const lt = translateCurrentLiteral
 
 const tonePalette = {
   blue: {
@@ -82,14 +84,14 @@ function formatPercent(value?: number | null) {
 
 function formatRangeLabel(payload?: SalesDashboardChartsResponse) {
   if (!payload) {
-    return 'Period unavailable'
+    return lt('Period unavailable')
   }
 
   const start = new Date(payload.period.start_date)
   const end = new Date(payload.period.end_date)
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return `${payload.period.days} days`
+    return `${payload.period.days} ${lt('days')}`
   }
 
   const formatter = new Intl.DateTimeFormat(getIntlLocale(), { month: 'short', day: 'numeric' })
@@ -192,15 +194,15 @@ function TrendChartCard({
         <div>
           <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', colors.label)}>{title}</p>
           <h3 className="mt-2 text-xl font-semibold tracking-tight text-white">
-            {payload ? `${formatCompactNumber(payload.summary.total_period_leads)} leads` : 'No dataset yet'}
+            {payload ? `${formatCompactNumber(payload.summary.total_period_leads)} ${lt('leads')}` : lt('No dataset yet')}
           </h3>
           <p className="mt-1 text-sm text-[var(--muted-strong)]">{description}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={colors.badge}>{payload ? formatRangeLabel(payload) : 'Waiting for API'}</Badge>
+          <Badge variant={colors.badge}>{payload ? formatRangeLabel(payload) : lt('Waiting for API')}</Badge>
           {payload ? (
-            <Badge variant="outline">{formatPercent(payload.summary.conversion_rate_percent)} conversion</Badge>
+            <Badge variant="outline">{formatPercent(payload.summary.conversion_rate_percent)} {lt('conversion')}</Badge>
           ) : null}
         </div>
       </div>
@@ -285,25 +287,25 @@ function TrendChartCard({
 
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <MiniStat
-              label="Today"
+              label={lt('Today')}
               value={formatCompactNumber(payload.summary.today)}
-              hint="Leads created today"
+              hint={lt('Leads created today')}
             />
             <MiniStat
-              label="Average / Day"
+              label={lt('Average / Day')}
               value={averagePerDay.toFixed(1)}
-              hint="Mean across this range"
+              hint={lt('Mean across this range')}
             />
             <MiniStat
-              label="Peak Day"
+              label={lt('Peak Day')}
               value={peakPoint ? formatCompactNumber(peakPoint.count) : '0'}
-              hint={peakPoint ? formatTickLabel(peakPoint.date, totalPoints) : 'No peak'}
+              hint={peakPoint ? formatTickLabel(peakPoint.date, totalPoints) : lt('No peak')}
             />
           </div>
         </>
       ) : (
         <div className="mt-5 rounded-[24px] border border-dashed border-white/10 bg-black/10 px-4 py-8 text-sm text-[var(--muted-strong)]">
-          Trend dataset is empty for this period.
+          {lt('Trend dataset is empty for this period.')}
         </div>
       )}
     </Card>
@@ -326,9 +328,9 @@ export function CrmDashboardCharts({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/80">CRM</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">CRM lead movement</h2>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{lt('CRM lead movement')}</h2>
           <p className="mt-1 text-sm text-[var(--muted-strong)]">
-            7-day va 30-day lead flow bir joyda ko'rsatiladi.
+            {lt('7-day and 30-day lead flow is shown together.')}
           </p>
         </div>
 
@@ -336,12 +338,12 @@ export function CrmDashboardCharts({
           <div className="min-w-[180px]">
             <SelectField
               value={customerType}
-              options={customerTypeOptions}
+              options={customerTypeOptions.map((option) => ({ ...option, label: lt(option.label) }))}
               onValueChange={onCustomerTypeChange}
             />
           </div>
           <Button variant="secondary" onClick={onRetry} loading={isLoading}>
-            Refresh charts
+            {lt('Refresh charts')}
           </Button>
         </div>
       </div>
@@ -349,44 +351,44 @@ export function CrmDashboardCharts({
       {summary ? (
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MiniStat
-            label="30d Leads"
+            label={lt('30d Leads')}
             value={formatCompactNumber(summary.total_period_leads)}
-            hint="Total leads across the selected monthly range"
+            hint={lt('Total leads across the selected monthly range')}
           />
           <MiniStat
-            label="This Week"
+            label={lt('This Week')}
             value={formatCompactNumber(summary.this_week)}
-            hint="Current week lead intake"
+            hint={lt('Current week lead intake')}
           />
           <MiniStat
-            label="Started"
+            label={lt('Started')}
             value={formatCompactNumber(summary.project_started)}
-            hint="Moved to project-started status"
+            hint={lt('Moved to project-started status')}
           />
           <MiniStat
-            label="Conversion"
+            label={lt('Conversion')}
             value={formatPercent(summary.conversion_rate_percent)}
-            hint="Project-started conversion rate"
+            hint={lt('Project-started conversion rate')}
           />
         </div>
       ) : null}
 
       {isError && !weekly && !monthly ? (
         <div className="mt-5 rounded-[24px] border border-dashed border-rose-500/30 bg-rose-500/[0.06] px-5 py-8 text-sm text-rose-100/80">
-          Chart API could not be loaded. Retry the dashboard charts request.
+          {lt('Chart API could not be loaded. Retry the dashboard charts request.')}
         </div>
       ) : (
         <>
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <TrendChartCard
-              title="7-day view"
-              description="Short-range lead flow for the last week."
+              title={lt('7-day view')}
+              description={lt('Short-range lead flow for the last week.')}
               payload={weekly}
               accent="blue"
             />
             <TrendChartCard
-              title="30-day view"
-              description="Longer-range lead flow for the last month."
+              title={lt('30-day view')}
+              description={lt('Longer-range lead flow for the last month.')}
               payload={monthly}
               accent="violet"
             />

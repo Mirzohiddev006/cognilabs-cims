@@ -2,6 +2,7 @@ import type { PermissionMap } from '../../../shared/api/types'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Modal } from '../../../shared/ui/modal'
+import { useTranslation } from 'react-i18next'
 import { getPermissionMeta } from '../lib/permissionCatalog'
 
 type PermissionEditorModalProps = {
@@ -33,6 +34,7 @@ export function PermissionEditorModal({
   onRemovePermission,
   isSubmitting,
 }: PermissionEditorModalProps) {
+  const { t } = useTranslation()
   const activePermissionKeys = Object.entries(permissions)
     .filter(([, enabled]) => enabled)
     .map(([key]) => key)
@@ -41,26 +43,30 @@ export function PermissionEditorModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={`Permissions for ${userName}`}
-      description="Manage access rights using checkbox selection, replace, or single removal flows."
+      title={t('ceo.permissions.title', { name: userName })}
+      description={t('ceo.permissions.description')}
       size="xl"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Close
+            {t('common.close')}
           </Button>
           <Button variant="ghost" onClick={onAddSelected} disabled={isSubmitting}>
-            Add selected
+            {t('ceo.permissions.add_selected')}
           </Button>
           <Button onClick={onReplaceAll} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Replace all'}
+            {isSubmitting ? t('customers.form.submitting') : t('ceo.permissions.replace_all')}
           </Button>
         </>
       }
     >
       <div className="flex flex-wrap gap-3">
-        <Badge className="border-blue-500/20 bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400">{`Active ${activePermissionsCount}`}</Badge>
-        <Badge className="border-[var(--border)] bg-white text-[var(--foreground)] dark:border-white/10 dark:bg-white/5 dark:text-white">{`Available ${totalAvailablePages}`}</Badge>
+        <Badge className="border-blue-500/20 bg-blue-50 text-blue-600 dark:bg-blue-600/10 dark:text-blue-400">
+          {t('ceo.permissions.active_count', { count: activePermissionsCount })}
+        </Badge>
+        <Badge className="border-[var(--border)] bg-white text-[var(--foreground)] dark:border-white/10 dark:bg-white/5 dark:text-white">
+          {t('ceo.permissions.available_count', { count: totalAvailablePages })}
+        </Badge>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
@@ -90,7 +96,7 @@ export function PermissionEditorModal({
         </div>
 
         <div className="sticky top-0 h-fit rounded-2xl border border-[var(--border)] bg-white p-6 dark:bg-white/5">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">Active now</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">{t('ceo.permissions.active_now')}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {activePermissionKeys.length > 0 ? (
               activePermissionKeys.map((permissionKey) => (
@@ -104,7 +110,7 @@ export function PermissionEditorModal({
                 </button>
               ))
             ) : (
-              <p className="text-sm text-(--muted)">No active permissions assigned.</p>
+              <p className="text-sm text-(--muted)">{t('ceo.permissions.none_active')}</p>
             )}
           </div>
         </div>

@@ -186,7 +186,7 @@ export function AppSidebar() {
     if (!nextName || !nextSurname) {
       showToast({
         title: t('profile.update_failed'),
-        description: 'Name and surname are required.',
+        description: t('profile.fill_required', 'Name and surname are required.'),
         tone: 'error',
       })
       return
@@ -195,7 +195,7 @@ export function AppSidebar() {
     if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
       showToast({
         title: t('profile.update_failed'),
-        description: 'Current password and new password must both be filled to change password.',
+        description: t('profile.password_pair_required', 'Current password and new password must both be filled to change the password.'),
         tone: 'error',
       })
       return
@@ -207,8 +207,8 @@ export function AppSidebar() {
 
     if (!hasNameChange && !hasPasswordChange && !hasImageChange) {
       showToast({
-        title: 'No profile changes',
-        description: 'Update a field, password, or photo before saving.',
+        title: t('profile.no_changes_title', 'No profile changes'),
+        description: t('profile.no_changes_description', 'Update a field, password, or photo before saving.'),
         tone: 'error',
       })
       return
@@ -558,7 +558,7 @@ export function AppSidebar() {
                 {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
               </p>
               <p className="mt-1 text-xs text-[var(--muted)]">
-                {profileImageFile ? profileImageFile.name : 'Upload a new profile photo if needed.'}
+                {profileImageFile ? profileImageFile.name : t('profile.photo_hint', 'Upload a new profile photo if needed.')}
               </p>
             </div>
           </div>
@@ -570,7 +570,9 @@ export function AppSidebar() {
               onClick={() => profileImageInputRef.current?.click()}
               disabled={isSavingMember}
             >
-              {resolvedUserProfileImage || profileImageFile ? 'Change photo' : 'Upload photo'}
+              {resolvedUserProfileImage || profileImageFile
+                ? t('profile.change_photo', 'Change photo')
+                : t('profile.upload_photo', 'Upload photo')}
             </Button>
           ) : null}
         </div>
@@ -596,7 +598,7 @@ export function AppSidebar() {
             <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? t('profile.active') : t('profile.inactive')}</p>
+              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}</p>
             </div>
           </div>
           {isEditingMember ? (
@@ -618,7 +620,9 @@ export function AppSidebar() {
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>Current password</p>
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
+                  {t('profile.current_password', 'Current password')}
+                </p>
                 <Input
                   type="password"
                   value={memberForm.current_password}
@@ -628,7 +632,9 @@ export function AppSidebar() {
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>New password</p>
+                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
+                  {t('profile.new_password', 'New password')}
+                </p>
                 <Input
                   type="password"
                   value={memberForm.new_password}

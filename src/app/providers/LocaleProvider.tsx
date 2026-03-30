@@ -1,16 +1,23 @@
-import { useEffect, useMemo, useState, type PropsWithChildren } from 'react'
-import { observeDomTranslations } from '../../shared/i18n/dom'
-import { getStoredLocale, setCurrentLocale, translate, type AppLocale, type TranslationParams } from '../../shared/i18n/translations'
+import { useEffect, type PropsWithChildren } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getStoredLocale, setCurrentLocale, type AppLocale, type TranslationParams } from '../../shared/i18n/translations'
 import { LocaleContext } from './LocaleContext'
 
 export function LocaleProvider({ children }: PropsWithChildren) {
-  const [locale, setLocaleState] = useState<AppLocale>(getStoredLocale)
+  const { i18n, t } = useTranslation()
+  const locale = (i18n.resolvedLanguage ?? i18n.language ?? getStoredLocale()) as AppLocale
 
-  setCurrentLocale(locale)
+  useEffect(() => {
+    const storedLocale = getStoredLocale()
+
+    if (i18n.language !== storedLocale) {
+      void i18n.changeLanguage(storedLocale)
+    }
+  }, [i18n])
 
   function setLocale(nextLocale: AppLocale) {
     setCurrentLocale(nextLocale)
-    setLocaleState(nextLocale)
+    void i18n.changeLanguage(nextLocale)
   }
 
   useEffect(() => {
@@ -19,13 +26,18 @@ export function LocaleProvider({ children }: PropsWithChildren) {
     document.documentElement.lang = locale
   }, [locale])
 
-  useEffect(() => observeDomTranslations(locale), [locale])
-
-  const value = useMemo(() => ({
+  const value = {
     locale,
     setLocale,
-    t: (key: string, fallback?: string, params?: TranslationParams) => translate(locale, key, fallback, params),
-  }), [locale])
+    t: (key: string, fallback?: string, params?: TranslationParams) => {
+      const translated = t(key, {
+        defaultValue: fallback ?? key,
+        ...params,
+      })
+
+      return typeof translated === 'string' ? translated : String(translated)
+    },
+  }
 
   return (
     <LocaleContext.Provider value={value}>

@@ -1,8 +1,9 @@
 import type { ApiResponseError } from '../api/types'
+import { translateCurrent } from '../i18n/translations'
 
 export function getApiErrorMessage(
   error: unknown,
-  fallback = "So'rov bajarilmadi. Qayta urinib ko'ring.",
+  fallback = translateCurrent('common.request_failed'),
 ) {
   const apiError = error as ApiResponseError | undefined
   const details = apiError?.details as

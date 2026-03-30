@@ -15,7 +15,7 @@ export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/auth/login',
     label: 'Auth',
-    description: 'Login, register va recovery flow tayyor.',
+    description: 'Authentication flows for sign-in, registration, and recovery.',
     group: 'Access',
     sidebar: false,
     permissionKey: undefined,
@@ -34,7 +34,7 @@ export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/ceo/dashboard',
     label: 'CEO Dashboard',
-    description: 'CEO statistik kartalari va daily metrics.',
+    description: 'Executive metrics, operational highlights, and daily performance indicators.',
     group: 'CEO',
     permissionKey: 'ceo',
     sidebar: true,
@@ -43,7 +43,7 @@ export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/crm',
     label: 'CRM',
-    description: 'Customers, filters, statuses va sales stats.',
+    description: 'Customers, filters, statuses, and sales performance.',
     group: 'Sales',
     permissionKey: 'crm',
     sidebar: true,
@@ -52,7 +52,7 @@ export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/ceo/users',
     label: 'Users & Permissions',
-    description: 'User management va permission overview.',
+    description: 'User management, role access, and permission oversight.',
     group: 'CEO',
     permissionKey: 'ceo',
     sidebar: true,
@@ -97,7 +97,7 @@ export const navigationItems: readonly NavigationItem[] = [
   {
     to: '/updates',
     label: 'Updates',
-    description: 'Update tracking, recent, missing va company stats.',
+    description: 'Update tracking, recent activity, missing submissions, and company stats.',
     group: 'People',
     permissionKey: 'update_list',
     sidebar: true,

@@ -1,6 +1,7 @@
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
+import { useTranslation } from 'react-i18next'
 
 export type CompanyPaymentFormValues = {
   title: string
@@ -30,32 +31,40 @@ export function CompanyPaymentFormModal({
   onSubmit,
   isSubmitting,
 }: CompanyPaymentFormModalProps) {
+  const { t } = useTranslation()
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={mode === 'create' ? 'Recurring payment yaratish' : 'Recurring paymentni tahrirlash'}
-      description="Company recurring payment reminder CRUD form."
+      title={mode === 'create'
+        ? t('ceo.recurring.form.create_title')
+        : t('ceo.recurring.form.edit_title')}
+      description={t('ceo.recurring.form.description')}
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saqlanmoqda...' : mode === 'create' ? 'Create reminder' : 'Save reminder'}
+            {isSubmitting
+              ? t('customers.form.submitting')
+              : mode === 'create'
+                ? t('ceo.recurring.form.create')
+                : t('ceo.recurring.form.save')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4">
         <label className="grid gap-2">
-          <span className="text-xs font-medium text-[var(--foreground)]">Title</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">{t('ceo.recurring.form.title')}</span>
           <Input value={values.title} onChange={(event) => onChange('title', event.target.value)} />
         </label>
 
         <div className="grid gap-4 md:grid-cols-3">
           <label className="grid gap-2">
-            <span className="text-xs font-medium text-[var(--foreground)]">Amount</span>
+            <span className="text-xs font-medium text-[var(--foreground)]">{t('ceo.recurring.form.amount')}</span>
             <Input
               type="number"
               min="0"
@@ -65,7 +74,7 @@ export function CompanyPaymentFormModal({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-xs font-medium text-[var(--foreground)]">Payment day</span>
+            <span className="text-xs font-medium text-[var(--foreground)]">{t('ceo.recurring.form.payment_day')}</span>
             <Input
               type="number"
               min="1"
@@ -76,7 +85,7 @@ export function CompanyPaymentFormModal({
           </label>
 
           <label className="grid gap-2">
-            <span className="text-xs font-medium text-[var(--foreground)]">Payment time</span>
+            <span className="text-xs font-medium text-[var(--foreground)]">{t('ceo.recurring.form.payment_time')}</span>
             <Input
               type="time"
               value={values.paymentTime}
@@ -86,7 +95,7 @@ export function CompanyPaymentFormModal({
         </div>
 
         <label className="grid gap-2">
-          <span className="text-xs font-medium text-[var(--foreground)]">Note</span>
+          <span className="text-xs font-medium text-[var(--foreground)]">{t('ceo.recurring.form.note')}</span>
           <textarea
             value={values.note}
             onChange={(event) => onChange('note', event.target.value)}
@@ -102,7 +111,7 @@ export function CompanyPaymentFormModal({
             onChange={(event) => onChange('isActive', event.target.checked)}
             className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
           />
-          <span className="text-xs text-[var(--muted-strong)]">Reminder active</span>
+          <span className="text-xs text-[var(--muted-strong)]">{t('ceo.recurring.form.active')}</span>
         </label>
       </div>
     </Modal>

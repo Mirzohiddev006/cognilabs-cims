@@ -2,6 +2,7 @@ import type {
   MemberDeliveryBonusRecord,
   MemberMistakeRecord,
 } from '../../../shared/api/types'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
@@ -9,16 +10,18 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { formatDetailDate } from '../lib/salaryEstimates'
 
+const lt = translateCurrentLiteral
+
 function renderProjectLabel(projectName?: string | null, projectId?: number | null) {
   if (projectName?.trim()) {
     return projectName
   }
 
   if (typeof projectId === 'number' && projectId > 0) {
-    return `Project #${projectId}`
+    return `${lt('Project')} #${projectId}`
   }
 
-  return 'No project'
+  return lt('No project')
 }
 
 function renderReviewerLabel(reviewerName?: string | null, reviewerId?: number | null) {
@@ -27,10 +30,10 @@ function renderReviewerLabel(reviewerName?: string | null, reviewerId?: number |
   }
 
   if (typeof reviewerId === 'number' && reviewerId > 0) {
-    return `Reviewer #${reviewerId}`
+    return `${lt('Reviewer')} #${reviewerId}`
   }
 
-  return 'Reviewer not set'
+  return lt('Reviewer not set')
 }
 
 type MistakeIncidentSectionProps = {
@@ -55,19 +58,19 @@ export function MistakeIncidentSection({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
-            Mistake incidents
+            {lt('Mistake incidents')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            Recorded compensation mistakes
+            {lt('Recorded compensation mistakes')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={items.length > 0 ? 'danger' : 'outline'}>
-            {items.length} entries
+            {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
             <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-rose-600 hover:text-rose-700 dark:text-rose-100/88 dark:hover:text-white">
-              Add mistake
+              {lt('Add mistake')}
             </Button>
           ) : null}
         </div>
@@ -92,18 +95,18 @@ export function MistakeIncidentSection({
                   <Badge variant="outline">{formatDetailDate(item.incident_date ?? item.created_at)}</Badge>
                   <Badge variant="outline">{renderProjectLabel(item.project_name, item.project_id)}</Badge>
                   <Badge variant="outline">{renderReviewerLabel(item.reviewer_name, item.reviewer_id)}</Badge>
-                  {item.reached_client ? <Badge variant="danger">Reached client</Badge> : <Badge variant="outline">Internal only</Badge>}
-                  {item.unclear_task ? <Badge variant="warning">Unclear task</Badge> : null}
+                  {item.reached_client ? <Badge variant="danger">{lt('Reached client')}</Badge> : <Badge variant="outline">{lt('Internal only')}</Badge>}
+                  {item.unclear_task ? <Badge variant="warning">{lt('Unclear task')}</Badge> : null}
                 </div>
               </div>
 
               {editable && onEdit && onDelete ? (
                 <div onClick={(event) => event.stopPropagation()}>
                   <ActionsMenu
-                    label={`Open mistake actions for ${item.title}`}
+                    label={`${lt('Open mistake actions for')} ${item.title}`}
                     items={[
-                      { label: 'Edit mistake', onSelect: () => onEdit(item) },
-                      { label: 'Delete mistake', onSelect: () => onDelete(item), tone: 'danger' },
+                      { label: lt('Edit mistake'), onSelect: () => onEdit(item) },
+                      { label: lt('Delete mistake'), onSelect: () => onDelete(item), tone: 'danger' },
                     ]}
                   />
                 </div>
@@ -112,7 +115,7 @@ export function MistakeIncidentSection({
           </div>
         )) : (
           <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-            No mistake incidents were returned for the selected month.
+            {lt('No mistake incidents were returned for the selected month.')}
           </div>
         )}
       </div>
@@ -142,19 +145,19 @@ export function DeliveryBonusSection({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
-            Delivery bonuses
+            {lt('Delivery bonuses')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            Recorded delivery bonus events
+            {lt('Recorded delivery bonus events')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant={items.length > 0 ? 'success' : 'outline'}>
-            {items.length} entries
+            {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
             <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-emerald-600 hover:text-emerald-700 dark:text-emerald-100/88 dark:hover:text-white">
-              Add delivery bonus
+              {lt('Add delivery bonus')}
             </Button>
           ) : null}
         </div>
@@ -183,10 +186,10 @@ export function DeliveryBonusSection({
               {editable && onEdit && onDelete ? (
                 <div onClick={(event) => event.stopPropagation()}>
                   <ActionsMenu
-                    label={`Open delivery bonus actions for ${item.title}`}
+                    label={`${lt('Open delivery bonus actions for')} ${item.title}`}
                     items={[
-                      { label: 'Edit delivery bonus', onSelect: () => onEdit(item) },
-                      { label: 'Delete delivery bonus', onSelect: () => onDelete(item), tone: 'danger' },
+                      { label: lt('Edit delivery bonus'), onSelect: () => onEdit(item) },
+                      { label: lt('Delete delivery bonus'), onSelect: () => onDelete(item), tone: 'danger' },
                     ]}
                   />
                 </div>
@@ -195,7 +198,7 @@ export function DeliveryBonusSection({
           </div>
         )) : (
           <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
-            No delivery bonus records were returned for the selected month.
+            {lt('No delivery bonus records were returned for the selected month.')}
           </div>
         )}
       </div>

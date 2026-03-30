@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import {
@@ -282,6 +283,7 @@ function toUserPayload(values: UserFormValues, mode: 'create' | 'edit'): UserPay
 }
 
 export function CeoUsersPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
@@ -1099,7 +1101,7 @@ export function CeoUsersPage() {
                           variant={entry.direction === 'incoming' ? 'blue' : 'violet'}
                           size="sm"
                         >
-                          {entry.direction === 'incoming' ? 'From user' : 'From CEO'}
+                          {entry.direction === 'incoming' ? t('ceo.users.thread.from_user') : t('ceo.users.thread.from_ceo')}
                         </Badge>
                         <span className="text-[11px] text-white/45">
                           {formatMessageTimestamp(entry.sentAt)}
@@ -1120,7 +1122,7 @@ export function CeoUsersPage() {
                       {presentation.hasHiddenPayload ? (
                         <div className="mt-3">
                           <Badge variant="outline" size="sm" className="border-white/10 bg-white/[0.03] text-white/60">
-                            Attachment payload hidden
+                            {t('ceo.users.thread.attachment_hidden')}
                           </Badge>
                         </div>
                       ) : null}
@@ -1129,7 +1131,7 @@ export function CeoUsersPage() {
                 })
               ) : (
                 <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-zinc-500">
-                  Hali shu user bilan yozishma yoq. Ong paneldan birinchi message yuborsangiz, thread shu yerda chiqadi.
+                  {t('ceo.users.thread.empty')}
                 </div>
               )}
             </div>
@@ -1141,25 +1143,25 @@ export function CeoUsersPage() {
                 {messageThreadUser ? <UserAvatar user={messageThreadUser} size="md" /> : null}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">
-                    {messageThreadUser ? getUserDisplayName(messageThreadUser) : 'Selected user'}
+                    {messageThreadUser ? getUserDisplayName(messageThreadUser) : t('ceo.users.thread.selected_user')}
                   </p>
                   <p className="truncate text-xs text-zinc-500">
-                    {messageThreadUser?.email ?? 'No recipient selected'}
+                    {messageThreadUser?.email ?? t('ceo.users.thread.no_recipient')}
                   </p>
                 </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Sent</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.sent')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
                 </div>
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Incoming</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.incoming')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
                 </div>
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">Latest</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.latest')}</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {activeConversation.entries.length > 0
                       ? formatShortDate(activeConversation.entries[activeConversation.entries.length - 1]?.sentAt)
@@ -1171,17 +1173,17 @@ export function CeoUsersPage() {
 
             <Card className="space-y-4 rounded-[26px] border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div>
-                <p className="text-sm font-semibold text-white">Write new message</p>
+                <p className="text-sm font-semibold text-white">{t('ceo.users.thread.write_title')}</p>
                 <p className="mt-1 text-xs text-zinc-500">
-                  Thread ichidan yozsangiz, oldingi xabarlar bilan bir joyda kuzatish oson bo‘ladi.
+                  {t('ceo.users.thread.write_description')}
                 </p>
               </div>
 
               <label className="grid gap-2">
-                <span className="text-xs font-semibold text-white">Subject</span>
+                <span className="text-xs font-semibold text-white">{t('ceo.messages.subject')}</span>
                 <Input
                   value={messageValues.subject}
-                  placeholder="Enter message subject"
+                  placeholder={t('ceo.messages.subject_placeholder')}
                   onChange={(event) =>
                     setMessageValues((current) => ({
                       ...current,
@@ -1192,11 +1194,11 @@ export function CeoUsersPage() {
               </label>
 
               <label className="grid gap-2">
-                <span className="text-xs font-semibold text-white">Body</span>
+                <span className="text-xs font-semibold text-white">{t('ceo.messages.body')}</span>
                 <Textarea
                   rows={8}
                   value={messageValues.body}
-                  placeholder="Enter message body"
+                  placeholder={t('ceo.messages.body_placeholder')}
                   onChange={(event) =>
                     setMessageValues((current) => ({
                       ...current,
@@ -1208,10 +1210,10 @@ export function CeoUsersPage() {
 
               <div className="flex flex-wrap justify-end gap-3">
                 <Button variant="secondary" onClick={() => setIsMessageDialogOpen(false)}>
-                  Close
+                  {t('common.close')}
                 </Button>
                 <Button onClick={() => void handleSendSingleMessage()} loading={isMessageSubmitting}>
-                  Send message
+                  {t('ceo.messages.send')}
                 </Button>
               </div>
             </Card>
@@ -1222,18 +1224,18 @@ export function CeoUsersPage() {
       <Dialog
         open={Boolean(profileUser)}
         onClose={() => setProfileUser(null)}
-        title={profileUser ? `${profileUser.name} ${profileUser.surname}` : 'User details'}
-        description={profileUser?.email ?? 'Selected user details'}
+        title={profileUser ? `${profileUser.name} ${profileUser.surname}` : t('ceo.users.profile.title')}
+        description={profileUser?.email ?? t('ceo.users.profile.description')}
         size="lg"
         footer={
           <>
             {profileUser ? (
               <Button onClick={() => openSalaryDetail(profileUser)}>
-                Open salary detail
+                {t('ceo.users.profile.open_salary')}
               </Button>
             ) : null}
             <Button variant="secondary" onClick={() => setProfileUser(null)}>
-              Close
+              {t('common.close')}
             </Button>
           </>
         }
@@ -1262,41 +1264,41 @@ export function CeoUsersPage() {
               loading={isUploadingImage}
               className="rounded-xl text-xs"
             >
-              {profileUser?.profile_image ? 'Change photo' : 'Upload photo'}
+              {profileUser?.profile_image ? t('profile.change_photo') : t('profile.upload_photo')}
             </Button>
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Role</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.role')}</p>
             <p className="mt-2 text-lg font-semibold text-white">{profileUser?.role ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Company</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.company_code')}</p>
             <p className="mt-2 text-lg font-semibold text-white">{profileUser?.company_code ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Job title</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.job_title')}</p>
             <p className="mt-2 text-lg font-semibold text-white">{profileUser?.job_title ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Email</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.email')}</p>
             <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.email ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Status</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', profileUser?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-white">{profileUser?.is_active ? 'Active' : 'Inactive'}</p>
+              <p className="text-base font-semibold text-white">{profileUser?.is_active ? t('status.active') : t('status.inactive')}</p>
             </div>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Telegram ID</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('auth.register.telegram_id')}</p>
             <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.telegram_id ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">Default salary</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('ceo.users.form.default_salary')}</p>
             <p className="mt-2 text-base font-semibold text-white">{formatSalary(profileUser?.default_salary)}</p>
           </div>
         </div>

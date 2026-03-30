@@ -1,12 +1,15 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Button } from '../../../shared/ui/button'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
-import { CustomerDetailContent, resolveCustomerAudioUrl } from '../components/CustomerDetailDrawer'
+import { CustomerDetailContent } from '../components/CustomerDetailDrawer'
+import { resolveCustomerAudioUrl } from '../lib/customerAudio'
 
 export function CustomerDetailPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams()
   const customerId = Number(params.customerId)
@@ -25,10 +28,10 @@ export function CustomerDetailPage() {
   if (!Number.isFinite(customerId) || customerId <= 0) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM / Detail"
-        title="Invalid Customer ID"
-        description="The customer identifier in the route is invalid."
-        actionLabel="Back to CRM"
+        eyebrow={t('customers.detail', 'Customer detail')}
+        title={t('customers.errors.invalid_id.title', 'Invalid customer ID')}
+        description={t('customers.errors.invalid_id.description', 'The customer identifier in the route is invalid.')}
+        actionLabel={t('customers.detail.back', 'Back to CRM')}
         onAction={() => navigate('/crm')}
       />
     )
@@ -37,9 +40,9 @@ export function CustomerDetailPage() {
   if (detailQuery.isLoading && !detailQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM / Detail"
-        title="Customer profile loading"
-        description="Retrieving comprehensive customer details."
+        eyebrow={t('customers.detail', 'Customer detail')}
+        title={t('customers.loading.profile.title', 'Customer profile loading')}
+        description={t('customers.loading.profile.description', 'Retrieving comprehensive customer details.')}
       />
     )
   }
@@ -47,10 +50,10 @@ export function CustomerDetailPage() {
   if (detailQuery.isError || !detailQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM / Detail"
-        title="Customer not found"
-        description="Could not retrieve details for this customer."
-        actionLabel="Back to CRM"
+        eyebrow={t('customers.detail', 'Customer detail')}
+        title={t('customers.errors.not_found.title', 'Customer not found')}
+        description={t('customers.errors.not_found.description', 'Could not retrieve details for this customer.')}
+        actionLabel={t('customers.detail.back', 'Back to CRM')}
         onAction={() => navigate('/crm')}
       />
     )
@@ -68,7 +71,7 @@ export function CustomerDetailPage() {
           <svg viewBox="0 0 16 16" className="mr-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M10 3.5 5.5 8 10 12.5" />
           </svg>
-          Back to CRM
+          {t('customers.detail.back', 'Back to CRM')}
         </Button>
       </div>
 

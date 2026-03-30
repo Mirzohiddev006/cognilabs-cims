@@ -3,6 +3,7 @@ import { Modal } from '../../../shared/ui/modal'
 import { Button } from '../../../shared/ui/button'
 import { SelectField } from '../../../shared/ui/select-field'
 import type { UserPayload } from '../../../shared/api/services/ceo.service'
+import { useTranslation } from 'react-i18next'
 
 export type UserFormValues = UserPayload & {
   password: string
@@ -20,6 +21,25 @@ type UserFormModalProps = {
 
 const roleOptions = ['Member', 'SalesManager', 'Finance', 'CEO', 'Admin', 'Customer']
 
+function getRoleTranslationKey(role: string) {
+  switch (role) {
+    case 'Member':
+      return 'auth.role.member'
+    case 'Customer':
+      return 'auth.role.customer'
+    case 'SalesManager':
+      return 'auth.role.sales_manager'
+    case 'Finance':
+      return 'auth.role.finance'
+    case 'CEO':
+      return 'auth.role.ceo'
+    case 'Admin':
+      return 'auth.role.admin'
+    default:
+      return ''
+  }
+}
+
 export function UserFormModal({
   open,
   mode,
@@ -29,6 +49,7 @@ export function UserFormModal({
   onSubmit,
   isSubmitting,
 }: UserFormModalProps) {
+  const { t } = useTranslation()
   const availableRoleOptions = Array.from(
     new Set([...roleOptions, values.role].filter((role): role is string => Boolean(role?.trim()))),
   )
@@ -37,70 +58,74 @@ export function UserFormModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={mode === 'create' ? 'Create new user' : 'Edit user details'}
-      description="CEO user CRUD form built with fields consistent with registration."
+      title={mode === 'create' ? t('ceo.users.form.create_title') : t('ceo.users.form.edit_title')}
+      description={t('ceo.users.form.description')}
       size="lg"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : mode === 'create' ? 'Create user' : 'Save changes'}
+            {isSubmitting
+              ? t('customers.form.submitting')
+              : mode === 'create'
+                ? t('ceo.users.form.create')
+                : t('common.save_changes')}
           </Button>
         </>
       }
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Email</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('auth.email')}</span>
           <Input value={values.email} placeholder="user@example.com" onChange={(event) => onChange('email', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Company code</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.users.form.company_code')}</span>
           <Input
             value={values.company_code}
-            placeholder="e.g. oddiy"
+            placeholder={t('ceo.users.form.company_code_placeholder')}
             onChange={(event) => onChange('company_code', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Name</span>
-          <Input value={values.name} placeholder="First name" onChange={(event) => onChange('name', event.target.value)} />
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.name')}</span>
+          <Input value={values.name} placeholder={t('ceo.users.form.name_placeholder')} onChange={(event) => onChange('name', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Surname</span>
-          <Input value={values.surname} placeholder="Last name" onChange={(event) => onChange('surname', event.target.value)} />
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.surname')}</span>
+          <Input value={values.surname} placeholder={t('ceo.users.form.surname_placeholder')} onChange={(event) => onChange('surname', event.target.value)} />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Job title</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.job_title')}</span>
           <Input
             value={values.job_title ?? ''}
-            placeholder="Sales Manager"
+            placeholder={t('ceo.users.form.job_title_placeholder')}
             onChange={(event) => onChange('job_title', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">
-            Password {mode === 'edit' ? '(optional)' : ''}
+            {mode === 'edit' ? t('ceo.users.form.password_optional') : t('auth.password')}
           </span>
           <Input
             type="password"
-            placeholder="Minimum 6 characters"
+            placeholder={t('ceo.users.form.password_placeholder')}
             value={values.password}
             onChange={(event) => onChange('password', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Telegram ID</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('auth.register.telegram_id')}</span>
           <Input
             value={values.telegram_id ?? ''}
-            placeholder="@username or ID"
+            placeholder={t('auth.register.telegram_placeholder')}
             onChange={(event) => onChange('telegram_id', event.target.value)}
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Default salary</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.users.form.default_salary')}</span>
           <Input
             type="number"
             min="0"
@@ -109,11 +134,17 @@ export function UserFormModal({
           />
         </label>
         <label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">Role</span>
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.role')}</span>
           <SelectField
             value={values.role}
             onValueChange={(value) => onChange('role', value)}
-            options={availableRoleOptions.map((role) => ({ value: role, label: role }))}
+            options={availableRoleOptions.map((role) => {
+              const translationKey = getRoleTranslationKey(role)
+              return {
+                value: role,
+                label: translationKey ? t(translationKey) : role,
+              }
+            })}
             className="min-h-12 rounded-xl px-4"
           />
         </label>
@@ -126,7 +157,7 @@ export function UserFormModal({
           onChange={(event) => onChange('is_active', event.target.checked)}
           className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
         />
-        <span className="text-xs font-bold text-[var(--foreground)] dark:text-white">Active user</span>
+        <span className="text-xs font-bold text-[var(--foreground)] dark:text-white">{t('ceo.users.form.active')}</span>
       </label>
     </Modal>
   )

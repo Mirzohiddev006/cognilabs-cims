@@ -1,33 +1,34 @@
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 
-const authFlows = [
-  {
-    title: 'Login',
-    description: 'POST /auth/login form-url-encoded orqali access va refresh token olish.',
-  },
-  {
-    title: 'Register',
-    description: 'POST /auth/register bilan email, role va company code asosida yangi foydalanuvchi yaratish.',
-  },
-  {
-    title: 'Recovery',
-    description: 'Forgot password, reset password va verify email flowlari alohida sahifalarga ajratiladi.',
-  },
-]
-
 export function AuthPreviewPage() {
+  const { t } = useTranslation()
+  const authFlows = [
+    {
+      title: t('auth.login.eyebrow'),
+      description: t('ceo.auth_preview.flow.login_description'),
+    },
+    {
+      title: t('auth.register.button'),
+      description: t('ceo.auth_preview.flow.register_description'),
+    },
+    {
+      title: t('auth.recovery.eyebrow'),
+      description: t('ceo.auth_preview.flow.recovery_description'),
+    },
+  ]
+
   return (
     <div className="flex h-full flex-col justify-between gap-8">
       <div>
-        <p className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">Day 2 prep</p>
+        <p className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">{t('ceo.auth_preview.eyebrow')}</p>
         <h2 className="mt-3 max-w-lg text-2xl font-semibold text-[var(--foreground)]">
-          Auth moduli uchun route va layout tayyor.
+          {t('ceo.auth_preview.title')}
         </h2>
         <p className="mt-3 max-w-xl text-sm text-[var(--muted-strong)]">
-          Bugun router, service layer va reusable componentlar tayyorlandi. Ertaga form validation va endpoint
-          integratsiyasi shu asosda qo'shiladi.
+          {t('ceo.auth_preview.description')}
         </p>
       </div>
 
@@ -42,11 +43,11 @@ export function AuthPreviewPage() {
 
       <div className="flex flex-wrap gap-3">
         <Button asChild>
-          <Link to="/">Back to overview</Link>
+          <Link to="/">{t('ceo.auth_preview.back')}</Link>
         </Button>
         <Button asChild variant="secondary">
           <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-            Vite docs
+            {t('ceo.auth_preview.docs')}
           </a>
         </Button>
       </div>
