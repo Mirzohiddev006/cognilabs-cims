@@ -1025,10 +1025,10 @@ export function FaultsMemberDetailPage({
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card className="relative overflow-hidden rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.34),transparent_72%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.88),rgba(251,113,133,0.34),transparent_72%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.46),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.9),rgba(251,113,133,0.38),transparent_76%)]" />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--danger-text)] dark:text-rose-200/90">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/95">
                 {tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1070,10 +1070,10 @@ export function FaultsMemberDetailPage({
         </Card>
 
         <Card className="relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,#32a852,rgba(50,168,82,0.34),transparent_72%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.9),rgba(52,211,153,0.34),transparent_72%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#228446,rgba(34,132,70,0.46),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.9),rgba(52,211,153,0.38),transparent_76%)]" />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#32a852] dark:text-emerald-200/90">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/95">
                 {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1100,7 +1100,7 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-[#32a852] dark:text-emerald-400">
+                  <p className="text-base font-semibold tracking-tight text-[#228446] dark:text-emerald-400">
                     {formatAmount(item.amount)}
                   </p>
                 </div>

@@ -665,6 +665,18 @@ export function MemberMonthlyUpdateCalendarBoard({
                     {getEntryCount(selectedDay)}
                   </p>
                 </div>
+                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                  <p>{tr('Check in time', 'Kirish vaqti', 'Vremya vhoda')}</p>
+                  <p className="mt-1 font-medium text-[var(--foreground)]">
+                    {formatWorkTime(selectedDay.checkInTime)}
+                  </p>
+                </div>
+                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                  <p>{tr('Check out time', 'Chiqish vaqti', 'Vremya vykhoda')}</p>
+                  <p className="mt-1 font-medium text-[var(--foreground)]">
+                    {formatWorkTime(selectedDay.checkOutTime)}
+                  </p>
+                </div>
               </div>
 
               {shouldShowFocusContent ? (
@@ -778,20 +790,17 @@ export function MemberMonthlyUpdateCalendarBoard({
                         <path d="M10 3.5 5.5 8 10 12.5" />
                       </svg>
                     </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'min-h-11 rounded-[14px] border-emerald-500/24 bg-emerald-50 px-5 font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:border-emerald-500/24 hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-50 dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-400/18 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-50 dark:active:bg-emerald-400/10',
-                        canJumpToToday
-                          ? 'cursor-pointer'
-                          : 'cursor-default opacity-100',
+                        'inline-flex min-h-11 items-center justify-center rounded-[14px] border border-emerald-500/24 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-none dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50',
+                        canJumpToToday ? 'cursor-pointer' : 'cursor-default',
                       )}
                     >
                       {selectedMonthName} {calendar.year}
-                    </Button>
+                    </button>
                     <Button
                       variant="secondary"
                       size="sm"

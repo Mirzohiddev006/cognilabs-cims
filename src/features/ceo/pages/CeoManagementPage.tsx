@@ -129,10 +129,10 @@ function SummaryCard({
   const lt = translateCurrentLiteral
   return (
     <div className="relative overflow-hidden rounded-[22px] border border-[var(--border)] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(148,163,184,0.14),inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-blue-500/18 dark:bg-blue-500/8 dark:shadow-none">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.38),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.9),rgba(96,165,250,0.34),transparent_78%)]" />
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/88">{lt(label)}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      <p className="mt-2 text-xs font-medium text-[var(--muted-strong)] dark:text-[var(--muted-strong)]">{lt(hint)}</p>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.44),transparent_80%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.92),rgba(96,165,250,0.38),transparent_80%)]" />
+      <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--blue-text)] dark:text-blue-200/95">{lt(label)}</p>
+      <p className="mt-2 text-[2rem] font-bold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
+      <p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--muted-strong)] dark:text-white/82">{lt(hint)}</p>
     </div>
   )
 }

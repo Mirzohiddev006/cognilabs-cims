@@ -59,7 +59,8 @@ export function CompensationPolicyPanel({
   }
 
   return (
-    <Card className={className ? `overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
+    <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.42),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(191,219,254,0.9),rgba(96,165,250,0.34),transparent_76%)]" />
       <button
         type="button"
         onClick={() => setIsExpanded((current) => !current)}
@@ -68,7 +69,7 @@ export function CompensationPolicyPanel({
         className="flex w-full items-start justify-between gap-4 px-6 py-6 text-left transition hover:bg-[var(--card-hover)]"
       >
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--blue-text)]">
             {lt('Compensation policy')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -138,7 +139,7 @@ export function CompensationPolicyPanel({
             <div className="rounded-[20px] border border-[var(--success-border)] bg-emerald-50/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#32a852] dark:text-emerald-200/80">{lt('Bonus rates')}</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/90">{lt('Bonus rates')}</p>
                   <p className="mt-1 text-sm text-[var(--muted-strong)]">
                     {tr(
                       'Configured percentage rules for bonus triggers.',
