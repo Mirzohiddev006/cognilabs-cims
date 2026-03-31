@@ -31,7 +31,10 @@ export function SummaryMetricCard({
 
   return (
     <div
-      className={cn('card-base min-h-[110px] rounded-[22px] px-6 py-5', tone === 'success' ? 'bg-white dark:bg-[var(--card)]' : toneClassName[tone])}
+      className={cn(
+        'card-base min-h-[110px] rounded-[22px] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:shadow-none',
+        tone === 'success' ? 'bg-white dark:bg-[var(--card)]' : toneClassName[tone],
+      )}
       style={tone === 'success' ? { borderColor: salaryEstimateSuccessTone.border } : undefined}
     >
       <div className="flex items-start justify-between gap-4">
@@ -66,8 +69,8 @@ export function DetailStatTile({
   const toneClassName = theme === 'light'
     ? {
         default: 'border-[var(--border)] bg-white',
-        danger: 'border-rose-500/28 bg-rose-50',
-        blue: 'border-[var(--blue-border)] bg-blue-50',
+        danger: 'border-[var(--danger-border)] bg-rose-50/90',
+        blue: 'border-[var(--blue-border)] bg-[var(--blue-soft)]',
       } as const
     : theme === 'dark'
       ? {
@@ -77,8 +80,8 @@ export function DetailStatTile({
         } as const
       : {
           default: 'border-[var(--border)] bg-white dark:bg-[var(--surface-elevated)]',
-          danger: 'border-rose-500/28 bg-rose-50/70 dark:bg-rose-500/8',
-          blue: 'border-[var(--blue-border)] bg-blue-50/80 dark:bg-[var(--blue-dim)]',
+          danger: 'border-[var(--danger-border)] bg-rose-50/85 dark:bg-rose-500/8',
+          blue: 'border-[var(--blue-border)] bg-[var(--blue-soft)] dark:bg-[var(--blue-dim)]',
         } as const
 
   const valueClassName = theme === 'light'
@@ -140,7 +143,10 @@ export function DetailStatTile({
 
   return (
     <div
-      className={cn('rounded-[16px] border px-4 py-3', tone === 'success' ? '' : toneClassName[tone])}
+      className={cn(
+        'rounded-[16px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:shadow-none',
+        tone === 'success' ? '' : toneClassName[tone],
+      )}
       style={tone === 'success' ? successStyle : undefined}
     >
       <p

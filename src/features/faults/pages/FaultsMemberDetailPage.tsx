@@ -1024,10 +1024,10 @@ export function FaultsMemberDetailPage({
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="rounded-[24px] border-rose-500/18 bg-[var(--card)] p-6">
+        <Card className="rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/80">
                 {tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1041,7 +1041,7 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-rose-500/18 bg-white px-4 py-4 dark:bg-black/15">
+              <div key={item.id} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-50/78 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-rose-500/18 dark:bg-black/15 dark:shadow-none">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
@@ -1055,23 +1055,23 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-rose-600 dark:text-rose-400">
+                  <p className="text-base font-semibold tracking-tight text-[var(--danger-text)] dark:text-rose-400">
                     {formatAmount(item.amount)}
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+              <div className="rounded-[18px] border border-dashed border-[var(--danger-border)] bg-rose-50/65 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-rose-500/18 dark:bg-black/10">
                 {tr('No deduction line-items were returned for this member in the selected month.', 'Tanlangan oy uchun bu xodim bo‘yicha ayirma yozuvlari qaytmadi.', 'За выбранный месяц для этого сотрудника не вернулись записи удержаний.')}
               </div>
             )}
           </div>
         </Card>
 
-        <Card className="rounded-[24px] border-emerald-500/18 bg-[var(--card)] p-6">
+        <Card className="rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#32a852] dark:text-emerald-200/80">
                 {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1085,7 +1085,7 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-emerald-500/18 bg-white px-4 py-4 dark:bg-black/15">
+              <div key={item.id} className="rounded-[18px] border border-[var(--success-border)] bg-emerald-50/78 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-emerald-500/18 dark:bg-black/15 dark:shadow-none">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
@@ -1098,13 +1098,13 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-emerald-600 dark:text-emerald-400">
+                  <p className="text-base font-semibold tracking-tight text-[#32a852] dark:text-emerald-400">
                     {formatAmount(item.amount)}
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+              <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-emerald-50/65 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-emerald-500/18 dark:bg-black/10">
                 {lt('No bonus line-items were returned for this member in the selected month.')}
               </div>
             )}

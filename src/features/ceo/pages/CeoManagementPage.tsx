@@ -128,10 +128,10 @@ function SummaryCard({
 }) {
   const lt = translateCurrentLiteral
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/[0.03] px-5 py-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{lt(label)}</p>
-      <p className="mt-2 text-2xl font-semibold tracking-tight text-white">{value}</p>
-      <p className="mt-2 text-xs text-(--muted)">{lt(hint)}</p>
+    <div className="rounded-[22px] border border-[var(--blue-border)] bg-[var(--blue-soft)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-blue-500/18 dark:bg-blue-500/8 dark:shadow-none">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{lt(label)}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
+      <p className="mt-2 text-xs text-[var(--muted-strong)] dark:text-[var(--muted)]">{lt(hint)}</p>
     </div>
   )
 }
@@ -1043,12 +1043,12 @@ export function CeoManagementPage() {
             className={cn(
               'rounded-[20px] border px-4 py-4 text-left transition',
               activeTab === tab.key
-                ? 'border-blue-500/25 bg-blue-600/10 text-white'
-                : 'border-white/10 bg-white/[0.03] text-white/72 hover:border-white/16 hover:bg-white/[0.05]',
+                ? 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-blue-500/25 dark:bg-blue-600/10 dark:text-white dark:shadow-none'
+                : 'border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/[0.05]',
             )}
           >
             <p className="text-sm font-semibold">{lt(tab.label)}</p>
-            <p className="mt-2 text-xs leading-5 text-(--muted)">{lt(tab.description)}</p>
+            <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)] dark:text-[var(--muted)]">{lt(tab.description)}</p>
           </button>
         ))}
       </div>

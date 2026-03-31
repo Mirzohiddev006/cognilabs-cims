@@ -86,10 +86,10 @@ export function CompensationPolicyPanel({
       </div>
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        <div className="rounded-[20px] border border-rose-500/18 bg-white p-4 dark:bg-rose-950/15">
+        <div className="rounded-[20px] border border-[var(--danger-border)] bg-rose-50/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">{lt('Deduction rates')}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--danger-text)] dark:text-rose-200/80">{lt('Deduction rates')}</p>
               <p className="mt-1 text-sm text-[var(--muted-strong)]">{lt('Severity-based deduction rules.')}</p>
             </div>
             <Badge variant="outline">{policy.deductionRates.length}</Badge>
@@ -97,7 +97,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-4 space-y-3">
             {policy.deductionRates.map((rate) => (
-              <div key={rate.severity} className="rounded-[16px] border border-rose-500/18 bg-rose-50/70 px-4 py-3 dark:bg-black/18">
+              <div key={rate.severity} className="rounded-[16px] border border-[var(--danger-border)] bg-rose-50/88 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-rose-500/18 dark:bg-black/18 dark:shadow-none">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.severity)}</p>
                   <div className="flex flex-wrap items-center gap-2">
@@ -110,10 +110,10 @@ export function CompensationPolicyPanel({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-emerald-500/18 bg-white p-4 dark:bg-emerald-950/15">
+        <div className="rounded-[20px] border border-[var(--success-border)] bg-emerald-50/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">{lt('Bonus rates')}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#32a852] dark:text-emerald-200/80">{lt('Bonus rates')}</p>
               <p className="mt-1 text-sm text-[var(--muted-strong)]">
                 {tr(
                   'Configured percentage rules for bonus triggers.',
@@ -127,7 +127,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-4 space-y-3">
             {policy.bonusRates.map((rate) => (
-              <div key={rate.key} className="rounded-[16px] border border-emerald-500/18 bg-emerald-50/70 px-4 py-3 dark:bg-black/18">
+              <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-emerald-50/88 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-emerald-500/18 dark:bg-black/18 dark:shadow-none">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.label)}</p>
                   <Badge variant="success">{formatPercent(rate.percent)}</Badge>

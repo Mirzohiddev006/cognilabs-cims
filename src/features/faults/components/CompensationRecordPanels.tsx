@@ -73,10 +73,10 @@ export function MistakeIncidentSection({
   className,
 }: MistakeIncidentSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border-rose-500/18 bg-[var(--card)] p-6', className)}>
+    <Card className={cn('rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]', className)}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-500 dark:text-rose-200/70">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/80">
             {tr('Mistake incidents', 'Xato holatlari', 'Sluchai oshibok')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -88,7 +88,7 @@ export function MistakeIncidentSection({
             {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-rose-600 hover:text-rose-700 dark:text-rose-100/88 dark:hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-[var(--danger-text)] hover:text-rose-700 dark:text-rose-100/88 dark:hover:text-white">
               {tr('Add mistake', 'Xato qoshish', 'Dobavit oshibku')}
             </Button>
           ) : null}
@@ -97,7 +97,7 @@ export function MistakeIncidentSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-rose-500/18 bg-white px-4 py-4 dark:bg-black/15">
+          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-50/78 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-rose-500/18 dark:bg-black/15 dark:shadow-none">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@ export function MistakeIncidentSection({
             </div>
           </div>
         )) : (
-          <div className="rounded-[18px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+          <div className="rounded-[18px] border border-dashed border-[var(--danger-border)] bg-rose-50/65 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-rose-500/18 dark:bg-black/10">
             {tr('No mistake incidents were returned for the selected month.', 'Tanlangan oy uchun xato holatlari qaytmadi.', 'Za vybrannyi mesyats zapisi ob oshibkakh ne vernulis.')}
           </div>
         )}
@@ -160,10 +160,10 @@ export function DeliveryBonusSection({
   className,
 }: DeliveryBonusSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border-emerald-500/18 bg-[var(--card)] p-6', className)}>
+    <Card className={cn('rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]', className)}>
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-200/70">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#32a852] dark:text-emerald-200/80">
             {tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -175,7 +175,7 @@ export function DeliveryBonusSection({
             {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-emerald-600 hover:text-emerald-700 dark:text-emerald-100/88 dark:hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-[#32a852] hover:text-emerald-700 dark:text-emerald-100/88 dark:hover:text-white">
               {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
             </Button>
           ) : null}
@@ -184,7 +184,7 @@ export function DeliveryBonusSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-emerald-500/18 bg-white px-4 py-4 dark:bg-black/15">
+          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-emerald-50/78 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-emerald-500/18 dark:bg-black/15 dark:shadow-none">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -216,7 +216,7 @@ export function DeliveryBonusSection({
             </div>
           </div>
         )) : (
-          <div className="rounded-[18px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+          <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-emerald-50/65 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-emerald-500/18 dark:bg-black/10">
             {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
           </div>
         )}

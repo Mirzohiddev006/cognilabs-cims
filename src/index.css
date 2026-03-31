@@ -216,6 +216,13 @@ html {
 }
 html.light { background: var(--background); }
 
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: none !important;
+}
+
 body {
   margin: 0;
   min-width: 320px;

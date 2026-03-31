@@ -51,40 +51,40 @@ const teamLinks = [
 
 const accentClasses = {
   blue: {
-    border: 'border-blue-500/18',
+    border: 'border-[var(--blue-border)] dark:border-blue-500/18',
     glow: 'shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(59,130,246,0.08)]',
     badge: 'blue' as const,
-    iconWrap: 'border-blue-400/20 bg-blue-500/10 text-blue-200',
+    iconWrap: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200',
     line: 'from-blue-500/40 via-cyan-400/20 to-transparent',
-    label: 'text-blue-200/82',
-    button: 'border-blue-400/25 bg-blue-500/12 text-blue-50 hover:border-blue-300/35 hover:bg-blue-500/18',
+    label: 'text-[var(--blue-text)] dark:text-blue-200/90',
+    button: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] hover:border-blue-400/40 hover:bg-blue-500/14 dark:border-blue-400/25 dark:bg-blue-500/12 dark:text-blue-50 dark:hover:border-blue-300/35 dark:hover:bg-blue-500/18',
   },
   violet: {
-    border: 'border-violet-500/18',
+    border: 'border-[var(--violet-border)] dark:border-violet-500/18',
     glow: 'shadow-[inset_0_0_0_1px_rgba(139,92,246,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(139,92,246,0.08)]',
     badge: 'violet' as const,
-    iconWrap: 'border-violet-400/20 bg-violet-500/10 text-violet-100',
+    iconWrap: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-100',
     line: 'from-violet-500/40 via-fuchsia-400/20 to-transparent',
-    label: 'text-violet-200/82',
-    button: 'border-violet-400/25 bg-violet-500/12 text-violet-50 hover:border-violet-300/35 hover:bg-violet-500/18',
+    label: 'text-[var(--violet-text)] dark:text-violet-200/90',
+    button: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] hover:border-violet-400/40 hover:bg-violet-500/14 dark:border-violet-400/25 dark:bg-violet-500/12 dark:text-violet-50 dark:hover:border-violet-300/35 dark:hover:bg-violet-500/18',
   },
   amber: {
-    border: 'border-amber-500/18',
+    border: 'border-[var(--warning-border)] dark:border-amber-500/18',
     glow: 'shadow-[inset_0_0_0_1px_rgba(245,158,11,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(245,158,11,0.08)]',
     badge: 'warning' as const,
-    iconWrap: 'border-amber-400/20 bg-amber-500/10 text-amber-100',
+    iconWrap: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100',
     line: 'from-amber-500/40 via-orange-400/20 to-transparent',
-    label: 'text-amber-200/82',
-    button: 'border-amber-400/25 bg-amber-500/12 text-amber-50 hover:border-amber-300/35 hover:bg-amber-500/18',
+    label: 'text-[var(--warning-text)] dark:text-amber-200/90',
+    button: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] hover:border-amber-400/40 hover:bg-amber-500/14 dark:border-amber-400/25 dark:bg-amber-500/12 dark:text-amber-50 dark:hover:border-amber-300/35 dark:hover:bg-amber-500/18',
   },
   emerald: {
-    border: 'border-emerald-500/18',
+    border: 'border-[var(--success-border)] dark:border-emerald-500/18',
     glow: 'shadow-[inset_0_0_0_1px_rgba(34,197,94,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(34,197,94,0.08)]',
     badge: 'success' as const,
-    iconWrap: 'border-emerald-400/20 bg-emerald-500/10 text-emerald-100',
+    iconWrap: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100',
     line: 'from-emerald-500/40 via-teal-400/20 to-transparent',
-    label: 'text-emerald-200/82',
-    button: 'border-emerald-400/25 bg-emerald-500/12 text-emerald-50 hover:border-emerald-300/35 hover:bg-emerald-500/18',
+    label: 'text-[#32a852] dark:text-emerald-200/90',
+    button: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] hover:border-emerald-400/40 hover:bg-emerald-500/14 dark:border-emerald-400/25 dark:bg-emerald-500/12 dark:text-emerald-50 dark:hover:border-emerald-300/35 dark:hover:bg-emerald-500/18',
   },
 } as const
 
@@ -138,7 +138,7 @@ export function CimsTeamPage() {
                   </div>
                   <div>
                     <p className={cn('text-[10px] font-semibold uppercase tracking-[0.24em]', accent.label)}>{eyebrow}</p>
-                    <h3 className="mt-1 text-xl font-semibold tracking-tight text-white">{title}</h3>
+                    <h3 className="mt-1 text-xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{title}</h3>
                   </div>
                 </div>
 
@@ -146,8 +146,8 @@ export function CimsTeamPage() {
               </div>
 
               <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/42">{t('cims.handle')}</p>
-                <p className="mt-2 break-all font-mono text-[15px] text-white/92">{link.handle}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)] dark:text-white/48">{t('cims.handle')}</p>
+                <p className="mt-2 break-all font-mono text-[15px] text-[var(--foreground)] dark:text-white/92">{link.handle}</p>
                 <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">{note}</p>
               </div>
 
@@ -168,7 +168,7 @@ export function CimsTeamPage() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="justify-center rounded-[16px] border border-white/10 bg-white/[0.03] text-white/78 hover:border-white/14 hover:bg-white/[0.06] hover:text-white"
+                  className="justify-center rounded-[16px] border border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/78 dark:hover:border-white/14 dark:hover:bg-white/[0.06] dark:hover:text-white"
                   leftIcon={<Copy className="h-4 w-4" />}
                   onClick={() => void handleCopyLink(link.href, title)}
                 >

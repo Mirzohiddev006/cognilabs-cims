@@ -517,6 +517,7 @@ export function MemberMonthlyUpdateCalendarBoard({
   const completionSummaryText = elapsedWorkingDays > 0
     ? `${counts.submitted} ${tr('of', 'dan', 'iz')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'zavershennykh rabochikh dney obnovleno.')}`
     : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Zavershennykh rabochikh dney poka net.')
+  const canJumpToToday = Boolean(onJumpToToday)
   const selectedDayDrawer = isFocusPanelOpen && selectedDay && typeof document !== 'undefined'
     ? createPortal(
       <div className="fixed inset-0 z-[95]">
@@ -745,8 +746,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                       variant="secondary"
                       size="sm"
                       onClick={() => onJumpToToday?.()}
-                      disabled={!onJumpToToday}
-                      className="min-h-11 rounded-[14px] border-emerald-500/20 bg-emerald-50 px-5 text-emerald-700 hover:border-emerald-500/30 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
+                      aria-disabled={!canJumpToToday}
+                      className={cn(
+                        'min-h-11 rounded-[14px] border-emerald-500/24 bg-emerald-50 px-5 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50',
+                        canJumpToToday
+                          ? 'hover:border-emerald-500/34 hover:bg-emerald-100 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14'
+                          : 'cursor-default opacity-100',
+                      )}
                     >
                       {selectedMonthName} {calendar.year}
                     </Button>
