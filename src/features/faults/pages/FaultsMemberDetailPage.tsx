@@ -996,7 +996,7 @@ export function FaultsMemberDetailPage({
                 onJumpToToday={handleCalendarTodayJump}
               />
             ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-500/30 bg-amber-500/8 px-4 py-5 text-sm text-amber-100/80">
+              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80 dark:shadow-none">
                 {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}
@@ -1015,7 +1015,7 @@ export function FaultsMemberDetailPage({
                 onJumpToToday={handleCalendarTodayJump}
               />
             ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-500/30 bg-amber-500/8 px-4 py-5 text-sm text-amber-100/80">
+              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80 dark:shadow-none">
                 {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}

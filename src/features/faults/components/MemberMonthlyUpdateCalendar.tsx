@@ -795,7 +795,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'inline-flex min-h-11 items-center justify-center rounded-[14px] border border-emerald-500/24 bg-emerald-50 px-5 text-sm font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] transition-none dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50',
+                        'inline-flex min-h-11 min-w-[128px] items-center justify-center rounded-[14px] border border-emerald-300 bg-[linear-gradient(180deg,#ecfdf5,#dcfce7)] px-5 text-sm font-bold tracking-[0.01em] text-emerald-950 shadow-[0_6px_18px_rgba(34,197,94,0.12),inset_0_1px_0_rgba(255,255,255,0.86)] transition-none dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:shadow-none',
                         canJumpToToday ? 'cursor-pointer' : 'cursor-default',
                       )}
                     >

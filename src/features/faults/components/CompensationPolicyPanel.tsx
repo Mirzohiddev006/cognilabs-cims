@@ -112,11 +112,12 @@ export function CompensationPolicyPanel({
           </div>
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
-            <div className="rounded-[20px] border border-[var(--danger-border)] bg-rose-50/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none">
+            <div className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.88),rgba(251,113,133,0.32),transparent_74%)]" />
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--danger-text)] dark:text-rose-200/80">{lt('Deduction rates')}</p>
-                  <p className="mt-1 text-sm text-[var(--muted-strong)]">{lt('Severity-based deduction rules.')}</p>
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/95">{lt('Deduction rates')}</p>
+                  <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]">{lt('Severity-based deduction rules.')}</p>
                 </div>
                 <Badge variant="outline">{policy.deductionRates.length}</Badge>
               </div>
@@ -136,11 +137,12 @@ export function CompensationPolicyPanel({
               </div>
             </div>
 
-            <div className="rounded-[20px] border border-[var(--success-border)] bg-emerald-50/35 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none">
+            <div className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-emerald-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#228446,rgba(34,132,70,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.88),rgba(52,211,153,0.32),transparent_74%)]" />
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/90">{lt('Bonus rates')}</p>
-                  <p className="mt-1 text-sm text-[var(--muted-strong)]">
+                  <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/95">{lt('Bonus rates')}</p>
+                  <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]">
                     {tr(
                       'Configured percentage rules for bonus triggers.',
                       'Bonus ishga tushishi uchun foiz qoidalari sozlangan.',

@@ -414,15 +414,15 @@ export function ProjectsListPage() {
                   type="button"
                   onClick={() => selectMember(null)}
                   className={cn(
-                    'flex min-h-20 items-center justify-between gap-3 rounded-[22px] border px-4 py-4 text-left transition-all duration-150',
+                    'flex min-h-[84px] items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-[0_8px_22px_rgba(148,163,184,0.10)] transition-all duration-150',
                     selectedMemberId === null
-                      ? 'border-blue-400/35 bg-blue-600/10 text-[var(--foreground)] shadow-[0_12px_30px_rgba(37,99,235,0.14)]'
-                      : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                      ? 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
+                      : 'border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface)]',
                   )}
                 >
                   <div>
-                    <p className="text-sm font-semibold">{lt('All members')}</p>
-                    <p className="mt-1 text-[11px] text-[var(--muted)]">{lt('Show every project')}</p>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{lt('All members')}</p>
+                    <p className="mt-1 text-[12px] font-medium text-[var(--muted-strong)]">{lt('Show every project')}</p>
                   </div>
                   <Badge variant={selectedMemberId === null ? 'blue' : 'secondary'}>
                     {total}
@@ -439,26 +439,28 @@ export function ProjectsListPage() {
                       type="button"
                       onClick={() => selectMember(member.id)}
                       className={cn(
-                        'flex min-h-20 items-center gap-3 rounded-[22px] border px-4 py-4 text-left transition-all duration-150',
+                        'flex min-h-[84px] items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-[0_8px_22px_rgba(148,163,184,0.10)] transition-all duration-150',
                         isSelected
-                          ? 'border-blue-400/35 bg-blue-600/10 text-[var(--foreground)] shadow-[0_12px_30px_rgba(37,99,235,0.14)]'
-                          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                          ? 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
+                          : 'border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface)]',
                       )}
                     >
-                      <Avatar
-                        name={member.name}
-                        surname={member.surname}
-                        imageUrl={member.profile_image}
-                        size="md"
-                      />
+                      <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                        <Avatar
+                          name={member.name}
+                          surname={member.surname}
+                          imageUrl={member.profile_image}
+                          size="md"
+                        />
 
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                          {member.name} {member.surname}
-                        </p>
-                        <p className="truncate text-[11px] text-[var(--muted)]">
-                          {member.job_title?.trim() || member.email}
-                        </p>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                            {member.name} {member.surname}
+                          </p>
+                          <p className="truncate text-[12px] font-medium text-[var(--muted-strong)]">
+                            {member.job_title?.trim() || member.email}
+                          </p>
+                        </div>
                       </div>
 
                       <Badge variant={isSelected ? 'blue' : 'secondary'}>

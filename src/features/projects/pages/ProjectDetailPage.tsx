@@ -734,8 +734,8 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-2 text-sm font-medium text-[var(--blue-text)] shadow-[0_8px_24px_rgba(37,99,235,0.12)] transition dark:border-blue-500/40 dark:bg-blue-500/12 dark:text-blue-100 dark:shadow-[0_8px_24px_rgba(37,99,235,0.16)]'
-                              : 'rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]'
+                              ? 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_10px_24px_rgba(37,99,235,0.14)] transition dark:border-blue-500/40 dark:bg-blue-500/12 dark:text-blue-100 dark:shadow-[0_8px_24px_rgba(37,99,235,0.16)]'
+                              : 'rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface-elevated)]'
                           }
                         >
                           {board.name}
@@ -761,8 +761,8 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-2 text-sm font-medium text-[var(--blue-text)] transition dark:border-white/20 dark:bg-white/8 dark:text-[var(--foreground)]'
-                              : 'rounded-full border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:border-[var(--border-hover)] hover:text-[var(--foreground)]'
+                              ? 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 transition dark:border-white/20 dark:bg-white/8 dark:text-[var(--foreground)]'
+                              : 'rounded-full border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:text-[var(--foreground)]'
                           }
                         >
                           {board.name}

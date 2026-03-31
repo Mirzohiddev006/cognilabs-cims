@@ -1,3 +1,4 @@
+import { useTheme } from '../../../app/hooks/useTheme'
 import { cn } from '../../../shared/lib/cn'
 import { translateCurrent } from '../../../shared/i18n/translations'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
@@ -22,6 +23,8 @@ const sizeClasses: Record<AvatarSize, string> = {
 }
 
 export function Avatar({ name, surname, imageUrl, size = 'md', className, title }: AvatarProps) {
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
   const displayName = [name, surname]
     .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
     .join(' ') || translateCurrent('projects.unknown_user', 'Unknown user')
@@ -35,7 +38,14 @@ export function Avatar({ name, surname, imageUrl, size = 'md', className, title 
         src={resolvedImageUrl}
         alt={title ?? displayName}
         title={title ?? displayName}
-        className={cn('rounded-full object-cover', sizeClasses[size], className)}
+        className={cn(
+          'rounded-full object-cover',
+          sizeClasses[size],
+          isLight
+            ? 'border border-white shadow-[0_8px_18px_rgba(15,23,42,0.10),0_0_0_1px_rgba(203,213,225,0.95)]'
+            : 'border border-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.08)]',
+          className,
+        )}
       />
     )
   }
@@ -49,9 +59,15 @@ export function Avatar({ name, surname, imageUrl, size = 'md', className, title 
         className,
       )}
       style={{
-        background: `hsl(${hue}, 55%, 20%)`,
-        color: `hsl(${hue}, 75%, 72%)`,
-        boxShadow: `0 0 0 2px hsl(${hue}, 40%, 14%)`,
+        background: isLight
+          ? `linear-gradient(180deg, hsl(${hue}, 82%, 93%), hsl(${hue}, 72%, 87%))`
+          : `hsl(${hue}, 55%, 20%)`,
+        color: isLight
+          ? `hsl(${hue}, 68%, 28%)`
+          : `hsl(${hue}, 75%, 72%)`,
+        boxShadow: isLight
+          ? `0 8px 18px rgba(15,23,42,0.08), 0 0 0 1px hsl(${hue}, 42%, 74%)`
+          : `0 0 0 2px hsl(${hue}, 40%, 14%)`,
       }}
       aria-label={title ?? displayName}
     >
