@@ -73,10 +73,11 @@ export function MistakeIncidentSection({
   className,
 }: MistakeIncidentSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]', className)}>
+    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]', className)}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.34),transparent_72%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.88),rgba(251,113,133,0.34),transparent_72%)]" />
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/80">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--danger-text)] dark:text-rose-200/90">
             {tr('Mistake incidents', 'Xato holatlari', 'Sluchai oshibok')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -160,10 +161,11 @@ export function DeliveryBonusSection({
   className,
 }: DeliveryBonusSectionProps) {
   return (
-    <Card className={cn('rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]', className)}>
+    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]', className)}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,#32a852,rgba(50,168,82,0.34),transparent_72%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.9),rgba(52,211,153,0.34),transparent_72%)]" />
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#32a852] dark:text-emerald-200/80">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#32a852] dark:text-emerald-200/90">
             {tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">

@@ -31,7 +31,7 @@ export const literalPhrases: LiteralPhrase[] = [
   { en: 'role', uz: 'rol', ru: 'роль' },
   { en: 'Roles', uz: 'Rollar', ru: 'Pоли' },
   { en: 'status', uz: 'holat', ru: 'статус' },
-  { en: 'statuses', uz: 'holatlar', ru: 'статусы' },
+  { en: 'Statuses', uz: 'Holatlar', ru: 'Cтатусы' },
   { en: 'page', uz: 'sahifa', ru: 'страница' },
   { en: 'Pages', uz: 'Sahifalar', ru: 'Cтраницы' },
   { en: 'image', uz: 'rasm', ru: 'изображение' },

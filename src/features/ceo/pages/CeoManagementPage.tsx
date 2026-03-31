@@ -132,7 +132,7 @@ function SummaryCard({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.38),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.9),rgba(96,165,250,0.34),transparent_78%)]" />
       <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/88">{lt(label)}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      <p className="mt-2 text-xs text-[var(--muted)] dark:text-[var(--muted)]">{lt(hint)}</p>
+      <p className="mt-2 text-xs font-medium text-[var(--muted-strong)] dark:text-[var(--muted-strong)]">{lt(hint)}</p>
     </div>
   )
 }
@@ -1049,7 +1049,7 @@ export function CeoManagementPage() {
             )}
           >
             <p className="text-sm font-semibold">{lt(tab.label)}</p>
-            <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)] dark:text-[var(--muted)]">{lt(tab.description)}</p>
+            <p className="mt-2 text-xs leading-5 font-medium text-[var(--muted-strong)] dark:text-[var(--muted-strong)]">{lt(tab.description)}</p>
           </button>
         ))}
       </div>

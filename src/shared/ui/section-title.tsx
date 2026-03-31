@@ -34,14 +34,14 @@ export function SectionTitle({
       <h2
         className={cn(
           'ui-section-title text-lg font-semibold leading-snug tracking-tight',
-          gradient ? 'text-gradient' : 'text-white',
+          gradient ? 'text-gradient' : 'text-[var(--foreground)]',
         )}
       >
         {localizedTitle}
       </h2>
 
       {localizedDescription ? (
-        <p className="max-w-2xl text-[12px] leading-5 text-[var(--muted)]">
+        <p className="max-w-2xl text-[12px] leading-5 text-[var(--muted-strong)]">
           {localizedDescription}
         </p>
       ) : null}
