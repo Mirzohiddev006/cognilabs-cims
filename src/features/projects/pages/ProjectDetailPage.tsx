@@ -345,13 +345,6 @@ export function ProjectDetailPage() {
 
         <Card variant="glass" noPadding className="overflow-hidden rounded-[28px]">
           <div className="relative overflow-hidden">
-            {projectImage ? (
-              <div className="relative h-40 w-full overflow-hidden">
-                <img src={projectImage} alt={project.project_name} className="h-full w-full object-cover opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--surface-elevated)]" />
-              </div>
-            ) : null}
-
             <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
             <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/8 blur-3xl" />
 
