@@ -496,8 +496,8 @@ export function CeoWorkdayOverridesPage() {
     <section className="space-y-6 page-enter">
       <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_70%)]" />
-          <div className="pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-amber-400/8 blur-3xl" />
+          <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_70%)]" />
+          <div className="page-header-decor pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-amber-400/8 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

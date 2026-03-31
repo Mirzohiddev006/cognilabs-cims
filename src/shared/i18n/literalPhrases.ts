@@ -50,7 +50,7 @@ export const literalPhrases: LiteralPhrase[] = [
   { en: 'salary detail', uz: 'maosh detali', ru: 'детали зарплаты' },
   { en: 'update', uz: 'yangilanish', ru: 'обновление' },
   { en: 'updates', uz: 'yangilanishlar', ru: 'обновления' },
-  { en: 'team monthly updates', uz: 'jamoa oylik yangilanishlari', ru: 'ежемесячные обновления команды' },
+  { en: 'team monthly updates', uz: 'Jamoa oylik yangilanishlari', ru: 'ежемесячные обновления команды' },
   { en: 'workday override', uz: 'ish kuni override', ru: 'правило рабочего дня' },
   { en: 'workday overrides', uz: 'ish kuni overridelari', ru: 'правила рабочего дня' },
   { en: 'holiday', uz: 'bayram kuni', ru: 'праздничный день' },

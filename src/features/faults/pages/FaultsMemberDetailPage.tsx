@@ -743,7 +743,7 @@ export function FaultsMemberDetailPage({
 
       <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--blue-border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_38%),radial-gradient(circle_at_right,rgba(34,211,238,0.12),transparent_26%)]" />
+          <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_38%),radial-gradient(circle_at_right,rgba(34,211,238,0.12),transparent_26%)]" />
 
           <div className="relative z-10 flex flex-col gap-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">

@@ -180,6 +180,24 @@ function isCeoUser(user: CeoUserRecord) {
   return normalizeUserRole(String(user.role ?? '')) === 'CEO'
 }
 
+function getRoleTextClass(role?: string | null) {
+  switch (normalizeUserRole(role)) {
+    case 'CEO':
+      return 'text-[var(--violet-text)]'
+    case 'Finance':
+      return 'text-[var(--success-text)]'
+    case 'SalesManager':
+      return 'text-[var(--warning-text)]'
+    case 'Admin':
+      return 'text-[var(--danger-text)]'
+    case 'Customer':
+      return 'text-sky-500'
+    case 'Member':
+    default:
+      return 'text-[var(--blue-text)]'
+  }
+}
+
 function renderJobTitleTag(jobTitle: string, role?: string | null) {
   const isCeo = normalizeUserRole(String(role ?? '')) === 'CEO'
 
@@ -946,7 +964,7 @@ export function CeoUsersPage() {
                 render: (row) => (
                   <span
                     data-keep-color="true"
-                    className={cn('text-xs font-semibold', isCeoUser(row) ? 'text-violet-400' : 'text-blue-400')}
+                    className={cn('text-xs font-semibold', getRoleTextClass(row.role))}
                   >
                     {row.role}
                   </span>

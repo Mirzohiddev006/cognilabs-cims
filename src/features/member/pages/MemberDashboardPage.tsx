@@ -382,7 +382,7 @@ export function MemberDashboardPage() {
     <section className="space-y-6 page-enter">
       <Card variant="glass" noPadding className="overflow-hidden rounded-[30px] border-white/10">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(16,185,129,0.12),transparent_24%)]" />
+          <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(16,185,129,0.12),transparent_24%)]" />
 
           <div className="relative z-10 flex flex-col gap-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">

@@ -278,7 +278,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
       </aside>
 
       <div className="relative flex min-h-[78vh] min-w-0 flex-col overflow-hidden rounded-[34px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] shadow-[var(--shadow-xl)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
+        <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
 
         <div className="relative flex items-center justify-between gap-4 border-b border-[var(--border)] px-6 py-5 lg:px-8">
           <div>

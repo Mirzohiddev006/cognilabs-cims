@@ -1265,6 +1265,7 @@ html.light .page-header-card {
   background: linear-gradient(180deg, rgba(252,253,255,0.98), rgba(247,250,253,0.98));
   box-shadow: 0 10px 30px rgba(15,23,42,0.05), 0 2px 8px rgba(15,23,42,0.04);
 }
+html.light .page-header-decor { display: none; }
 .page-header-title { color: #ffffff; }
 html.light .page-header-title { color: #0F172A; font-weight: 700; }
 .page-header-label { color: rgba(255,255,255,0.55); }
