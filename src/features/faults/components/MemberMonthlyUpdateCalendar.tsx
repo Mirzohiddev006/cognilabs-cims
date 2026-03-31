@@ -754,11 +754,21 @@ export function MemberMonthlyUpdateCalendarBoard({
             <div className="cal-inner overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-3.5 sm:p-5">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(290px,330px)] lg:items-center">
                 <div className="min-w-0 max-w-2xl">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
+                  <p
+                    className={cn(
+                      'text-[11px] font-extrabold uppercase tracking-[0.3em]',
+                      isLight ? 'text-emerald-700' : 'text-emerald-300/72',
+                    )}
+                  >
                     {lt('Calendar System')}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <h4 className="text-[1.45rem] font-semibold tracking-tight text-white sm:text-[1.65rem]">
+                    <h4
+                      className={cn(
+                        'text-[1.45rem] font-semibold tracking-tight sm:text-[1.65rem]',
+                        isLight ? 'text-[var(--foreground)]' : 'text-white',
+                      )}
+                    >
                       {selectedMonthName} {calendar.year}
                     </h4>
                     <Badge
@@ -778,7 +788,14 @@ export function MemberMonthlyUpdateCalendarBoard({
                 </div>
 
                 <div className="flex justify-center lg:justify-self-center">
-                  <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-[var(--border)] bg-white p-1.5 shadow-[0_10px_24px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                  <div
+                    className={cn(
+                      'grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border p-1.5',
+                      isLight
+                        ? 'border-emerald-200 bg-white shadow-[0_10px_24px_rgba(148,163,184,0.14)]'
+                        : 'border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+                    )}
+                  >
                     <Button
                       variant="secondary"
                       size="sm"
@@ -795,9 +812,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'inline-flex min-h-11 min-w-[128px] items-center justify-center rounded-[14px] border border-emerald-300 bg-[linear-gradient(180deg,#ecfdf5,#dcfce7)] px-5 text-sm font-bold tracking-[0.01em] text-emerald-950 shadow-[0_6px_18px_rgba(34,197,94,0.12),inset_0_1px_0_rgba(255,255,255,0.86)] transition-none dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:shadow-none',
+                        'inline-flex min-h-11 min-w-[144px] items-center justify-center rounded-[14px] border px-5 text-sm font-bold tracking-[0.01em] transition-none',
+                        isLight
+                          ? 'border-emerald-300 bg-[linear-gradient(180deg,#f0fdf4,#dcfce7)] text-emerald-950 shadow-[0_8px_22px_rgba(34,197,94,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]'
+                          : 'border-emerald-400/18 bg-emerald-400/10 text-emerald-50 shadow-none',
                         canJumpToToday ? 'cursor-pointer' : 'cursor-default',
                       )}
+                      style={isLight ? { color: '#14532d' } : undefined}
                     >
                       {selectedMonthName} {calendar.year}
                     </button>

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTheme } from '../../../app/hooks/useTheme'
 import { Badge } from '../../../shared/ui/badge'
 import { Card } from '../../../shared/ui/card'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
@@ -20,6 +21,8 @@ export function CompensationPolicyPanel({
   className,
 }: CompensationPolicyPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -57,6 +60,36 @@ export function CompensationPolicyPanel({
       </Card>
     )
   }
+
+  const deductionPanelStyle = isLight
+    ? {
+        borderColor: '#f8b4b4',
+        background: 'linear-gradient(180deg, #fff4f4 0%, #ffe8e8 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.86), 0 10px 22px rgba(239,68,68,0.06)',
+      }
+    : undefined
+
+  const deductionPanelLineStyle = isLight
+    ? { background: 'linear-gradient(90deg, #dc2626 0%, rgba(220,38,38,0.42) 38%, transparent 74%)' }
+    : undefined
+
+  const deductionTitleStyle = isLight ? { color: '#b42318' } : undefined
+  const deductionHintStyle = isLight ? { color: '#7f1d1d' } : undefined
+
+  const bonusPanelStyle = isLight
+    ? {
+        borderColor: '#9ae6b4',
+        background: 'linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.86), 0 10px 22px rgba(34,168,82,0.06)',
+      }
+    : undefined
+
+  const bonusPanelLineStyle = isLight
+    ? { background: 'linear-gradient(90deg, #228446 0%, rgba(34,132,70,0.42) 38%, transparent 74%)' }
+    : undefined
+
+  const bonusTitleStyle = isLight ? { color: '#166534' } : undefined
+  const bonusHintStyle = isLight ? { color: '#166534' } : undefined
 
   return (
     <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
@@ -112,12 +145,28 @@ export function CompensationPolicyPanel({
           </div>
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
-            <div className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.88),rgba(251,113,133,0.32),transparent_74%)]" />
+            <div
+              className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none"
+              style={deductionPanelStyle}
+            >
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--danger-text),rgba(185,28,28,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.88),rgba(251,113,133,0.32),transparent_74%)]"
+                style={deductionPanelLineStyle}
+              />
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/95">{lt('Deduction rates')}</p>
-                  <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]">{lt('Severity-based deduction rules.')}</p>
+                  <p
+                    className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--danger-text)] dark:text-rose-200/95"
+                    style={deductionTitleStyle}
+                  >
+                    {lt('Deduction rates')}
+                  </p>
+                  <p
+                    className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]"
+                    style={deductionHintStyle}
+                  >
+                    {lt('Severity-based deduction rules.')}
+                  </p>
                 </div>
                 <Badge variant="outline">{policy.deductionRates.length}</Badge>
               </div>
@@ -137,12 +186,26 @@ export function CompensationPolicyPanel({
               </div>
             </div>
 
-            <div className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-emerald-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#228446,rgba(34,132,70,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.88),rgba(52,211,153,0.32),transparent_74%)]" />
+            <div
+              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-emerald-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none"
+              style={bonusPanelStyle}
+            >
+              <div
+                className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#228446,rgba(34,132,70,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.88),rgba(52,211,153,0.32),transparent_74%)]"
+                style={bonusPanelLineStyle}
+              />
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/95">{lt('Bonus rates')}</p>
-                  <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]">
+                  <p
+                    className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/95"
+                    style={bonusTitleStyle}
+                  >
+                    {lt('Bonus rates')}
+                  </p>
+                  <p
+                    className="mt-1 text-[13px] font-semibold leading-5 text-slate-700 dark:text-[var(--muted-strong)]"
+                    style={bonusHintStyle}
+                  >
                     {tr(
                       'Configured percentage rules for bonus triggers.',
                       'Bonus ishga tushishi uchun foiz qoidalari sozlangan.',
