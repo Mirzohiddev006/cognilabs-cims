@@ -4,7 +4,7 @@ import type {
   SalesDashboardChartsResponse,
   SalesDashboardTrendPoint,
 } from '../../../shared/api/types'
-import { getIntlLocale } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatCompactNumber } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
@@ -77,14 +77,14 @@ function formatPercent(value?: number | null) {
 
 function formatRangeLabel(payload?: SalesDashboardChartsResponse) {
   if (!payload) {
-    return lt('Period unavailable')
+    return translateCurrentLiteral('Period unavailable')
   }
 
   const start = new Date(payload.period.start_date)
   const end = new Date(payload.period.end_date)
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    return `${payload.period.days} ${lt('days')}`
+    return `${payload.period.days} ${translateCurrentLiteral('days')}`
   }
 
   const formatter = new Intl.DateTimeFormat(getIntlLocale(), { month: 'short', day: 'numeric' })
@@ -340,7 +340,7 @@ export function CrmDashboardCharts({
           <div className="min-w-[180px]">
             <SelectField
               value={customerType}
-              options={customerTypeOptions.map((option) => ({ ...option, label: lt(option.label) }))}
+              options={customerTypeOptions}
               onValueChange={onCustomerTypeChange}
             />
           </div>
