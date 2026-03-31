@@ -66,7 +66,7 @@ export function Dialog({
         type="button"
         aria-label={translateCurrentLiteral('Close dialog')}
         className={cn(
-          'absolute inset-0 backdrop-blur-md',
+          'dialog-backdrop absolute inset-0 backdrop-blur-md',
           tone === 'danger'
             ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.16),transparent_34%),rgba(0,0,0,0.76)]'
             : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),rgba(0,0,0,0.72)]',
@@ -82,7 +82,7 @@ export function Dialog({
       >
         <div
           className={cn(
-            'pointer-events-none absolute inset-x-0 top-0 h-28',
+            'dialog-header-decor pointer-events-none absolute inset-x-0 top-0 h-28',
             tone === 'danger'
               ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.18),transparent_72%)]'
               : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_72%)]',
@@ -97,7 +97,7 @@ export function Dialog({
               </div>
             ) : null}
             <p className={cn(
-              'ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.24em]',
+              'dialog-eyebrow ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.24em]',
               tone === 'danger' ? 'text-red-300/80' : 'text-blue-300/70',
             )}>
               {translateCurrentLiteral(eyebrow ?? 'Workspace dialog')}

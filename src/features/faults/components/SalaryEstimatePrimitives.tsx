@@ -68,16 +68,16 @@ export function DetailStatTile({
         } as const
       : {
           default: 'border-[var(--border)] bg-white dark:bg-[var(--surface-elevated)]',
-          danger: 'border-rose-500/28 bg-white dark:bg-rose-500/8',
-          success: 'border-emerald-500/28 bg-white dark:bg-emerald-500/8',
-          blue: 'border-[var(--blue-border)] bg-white dark:bg-[var(--blue-dim)]',
+          danger: 'border-rose-500/28 bg-rose-50/70 dark:bg-rose-500/8',
+          success: 'border-emerald-500/28 bg-emerald-50/80 dark:bg-emerald-500/8',
+          blue: 'border-[var(--blue-border)] bg-blue-50/80 dark:bg-[var(--blue-dim)]',
         } as const
 
   const valueClassName = theme === 'light'
     ? {
         default: 'text-[var(--foreground)]',
-        danger: 'text-rose-600',
-        success: 'text-emerald-600',
+        danger: 'text-[var(--danger-text)]',
+        success: 'text-[var(--success-text)]',
         blue: 'text-[var(--blue-text)]',
       } as const
     : theme === 'dark'
@@ -89,14 +89,35 @@ export function DetailStatTile({
         } as const
       : {
           default: 'text-[var(--foreground)]',
-          danger: 'text-rose-600 dark:text-rose-400',
-          success: 'text-emerald-600 dark:text-emerald-400',
+          danger: 'text-[var(--danger-text)] dark:text-rose-400',
+          success: 'text-[var(--success-text)] dark:text-emerald-400',
+          blue: 'text-[var(--blue-text)]',
+        } as const
+
+  const labelClassName = theme === 'light'
+    ? {
+        default: 'text-[var(--muted-strong)]',
+        danger: 'text-[var(--danger-text)]',
+        success: 'text-[var(--success-text)]',
+        blue: 'text-[var(--blue-text)]',
+      } as const
+    : theme === 'dark'
+      ? {
+          default: 'text-[var(--muted-strong)]',
+          danger: 'text-[var(--danger-text)]',
+          success: 'text-[var(--success-text)]',
+          blue: 'text-[var(--blue-text)]',
+        } as const
+      : {
+          default: 'text-[var(--muted-strong)]',
+          danger: 'text-[var(--danger-text)] dark:text-rose-400',
+          success: 'text-[var(--success-text)] dark:text-emerald-400',
           blue: 'text-[var(--blue-text)]',
         } as const
 
   return (
     <div className={cn('rounded-[16px] border px-4 py-3', toneClassName[tone])}>
-      <p className="text-xs text-[var(--muted-strong)]">{label}</p>
+      <p className={cn('text-xs font-semibold', labelClassName[tone])}>{label}</p>
       <p className={cn('mt-2 text-[1.05rem] font-semibold tracking-tight', valueClassName[tone])}>
         {value}
       </p>

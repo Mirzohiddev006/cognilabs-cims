@@ -68,6 +68,12 @@ function clampNumber(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
 
+const successPillClassName =
+  'inline-flex items-center rounded-full border border-[var(--success-border)] bg-[#EAFBF2] px-2.5 py-1 font-semibold text-[var(--success-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
+
+const neutralPillClassName =
+  'inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 font-semibold text-[var(--foreground)]'
+
 function parsePeriodNumber(value: string | null, fallback: number, min: number, max: number) {
   if (!value?.trim()) {
     return fallback
@@ -760,7 +766,7 @@ export function FaultsPage() {
               align: 'right',
               minWidth: '130px',
               render: (row) => (
-                <span className="inline-flex items-center rounded-full border border-emerald-500/38 bg-emerald-100 px-2.5 py-1 font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none">
+                <span className={successPillClassName}>
                   {formatAmount(row.bonusAmount)}
                 </span>
               ),
@@ -775,8 +781,8 @@ export function FaultsPage() {
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 font-semibold',
                     row.totalBonusPercent > 0
-                      ? 'border border-emerald-500/38 bg-emerald-100 text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
-                      : 'border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]',
+                      ? successPillClassName
+                      : neutralPillClassName,
                   )}
                 >
                   {formatPercent(row.totalBonusPercent)}
@@ -793,8 +799,8 @@ export function FaultsPage() {
                   className={cn(
                     'inline-flex items-center rounded-full px-2.5 py-1 font-semibold',
                     row.qualifiesProductivityBonus
-                      ? 'border border-emerald-500/38 bg-emerald-100 text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
-                      : 'border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]',
+                      ? successPillClassName
+                      : neutralPillClassName,
                   )}
                 >
                   {Number.isFinite(row.productivityPercentage)
@@ -808,7 +814,11 @@ export function FaultsPage() {
               header: 'Final salary',
               align: 'right',
               minWidth: '130px',
-              render: (row) => formatAmount(row.finalSalary),
+              render: (row) => (
+                <span className={cn('font-semibold', row.finalSalary > row.afterPenalty ? 'text-[var(--success-text)]' : 'text-[var(--foreground)]')}>
+                  {formatAmount(row.finalSalary)}
+                </span>
+              ),
             },
             {
               key: 'actions',

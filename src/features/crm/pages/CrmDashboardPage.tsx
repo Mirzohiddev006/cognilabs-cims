@@ -15,7 +15,7 @@ import {
   getCustomerDisplayPlatform,
   getCustomerPlatforms,
 } from '../../../shared/lib/customer-display'
-import { formatCompactNumber } from '../../../shared/lib/format'
+import { formatCompactNumber, formatNumericDateTime } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -176,23 +176,7 @@ function buildCustomerDraft(customer: CustomerSummary, values: CustomerFormValue
 }
 
 function formatDateTime(value?: string | null) {
-  if (!value) {
-    return '-'
-  }
-
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    return '-'
-  }
-
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(parsed)
+  return formatNumericDateTime(value)
 }
 
 function resolveAudioUrl(customer: CustomerSummary) {

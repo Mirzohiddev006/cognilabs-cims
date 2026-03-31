@@ -10,7 +10,7 @@ import {
   getCustomerDisplayName,
   getCustomerDisplayPlatform,
 } from '../../../shared/lib/customer-display'
-import { formatShortDate } from '../../../shared/lib/format'
+import { formatNumericDate, formatNumericDateTime } from '../../../shared/lib/format'
 import { Badge, StatusBadge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -169,11 +169,11 @@ export function CustomerDetailContent({
               </div>
               <div className="rounded-[20px] border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('customers.table.recall', 'Recall time')}</p>
-                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{customer.recall_time ? formatShortDate(customer.recall_time) : '-'}</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatNumericDateTime(customer.recall_time)}</p>
               </div>
               <div className="rounded-[20px] border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.created', 'Created')}</p>
-                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatShortDate(customer.created_at)}</p>
+                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatNumericDate(customer.created_at)}</p>
               </div>
             </div>
           </div>
@@ -199,7 +199,7 @@ export function CustomerDetailContent({
                   t('common.conversation_language', 'Conversation language'),
                   formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
                 ],
-                [t('common.recall_time', 'Recall time'), customer.recall_time || '-'],
+                [t('common.recall_time', 'Recall time'), formatNumericDateTime(customer.recall_time)],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
                   <span className="text-sm text-[var(--muted-strong)]">{label}</span>

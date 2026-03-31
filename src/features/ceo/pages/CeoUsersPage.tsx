@@ -946,16 +946,23 @@ export function CeoUsersPage() {
                 key: 'identity',
                 header: lt('User'),
                 render: (row) => (
-                  <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openProfileDialog(row)}
+                    className="group/user -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-[18px] px-2 py-1 text-left transition hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
+                    aria-label={`${lt('Profile')}: ${row.name} ${row.surname}`}
+                  >
                     <UserAvatar user={row} size="sm" />
                     <div>
-                      <p className="font-bold text-white tracking-tight">{row.name} {row.surname}</p>
-                      <p className="text-xs font-medium text-zinc-500">{row.email}</p>
+                      <p className="font-bold tracking-tight text-[var(--foreground)] transition group-hover/user:text-[var(--blue-text)]">
+                        {row.name} {row.surname}
+                      </p>
+                      <p className="text-xs font-medium text-[var(--muted-strong)]">{row.email}</p>
                       {row.job_title ? (
                         renderJobTitleTag(row.job_title, row.role)
                       ) : null}
                     </div>
-                  </div>
+                  </button>
                 ),
               },
               {
@@ -1218,15 +1225,15 @@ export function CeoUsersPage() {
 
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.sent')}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.sent')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
                 </div>
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.incoming')}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.incoming')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
                 </div>
                 <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-300/70">{t('ceo.users.thread.latest')}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.latest')}</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {activeConversation.entries.length > 0
                       ? formatShortDate(activeConversation.entries[activeConversation.entries.length - 1]?.sentAt)
@@ -1309,8 +1316,8 @@ export function CeoUsersPage() {
         <div className="mb-4 flex items-center gap-4">
           {profileUser ? <UserAvatar user={profileUser} size="lg" /> : null}
           <div>
-            <p className="text-sm font-semibold text-white">{profileUser?.name} {profileUser?.surname}</p>
-            <p className="text-xs text-zinc-500 mb-2">{profileUser?.email}</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">{profileUser?.name} {profileUser?.surname}</p>
+            <p className="mb-2 text-xs text-[var(--muted-strong)]">{profileUser?.email}</p>
             <input
               ref={profileImageRef}
               type="file"
@@ -1335,36 +1342,40 @@ export function CeoUsersPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.role')}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.role ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.role')}</p>
+            <p className={cn('mt-2 text-lg font-semibold', getRoleTextClass(profileUser?.role))}>{profileUser?.role ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.company_code')}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.company_code ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.company_code')}</p>
+            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{profileUser?.company_code ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.job_title')}</p>
-            <p className="mt-2 text-lg font-semibold text-white">{profileUser?.job_title ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.job_title')}</p>
+            <p className={cn('mt-2 text-lg font-semibold', profileUser?.job_title ? (isCeoUser(profileUser) ? 'text-[var(--violet-text)]' : 'text-[var(--success-text)]') : 'text-[var(--foreground)]')}>
+              {profileUser?.job_title ?? '-'}
+            </p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.email')}</p>
-            <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.email ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.email')}</p>
+            <p className="mt-2 break-all text-base font-semibold text-[var(--foreground)]">{profileUser?.email ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('profile.status')}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', profileUser?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-white">{profileUser?.is_active ? t('status.active') : t('status.inactive')}</p>
+              <p className={cn('text-base font-semibold', profileUser?.is_active ? 'text-[var(--success-text)]' : 'text-[var(--danger-text)]')}>
+                {profileUser?.is_active ? t('status.active') : t('status.inactive')}
+              </p>
             </div>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('auth.register.telegram_id')}</p>
-            <p className="mt-2 text-base font-semibold text-white break-all">{profileUser?.telegram_id ?? '-'}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('auth.register.telegram_id')}</p>
+            <p className="mt-2 break-all text-base font-semibold text-[var(--foreground)]">{profileUser?.telegram_id ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-white/10 bg-(--surface) px-5 py-4">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-blue-300/75">{t('ceo.users.form.default_salary')}</p>
-            <p className="mt-2 text-base font-semibold text-white">{formatSalary(profileUser?.default_salary)}</p>
+          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('ceo.users.form.default_salary')}</p>
+            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">{formatSalary(profileUser?.default_salary)}</p>
           </div>
         </div>
       </Dialog>
