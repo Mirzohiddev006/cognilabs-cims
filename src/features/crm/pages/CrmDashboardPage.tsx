@@ -440,22 +440,22 @@ function MetricCard({
     danger: 'border-rose-500/15 shadow-[inset_0_0_0_1px_rgba(244,63,94,0.10),0_0_20px_rgba(244,63,94,0.05)]',
   }
   const toneLabelClassNames = {
-    blue: 'text-blue-300/80',
-    success: 'text-emerald-300/80',
-    warning: 'text-amber-300/80',
-    violet: 'text-violet-300/80',
-    danger: 'text-rose-300/80',
+    blue: 'text-[var(--blue-text)]',
+    success: 'text-[var(--success-text)]',
+    warning: 'text-[var(--warning-text)]',
+    violet: 'text-[var(--violet-text)]',
+    danger: 'text-[var(--danger-text)]',
   }
 
   return (
     <Card variant="metric" className={cn('flex min-h-30 flex-col justify-between p-4', toneClassNames[tone])}>
       <div>
-        <p className={cn('text-[10px] font-semibold uppercase tracking-[0.28em]', toneLabelClassNames[tone])}>{label}</p>
-        <p className="mt-3 text-2xl leading-none font-semibold text-white tracking-tight">
+        <p className={cn('text-[10px] font-bold uppercase tracking-[0.28em]', toneLabelClassNames[tone])}>{label}</p>
+        <p className="mt-3 text-2xl leading-none font-semibold tracking-tight text-[var(--foreground)]">
           {typeof value === 'number' ? formatCompactNumber(value) : value}
         </p>
       </div>
-      <p className="text-xs leading-5 text-(--muted)">{description}</p>
+      <p className="text-xs leading-5 text-[var(--muted-strong)]">{description}</p>
     </Card>
   )
 }
