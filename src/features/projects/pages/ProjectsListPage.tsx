@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTheme } from '../../../app/hooks/useTheme'
 import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -30,6 +31,7 @@ function parseMemberId(rawValue: string | null) {
 }
 
 export function ProjectsListPage() {
+  const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
@@ -53,6 +55,7 @@ export function ProjectsListPage() {
     return uzFallback
   }
   const [searchParams, setSearchParams] = useSearchParams()
+  const isDark = theme === 'dark'
 
   const canManageProjects = hasPermission('projects')
   const priorityConfigMap = getPriorityConfig()
@@ -416,7 +419,9 @@ export function ProjectsListPage() {
                   className={cn(
                     'flex min-h-[84px] items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-[0_8px_22px_rgba(148,163,184,0.10)] transition-all duration-150',
                     selectedMemberId === null
-                      ? 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
+                      ? isDark
+                        ? 'border-blue-500/45 bg-[linear-gradient(180deg,rgba(17,24,39,0.94),rgba(15,23,42,0.98))] text-blue-50 ring-1 ring-blue-400/20 shadow-[0_14px_28px_rgba(37,99,235,0.18)]'
+                        : 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
                       : 'border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface)]',
                   )}
                 >
@@ -441,7 +446,9 @@ export function ProjectsListPage() {
                       className={cn(
                         'flex min-h-[84px] items-center justify-between gap-4 rounded-[22px] border px-4 py-4 text-left shadow-[0_8px_22px_rgba(148,163,184,0.10)] transition-all duration-150',
                         isSelected
-                          ? 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
+                          ? isDark
+                            ? 'border-blue-500/45 bg-[linear-gradient(180deg,rgba(17,24,39,0.94),rgba(15,23,42,0.98))] text-blue-50 ring-1 ring-blue-400/20 shadow-[0_14px_28px_rgba(37,99,235,0.18)]'
+                            : 'border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] text-[var(--foreground)] shadow-[0_14px_28px_rgba(37,99,235,0.12)]'
                           : 'border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface)]',
                       )}
                     >

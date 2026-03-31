@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useTheme } from '../../../app/hooks/useTheme'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
@@ -36,6 +37,7 @@ export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user, hasPermission } = useAuth()
@@ -61,6 +63,7 @@ export function ProjectDetailPage() {
 
   const id = Number(projectId)
   const canManageProjects = hasPermission('projects')
+  const isDark = theme === 'dark'
 
   const projectQuery = useAsyncData(
     async () => {
@@ -734,7 +737,9 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_10px_24px_rgba(37,99,235,0.14)] transition dark:border-blue-500/40 dark:bg-blue-500/12 dark:text-blue-100 dark:shadow-[0_8px_24px_rgba(37,99,235,0.16)]'
+                              ? isDark
+                                ? 'rounded-full border border-blue-500/45 bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(15,23,42,0.98))] px-4 py-2 text-sm font-semibold text-blue-100 ring-1 ring-blue-400/20 shadow-[0_8px_24px_rgba(37,99,235,0.18)] transition'
+                                : 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_10px_24px_rgba(37,99,235,0.14)] transition'
                               : 'rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface-elevated)]'
                           }
                         >
@@ -761,7 +766,9 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 transition dark:border-white/20 dark:bg-white/8 dark:text-[var(--foreground)]'
+                              ? isDark
+                                ? 'rounded-full border border-blue-500/40 bg-[linear-gradient(180deg,rgba(17,24,39,0.94),rgba(20,24,36,0.98))] px-4 py-2 text-sm font-semibold text-blue-100 ring-1 ring-blue-400/18 transition'
+                                : 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 transition'
                               : 'rounded-full border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:text-[var(--foreground)]'
                           }
                         >
