@@ -734,7 +734,7 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-blue-500/40 bg-blue-500/12 px-4 py-2 text-sm font-medium text-blue-100 shadow-[0_8px_24px_rgba(37,99,235,0.16)] transition'
+                              ? 'rounded-full border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-2 text-sm font-medium text-[var(--blue-text)] shadow-[0_8px_24px_rgba(37,99,235,0.12)] transition dark:border-blue-500/40 dark:bg-blue-500/12 dark:text-blue-100 dark:shadow-[0_8px_24px_rgba(37,99,235,0.16)]'
                               : 'rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]'
                           }
                         >
@@ -761,7 +761,7 @@ export function ProjectDetailPage() {
                           onClick={() => selectBoard(board.id)}
                           className={
                             isSelected
-                              ? 'rounded-full border border-white/20 bg-white/8 px-4 py-2 text-sm font-medium text-[var(--foreground)] transition'
+                              ? 'rounded-full border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-2 text-sm font-medium text-[var(--blue-text)] transition dark:border-white/20 dark:bg-white/8 dark:text-[var(--foreground)]'
                               : 'rounded-full border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--muted)] transition hover:border-[var(--border-hover)] hover:text-[var(--foreground)]'
                           }
                         >

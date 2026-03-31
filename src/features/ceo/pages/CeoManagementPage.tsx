@@ -128,10 +128,11 @@ function SummaryCard({
 }) {
   const lt = translateCurrentLiteral
   return (
-    <div className="rounded-[22px] border border-[var(--blue-border)] bg-[var(--blue-soft)] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-blue-500/18 dark:bg-blue-500/8 dark:shadow-none">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{lt(label)}</p>
+    <div className="relative overflow-hidden rounded-[22px] border border-[var(--border)] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(148,163,184,0.14),inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-blue-500/18 dark:bg-blue-500/8 dark:shadow-none">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.38),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.9),rgba(96,165,250,0.34),transparent_78%)]" />
+      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/88">{lt(label)}</p>
       <p className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      <p className="mt-2 text-xs text-[var(--muted-strong)] dark:text-[var(--muted)]">{lt(hint)}</p>
+      <p className="mt-2 text-xs text-[var(--muted)] dark:text-[var(--muted)]">{lt(hint)}</p>
     </div>
   )
 }
