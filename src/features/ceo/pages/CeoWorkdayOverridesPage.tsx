@@ -130,15 +130,22 @@ function SummaryCard({
   accent?: 'default' | 'warning' | 'blue' | 'success'
 }) {
   const accentClassName = {
-    default: 'border-[var(--border)] bg-white dark:border-white/8 dark:bg-white/[0.03]',
-    warning: 'border-amber-500/18 bg-amber-50 dark:bg-amber-500/[0.06]',
-    blue: 'border-blue-500/18 bg-blue-50 dark:bg-blue-500/[0.06]',
-    success: 'border-emerald-500/18 bg-emerald-50 dark:bg-emerald-500/[0.06]',
+    default: 'border-[var(--border)] bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none',
+    warning: 'border-[var(--warning-border)] bg-amber-50/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-amber-500/18 dark:bg-amber-500/[0.06] dark:shadow-none',
+    blue: 'border-[var(--blue-border)] bg-[var(--blue-soft)] shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-blue-500/18 dark:bg-blue-500/[0.06] dark:shadow-none',
+    success: 'border-[var(--success-border)] bg-emerald-50/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-emerald-500/18 dark:bg-emerald-500/[0.06] dark:shadow-none',
+  } as const
+
+  const accentLabelClassName = {
+    default: 'text-[var(--blue-text)] dark:text-blue-200/82',
+    warning: 'text-[var(--warning-text)] dark:text-amber-200/82',
+    blue: 'text-[var(--blue-text)] dark:text-blue-200/82',
+    success: 'text-[#32a852] dark:text-emerald-200/82',
   } as const
 
   return (
     <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{label}</p>
+      <p className={cn('text-[10px] font-bold uppercase tracking-[0.22em]', accentLabelClassName[accent])}>{label}</p>
       <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
       {hint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{hint}</p> : null}
     </div>
@@ -686,22 +693,22 @@ export function CeoWorkdayOverridesPage() {
               description={tx('ceo.workday.guide.description', 'Use these rules to control whether updates are expected on a date.')}
             />
 
-            <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.06] px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-200/70">{lt('Holiday')}</p>
+            <div className="rounded-[20px] border border-[var(--warning-border)] bg-amber-50/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-amber-500/18 dark:bg-amber-500/[0.06] dark:shadow-none">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--warning-text)] dark:text-amber-200/82">{lt('Holiday')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
                 {tx('ceo.workday.guide.holiday_description', 'Mark a date as a holiday when no update should be expected. Calendars should treat it as an off day instead of a missing day.')}
               </p>
             </div>
 
-            <div className="rounded-[20px] border border-blue-500/18 bg-blue-500/[0.06] px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-blue-200/72">{lt('Short Day')}</p>
+            <div className="rounded-[20px] border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-blue-500/18 dark:bg-blue-500/[0.06] dark:shadow-none">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{lt('Short Day')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
                 {tx('ceo.workday.guide.short_day_description', 'Use a short day when working hours change. You can still require updates or turn them off for that shortened date.')}
               </p>
             </div>
 
-            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">{tx('ceo.workday.guide.member_targeting_title', 'Member Targeting')}</p>
+            <div className="rounded-[20px] border border-[var(--blue-border)] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-[var(--surface-elevated)] dark:shadow-none">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{tx('ceo.workday.guide.member_targeting_title', 'Member Targeting')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/78">
                 {tx('ceo.workday.guide.member_targeting_description', 'Choose all members for company-wide holidays, or select one or more members when the override is specific to a subset of the team.')}
               </p>
