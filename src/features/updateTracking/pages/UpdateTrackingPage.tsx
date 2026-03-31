@@ -416,11 +416,6 @@ function monthNameToNumber(value: string): number | null {
   return null
 }
 
-const ALL_MONTHS = Array.from({ length: 12 }, (_, index) => ({
-  value: index + 1,
-  label: getMonthName(index + 1),
-}))
-
 function getFallbackDayStatus(date: Date): DayStatus {
   if (date.getDay() === 0) {
     return 'sunday'
@@ -1267,6 +1262,14 @@ function clampYear(value: number) {
 }
 
 export function UpdateTrackingPage() {
+  const locale = getIntlLocale()
+  const monthOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, index) => ({
+      value: index + 1,
+      label: getMonthName(index + 1),
+    })),
+    [locale],
+  )
   const { showToast } = useToast()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
@@ -1427,7 +1430,7 @@ export function UpdateTrackingPage() {
                   onChange={(event) => handleMonthChange(Number(event.target.value))}
                   className="h-7 rounded-lg border border-(--border) bg-(--surface) px-2 text-sm text-(--foreground) focus:outline-none focus:ring-1 focus:ring-blue-500/30"
                 >
-                  {ALL_MONTHS.map(({ value, label }) => (
+                  {monthOptions.map(({ value, label }) => (
                     <option key={value} value={value}>{label}</option>
                   ))}
                 </select>

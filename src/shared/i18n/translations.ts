@@ -42,6 +42,15 @@ for (const phrase of literalPhrases) {
   }
 }
 
+function syncCurrentLocaleFromI18n() {
+  currentLocale = normalizeLocale(i18n.resolvedLanguage ?? i18n.language)
+}
+
+syncCurrentLocaleFromI18n()
+
+i18n.on('initialized', syncCurrentLocaleFromI18n)
+i18n.on('languageChanged', syncCurrentLocaleFromI18n)
+
 function normalizeLocale(value?: string | null): AppLocale {
   if (!value) {
     return DEFAULT_LOCALE
@@ -124,7 +133,7 @@ export function translate(locale: AppLocale, key: string, fallback?: string, par
 }
 
 export function translateCurrent(key: string, fallback?: string, params?: TranslationParams) {
-  return translate(getStoredLocale(), key, fallback, params)
+  return translate(normalizeLocale(i18n.resolvedLanguage ?? i18n.language), key, fallback, params)
 }
 
 export function translateLiteral(locale: AppLocale, value: string) {
@@ -146,5 +155,5 @@ export function translateLiteral(locale: AppLocale, value: string) {
 }
 
 export function translateCurrentLiteral(value: string) {
-  return translateLiteral(getStoredLocale(), value)
+  return translateLiteral(normalizeLocale(i18n.resolvedLanguage ?? i18n.language), value)
 }

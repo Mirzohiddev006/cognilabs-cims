@@ -730,10 +730,12 @@ export function getMonthName(month: number) {
   return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2026, month - 1))
 }
 
-export const monthOptions = Array.from({ length: 12 }, (_, index) => ({
+export function getMonthOptions() {
+  return Array.from({ length: 12 }, (_, index) => ({
   value: String(index + 1),
   label: getMonthName(index + 1),
-}))
+  }))
+}
 
 export function formatAmount(value?: number | null) {
   if (typeof value !== 'number' || !Number.isFinite(value)) {

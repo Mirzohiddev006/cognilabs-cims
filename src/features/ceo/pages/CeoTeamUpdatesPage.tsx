@@ -66,9 +66,6 @@ function getMonthName(month: number): string {
   return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
-const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ value: i + 1, label: getMonthName(i + 1) }))
-const MONTH_OPTIONS = ALL_MONTHS.map(({ value, label }) => ({ value: String(value), label }))
-
 function getDaysInMonth(month: number, year: number) {
   return new Date(year, month, 0).getDate()
 }
@@ -1214,7 +1211,9 @@ function buildMonthlyActivityFromPeriods(periods: UnknownRecord[], year: number)
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth() + 1
 
-  return ALL_MONTHS.map(({ value, label }) => {
+  return Array.from({ length: 12 }, (_, index) => {
+    const value = index + 1
+    const label = getMonthName(value)
     const period = getSelectedPeriod(periods, value, year)
     const reportsCount = toNumber(period?.reports_count ?? period?.total_reports ?? period?.submitted_count) ?? 0
     const averagePercentage = normalizePercentage(
@@ -1908,6 +1907,13 @@ export function CeoTeamUpdatesPage() {
   const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
+  const monthOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, index) => ({
+      value: String(index + 1),
+      label: getMonthName(index + 1),
+    })),
+    [locale],
+  )
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
     const value = lt(key)
 
@@ -2038,7 +2044,7 @@ export function CeoTeamUpdatesPage() {
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</label>
                 <SelectField
                   value={String(month)}
-                  options={MONTH_OPTIONS}
+                  options={monthOptions}
                   onValueChange={(value) => setMonth(Number(value))}
                   className="min-h-0 h-9 min-w-28 border-white/10 bg-(--surface) text-sm text-white hover:border-white/15 hover:bg-white/6 focus-visible:border-white/20 focus-visible:bg-white/6 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(255,255,255,0.06)]"
                 />

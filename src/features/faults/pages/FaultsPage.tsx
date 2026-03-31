@@ -37,10 +37,10 @@ import {
   getCompensationPolicyCategoryOptions,
   getCompensationPolicyDeliveryBonusOptions,
   getCompensationPolicySeverityOptions,
+  getMonthOptions,
   getMonthName,
   getSuccessMessage,
   isRecord,
-  monthOptions,
   parseMaybeJson,
 } from '../lib/salaryEstimates'
 
@@ -69,7 +69,7 @@ function clampNumber(value: number, min: number, max: number) {
 }
 
 const successPillClassName =
-  'inline-flex items-center rounded-full border border-[var(--success-border)] bg-[#EAFBF2] px-2.5 py-1 font-semibold text-[var(--success-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-emerald-400/24 dark:bg-emerald-400/12 dark:text-emerald-300 dark:shadow-none'
+  'inline-flex items-center rounded-full border border-[rgba(50,168,82,0.26)] bg-[rgba(50,168,82,0.10)] px-2.5 py-1 font-semibold text-[#32a852] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:bg-[rgba(50,168,82,0.12)] dark:text-[#32a852] dark:shadow-none'
 
 const neutralPillClassName =
   'inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 font-semibold text-[var(--foreground)]'
@@ -195,6 +195,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
 }
 
 export function FaultsPage() {
+  const monthOptions = useMemo(() => getMonthOptions(), [])
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
@@ -815,7 +816,7 @@ export function FaultsPage() {
               align: 'right',
               minWidth: '130px',
               render: (row) => (
-                <span className={cn('font-semibold', row.finalSalary > row.afterPenalty ? 'text-[var(--success-text)]' : 'text-[var(--foreground)]')}>
+                <span className={cn('font-semibold', row.finalSalary > row.afterPenalty ? 'text-[#32a852]' : 'text-[var(--foreground)]')}>
                   {formatAmount(row.finalSalary)}
                 </span>
               ),

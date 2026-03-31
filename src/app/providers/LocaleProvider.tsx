@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { getStoredLocale, setCurrentLocale, type AppLocale, type TranslationParams } from '../../shared/i18n/translations'
 import { LocaleContext } from './LocaleContext'
 
+function LocaleRenderBoundary({ children }: PropsWithChildren) {
+  return <>{children}</>
+}
+
 export function LocaleProvider({ children }: PropsWithChildren) {
   const { i18n, t } = useTranslation()
   const locale = (i18n.resolvedLanguage ?? i18n.language ?? getStoredLocale()) as AppLocale
@@ -37,7 +41,9 @@ export function LocaleProvider({ children }: PropsWithChildren) {
 
   return (
     <LocaleContext.Provider value={value}>
-      {children}
+      <LocaleRenderBoundary key={locale}>
+        {children}
+      </LocaleRenderBoundary>
     </LocaleContext.Provider>
   )
 }

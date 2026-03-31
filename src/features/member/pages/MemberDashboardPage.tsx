@@ -31,8 +31,8 @@ import {
   formatCount,
   formatDetailDate,
   formatPercent,
+  getMonthOptions,
   getMonthName,
-  monthOptions,
 } from '../../faults/lib/salaryEstimates'
 
 function clampNumber(value: number, min: number, max: number) {
@@ -225,6 +225,7 @@ function MetricPanel({
 }
 
 export function MemberDashboardPage() {
+  const monthOptions = useMemo(() => getMonthOptions(), [])
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {

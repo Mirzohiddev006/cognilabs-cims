@@ -1,6 +1,13 @@
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 
+const salaryEstimateSuccessTone = {
+  border: 'rgba(50, 168, 82, 0.26)',
+  background: 'rgba(50, 168, 82, 0.10)',
+  backgroundStrong: 'rgba(50, 168, 82, 0.13)',
+  text: '#32a852',
+}
+
 export function SummaryMetricCard({
   label,
   value,
@@ -15,26 +22,30 @@ export function SummaryMetricCard({
   const toneClassName = {
     default: 'border-[var(--border)] bg-white dark:bg-[var(--card)]',
     danger: 'border-rose-500/28 bg-white dark:bg-rose-500/6',
-    success: 'border-emerald-500/28 bg-white dark:bg-emerald-500/6',
   } as const
 
   const valueClassName = {
     default: 'text-[var(--foreground)]',
     danger: 'text-rose-600 dark:text-rose-400',
-    success: 'text-emerald-600 dark:text-emerald-400',
   } as const
 
   return (
-    <div className={cn('card-base min-h-[110px] rounded-[22px] px-6 py-5', toneClassName[tone])}>
+    <div
+      className={cn('card-base min-h-[110px] rounded-[22px] px-6 py-5', tone === 'success' ? 'bg-white dark:bg-[var(--card)]' : toneClassName[tone])}
+      style={tone === 'success' ? { borderColor: salaryEstimateSuccessTone.border } : undefined}
+    >
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm text-[var(--muted-strong)]">{label}</p>
         {badge ? (
           <Badge variant={tone === 'danger' ? 'danger' : tone === 'success' ? 'success' : 'outline'}>
             {badge}
           </Badge>
-        ) : null}
+          ) : null}
       </div>
-      <p className={cn('mt-5 text-2xl font-semibold tracking-tight sm:text-[2rem]', valueClassName[tone])}>
+      <p
+        className={cn('mt-5 text-2xl font-semibold tracking-tight sm:text-[2rem]', tone === 'success' ? '' : valueClassName[tone])}
+        style={tone === 'success' ? { color: salaryEstimateSuccessTone.text } : undefined}
+      >
         {value}
       </p>
     </div>
@@ -56,20 +67,17 @@ export function DetailStatTile({
     ? {
         default: 'border-[var(--border)] bg-white',
         danger: 'border-rose-500/28 bg-rose-50',
-        success: 'border-emerald-500/28 bg-emerald-50',
         blue: 'border-[var(--blue-border)] bg-blue-50',
       } as const
     : theme === 'dark'
       ? {
           default: 'border-[var(--border)] bg-[var(--surface-elevated)]',
           danger: 'border-[var(--danger-border)] bg-[var(--danger-dim)]',
-          success: 'border-[var(--success-border)] bg-[var(--success-dim)]',
           blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)]',
         } as const
       : {
           default: 'border-[var(--border)] bg-white dark:bg-[var(--surface-elevated)]',
           danger: 'border-rose-500/28 bg-rose-50/70 dark:bg-rose-500/8',
-          success: 'border-emerald-500/28 bg-emerald-50/80 dark:bg-emerald-500/8',
           blue: 'border-[var(--blue-border)] bg-blue-50/80 dark:bg-[var(--blue-dim)]',
         } as const
 
@@ -113,12 +121,38 @@ export function DetailStatTile({
           danger: 'text-[var(--danger-text)] dark:text-rose-400',
           success: 'text-[var(--success-text)] dark:text-emerald-400',
           blue: 'text-[var(--blue-text)]',
-        } as const
+      } as const
+
+  const successStyle = theme === 'light'
+    ? {
+        borderColor: salaryEstimateSuccessTone.border,
+        backgroundColor: salaryEstimateSuccessTone.backgroundStrong,
+      }
+    : theme === 'dark'
+      ? {
+          borderColor: salaryEstimateSuccessTone.border,
+          backgroundColor: 'rgba(50, 168, 82, 0.12)',
+        }
+      : {
+          borderColor: salaryEstimateSuccessTone.border,
+          backgroundColor: salaryEstimateSuccessTone.background,
+        }
 
   return (
-    <div className={cn('rounded-[16px] border px-4 py-3', toneClassName[tone])}>
-      <p className={cn('text-xs font-semibold', labelClassName[tone])}>{label}</p>
-      <p className={cn('mt-2 text-[1.05rem] font-semibold tracking-tight', valueClassName[tone])}>
+    <div
+      className={cn('rounded-[16px] border px-4 py-3', tone === 'success' ? '' : toneClassName[tone])}
+      style={tone === 'success' ? successStyle : undefined}
+    >
+      <p
+        className={cn('text-xs font-semibold', tone === 'success' ? '' : labelClassName[tone])}
+        style={tone === 'success' ? { color: salaryEstimateSuccessTone.text } : undefined}
+      >
+        {label}
+      </p>
+      <p
+        className={cn('mt-2 text-[1.05rem] font-semibold tracking-tight', tone === 'success' ? '' : valueClassName[tone])}
+        style={tone === 'success' ? { color: salaryEstimateSuccessTone.text } : undefined}
+      >
         {value}
       </p>
     </div>

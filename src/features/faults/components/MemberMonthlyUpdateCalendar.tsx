@@ -82,7 +82,7 @@ const dayFocusStyle: Record<DayStatus, string> = {
 }
 
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2024, month - 1))
+  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
 
 function formatLongDate(date: string) {

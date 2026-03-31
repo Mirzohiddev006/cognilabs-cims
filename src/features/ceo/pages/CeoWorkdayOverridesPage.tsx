@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   updateTrackingService,
   type WorkdayOverrideDayType,
@@ -46,11 +47,6 @@ type OverrideFormState = {
 function getMonthName(month: number): string {
   return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
 }
-
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => ({
-  value: String(index + 1),
-  label: getMonthName(index + 1),
-}))
 
 function formatDateInput(date: Date) {
   const year = date.getFullYear()
@@ -133,9 +129,6 @@ function SummaryCard({
   hint?: string
   accent?: 'default' | 'warning' | 'blue' | 'success'
 }) {
-  const localizedLabel = translateCurrentLiteral(label)
-  const localizedHint = hint ? translateCurrentLiteral(hint) : null
-
   const accentClassName = {
     default: 'border-[var(--border)] bg-white dark:border-white/8 dark:bg-white/[0.03]',
     warning: 'border-amber-500/18 bg-amber-50 dark:bg-amber-500/[0.06]',
@@ -145,9 +138,9 @@ function SummaryCard({
 
   return (
     <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{label}</p>
       <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      {localizedHint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{localizedHint}</p> : null}
+      {hint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{hint}</p> : null}
     </div>
   )
 }
@@ -268,6 +261,14 @@ function MemberPicker({
 }
 
 export function CeoWorkdayOverridesPage() {
+  const { t } = useTranslation()
+  const locale = getIntlLocale()
+  const tx = (key: string, fallback: string, params?: Record<string, string | number>) => (
+    t(key, {
+      defaultValue: fallback,
+      ...params,
+    })
+  )
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -276,6 +277,13 @@ export function CeoWorkdayOverridesPage() {
   const [editingOverride, setEditingOverride] = useState<WorkdayOverrideRecord | null>(null)
   const [formState, setFormState] = useState<OverrideFormState>(() => createDefaultFormState(now.getMonth() + 1, now.getFullYear()))
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const monthOptions = useMemo(
+    () => Array.from({ length: 12 }, (_, index) => ({
+      value: String(index + 1),
+      label: getMonthName(index + 1),
+    })),
+    [locale],
+  )
 
   const overridesQuery = useAsyncData(
     () => updateTrackingService.workdayOverrides({ month, year }),
@@ -467,9 +475,9 @@ export function CeoWorkdayOverridesPage() {
   if (overridesQuery.isLoading && !overridesQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Workday Overrides"
-        title={lt('Loading workday overrides')}
-        description={lt('Fetching holiday and short-day settings for the selected period.')}
+        eyebrow={tx('ceo.workday.header.eyebrow', 'CEO Workspace')}
+        title={tx('ceo.workday.states.loading_title', 'Loading workday overrides')}
+        description={tx('ceo.workday.states.loading_description', 'Fetching holiday and short-day settings for the selected period.')}
       />
     )
   }
@@ -477,61 +485,63 @@ export function CeoWorkdayOverridesPage() {
   if (overridesQuery.isError && !overridesQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Workday Overrides"
-        title={lt('Overrides unavailable')}
-        description={lt('Could not load holiday and short-day overrides.')}
-        actionLabel={lt('Retry')}
+        eyebrow={tx('ceo.workday.header.eyebrow', 'CEO Workspace')}
+        title={tx('ceo.workday.states.error_title', 'Overrides unavailable')}
+        description={tx('ceo.workday.states.error_description', 'Could not load holiday and short-day overrides.')}
+        actionLabel={t('common.retry')}
         onAction={() => void overridesQuery.refetch()}
       />
     )
   }
 
   const memberOptions = memberOptionsQuery.data ?? []
-  const activeDialogTitle = editingOverride ? lt('Edit workday override') : lt('Create workday override')
+  const activeDialogTitle = editingOverride
+    ? tx('ceo.workday.dialog.edit_title', 'Edit Workday Override')
+    : tx('ceo.workday.dialog.create_title', 'Create Workday Override')
   const activeDialogDescription = editingOverride
-    ? lt('Update the selected holiday or short-day entry.')
-    : lt('Create a holiday or short working day for all members or selected members.')
+    ? tx('ceo.workday.dialog.edit_description', 'Update the selected holiday or short-day entry.')
+    : tx('ceo.workday.dialog.create_description', 'Create a holiday or short working day for all members or selected members.')
 
   return (
     <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_70%)]" />
           <div className="page-header-decor pointer-events-none absolute -right-10 top-4 h-32 w-32 rounded-full bg-amber-400/8 blur-3xl" />
 
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-blue-400/80">
-                CEO Dashboard
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--blue-text)]">
+                {tx('ceo.workday.header.eyebrow', 'CEO Workspace')}
               </p>
-              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
-                {lt('Workday Overrides')}
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
+                {tx('ceo.workday.header.title', 'Workday Overrides')}
               </h1>
-              <p className="mt-1.5 text-[13px] text-(--muted)">
-                {lt('Configure holidays and short working days that affect update expectations.')}
+              <p className="mt-1.5 text-[13px] text-(--muted-strong)">
+                {tx('ceo.workday.header.description', 'Configure holidays and short working days that affect update expectations.')}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</label>
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.year', 'Year')}</label>
                 <Input
                   type="number"
                   min="2020"
                   max="2035"
                   value={year}
                   onChange={(event) => setYear(Number(event.target.value) || now.getFullYear())}
-                  className="min-h-0 h-6 w-18 border-white/10 bg-transparent px-2.5 text-sm text-white"
+                  className="min-h-0 h-6 w-18 border-transparent bg-transparent px-2.5 text-sm text-[var(--foreground)]"
                 />
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</label>
+              <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.month', 'Month')}</label>
                 <SelectField
                   value={String(month)}
-                  options={MONTH_OPTIONS}
+                  options={monthOptions}
                   onValueChange={(value) => setMonth(Number(value))}
-                  className="min-h-0 h-9 min-w-28 border-white/10 bg-(--surface) text-sm text-white hover:border-white/15 hover:bg-white/6 focus-visible:border-white/20 focus-visible:bg-white/6 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(255,255,255,0.06)]"
+                  className="min-h-0 h-9 min-w-28 border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--foreground)]"
                 />
               </div>
 
@@ -541,7 +551,7 @@ export function CeoWorkdayOverridesPage() {
                 onClick={() => void handleRefresh()}
                 className="min-h-9 rounded-xl"
               >
-                {lt('Refresh')}
+                {t('common.refresh')}
               </Button>
               <Button
                 variant="success"
@@ -549,7 +559,7 @@ export function CeoWorkdayOverridesPage() {
                 onClick={openCreateDialog}
                 className="min-h-9 rounded-xl"
               >
-                {lt('New override')}
+                {tx('ceo.workday.actions.create', 'Create Override')}
               </Button>
             </div>
           </div>
@@ -558,26 +568,29 @@ export function CeoWorkdayOverridesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
-          label={lt('Overrides in period')}
+          label={tx('ceo.workday.summary.in_period', 'Overrides in period')}
           value={overrides.length}
           hint={`${getMonthName(month)} ${year}`}
         />
         <SummaryCard
-          label={lt('Holiday entries')}
+          label={tx('ceo.workday.summary.holidays', 'Holiday entries')}
           value={holidayCount}
-          hint={lt('Full day off or no update expected.')}
+          hint={tx('ceo.workday.summary.holidays_hint', 'Full day off or no update expected.')}
           accent="warning"
         />
         <SummaryCard
-          label={lt('Short day entries')}
+          label={tx('ceo.workday.summary.short_days', 'Short day entries')}
           value={shortDayCount}
-          hint={lt('Reduced working hours or shortened day.')}
+          hint={tx('ceo.workday.summary.short_days_hint', 'Reduced working hours or shortened day.')}
           accent="blue"
         />
         <SummaryCard
-          label={lt('Targeting')}
-          value={`${allMemberCount} all / ${specificMemberCount} specific`}
-          hint={lt('How many overrides apply to all members vs selected members.')}
+          label={tx('ceo.workday.summary.targeting', 'Targeting')}
+          value={tx('ceo.workday.summary.targeting_value', '{{all}} all / {{specific}} specific', {
+            all: allMemberCount,
+            specific: specificMemberCount,
+          })}
+          hint={tx('ceo.workday.summary.targeting_hint', 'How many overrides apply to all members versus selected members.')}
           accent="success"
         />
       </div>
@@ -586,10 +599,10 @@ export function CeoWorkdayOverridesPage() {
         <Card variant="glass" className="p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <SectionTitle
-              title={`${lt('Overrides for')} ${getMonthName(month)} ${year}`}
-              description={lt('Each entry changes how update tracking treats a specific date.')}
+              title={tx('ceo.workday.list.title', 'Overrides for {{month}} {{year}}', { month: getMonthName(month), year })}
+              description={tx('ceo.workday.list.description', 'Each entry changes how update tracking treats a specific date.')}
             />
-            <Badge variant="blue">{overrides.length} {lt('items')}</Badge>
+            <Badge variant="blue">{tx('ceo.workday.list.items', '{{count}} items', { count: overrides.length })}</Badge>
           </div>
 
           {overrides.length > 0 ? (
@@ -602,7 +615,7 @@ export function CeoWorkdayOverridesPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold tracking-tight text-white">
+                        <h3 className="text-base font-semibold tracking-tight text-[var(--foreground)]">
                           {item.title}
                         </h3>
                         <Badge variant={getTypeBadgeVariant(item.day_type)}>
@@ -624,43 +637,43 @@ export function CeoWorkdayOverridesPage() {
                       </p>
 
                       {item.note?.trim() ? (
-                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-white/78">
+                        <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]/80">
                           {item.note}
                         </p>
                       ) : (
                         <p className="mt-3 text-sm text-[var(--muted)]">
-                          {lt('No note provided for this override.')}
+                          {tx('ceo.workday.list.no_note', 'No note provided for this override.')}
                         </p>
                       )}
                     </div>
 
                     <ActionsMenu
-                      label={`${lt('Actions for')} ${item.title}`}
+                      label={`${tx('ceo.workday.actions.actions_for', 'Actions for')} ${item.title}`}
                       items={[
-                        { label: lt('Edit override'), onSelect: () => openEditDialog(item) },
-                        { label: lt('Delete override'), onSelect: () => void handleDelete(item), tone: 'danger' },
+                        { label: tx('ceo.workday.actions.edit', 'Edit Override'), onSelect: () => openEditDialog(item) },
+                        { label: tx('ceo.workday.actions.delete', 'Delete Override'), onSelect: () => void handleDelete(item), tone: 'danger' },
                       ]}
                     />
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-[var(--muted)]">
-                    <span>{lt('Created')}: {formatDateTime(item.created_at)}</span>
+                    <span>{tx('common.created', 'Created')}: {formatDateTime(item.created_at)}</span>
                     <span className="opacity-35">|</span>
-                    <span>{lt('Updated')}: {formatDateTime(item.updated_at)}</span>
+                    <span>{tx('common.updated', 'Updated')}: {formatDateTime(item.updated_at)}</span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-[22px] border border-dashed border-white/10 bg-black/10 px-5 py-8 text-center">
-              <p className="text-base font-semibold text-white">
-                {lt('No overrides yet for')} {getMonthName(month)} {year}
+            <div className="rounded-[22px] border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-8 text-center">
+              <p className="text-base font-semibold text-[var(--foreground)]">
+                {tx('ceo.workday.empty.title', 'No overrides yet for {{month}} {{year}}', { month: getMonthName(month), year })}
               </p>
               <p className="mt-2 text-sm text-[var(--muted)]">
-                {lt('Create a holiday or short-day rule so calendars stop treating those dates as missing workdays.')}
+                {tx('ceo.workday.empty.description', 'Create a holiday or short-day rule so calendars stop treating those dates as missing workdays.')}
               </p>
               <Button variant="success" size="sm" className="mt-5 rounded-xl" onClick={openCreateDialog}>
-                {lt('Create first override')}
+                {tx('ceo.workday.empty.action', 'Create First Override')}
               </Button>
             </div>
           )}
@@ -669,34 +682,34 @@ export function CeoWorkdayOverridesPage() {
         <Card variant="glass" className="p-5">
           <div className="space-y-4">
             <SectionTitle
-              title={lt('How It Works')}
-              description={lt('Use these rules to control whether updates are expected on a date.')}
+              title={tx('ceo.workday.guide.title', 'How It Works')}
+              description={tx('ceo.workday.guide.description', 'Use these rules to control whether updates are expected on a date.')}
             />
 
             <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.06] px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-200/70">{lt('Holiday')}</p>
-              <p className="mt-2 text-sm leading-6 text-white/78">
-                {lt('Mark a date as a holiday when no update should be expected. Calendars should treat it as an off day instead of a missing day.')}
+              <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
+                {tx('ceo.workday.guide.holiday_description', 'Mark a date as a holiday when no update should be expected. Calendars should treat it as an off day instead of a missing day.')}
               </p>
             </div>
 
             <div className="rounded-[20px] border border-blue-500/18 bg-blue-500/[0.06] px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-blue-200/72">{lt('Short Day')}</p>
-              <p className="mt-2 text-sm leading-6 text-white/78">
-                {lt('Use a short day when working hours change. You can still require updates or turn them off for that shortened date.')}
+              <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
+                {tx('ceo.workday.guide.short_day_description', 'Use a short day when working hours change. You can still require updates or turn them off for that shortened date.')}
               </p>
             </div>
 
-            <div className="rounded-[20px] border border-white/8 bg-black/12 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">{lt('Member Targeting')}</p>
-              <p className="mt-2 text-sm leading-6 text-white/72">
-                {lt('Choose all members for company-wide holidays, or select one or more members when the override is specific to a subset of the team.')}
+            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">{tx('ceo.workday.guide.member_targeting_title', 'Member Targeting')}</p>
+              <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/78">
+                {tx('ceo.workday.guide.member_targeting_description', 'Choose all members for company-wide holidays, or select one or more members when the override is specific to a subset of the team.')}
               </p>
             </div>
 
             {memberOptionsQuery.isError ? (
-              <div className="rounded-[18px] border border-amber-500/25 bg-amber-500/8 px-4 py-4 text-sm text-amber-100/80">
-                {lt('Member options could not be loaded. You can still review existing overrides, but creating member-specific entries may fail until this list reloads.')}
+              <div className="rounded-[18px] border border-amber-500/25 bg-amber-50 px-4 py-4 text-sm text-amber-700 dark:bg-amber-500/8 dark:text-amber-100/80">
+                {tx('ceo.workday.guide.member_options_error', 'Member options could not be loaded. You can still review existing overrides, but creating member-specific entries may fail until this list reloads.')}
               </div>
             ) : null}
           </div>
@@ -712,14 +725,14 @@ export function CeoWorkdayOverridesPage() {
         footer={(
           <>
             <Button variant="secondary" onClick={closeDialog} disabled={isSubmitting}>
-              {lt('Cancel')}
+              {t('common.cancel')}
             </Button>
             <Button
               variant={editingOverride ? 'secondary' : 'success'}
               onClick={() => void handleSubmit()}
               loading={isSubmitting}
             >
-              {editingOverride ? lt('Save changes') : lt('Create override')}
+              {editingOverride ? t('common.save_changes') : tx('ceo.workday.dialog.create_action', 'Create Override')}
             </Button>
           </>
         )}
@@ -728,7 +741,7 @@ export function CeoWorkdayOverridesPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Date')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.date', 'Date')}</label>
                 <Input
                   type="date"
                   value={formState.specialDate}
@@ -736,7 +749,7 @@ export function CeoWorkdayOverridesPage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Type')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.type', 'Type')}</label>
                 <SelectField
                   value={String(formState.dayType)}
                   options={DAY_TYPE_OPTIONS.map((option) => ({ ...option, label: lt(option.label) }))}
@@ -746,26 +759,28 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Title')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.title', 'Title')}</label>
               <Input
                 value={formState.title}
                 onChange={(event) => setForm({ title: event.target.value })}
-                placeholder={formState.dayType === 'holiday' ? lt('Holiday title example') : lt('Short day title example')}
+                placeholder={formState.dayType === 'holiday'
+                  ? tx('ceo.workday.form.holiday_title_placeholder', 'Holiday title example')
+                  : tx('ceo.workday.form.short_day_title_placeholder', 'Short day title example')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Note')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.note', 'Note')}</label>
               <Textarea
                 value={formState.note}
                 onChange={(event) => setForm({ note: event.target.value })}
-                placeholder={lt('Optional note shown in calendars and focus panels.')}
+                placeholder={tx('ceo.workday.form.note_placeholder', 'Optional note shown in calendars and focus panels.')}
               />
             </div>
 
             {formState.dayType === 'short_day' ? (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Workday hours')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.workday_hours', 'Workday hours')}</label>
                 <Input
                   type="number"
                   min="1"
@@ -778,7 +793,7 @@ export function CeoWorkdayOverridesPage() {
             ) : null}
 
             <div>
-              <p className="mb-2 text-sm font-semibold text-white">{lt('Update rule')}</p>
+              <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.update_rule', 'Update rule')}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -790,8 +805,8 @@ export function CeoWorkdayOverridesPage() {
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
                   )}
                 >
-                  <p className="text-sm font-semibold">{lt('No update required')}</p>
-                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{lt('Use this for holidays or shortened days with no reporting.')}</p>
+                  <p className="text-sm font-semibold">{tx('ceo.workday.form.no_update_required', 'No update required')}</p>
+                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{tx('ceo.workday.form.no_update_required_hint', 'Use this for holidays or shortened days with no reporting.')}</p>
                 </button>
                 <button
                   type="button"
@@ -803,8 +818,8 @@ export function CeoWorkdayOverridesPage() {
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
                   )}
                 >
-                  <p className="text-sm font-semibold">{lt('Update still required')}</p>
-                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{lt('Use this when the day is shortened but reporting should still happen.')}</p>
+                  <p className="text-sm font-semibold">{tx('ceo.workday.form.update_required', 'Update still required')}</p>
+                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{tx('ceo.workday.form.update_required_hint', 'Use this when the day is shortened but reporting should still happen.')}</p>
                 </button>
               </div>
             </div>
@@ -812,7 +827,7 @@ export function CeoWorkdayOverridesPage() {
 
           <div className="space-y-4">
             <div>
-              <p className="mb-2 text-sm font-semibold text-white">{lt('Target scope')}</p>
+              <p className="mb-2 text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.target_scope', 'Target scope')}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
@@ -824,8 +839,8 @@ export function CeoWorkdayOverridesPage() {
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
                   )}
                 >
-                  <p className="text-sm font-semibold">{lt('All members')}</p>
-                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{lt('Company-wide holiday or short day.')}</p>
+                  <p className="text-sm font-semibold">{tx('ceo.workday.form.all_members', 'All members')}</p>
+                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{tx('ceo.workday.form.all_members_hint', 'Company-wide holiday or short day.')}</p>
                 </button>
                 <button
                   type="button"
@@ -837,8 +852,8 @@ export function CeoWorkdayOverridesPage() {
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
                   )}
                 >
-                  <p className="text-sm font-semibold">{lt('Selected members')}</p>
-                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{lt('Apply only to specific employees.')}</p>
+                  <p className="text-sm font-semibold">{tx('ceo.workday.form.selected_members', 'Selected members')}</p>
+                  <p className="mt-1 text-xs text-[var(--muted-strong)]">{tx('ceo.workday.form.selected_members_hint', 'Apply only to specific employees.')}</p>
                 </button>
               </div>
             </div>
@@ -846,17 +861,17 @@ export function CeoWorkdayOverridesPage() {
             {!formState.appliesToAll ? (
               <div>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <label className="text-sm font-semibold text-white">
-                    {editingOverride ? lt('Member') : lt('Members')}
+                  <label className="text-sm font-semibold text-[var(--foreground)]">
+                    {editingOverride ? tx('common.member', 'Member') : tx('common.members', 'Members')}
                   </label>
                   <Badge variant="secondary">
-                    {formState.memberIds.length} {lt('selected')}
+                    {tx('ceo.workday.form.selected_count', '{{count}} selected', { count: formState.memberIds.length })}
                   </Badge>
                 </div>
 
                 {memberOptionsQuery.isLoading && memberOptions.length === 0 ? (
-                  <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-6 text-sm text-[var(--muted)]">
-                    {lt('Loading member options...')}
+                  <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-6 text-sm text-[var(--muted)]">
+                    {tx('ceo.workday.form.loading_members', 'Loading member options...')}
                   </div>
                 ) : (
                   <MemberPicker
@@ -868,34 +883,36 @@ export function CeoWorkdayOverridesPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-[18px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-[var(--muted-strong)]">
-                {lt('This override will apply to every member in the company.')}
+              <div className="rounded-[18px] border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-5 text-sm text-[var(--muted-strong)]">
+                {tx('ceo.workday.form.applies_to_all', 'This override will apply to every member in the company.')}
               </div>
             )}
 
-            <div className="rounded-[20px] border border-white/8 bg-black/12 px-4 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/42">{lt('Preview')}</p>
+            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">{tx('common.preview', 'Preview')}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge variant={getTypeBadgeVariant(formState.dayType)}>
                   {getOverrideTypeLabel(formState.dayType)}
                 </Badge>
                 <Badge variant={formState.appliesToAll ? 'secondary' : 'outline'}>
                   {formState.appliesToAll
-                    ? lt('All members')
-                    : `${formState.memberIds.length} ${lt(formState.memberIds.length === 1 ? 'selected member' : 'selected members')}`}
+                    ? tx('ceo.workday.form.all_members', 'All members')
+                    : `${formState.memberIds.length} ${tx(formState.memberIds.length === 1 ? 'ceo.workday.form.selected_member' : 'ceo.workday.form.selected_members_count', formState.memberIds.length === 1 ? 'selected member' : 'selected members')}`}
                 </Badge>
                 <Badge variant={formState.updateRequired ? 'success' : 'warning'}>
-                  {formState.updateRequired ? lt('Update required') : lt('No update required')}
+                  {formState.updateRequired
+                    ? tx('ceo.workday.form.update_required_badge', 'Update required')
+                    : tx('ceo.workday.form.no_update_required', 'No update required')}
                 </Badge>
                 {formState.dayType === 'short_day' && formState.workdayHours ? (
                   <Badge variant="blue">{formState.workdayHours}h</Badge>
                 ) : null}
               </div>
-              <p className="mt-3 text-sm text-white/78">
-                {formState.title.trim() || lt('Override title will appear here.')}
+              <p className="mt-3 text-sm text-[var(--foreground)]/80">
+                {formState.title.trim() || tx('ceo.workday.form.preview_title_placeholder', 'Override title will appear here.')}
               </p>
               <p className="mt-2 text-xs text-[var(--muted)]">
-                {formState.specialDate ? formatShortDate(formState.specialDate) : lt('No date selected')}
+                {formState.specialDate ? formatShortDate(formState.specialDate) : tx('ceo.workday.form.no_date', 'No date selected')}
               </p>
             </div>
           </div>

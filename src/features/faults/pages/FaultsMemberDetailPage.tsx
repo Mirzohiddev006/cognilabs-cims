@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type {
@@ -45,10 +45,10 @@ import {
   getCompensationPolicyDeliveryBonusOptions,
   getCompensationPolicySeverityOptions,
   getEstimateRecordForMember,
+  getMonthOptions,
   getMonthName,
   getSuccessMessage,
   isRecord,
-  monthOptions,
   normalizeEstimateEntry,
   parseMaybeJson,
   resolveRecordDisplayName,
@@ -238,6 +238,7 @@ export function FaultsMemberDetailPage({
   memberIdOverride,
   mode = 'salary-detail',
 }: FaultsMemberDetailPageProps = {}) {
+  const monthOptions = useMemo(() => getMonthOptions(), [])
   const navigate = useNavigate()
   const params = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
