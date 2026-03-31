@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo, useState } from 'react'
+import { useTheme } from '../../../app/hooks/useTheme'
 import type { DayStatus } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
@@ -397,6 +398,8 @@ export function MemberMonthlyUpdateCalendarBoard({
   onMonthShift,
   onJumpToToday,
 }: MemberMonthlyUpdateCalendarBoardProps) {
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
   const todayKey = getTodayKey()
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [isFocusPanelOpen, setIsFocusPanelOpen] = useState(false)
@@ -520,17 +523,38 @@ export function MemberMonthlyUpdateCalendarBoard({
   const canJumpToToday = Boolean(onJumpToToday)
   const selectedDayDrawer = isFocusPanelOpen && selectedDay && typeof document !== 'undefined'
     ? createPortal(
-      <div className="fixed inset-0 z-[95]">
+      <div
+        className="fixed inset-0 z-[95] calendar-focus-drawer text-[var(--foreground)]"
+        data-theme={theme}
+        style={{ colorScheme: isLight ? 'light' : 'dark' }}
+      >
         <button
           type="button"
           aria-label={lt('Close focus day panel')}
-          className="absolute inset-0 bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.08),transparent_24%),rgba(248,250,252,0.78)] backdrop-blur-md dark:bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_24%),rgba(0,0,0,0.62)]"
+          className={cn(
+            'absolute inset-0 backdrop-blur-md',
+            isLight
+              ? 'bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.08),transparent_24%),rgba(248,250,252,0.78)]'
+              : 'bg-[radial-gradient(circle_at_right,rgba(59,130,246,0.10),transparent_24%),rgba(0,0,0,0.62)]',
+          )}
           onClick={() => setIsFocusPanelOpen(false)}
         />
 
         <div className="absolute inset-y-0 right-0 w-full sm:w-[min(88vw,430px)] xl:w-[min(34vw,480px)]">
-          <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))] text-[var(--foreground)] shadow-[0_20px_80px_rgba(15,23,42,0.16)] dark:bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] dark:shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
-            <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] bg-white/95 px-5 py-4 dark:bg-transparent sm:px-6">
+          <div
+            className={cn(
+              'sheet-enter flex h-full flex-col overflow-hidden border-l border-[var(--border)] text-[var(--foreground)]',
+              isLight
+                ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))] shadow-[0_20px_80px_rgba(15,23,42,0.16)]'
+                : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]',
+            )}
+          >
+            <div
+              className={cn(
+                'flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6',
+                isLight ? 'bg-white/95' : 'bg-transparent',
+              )}
+            >
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
                   {lt('Focus Day')}
@@ -546,7 +570,12 @@ export function MemberMonthlyUpdateCalendarBoard({
               <button
                 type="button"
                 onClick={() => setIsFocusPanelOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white dark:hover:border-white/16 dark:hover:bg-white/[0.06]"
+                className={cn(
+                  'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] transition',
+                  isLight
+                    ? 'bg-[var(--surface-elevated)] text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)]'
+                    : 'bg-white/[0.03] text-white hover:border-white/16 hover:bg-white/[0.06]',
+                )}
                 aria-label={lt('Close focus day panel')}
               >
                 <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -555,7 +584,14 @@ export function MemberMonthlyUpdateCalendarBoard({
               </button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto bg-white px-5 py-5 dark:bg-transparent sm:px-6">
+            <div
+              className={cn(
+                'min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6',
+                isLight
+                  ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]'
+                  : 'bg-transparent',
+              )}
+            >
               <div
                 className={cn(
                   'rounded-[24px] border p-5 shadow-[0_8px_24px_rgba(148,163,184,0.10)] dark:shadow-none',
@@ -748,9 +784,9 @@ export function MemberMonthlyUpdateCalendarBoard({
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'min-h-11 rounded-[14px] border-emerald-500/24 bg-emerald-50 px-5 text-emerald-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50',
+                        'min-h-11 rounded-[14px] border-emerald-500/24 bg-emerald-50 px-5 font-semibold text-emerald-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] hover:border-emerald-500/24 hover:bg-emerald-50 hover:text-emerald-800 active:bg-emerald-50 dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-400/18 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-50 dark:active:bg-emerald-400/10',
                         canJumpToToday
-                          ? 'hover:border-emerald-500/34 hover:bg-emerald-100 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14'
+                          ? 'cursor-pointer'
                           : 'cursor-default opacity-100',
                       )}
                     >
