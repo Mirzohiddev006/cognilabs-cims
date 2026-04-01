@@ -118,13 +118,14 @@ const initialRoleForm: RoleFormState = {
 }
 
 const managementStaticCardSurface =
-  'border-[#2576EF]/30 bg-[linear-gradient(180deg,rgba(37,118,239,0.09),rgba(37,118,239,0.03)_60%,rgba(255,255,255,1))] shadow-[inset_0_0_0_1px_rgba(37,118,239,0.12),0_8px_24px_rgba(37,118,239,0.10)] dark:border-blue-400/25 dark:bg-[linear-gradient(180deg,rgba(37,118,239,0.20),rgba(37,118,239,0.06))] dark:shadow-[0_0_0_1px_rgba(96,165,250,0.10),0_18px_36px_rgba(15,23,42,0.35)]'
-const managementStaticCardTopLine =
-  'bg-[linear-gradient(90deg,#2576EF,rgba(37,118,239,0.42),transparent_82%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.95),rgba(96,165,250,0.42),transparent_82%)]'
-const managementStaticCardTitle = 'text-[#1A5FD4] dark:text-blue-300'
-const managementStaticCardValue = 'text-[#0A1E5C] dark:text-white'
-const managementStaticCardHint = 'text-[#1A3060] dark:text-blue-200'
+  'border-gray-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-white/[0.04] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_8px_24px_rgba(0,0,0,0.25)]'
 
+const managementStaticCardTopLine =
+  'bg-gray-200 dark:bg-white/10'
+
+const managementStaticCardTitle = 'text-gray-500 dark:text-white/50'
+const managementStaticCardValue = 'text-gray-900 dark:text-white'
+const managementStaticCardHint = 'text-gray-500 dark:text-white/55'
 function SummaryCard({
   label,
   value,
