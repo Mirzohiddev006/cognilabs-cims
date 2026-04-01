@@ -117,6 +117,12 @@ const initialRoleForm: RoleFormState = {
   isSystem: false,
 }
 
+const managementStaticCardSurface =
+  'border-[var(--blue-border)] bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(255,255,255,0.96))] shadow-[0_14px_30px_rgba(59,130,246,0.10),inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-blue-400/22 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(59,130,246,0.06))] dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.28)]'
+const managementStaticCardTitle = 'text-[#1d4ed8] dark:text-blue-100'
+const managementStaticCardValue = 'text-[#173d97] dark:text-blue-50'
+const managementStaticCardHint = 'text-[#4e72be] dark:text-blue-100/84'
+
 function SummaryCard({
   label,
   value,
@@ -128,11 +134,11 @@ function SummaryCard({
 }) {
   const lt = translateCurrentLiteral
   return (
-    <div className="relative overflow-hidden rounded-[22px] border border-[var(--border)] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(148,163,184,0.14),inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-blue-500/18 dark:bg-blue-500/8 dark:shadow-none">
+    <div className={cn('relative overflow-hidden rounded-[22px] px-5 py-4', managementStaticCardSurface)}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.44),transparent_80%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.92),rgba(96,165,250,0.38),transparent_80%)]" />
-      <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#2b67e6] dark:text-blue-200">{lt(label)}</p>
-      <p className="mt-2 text-[2rem] font-bold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      <p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--muted-strong)] dark:text-white/82">{lt(hint)}</p>
+      <p className={cn('text-[12px] font-extrabold uppercase tracking-[0.24em]', managementStaticCardTitle)}>{lt(label)}</p>
+      <p className={cn('mt-2 text-[2rem] font-bold tracking-tight', managementStaticCardValue)}>{value}</p>
+      <p className={cn('mt-2 text-[13px] font-semibold leading-5', managementStaticCardHint)}>{lt(hint)}</p>
     </div>
   )
 }
@@ -1044,12 +1050,12 @@ export function CeoManagementPage() {
             className={cn(
               'rounded-[20px] border px-4 py-4 text-left transition',
               activeTab === tab.key
-                ? 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:border-blue-500/25 dark:bg-blue-600/10 dark:text-white dark:shadow-none'
-                : 'border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/72 dark:hover:border-white/16 dark:hover:bg-white/[0.05]',
+                ? 'border-[rgba(59,130,246,0.34)] bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(255,255,255,0.96))] text-[var(--foreground)] shadow-[0_16px_30px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-blue-400/28 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.22),rgba(59,130,246,0.08))] dark:text-white dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.26)]'
+                : 'border-[var(--blue-border)] bg-[linear-gradient(180deg,rgba(59,130,246,0.10),rgba(255,255,255,0.98))] text-[var(--foreground)] shadow-[0_12px_24px_rgba(59,130,246,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] hover:border-[rgba(59,130,246,0.36)] hover:bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(255,255,255,0.98))] dark:border-blue-500/18 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(59,130,246,0.05))] dark:text-white/84 dark:shadow-[0_0_0_1px_rgba(96,165,250,0.06),0_16px_28px_rgba(15,23,42,0.24)] dark:hover:border-blue-400/26 dark:hover:bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(59,130,246,0.06))]',
             )}
           >
-            <p className={cn('text-sm font-semibold', activeTab === tab.key ? 'text-[#1d4ed8] dark:text-blue-100' : 'text-[#2b67e6] dark:text-blue-200')}>{lt(tab.label)}</p>
-            <p className="mt-2 text-xs leading-5 font-medium text-[var(--muted-strong)] dark:text-[var(--muted-strong)]">{lt(tab.description)}</p>
+            <p className={cn('text-sm font-semibold', activeTab === tab.key ? managementStaticCardValue : managementStaticCardTitle)}>{lt(tab.label)}</p>
+            <p className={cn('mt-2 text-[13px] leading-5 font-semibold', managementStaticCardHint)}>{lt(tab.description)}</p>
           </button>
         ))}
       </div>
@@ -1318,11 +1324,11 @@ export function CeoManagementPage() {
             />
           </div>
 
-            <div className="mt-5 rounded-[22px] border border-white/10 bg-white/[0.03] p-5">
+            <div className={cn('mt-5 rounded-[22px] p-5', managementStaticCardSurface)}>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-white">{lt('Image library')}</p>
-                  <p className="mt-1 text-xs text-(--muted)">
+                  <p className={cn('text-sm font-semibold', managementStaticCardValue)}>{lt('Image library')}</p>
+                  <p className={cn('mt-1 text-xs leading-5', managementStaticCardHint)}>
                     {lt('GET /management/images and GET /management/images/detail are connected here.')}
                   </p>
                 </div>
@@ -1354,7 +1360,7 @@ export function CeoManagementPage() {
 
             <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.85fr_0.85fr]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Search')}</label>
+                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Search')}</label>
                 <Input
                   value={imageSearch}
                   onChange={(event) => setImageSearch(event.target.value)}
@@ -1363,7 +1369,7 @@ export function CeoManagementPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{lt('Category')}</label>
+                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Category')}</label>
                 <SelectField
                   value={imageCategoryFilter}
                   options={imageCategoryOptions.map((option) => ({
@@ -1386,7 +1392,7 @@ export function CeoManagementPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-white">{tr('Reference filter', 'Boglanish filtri', 'Filtr svyazei')}</label>
+                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{tr('Reference filter', 'Boglanish filtri', 'Filtr svyazei')}</label>
                 <SelectField
                   value={imageReferenceFilter}
                   options={imageReferenceFilterOptions.map((option) => ({
