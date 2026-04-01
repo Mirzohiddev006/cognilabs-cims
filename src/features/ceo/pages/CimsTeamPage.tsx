@@ -138,7 +138,7 @@ export function CimsTeamPage() {
                   </div>
                   <div>
                     <p className={cn('text-[10px] font-semibold uppercase tracking-[0.24em]', accent.label)}>{eyebrow}</p>
-                    <h3 className="mt-1 text-xl font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{title}</h3>
+                    <h3 className={cn('mt-1 text-xl font-semibold tracking-tight', accent.label)}>{title}</h3>
                   </div>
                 </div>
 
