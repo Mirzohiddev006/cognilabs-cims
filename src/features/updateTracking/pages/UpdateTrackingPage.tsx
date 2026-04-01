@@ -1575,7 +1575,7 @@ export function UpdateTrackingPage() {
                   <div className="cal-inner overflow-hidden rounded-[28px] border p-3.5 sm:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-xl">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-300/72">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#3D9460] dark:text-emerald-300/72">
                           Calendar System
                         </p>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -1613,7 +1613,7 @@ export function UpdateTrackingPage() {
                           variant="secondary"
                           size="sm"
                           onClick={handleJumpToToday}
-                          className="min-h-11 rounded-[14px] border-emerald-500/20 bg-emerald-50 px-5 text-emerald-700 hover:border-emerald-500/30 hover:bg-emerald-100 dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
+                          className="min-h-11 rounded-[14px] border-[#9ED6B2] bg-[linear-gradient(180deg,#ECFDF3,#DDF7E8)] px-5 font-semibold tracking-[0.01em] text-[#166534] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_20px_rgba(22,101,52,0.08)] hover:border-[#79C797] hover:bg-[linear-gradient(180deg,#E1FAEB,#CEF2DE)] hover:text-[#14532D] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
                         >
                           {selectedMonthName} {year}
                         </Button>
