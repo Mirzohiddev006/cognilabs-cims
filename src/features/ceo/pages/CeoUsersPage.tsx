@@ -12,7 +12,7 @@ import {
 import type { PermissionMap } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { formatCompactNumber, formatShortDate } from '../../../shared/lib/format'
+import { formatCompactNumber, formatShortDate, formatShortMonthDayTime } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -58,13 +58,6 @@ const emptySentMessages: CeoMessageRecord[] = []
 const emptyIncomingMessages: IncomingCeoMessageRecord[] = []
 const now = new Date()
 const supportedUserRoles = ['Member', 'Customer', 'SalesManager', 'Finance', 'CEO', 'Admin'] as const
-const messageTimestampFormatter = new Intl.DateTimeFormat('en-GB', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-})
-
 type UserConversationEntry = {
   id: string
   direction: 'incoming' | 'outgoing'
@@ -274,7 +267,7 @@ function formatMessageTimestamp(sentAt?: string | null) {
     return '-'
   }
 
-  return messageTimestampFormatter.format(parsed)
+  return formatShortMonthDayTime(sentAt)
 }
 
 function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {

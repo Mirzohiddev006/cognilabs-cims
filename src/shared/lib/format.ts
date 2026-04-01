@@ -45,6 +45,27 @@ const localizedMonthNames: Record<AppLocale, string[]> = {
   ],
 }
 
+const localizedShortMonthNames: Record<AppLocale, string[]> = {
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  uz: ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyn', 'Iyl', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'],
+  ru: ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'],
+}
+
+const localizedShortWeekdayNames: Record<AppLocale, string[]> = {
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+  uz: ['Yak', 'Dus', 'Ses', 'Cho', 'Pay', 'Jum', 'Sha'],
+  ru: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+}
+
+function parseDateInput(date?: string | null) {
+  if (!date) {
+    return null
+  }
+
+  const parsed = new Date(date)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
 export function getLocalizedMonthName(month: number, locale: AppLocale = getStoredLocale()) {
   const index = Math.trunc(month) - 1
 
@@ -54,6 +75,24 @@ export function getLocalizedMonthName(month: number, locale: AppLocale = getStor
 
   // Some browsers can return month codes like "M04" for month-only Intl formatting in Uzbek.
   return localizedMonthNames[locale][index]
+}
+
+export function getLocalizedShortMonthName(month: number, locale: AppLocale = getStoredLocale()) {
+  const index = Math.trunc(month) - 1
+
+  if (index < 0 || index >= 12) {
+    return ''
+  }
+
+  return localizedShortMonthNames[locale][index]
+}
+
+export function getLocalizedShortWeekdayName(dayIndex: number, locale: AppLocale = getStoredLocale()) {
+  if (dayIndex < 0 || dayIndex >= 7) {
+    return ''
+  }
+
+  return localizedShortWeekdayNames[locale][dayIndex]
 }
 
 export function formatCurrency(value: number, currency = 'UZS') {
@@ -71,12 +110,67 @@ export function formatCompactNumber(value: number) {
   }).format(value)
 }
 
-export function formatShortDate(date: string) {
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date))
+export function formatShortMonthDay(date?: string | null, locale: AppLocale = getStoredLocale()) {
+  const parsed = parseDateInput(date)
+
+  if (!parsed) {
+    return '-'
+  }
+
+  const day = padDatePart(parsed.getDate())
+  const month = getLocalizedShortMonthName(parsed.getMonth() + 1, locale)
+
+  if (locale === 'en') {
+    return `${month} ${parsed.getDate()}`
+  }
+
+  return `${day} ${month}`
+}
+
+export function formatShortDate(date?: string | null, locale: AppLocale = getStoredLocale()) {
+  const parsed = parseDateInput(date)
+
+  if (!parsed) {
+    return '-'
+  }
+
+  const day = padDatePart(parsed.getDate())
+  const month = getLocalizedShortMonthName(parsed.getMonth() + 1, locale)
+  const year = parsed.getFullYear()
+
+  if (locale === 'en') {
+    return `${month} ${parsed.getDate()}, ${year}`
+  }
+
+  return `${day} ${month} ${year}`
+}
+
+function formatTimePart(date: Date, locale: AppLocale = getStoredLocale()) {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+}
+
+export function formatShortDateTime(date?: string | null, locale: AppLocale = getStoredLocale()) {
+  const parsed = parseDateInput(date)
+
+  if (!parsed) {
+    return '-'
+  }
+
+  return `${formatShortDate(date, locale)} ${formatTimePart(parsed, locale)}`
+}
+
+export function formatShortMonthDayTime(date?: string | null, locale: AppLocale = getStoredLocale()) {
+  const parsed = parseDateInput(date)
+
+  if (!parsed) {
+    return '-'
+  }
+
+  return `${formatShortMonthDay(date, locale)} ${formatTimePart(parsed, locale)}`
 }
 
 function padDatePart(value: number) {

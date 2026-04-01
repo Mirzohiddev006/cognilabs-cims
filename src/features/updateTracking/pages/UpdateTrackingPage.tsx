@@ -17,6 +17,31 @@ import { ErrorStateBlock } from '../../../shared/ui/state-block'
 const now = new Date()
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const weekdayLongLabelByShortKey: Record<string, string> = {
+  Mon: 'Monday',
+  Tue: 'Tuesday',
+  Wed: 'Wednesday',
+  Thu: 'Thursday',
+  Fri: 'Friday',
+  Sat: 'Saturday',
+  Sun: 'Sunday',
+}
+const weekdayFallbacks: Record<string, { uz: string; ru: string }> = {
+  Mon: { uz: 'Dus', ru: 'Pn' },
+  Tue: { uz: 'Ses', ru: 'Vt' },
+  Wed: { uz: 'Cho', ru: 'Sr' },
+  Thu: { uz: 'Pay', ru: 'Cht' },
+  Fri: { uz: 'Jum', ru: 'Pt' },
+  Sat: { uz: 'Sha', ru: 'Sb' },
+  Sun: { uz: 'Yak', ru: 'Vs' },
+  Monday: { uz: 'Dushanba', ru: 'Ponedelnik' },
+  Tuesday: { uz: 'Seshanba', ru: 'Vtornik' },
+  Wednesday: { uz: 'Chorshanba', ru: 'Sreda' },
+  Thursday: { uz: 'Payshanba', ru: 'Chetverg' },
+  Friday: { uz: 'Juma', ru: 'Pyatnitsa' },
+  Saturday: { uz: 'Shanba', ru: 'Subbota' },
+  Sunday: { uz: 'Yakshanba', ru: 'Voskresenye' },
+}
 const calendarCollectionKeys = ['calendar', 'days', 'entries', 'items', 'data', 'results']
 const recentCollectionKeys = ['updates', 'items', 'results', 'data', 'recent', 'recent_updates', 'entries', 'rows']
 const trendCollectionKeys = ['trends', 'months', 'items', 'data', 'results']
@@ -393,6 +418,43 @@ function getFirstArray(source: UnknownRecord, keys: string[]) {
 
 function getMonthName(month: number): string {
   return getLocalizedMonthName(month)
+}
+
+function getLocalizedWeekdayLabel(key: string) {
+  const fallback = weekdayFallbacks[key]
+
+  if (!fallback) {
+    return key
+  }
+
+  return tr(key, fallback.uz, fallback.ru)
+}
+
+function getWeekdayShortKeyFromValue(value?: string | null) {
+  const normalized = value?.trim().slice(0, 3).toLowerCase()
+
+  if (!normalized) {
+    return null
+  }
+
+  const mapping: Record<string, string> = {
+    mon: 'Mon',
+    tue: 'Tue',
+    wed: 'Wed',
+    thu: 'Thu',
+    fri: 'Fri',
+    sat: 'Sat',
+    sun: 'Sun',
+    dus: 'Mon',
+    ses: 'Tue',
+    cho: 'Wed',
+    pay: 'Thu',
+    jum: 'Fri',
+    sha: 'Sat',
+    yak: 'Sun',
+  }
+
+  return mapping[normalized] ?? null
 }
 
 function monthNameToNumber(value: string): number | null {
@@ -843,7 +905,9 @@ function formatRecentDate(value?: string) {
     return ''
   }
 
-  return new Date(value).toLocaleDateString(getIntlLocale(), { month: 'short', day: 'numeric' })
+  const parsed = new Date(value)
+
+  return `${getMonthName(parsed.getMonth() + 1)} ${parsed.getDate()}`
 }
 
 function getCalendarCounts(calendar: CalendarData | null) {
@@ -910,12 +974,15 @@ function formatCalendarDayLabel(day: CalendarDay | null) {
     return day.date
   }
 
-  return parsedDate.toLocaleDateString(getIntlLocale(), {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const weekdayName = getLocalizedWeekdayLabel(weekdayLongLabelByShortKey[weekdayLabels[(parsedDate.getDay() + 6) % 7]] ?? 'Monday')
+  const monthName = getMonthName(parsedDate.getMonth() + 1)
+  const dateLabel = `${parsedDate.getDate()} ${monthName} ${parsedDate.getFullYear()}`
+
+  if (getIntlLocale().startsWith('en')) {
+    return `${weekdayName}, ${monthName} ${parsedDate.getDate()}, ${parsedDate.getFullYear()}`
+  }
+
+  return `${dateLabel}, ${weekdayName}`
 }
 
 function getSpecialDayLabel(day: CalendarDay | null | undefined) {
@@ -923,7 +990,9 @@ function getSpecialDayLabel(day: CalendarDay | null | undefined) {
     return null
   }
 
-  return day.workdayOverride.day_type === 'short_day' ? 'Short Day' : 'Holiday'
+  return day.workdayOverride.day_type === 'short_day'
+    ? tr('Short Day', 'Qisqa kun', 'Korotkiy den')
+    : tr('Holiday', 'Bayram', 'Prazdnik')
 }
 
 function isHolidayCalendarDay(day: CalendarDay | null | undefined) {
@@ -985,11 +1054,11 @@ function getCalendarDayFocusClass(day: CalendarDay | null) {
 function getCalendarStatusLabel(status: DayStatus, day?: CalendarDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Submitted'
-  if (status === 'missing') return 'Missing'
-  if (status === 'sunday') return specialLabel ?? 'Off Day'
-  if (status === 'future') return 'Upcoming'
-  return 'No status'
+  if (status === 'submitted') return tr('Submitted', 'Topshirildi', 'Otpravleno')
+  if (status === 'missing') return tr('Missing', 'Yetishmaydi', 'Propushcheno')
+  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Vyhodnoi den')
+  if (status === 'future') return tr('Upcoming', 'Yaqinlashmoqda', 'Skoro')
+  return tr('No status', 'Holat yoq', 'Statusa net')
 }
 
 function getCalendarStatusVariant(status: DayStatus, day?: CalendarDay | null) {
@@ -1008,81 +1077,73 @@ function getCalendarDetailText(day: CalendarDay | null) {
   }
 
   if (!day) {
-    return 'Select a calendar day to inspect the update returned by the API.'
+    return tr(
+      'Select a calendar day to inspect the update returned by the API.',
+      'API qaytargan update ni korish uchun kalendardan bir kunni tanlang.',
+      'Vyberite den v kalendare, chtoby proverit obnovlenie, vozvrashchennoe API.',
+    )
   }
 
   if (day.workdayOverride) {
     const specialLabel = getSpecialDayLabel(day)
-    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? 'Special day'} is configured for this date.`
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? tr('Special day', 'Maxsus kun', 'Osobyy den')} ${tr('is configured for this date.', 'bu sana uchun sozlangan.', 'nastroen dlya etoy daty.')}`
   }
 
   if (day.status === 'missing') {
-    return 'No update was submitted for this working day.'
+    return tr('No update was submitted for this working day.', 'Bu ish kuni uchun update yuborilmagan.', 'Dlya etogo rabochego dnya obnovlenie ne bylo otpravleno.')
   }
 
   if (day.status === 'sunday') {
-    return isHolidayCalendarDay(day) ? 'This date is marked as a holiday.' : 'This date is an off day.'
+    return isHolidayCalendarDay(day)
+      ? tr('This date is marked as a holiday.', 'Bu sana bayram kuni deb belgilangan.', 'Eta data otmechena kak prazdnichnyy den.')
+      : tr('This date is an off day.', 'Bu sana dam olish kuni.', 'Eta data yavlyaetsya vyhodnym dnem.')
   }
 
   if (day.status === 'future') {
-    return 'This date is still in the future.'
+    return tr('This date is still in the future.', 'Bu sana hali kelajakda.', 'Eta data vse eshche v budushchem.')
   }
 
-  return 'No update content was returned by the API for this date.'
+  return tr(
+    'No update content was returned by the API for this date.',
+    'Bu sana uchun API update kontentini qaytarmadi.',
+    'API ne vernulo soderzhimoe obnovleniya dlya etoy daty.',
+  )
 }
 
 function getCalendarCellStatusLabel(status: DayStatus, day?: CalendarDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return 'Updated'
-  if (status === 'missing') return 'Missed'
-  if (status === 'sunday') return specialLabel ?? 'Off Day'
-  if (status === 'future') return 'Soon'
-  return 'Open'
+  if (status === 'submitted') return tr('Updated', 'Yangilangan', 'Obnovleno')
+  if (status === 'missing') return tr('Missed', 'Otib yuborilgan', 'Propushcheno')
+  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Vyhodnoi den')
+  if (status === 'future') return tr('Soon', 'Yaqinda', 'Skoro')
+  return tr('Open', 'Ochiq', 'Otkryto')
 }
 
 function getCalendarShortWeekday(day: CalendarDay) {
-  if (day.weekday?.trim()) {
-    return day.weekday.slice(0, 3)
-  }
+  const parsedDate = day.date ? parseDateValue(day.date) : null
+  const weekdayKey = parsedDate && !Number.isNaN(parsedDate.getTime())
+    ? weekdayLabels[(parsedDate.getDay() + 6) % 7]
+    : getWeekdayShortKeyFromValue(day.weekday)
 
-  if (!day.date) {
-    return ''
-  }
-
-  const parsedDate = parseDateValue(day.date)
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return ''
-  }
-
-  return weekdayLabels[(parsedDate.getDay() + 6) % 7]
+  return weekdayKey ? getLocalizedWeekdayLabel(weekdayKey) : ''
 }
 
 function getCalendarBoardWeekday(day: CalendarDay) {
-  const weekdayMap: Record<string, string> = {
-    mon: 'DUS',
-    tue: 'SES',
-    wed: 'CHO',
-    thu: 'PAY',
-    fri: 'JUM',
-    sat: 'SHA',
-    sun: 'YAK',
+  return getCalendarShortWeekday(day).toUpperCase()
+}
+
+function getCalendarLongWeekday(day: CalendarDay) {
+  const parsedDate = day.date ? parseDateValue(day.date) : null
+  const weekdayKey = parsedDate && !Number.isNaN(parsedDate.getTime())
+    ? weekdayLabels[(parsedDate.getDay() + 6) % 7]
+    : getWeekdayShortKeyFromValue(day.weekday)
+
+  if (!weekdayKey) {
+    return day.weekday?.trim() ?? ''
   }
 
-  if (day.date) {
-    const parsedDate = parseDateValue(day.date)
-
-    if (!Number.isNaN(parsedDate.getTime())) {
-      return ['YAK', 'DUS', 'SES', 'CHO', 'PAY', 'JUM', 'SHA'][parsedDate.getDay()]
-    }
-  }
-
-  if (day.weekday?.trim()) {
-    return weekdayMap[day.weekday.trim().slice(0, 3).toLowerCase()] ?? day.weekday.trim().slice(0, 3).toUpperCase()
-  }
-
-  return ''
+  return getLocalizedWeekdayLabel(weekdayLongLabelByShortKey[weekdayKey] ?? weekdayKey)
 }
 
 function getCalendarEntryCount(day: CalendarDay) {
@@ -1092,29 +1153,31 @@ function getCalendarEntryCount(day: CalendarDay) {
 function getCalendarCellHint(day: CalendarDay) {
   if (day.hasUpdate) {
     if ((day.updates_count ?? 0) > 1) {
-      return `${day.updates_count} updates captured`
+      return `${day.updates_count} ${tr('updates captured', 'ta yangilanish qayd etildi', 'obnovleniy zafiksirovano')}`
     }
 
     return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
   }
 
   if (day.workdayOverride) {
-    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || 'Special day'
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || tr('Special day', 'Maxsus kun', 'Osobyy den')
   }
 
   if (day.status === 'missing') {
-    return 'Needs submission'
+    return tr('Needs submission', 'Yuborish kerak', 'Nuzhna otpravka')
   }
 
   if (day.status === 'sunday') {
-    return isHolidayCalendarDay(day) ? 'Holiday schedule' : 'Weekend / off day'
+    return isHolidayCalendarDay(day)
+      ? tr('Holiday schedule', 'Bayram jadvali', 'Prazdnichnyy grafik')
+      : tr('Weekend / off day', 'Dam olish / ish bolmagan kun', 'Vyhodnoy / nerabochiy den')
   }
 
   if (day.status === 'future') {
-    return 'Awaiting date'
+    return tr('Awaiting date', 'Sana kutilmoqda', 'Ozhidanie daty')
   }
 
-  return 'No update yet'
+  return tr('No update yet', 'Hali update yoq', 'Obnovleniya poka net')
 }
 
 function shouldShowCalendarTimePanel(day: CalendarDay) {
@@ -1307,9 +1370,13 @@ export function UpdateTrackingPage() {
     try {
       const nextData = await loadUpdateTrackingPageData(month, year, true)
       pageQuery.setData(nextData)
-      showToast({ title: 'Refreshed', description: 'Your update data has been reloaded.', tone: 'success' })
+      showToast({
+        title: tr('Refreshed', 'Yangilandi', 'Obnovleno'),
+        description: tr('Your update data has been reloaded.', 'Update malumotlaringiz qayta yuklandi.', 'Vashi dannye obnovleniy byli perezagruzheny.'),
+        tone: 'success',
+      })
     } catch (error) {
-      showToast({ title: 'Refresh failed', description: getApiErrorMessage(error), tone: 'error' })
+      showToast({ title: tr('Refresh failed', 'Yangilash muvaffaqiyatsiz tugadi', 'Obnovlenie ne udalos'), description: getApiErrorMessage(error), tone: 'error' })
     }
   }
 
@@ -1356,10 +1423,10 @@ export function UpdateTrackingPage() {
   if (pageQuery.isError && !pageQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="Updates"
-        title="Updates unavailable"
-        description="Could not load your update statistics."
-        actionLabel="Retry"
+        eyebrow={tr('Updates', 'Yangilanishlar', 'Obnovleniya')}
+        title={tr('Updates unavailable', 'Yangilanishlar mavjud emas', 'Obnovleniya nedostupny')}
+        description={tr('Could not load your update statistics.', 'Update statistikangizni yuklab bolmadi.', 'Ne udalos zagruzit statistiku obnovleniy.')}
+        actionLabel={tr('Retry', 'Qayta urinish', 'Povtorit')}
         onAction={() => void pageQuery.refetch()}
       />
     )
@@ -1399,19 +1466,23 @@ export function UpdateTrackingPage() {
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--blue-text)]">
-                Personal
+                {tr('Personal', 'Shaxsiy', 'Lichnoye')}
               </p>
               <h1 className="page-header-title mt-1 text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
-                My Updates
+                {tr('My Updates', 'Mening update larim', 'Moi obnovleniya')}
               </h1>
               <p className="mt-1.5 text-[13px] text-(--muted)">
-                Track your daily update submissions and performance.
+                {tr(
+                  'Track your daily update submissions and performance.',
+                  'Kunlik update yuborishlaringiz va samaradorligingizni kuzating.',
+                  'Otslezhivayte ezhednevnye otpravki obnovleniy i effektivnost.',
+                )}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="cal-control flex items-center gap-2 rounded-xl border px-3 py-2">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Year</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tr('Year', 'Yil', 'God')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -1425,7 +1496,7 @@ export function UpdateTrackingPage() {
               </div>
 
               <div className="cal-control flex items-center gap-2 rounded-xl border px-3 py-2">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">Month</label>
+                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tr('Month', 'Oy', 'Mesyats')}</label>
                 <select
                   value={month}
                   onChange={(event) => handleMonthChange(Number(event.target.value))}
@@ -1447,14 +1518,18 @@ export function UpdateTrackingPage() {
                   <path d="M1.5 8a6.5 6.5 0 1 1 1.2 3.8" />
                   <path d="M1.5 12.5V8.5h4" />
                 </svg>
-                Refresh
+                {tr('Refresh', 'Yangilash', 'Obnovit')}
               </Button>
             </div>
           </div>
 
           {pageQuery.data?.errors.stats ? (
             <div className="relative z-10 mt-4 rounded-[18px] border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/82">
-              Stats API unavailable. Calendar and other sections continue loading independently.
+              {tr(
+                'Stats API unavailable. Calendar and other sections continue loading independently.',
+                'Stats API mavjud emas. Kalendar va boshqa bolimlar mustaqil yuklanishda davom etadi.',
+                'Stats API nedostupen. Kalendar i drugie razdely prodolzhayut zagruzhatsya otdelno.',
+              )}
             </div>
           ) : null}
         </div>
@@ -1463,7 +1538,7 @@ export function UpdateTrackingPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 stagger-children">
         <SummaryCard
           accent="violet"
-          label="Monthly Completion"
+          label={tr('Monthly Completion', 'Oylik bajarilish', 'Mesyachnoe vypolnenie')}
           value={`${monthlyPct.toFixed(1)}%`}
           icon={(
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -1475,7 +1550,7 @@ export function UpdateTrackingPage() {
         />
         <SummaryCard
           accent={weeklyPct >= 80 ? 'success' : weeklyPct >= 50 ? 'warning' : 'default'}
-          label="Weekly Completion"
+          label={tr('Weekly Completion', 'Haftalik bajarilish', 'Nedelnoye vypolnenie')}
           value={`${weeklyPct.toFixed(1)}%`}
           icon={(
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -1486,7 +1561,7 @@ export function UpdateTrackingPage() {
         />
         <SummaryCard
           accent="blue"
-          label="Updates This Month"
+          label={tr('Updates This Month', 'Bu oydagi update lar', 'Obnovleniya za etot mesyats')}
           value={stats?.updates_this_month ?? 0}
           icon={(
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -1497,7 +1572,7 @@ export function UpdateTrackingPage() {
         />
         <SummaryCard
           accent="default"
-          label="Updates This Week"
+          label={tr('Updates This Week', 'Bu haftadagi update lar', 'Obnovleniya za etu nedelyu')}
           value={stats?.updates_this_week ?? 0}
           icon={(
             <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -1510,7 +1585,7 @@ export function UpdateTrackingPage() {
       {trends.length > 0 && (
         <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-(--border) px-5 py-4">
-            <SectionTitle title="Performance Trends" />
+            <SectionTitle title={tr('Performance Trends', 'Samaradorlik trendlari', 'Trendy effektivnosti')} />
           </div>
           <div className="space-y-3 px-5 py-4">
             {trends.slice(-6).map((trend) => {
@@ -1539,7 +1614,7 @@ export function UpdateTrackingPage() {
           <div className="border-b border-(--border) px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
               <SectionTitle
-                title={`${selectedMonthName} ${year} Calendar`}
+                title={`${selectedMonthName} ${year} ${tr('Calendar', 'Kalendar', 'Kalendary')}`}
                 description={tr(
                   'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
                   'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
@@ -1548,17 +1623,17 @@ export function UpdateTrackingPage() {
               />
               {calendar ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="success" dot>{calendarCounts.submitted} submitted</Badge>
-                  <Badge variant="danger" dot>{calendarCounts.missing} missing</Badge>
+                  <Badge variant="success" dot>{calendarCounts.submitted} {tr('submitted', 'topshirildi', 'otpravleno')}</Badge>
+                  <Badge variant="danger" dot>{calendarCounts.missing} {tr('missing', 'yetishmadi', 'propushcheno')}</Badge>
                   {calendarCounts.open > 0 ? (
-                    <Badge variant="secondary">{calendarCounts.open} open</Badge>
+                    <Badge variant="secondary">{calendarCounts.open} {tr('open', 'ochiq', 'otkryto')}</Badge>
                   ) : null}
                   {calendarCounts.holiday > 0 ? (
-                    <Badge variant="blue" dot>{calendarCounts.holiday} holidays</Badge>
+                    <Badge variant="blue" dot>{calendarCounts.holiday} {tr('holidays', 'bayramlar', 'prazdniki')}</Badge>
                   ) : null}
-                  <Badge variant="warning" dot>{calendarCounts.offDay} off days</Badge>
+                  <Badge variant="warning" dot>{calendarCounts.offDay} {tr('off days', 'dam olish kunlari', 'vyhodnye dni')}</Badge>
                   {calendarCounts.upcoming > 0 ? (
-                    <Badge variant="secondary">{calendarCounts.upcoming} upcoming</Badge>
+                    <Badge variant="secondary">{calendarCounts.upcoming} {tr('upcoming', 'yaqinlashmoqda', 'skoro')}</Badge>
                   ) : null}
                 </div>
               ) : null}
@@ -1566,9 +1641,9 @@ export function UpdateTrackingPage() {
           </div>
           <div className="px-4 py-4 sm:px-5">
             {pageQuery.isLoading && !calendar ? (
-              <div className="py-10 text-center text-sm text-(--muted)">Loading calendar...</div>
+              <div className="py-10 text-center text-sm text-(--muted)">{tr('Loading calendar...', 'Kalendar yuklanmoqda...', 'Kalendar zagruzhaetsya...')}</div>
             ) : !calendar ? (
-              <div className="py-10 text-center text-sm text-(--muted)">No calendar data for this period.</div>
+              <div className="py-10 text-center text-sm text-(--muted)">{tr('No calendar data for this period.', 'Bu davr uchun kalendar malumoti yoq.', 'Dlya etogo perioda net dannykh kalendarya.')}</div>
             ) : (
               <>
                 <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
@@ -1576,7 +1651,7 @@ export function UpdateTrackingPage() {
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-xl">
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#3D9460] dark:text-emerald-300/72">
-                          Calendar System
+                          {tr('Calendar System', 'Kalendar tizimi', 'Sistema kalendarya')}
                         </p>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <h3 className="cal-heading text-[1.45rem] font-semibold tracking-tight sm:text-[1.65rem]">
@@ -1586,7 +1661,7 @@ export function UpdateTrackingPage() {
                             variant="violet"
                             className="rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]"
                           >
-                            {monthProgressPct.toFixed(0)}% pace
+                            {monthProgressPct.toFixed(0)}{tr('% pace', '% temp', '% temp')}
                           </Badge>
                         </div>
                         <p className="mt-2 text-[12px] leading-5 text-(--muted)">
@@ -1646,29 +1721,29 @@ export function UpdateTrackingPage() {
                     <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,330px)] lg:items-start">
                       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                       <Badge variant="success" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                        {calendarCounts.submitted} updated
+                        {calendarCounts.submitted} {tr('updated', 'yangilandi', 'obnovleno')}
                       </Badge>
                       <Badge variant="danger" dot className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                        {calendarCounts.missing} missed
+                        {calendarCounts.missing} {tr('missed', 'otkazib yuborildi', 'propushcheno')}
                       </Badge>
                       <Badge variant="secondary" className="w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                        {attentionDaysCount} attention
+                        {attentionDaysCount} {tr('attention', 'etibor', 'vnimanie')}
                       </Badge>
                       <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
                         <span className="truncate">
-                          Next:{' '}
+                          {tr('Next', 'Keyingi', 'Sleduyushchiy')}:{' '}
                           {nextUpcomingDay
                             ? `${getCalendarShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
                             : latestSubmittedDay
                               ? `${getCalendarShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
-                              : 'None'}
+                              : tr('None', 'Yoq', 'Net')}
                         </span>
                       </Badge>
                       </div>
                       <div className="flex w-full items-center gap-3 rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-3 py-2 sm:min-w-[250px] dark:border-white/8 dark:bg-white/[0.04]">
                         <div className="min-w-0 flex-1">
                           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-700/70 dark:text-white/36">
-                            Completion To Date
+                            {tr('Completion To Date', 'Shu kungacha bajarilish', 'Vypolnenie na segodnyashniy den')}
                           </p>
                           <p className="mt-1 text-[11px] text-[var(--muted-strong)] dark:text-white/72">
                             {elapsedWorkingDays > 0
@@ -1695,7 +1770,7 @@ export function UpdateTrackingPage() {
                             key={label}
                             className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                           >
-                            {label}
+                            {getLocalizedWeekdayLabel(label)}
                           </div>
                         ))}
                       </div>
@@ -1732,7 +1807,7 @@ export function UpdateTrackingPage() {
                                       : 'hover:-translate-y-[1px] hover:border-(--border-hover)',
                                     isToday && !isSelected && 'shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                                   )}
-                                  title={`${isSelected ? 'Selected: ' : ''}${formatCalendarDayLabel(day) || `Day ${day.day}`}: ${getCalendarStatusLabel(day.status, day)}`}
+                                  title={`${isSelected ? `${tr('Selected', 'Tanlangan', 'Vybran')}: ` : ''}${formatCalendarDayLabel(day) || `${tr('Day', 'Kun', 'Den')} ${day.day}`}: ${getCalendarStatusLabel(day.status, day)}`}
                                 >
                                   <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', getCalendarDayAccentClass(day))} />
                                   <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
@@ -1771,7 +1846,7 @@ export function UpdateTrackingPage() {
                                       <div className="grid grid-cols-2 gap-1.5">
                                         <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                           <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                            In
+                                            {tr('In', 'Kirish', 'Vkhod')}
                                           </p>
                                           <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                             {formatCalendarWorkTime(day.checkInTime)}
@@ -1779,7 +1854,7 @@ export function UpdateTrackingPage() {
                                         </div>
                                         <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                           <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                            Out
+                                            {tr('Out', 'Chiqish', 'Vykhod')}
                                           </p>
                                           <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                             {formatCalendarWorkTime(day.checkOutTime)}
@@ -1814,25 +1889,25 @@ export function UpdateTrackingPage() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-(--muted)">
-                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.55)]" />
-                      Selected
+                      {tr('Selected', 'Tanlangan', 'Vybran')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_8px_rgba(125,211,252,0.55)]" />
-                      Today
+                      {tr('Today', 'Bugun', 'Segodnya')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
-                      Updated
+                      {tr('Updated', 'Yangilangan', 'Obnovleno')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-sm border border-rose-500/30 bg-rose-500/20" />
-                      Missed
+                      {tr('Missed', 'Otib yuborilgan', 'Propushcheno')}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-sm border border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/4" />
-                      Open or upcoming
+                      {tr('Open or upcoming', 'Ochiq yoki yaqinlashayotgan', 'Otkryto ili skoro')}
                     </span>
                   </div>
 
@@ -1850,13 +1925,13 @@ export function UpdateTrackingPage() {
 
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-blue-300/72">
-                            Focus Day
+                            {tr('Focus Day', 'Fokus kuni', 'Fokusnyy den')}
                           </p>
                           <h4 className="mt-2 text-lg font-semibold tracking-tight text-(--foreground)">
-                            {selectedCalendarDayLabel || 'No date selected'}
+                            {selectedCalendarDayLabel || tr('No date selected', 'Sana tanlanmagan', 'Data ne vybrana')}
                           </h4>
                           <p className="mt-1.5 max-w-2xl text-[13px] leading-6 text-(--muted)">
-                            {selectedCalendarDay ? getCalendarCellHint(selectedCalendarDay) : 'Pick a date from the month grid to inspect details.'}
+                            {selectedCalendarDay ? getCalendarCellHint(selectedCalendarDay) : tr('Pick a date from the month grid to inspect details.', 'Tafsilotlarni korish uchun oy setkasidan sana tanlang.', 'Vyberite datu iz setki mesyatsa, chtoby posmotret detali.')}
                           </p>
                           <div className="mt-3 flex flex-wrap gap-2">
                             {selectedCalendarDay ? (
@@ -1864,17 +1939,17 @@ export function UpdateTrackingPage() {
                                 {getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay)}
                               </Badge>
                             ) : null}
-                            {selectedCalendarDay?.weekday ? (
-                              <Badge variant="secondary">{selectedCalendarDay.weekday}</Badge>
+                            {selectedCalendarDay ? (
+                              <Badge variant="secondary">{getCalendarLongWeekday(selectedCalendarDay)}</Badge>
                             ) : null}
                             {selectedCalendarDay?.date === todayKey ? (
-                              <Badge variant="blue">Today</Badge>
+                              <Badge variant="blue">{tr('Today', 'Bugun', 'Segodnya')}</Badge>
                             ) : null}
                             {selectedCalendarDay?.hasUpdate ? (
-                              <Badge variant="violet">Payload available</Badge>
+                              <Badge variant="violet">{tr('Payload available', 'Payload mavjud', 'Payload dostupen')}</Badge>
                             ) : null}
                             {isHolidayCalendarDay(selectedCalendarDay) ? (
-                              <Badge variant="blue">Holiday</Badge>
+                              <Badge variant="blue">{tr('Holiday', 'Bayram', 'Prazdnik')}</Badge>
                             ) : null}
                           </div>
                         </div>
@@ -1882,19 +1957,19 @@ export function UpdateTrackingPage() {
 
                       <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[420px] xl:max-w-[480px]">
                         <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                          <p>Status</p>
+                          <p>{tr('Status', 'Holat', 'Status')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
-                            {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : 'N/A'}
+                            {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : tr('N/A', 'Mavjud emas', 'N/A')}
                           </p>
                         </div>
                         <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                          <p>Submission</p>
+                          <p>{tr('Submission', 'Yuborish', 'Otpravka')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
-                            {selectedCalendarDay?.hasUpdate ? 'Available' : 'None'}
+                            {selectedCalendarDay?.hasUpdate ? tr('Available', 'Mavjud', 'Dostupno') : tr('None', 'Yoq', 'Net')}
                           </p>
                         </div>
                         <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                          <p>Validation</p>
+                          <p>{tr('Validation', 'Validatsiya', 'Validatsiya')}</p>
                           <p className={cn(
                             'mt-1 font-medium',
                             selectedCalendarDay?.isValid === false
@@ -1903,11 +1978,11 @@ export function UpdateTrackingPage() {
                                 ? 'text-emerald-300'
                                 : 'text-(--foreground)',
                           )}>
-                            {selectedCalendarDay?.isValid === false ? 'Needs review' : selectedCalendarDay?.isValid === true ? 'Valid' : 'N/A'}
+                            {selectedCalendarDay?.isValid === false ? tr('Needs review', 'Korib chiqish kerak', 'Trebuet proverki') : selectedCalendarDay?.isValid === true ? tr('Valid', 'Valid', 'Validno') : tr('N/A', 'Mavjud emas', 'N/A')}
                           </p>
                         </div>
                         <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
-                          <p>Entries</p>
+                          <p>{tr('Entries', 'Yozuvlar', 'Zapisi')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
                             {selectedCalendarDay ? getCalendarEntryCount(selectedCalendarDay) : 0}
                           </p>
@@ -1920,17 +1995,21 @@ export function UpdateTrackingPage() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
-                              {selectedCalendarDay?.hasUpdate ? 'Update Content' : 'Special Day'}
+                              {selectedCalendarDay?.hasUpdate
+                                ? tr('Update Content', 'Update kontenti', 'Kontent obnovleniya')
+                                : tr('Special Day', 'Maxsus kun', 'Osobyy den')}
                             </p>
                             <h4 className="mt-2 text-base font-semibold tracking-tight text-(--foreground)">
-                              {selectedCalendarDay?.hasUpdate ? 'Returned content for this date' : 'Details for this date'}
+                              {selectedCalendarDay?.hasUpdate
+                                ? tr('Returned content for this date', 'Bu sana uchun qaytgan kontent', 'Vozvrashchennyy kontent dlya etoy daty')
+                                : tr('Details for this date', 'Bu sana uchun tafsilotlar', 'Detali dlya etoy daty')}
                             </h4>
                           </div>
                           {selectedCalendarDay?.hasUpdate ? (
-                            <Badge variant="blue">API payload</Badge>
+                            <Badge variant="blue">{tr('API payload', 'API payload', 'API payload')}</Badge>
                           ) : selectedCalendarDay?.workdayOverride ? (
                             <Badge variant={isHolidayCalendarDay(selectedCalendarDay) ? 'blue' : 'warning'}>
-                              {getSpecialDayLabel(selectedCalendarDay) ?? 'Special day'}
+                              {getSpecialDayLabel(selectedCalendarDay) ?? tr('Special day', 'Maxsus kun', 'Osobyy den')}
                             </Badge>
                           ) : null}
                         </div>
@@ -1943,7 +2022,11 @@ export function UpdateTrackingPage() {
 
                         {selectedCalendarDay?.isValid === false ? (
                           <p className="mt-3 text-xs text-amber-300">
-                            This update was returned with an invalid flag by the API.
+                            {tr(
+                              'This update was returned with an invalid flag by the API.',
+                              'Bu update API tomonidan notogri flag bilan qaytarilgan.',
+                              'Eto obnovlenie bylo vozvrashcheno API s nekorrektnym flagom.',
+                            )}
                           </p>
                         ) : null}
                       </div>
@@ -1957,12 +2040,12 @@ export function UpdateTrackingPage() {
 
           <Card variant="glass" className="overflow-hidden p-0">
             <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
-              <SectionTitle title="Recent Updates" />
+              <SectionTitle title={tr('Recent Updates', 'Songgi update lar', 'Poslednie obnovleniya')} />
               <Badge variant="blue">{recent.length}</Badge>
             </div>
             <div className="divide-y divide-(--border)">
               {recent.length === 0 ? (
-                <div className="py-10 text-center text-sm text-(--muted)">No recent updates.</div>
+                <div className="py-10 text-center text-sm text-(--muted)">{tr('No recent updates.', 'Songgi update lar yoq.', 'Poslednikh obnovleniy net.')}</div>
               ) : (
                 recent.slice(0, 10).map((item, index) => {
                   const dateLabel = formatRecentDate(item.update_date ?? item.date)
@@ -1976,7 +2059,7 @@ export function UpdateTrackingPage() {
                     <div key={String(item.id ?? index)} className="px-5 py-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="line-clamp-2 text-[13px] text-(--foreground)">{text || 'No description returned by API.'}</p>
+                          <p className="line-clamp-2 text-[13px] text-(--foreground)">{text || tr('No description returned by API.', 'API tavsif qaytarmadi.', 'API ne vernulo opisanie.')}</p>
                           {ownerName ? (
                             <p className="mt-1 text-xs text-(--muted-strong)">
                               {ownerName}

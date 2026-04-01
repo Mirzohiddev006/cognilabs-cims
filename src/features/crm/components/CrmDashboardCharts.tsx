@@ -4,9 +4,9 @@ import type {
   SalesDashboardChartsResponse,
   SalesDashboardTrendPoint,
 } from '../../../shared/api/types'
-import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
-import { formatCompactNumber } from '../../../shared/lib/format'
+import { formatCompactNumber, formatShortMonthDay, getLocalizedShortWeekdayName } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -87,8 +87,7 @@ function formatRangeLabel(payload?: SalesDashboardChartsResponse) {
     return `${payload.period.days} ${translateCurrentLiteral('days')}`
   }
 
-  const formatter = new Intl.DateTimeFormat(getIntlLocale(), { month: 'short', day: 'numeric' })
-  return `${formatter.format(start)} - ${formatter.format(end)}`
+  return `${formatShortMonthDay(payload.period.start_date)} - ${formatShortMonthDay(payload.period.end_date)}`
 }
 
 function formatTickLabel(date: string, totalPoints: number) {
@@ -98,12 +97,11 @@ function formatTickLabel(date: string, totalPoints: number) {
     return date
   }
 
-  return new Intl.DateTimeFormat(
-    getIntlLocale(),
-    totalPoints <= 8
-      ? { weekday: 'short' }
-      : { month: 'short', day: 'numeric' },
-  ).format(parsed)
+  if (totalPoints <= 8) {
+    return getLocalizedShortWeekdayName(parsed.getDay())
+  }
+
+  return formatShortMonthDay(date)
 }
 
 function getPeakPoint(points: SalesDashboardTrendPoint[]) {

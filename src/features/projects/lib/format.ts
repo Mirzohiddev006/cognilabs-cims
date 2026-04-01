@@ -1,5 +1,6 @@
 import type { CardPriority } from '../../../shared/api/services/projects.service'
 import { getStoredLocale, translateCurrent } from '../../../shared/i18n/translations'
+import { formatShortDate as formatSharedShortDate } from '../../../shared/lib/format'
 
 function parseProjectDate(value?: string | null): Date | null {
   if (typeof value !== 'string') {
@@ -24,11 +25,7 @@ export function formatProjectDate(date?: string | null): string {
     return translateCurrent('projects.unknown_date', 'Unknown date')
   }
 
-  return new Intl.DateTimeFormat(getStoredLocale(), {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(parsed)
+  return formatSharedShortDate(date, getStoredLocale())
 }
 
 /** Get relative time label (e.g. "2 days ago") */

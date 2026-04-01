@@ -6,7 +6,7 @@ import type {
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import type { WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getLocalizedMonthName } from '../../../shared/lib/format'
+import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/format'
 
 export type UnknownRecord = Record<string, unknown>
 
@@ -789,17 +789,8 @@ export function formatDetailDate(value?: string | null) {
     return translateSalaryEstimateText('Not provided', 'Ko\'rsatilmagan', 'Не указано')
   }
 
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(parsed)
+  const formatted = formatShortDate(value)
+  return formatted === '-' ? value : formatted
 }
 
 export function normalizePercentageValue(value?: number | null) {

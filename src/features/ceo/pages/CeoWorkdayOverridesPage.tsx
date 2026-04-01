@@ -11,7 +11,7 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
-import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/format'
+import { formatShortDate, formatShortDateTime, getLocalizedMonthName } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
@@ -56,19 +56,7 @@ function formatDateInput(date: Date) {
 }
 
 function formatDateTime(value: string) {
-  const parsed = new Date(value)
-
-  if (Number.isNaN(parsed.getTime())) {
-    return value
-  }
-
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(parsed)
+  return formatShortDateTime(value)
 }
 
 function normalizeDayType(value: string | null | undefined): WorkdayOverrideDayType {

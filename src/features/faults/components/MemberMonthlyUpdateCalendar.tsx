@@ -4,6 +4,7 @@ import { useTheme } from '../../../app/hooks/useTheme'
 import type { DayStatus } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
+import { formatShortMonthDayTime } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import type {
@@ -112,12 +113,8 @@ function formatEntryTimestamp(value?: string) {
     return value
   }
 
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(parsed)
+  const formatted = formatShortMonthDayTime(value)
+  return formatted === '-' ? value : formatted
 }
 
 function formatWorkTime(value?: string | null) {
