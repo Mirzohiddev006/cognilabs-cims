@@ -9,6 +9,26 @@ import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/tra
 
 export type UnknownRecord = Record<string, unknown>
 
+function translateSalaryEstimateText(en: string, uz: string, ru: string) {
+  const translated = translateCurrentLiteral(en)
+
+  if (translated !== en) {
+    return translated
+  }
+
+  const locale = getIntlLocale()
+
+  if (locale.startsWith('ru')) {
+    return ru
+  }
+
+  if (locale.startsWith('en')) {
+    return en
+  }
+
+  return uz
+}
+
 export type SalaryEstimateSnapshot = {
   userId: number | null
   userLabel?: string
@@ -765,7 +785,7 @@ export function formatCount(value?: number | null) {
 
 export function formatDetailDate(value?: string | null) {
   if (!value) {
-    return translateCurrentLiteral('Not provided')
+    return translateSalaryEstimateText('Not provided', 'Ko\'rsatilmagan', 'Не указано')
   }
 
   const parsed = new Date(value)
@@ -1413,15 +1433,33 @@ export function buildSalaryLedgerItems(
     }
 
     const penaltyNotes = [
-      report.mistakesCount > 0 ? `${report.mistakesCount} client-facing mistake${report.mistakesCount === 1 ? '' : 's'} recorded.` : null,
-      report.penaltyPoints > 0 ? `${report.penaltyPoints} penalty points applied.` : null,
+      report.mistakesCount > 0
+        ? translateSalaryEstimateText(
+          `${report.mistakesCount} client-facing mistake${report.mistakesCount === 1 ? '' : 's'} recorded.`,
+          `${report.mistakesCount} ta mijozga ta'sir qilgan xato qayd etildi.`,
+          `Зафиксировано ${report.mistakesCount} ошибок, повлиявших на клиента.`,
+        )
+        : null,
+      report.penaltyPoints > 0
+        ? translateSalaryEstimateText(
+          `${report.penaltyPoints} penalty points applied.`,
+          `${report.penaltyPoints} ta penalty ball qo'llandi.`,
+          `Применено ${report.penaltyPoints} штрафных баллов.`,
+        )
+        : null,
     ].filter(Boolean)
 
     return [
       {
         id: `penalty-derived-${report.id}`,
-        title: report.deductionAmount > 0 ? 'Calculated monthly deduction' : 'Penalty activity recorded',
-        description: penaltyNotes.join(' ') || 'Penalty information was inferred from the salary estimate summary.',
+        title: report.deductionAmount > 0
+          ? translateSalaryEstimateText('Calculated monthly deduction', 'Hisoblangan oylik ayirma', 'Рассчитанное месячное удержание')
+          : translateSalaryEstimateText('Penalty activity recorded', 'Ayirma faolligi qayd etildi', 'Штрафная активность зафиксирована'),
+        description: penaltyNotes.join(' ') || translateSalaryEstimateText(
+          'Penalty information was inferred from the salary estimate summary.',
+          'Ayirma ma\'lumotlari maosh hisobi xulosasidan aniqlandi.',
+          'Информация об удержании была выведена из сводки оценки зарплаты.',
+        ),
         amount: Math.max(0, report.deductionAmount),
         points: report.penaltyPoints > 0 ? report.penaltyPoints : undefined,
         percentage: report.penaltyPercentage > 0 ? report.penaltyPercentage : undefined,
@@ -1435,19 +1473,45 @@ export function buildSalaryLedgerItems(
 
   const productivityText =
     report.updateDays >= 0 && report.workingDays >= 0 && Number.isFinite(report.productivityPercentage)
-      ? `${report.updateDays}/${report.workingDays} update days (${report.productivityPercentage.toFixed(report.productivityPercentage % 1 === 0 ? 0 : 2)}%).`
+      ? translateSalaryEstimateText(
+        `${report.updateDays}/${report.workingDays} update days (${report.productivityPercentage.toFixed(report.productivityPercentage % 1 === 0 ? 0 : 2)}%).`,
+        `${report.updateDays}/${report.workingDays} update kuni (${report.productivityPercentage.toFixed(report.productivityPercentage % 1 === 0 ? 0 : 2)}%).`,
+        `${report.updateDays}/${report.workingDays} дней с обновлениями (${report.productivityPercentage.toFixed(report.productivityPercentage % 1 === 0 ? 0 : 2)}%).`,
+      )
       : null
   const bonusNotes = [
-    report.qualifiesProductivityBonus ? 'Full update productivity bonus qualified.' : null,
-    report.deliveryBonusCount > 0 ? `${report.deliveryBonusCount} delivery bonus trigger${report.deliveryBonusCount === 1 ? '' : 's'} recorded.` : null,
+    report.qualifiesProductivityBonus
+      ? translateSalaryEstimateText(
+        'Full update productivity bonus qualified.',
+        'To\'liq update mahsuldorlik bonusi tasdiqlandi.',
+        'Бонус за полную продуктивность обновлений подтвержден.',
+      )
+      : null,
+    report.deliveryBonusCount > 0
+      ? translateSalaryEstimateText(
+        `${report.deliveryBonusCount} delivery bonus trigger${report.deliveryBonusCount === 1 ? '' : 's'} recorded.`,
+        `${report.deliveryBonusCount} ta topshirish bonusi triggeri qayd etildi.`,
+        `Зафиксировано ${report.deliveryBonusCount} триггеров бонуса за сдачу.`,
+      )
+      : null,
     productivityText,
   ].filter(Boolean)
 
   return items
     .concat({
       id: `bonus-derived-${report.id}`,
-      title: report.totalBonusPercent > 0 ? `Calculated monthly bonus (${report.totalBonusPercent.toFixed(report.totalBonusPercent % 1 === 0 ? 0 : 2)}%)` : 'Calculated monthly bonus',
-      description: bonusNotes.join(' ') || 'Bonus information was inferred from the salary estimate summary.',
+      title: report.totalBonusPercent > 0
+        ? translateSalaryEstimateText(
+          `Calculated monthly bonus (${report.totalBonusPercent.toFixed(report.totalBonusPercent % 1 === 0 ? 0 : 2)}%)`,
+          `Hisoblangan oylik bonus (${report.totalBonusPercent.toFixed(report.totalBonusPercent % 1 === 0 ? 0 : 2)}%)`,
+          `Рассчитанный месячный бонус (${report.totalBonusPercent.toFixed(report.totalBonusPercent % 1 === 0 ? 0 : 2)}%)`,
+        )
+        : translateSalaryEstimateText('Calculated monthly bonus', 'Hisoblangan oylik bonus', 'Рассчитанный месячный бонус'),
+      description: bonusNotes.join(' ') || translateSalaryEstimateText(
+        'Bonus information was inferred from the salary estimate summary.',
+        'Bonus ma\'lumotlari maosh hisobi xulosasidan aniqlandi.',
+        'Информация о бонусе была выведена из сводки оценки зарплаты.',
+      ),
       amount: Math.max(0, report.bonusAmount),
       points: undefined,
       percentage: report.totalBonusPercent > 0 ? report.totalBonusPercent : normalizedRoot.totalBonusPercent,

@@ -341,13 +341,17 @@ export function MemberDashboardPage() {
       const nextData = await loadMemberDashboardData(memberUser, year, month, true)
       dashboardQuery.setData(nextData)
       showToast({
-        title: 'Member dashboard refreshed',
-        description: `${memberUser?.name ?? 'Your'} dashboard synced for ${getMonthName(month)} ${year}.`,
+        title: tr('Member dashboard refreshed', 'Xodim paneli yangilandi', 'Панель сотрудника обновлена'),
+        description: tr(
+          `Dashboard synced for ${getMonthName(month)} ${year}.`,
+          `${getMonthName(month)} ${year} uchun panel sinxronlandi.`,
+          `Панель синхронизирована за ${getMonthName(month)} ${year}.`,
+        ),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Refresh failed',
+        title: lt('Refresh failed'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -357,9 +361,9 @@ export function MemberDashboardPage() {
   if (!memberUser) {
     return (
       <ErrorStateBlock
-        eyebrow="Member"
-        title="Member session unavailable"
-        description="The current authenticated user could not be resolved."
+        eyebrow={lt('Member')}
+        title={tr('Member session unavailable', 'Xodim sessiyasi mavjud emas', 'Сессия сотрудника недоступна')}
+        description={lt('The current authenticated user could not be resolved.')}
       />
     )
   }
@@ -369,9 +373,9 @@ export function MemberDashboardPage() {
   if (isDashboardPending && !detail) {
     return (
       <ErrorStateBlock
-        eyebrow="Member"
-        title="Dashboard loading"
-        description="Member dashboard API data is still loading."
+        eyebrow={lt('Member')}
+        title={lt('Dashboard loading')}
+        description={tr('Member dashboard API data is still loading.', 'Xodim paneli API ma\'lumotlari hali yuklanmoqda.', 'Данные API панели сотрудника все еще загружаются.')}
       />
     )
   }
@@ -379,17 +383,48 @@ export function MemberDashboardPage() {
   if (!detail) {
     return (
       <ErrorStateBlock
-        eyebrow="Member"
-        title="Dashboard unavailable"
-        description="The dashboard payload did not return a valid member snapshot."
-        actionLabel="Retry"
+        eyebrow={lt('Member')}
+        title={lt('Dashboard unavailable')}
+        description={lt('The dashboard payload did not return a valid member snapshot.')}
+        actionLabel={lt('Retry')}
         onAction={() => void dashboardQuery.refetch()}
       />
     )
   }
 
+  const expectedUpdatesHint = tr(
+    `${calendarCounts.submitted} updated, ${calendarCounts.missing} missing, ${calendarCounts.open} still open.`,
+    `${calendarCounts.submitted} ta yangilangan, ${calendarCounts.missing} ta yetishmayotgan, ${calendarCounts.open} tasi hali ochiq.`,
+    `${calendarCounts.submitted} обновлено, ${calendarCounts.missing} отсутствует, ${calendarCounts.open} все еще открыто.`,
+  )
+  const weeklyProgressHint =
+    typeof expectedWeeklyUpdates === 'number' && typeof weeklyRemaining === 'number'
+      ? tr(
+        `${formatCount(weeklyRemaining)} remaining from ${formatCount(expectedWeeklyUpdates)} expected.`,
+        `${formatCount(expectedWeeklyUpdates)} tadan ${formatCount(weeklyRemaining)} tasi qoldi.`,
+        `Из ${formatCount(expectedWeeklyUpdates)} ожидаемых осталось ${formatCount(weeklyRemaining)}.`,
+      )
+      : lt('Weekly target not returned by the API.')
+  const weeklyCompletionHint = targetReached
+    ? lt('Current weekly target has been reached.')
+    : tr(
+      'Keep logging updates to stay on track.',
+      'Rejada qolish uchun update kiritishda davom eting.',
+      'Продолжайте вносить обновления, чтобы идти по плану.',
+    )
+  const salaryEstimateLabel = `${lt('Salary estimate for')} ${month}/${year}`
+  const userBadgeLabel = tr(`User #${detail.report.id}`, `Xodim #${detail.report.id}`, `Сотрудник #${detail.report.id}`)
+  const penaltiesSummary = detail.penalties.length > 0
+    ? tr(`${detail.penalties.length} entries`, `${detail.penalties.length} ta yozuv`, `${detail.penalties.length} записей`)
+    : tr('No deductions were recorded for this period.', 'Bu davr uchun ayirma qayd etilmadi.', 'За этот период удержания не зафиксированы.')
+  const bonusesSummary = detail.bonuses.length > 0
+    ? tr(`${detail.bonuses.length} entries`, `${detail.bonuses.length} ta yozuv`, `${detail.bonuses.length} записей`)
+    : tr('No bonus records returned.', 'Bonus yozuvlari qaytmadi.', 'Записи бонусов не вернулись.')
+
   return (
     <section className="space-y-6 page-enter" style={memberDashboardSuccessTheme}>
+      {false ? penaltiesSummary : null}
+      {false ? bonusesSummary : null}
       <Card variant="glass" noPadding className="overflow-hidden rounded-[30px] border-white/10">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(var(--success-rgb),0.12),transparent_24%)]" />
@@ -397,7 +432,7 @@ export function MemberDashboardPage() {
           <div className="relative z-10 flex flex-col gap-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">Member Dashboard</p>
+                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">{lt('Member Dashboard')}</p>
                 <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
                   {detail.report.fullName}
                 </h1>
@@ -406,17 +441,17 @@ export function MemberDashboardPage() {
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">User #{detail.report.id}</Badge>
+                  <Badge variant="outline">{userBadgeLabel}</Badge>
                   <Badge variant="secondary">{detail.report.roleLabel}</Badge>
                   <Badge variant={targetReached ? 'success' : 'warning'}>
-                    {targetReached ? 'Target reached' : 'Need follow-up'}
+                    {targetReached ? lt('Target reached') : lt('Need follow-up')}
                   </Badge>
                 </div>
               </div>
 
               <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto] xl:min-w-[430px]">
                 <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Year</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{lt('Year')}</label>
                   <Input
                     type="number"
                     min="2020"
@@ -427,7 +462,7 @@ export function MemberDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Month</label>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">{lt('Month')}</label>
                   <SelectField
                     value={String(month)}
                     options={monthOptions}
@@ -444,7 +479,7 @@ export function MemberDashboardPage() {
                     loading={dashboardQuery.isLoading}
                     className="min-h-10 rounded-xl"
                   >
-                    Refresh
+                    {lt('Refresh')}
                   </Button>
                 </div>
               </div>
@@ -452,23 +487,19 @@ export function MemberDashboardPage() {
 
             <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1.2fr]">
               <MetricPanel
-                label="Expected updates (to date)"
+                label={lt('Expected updates (to date)')}
                 value={elapsedWorkingDays}
-                hint={`${calendarCounts.submitted} updated, ${calendarCounts.missing} missing, ${calendarCounts.open} still open.`}
+                hint={expectedUpdatesHint}
               />
               <MetricPanel
-                label="This week progress"
+                label={lt('This week progress')}
                 value={formatCount(updatesThisWeek)}
-                hint={
-                  typeof expectedWeeklyUpdates === 'number' && typeof weeklyRemaining === 'number'
-                    ? `${formatCount(weeklyRemaining)} remaining from ${formatCount(expectedWeeklyUpdates)} expected.`
-                    : 'Weekly target not returned by the API.'
-                }
+                hint={weeklyProgressHint}
               />
               <MetricPanel
-                label="Weekly completion"
+                label={lt('Weekly completion')}
                 value={formatPercent(weeklyCompletion)}
-                hint={targetReached ? 'Current weekly target has been reached.' : 'Keep logging updates to stay on track.'}
+                hint={weeklyCompletionHint}
                 progress={typeof weeklyCompletion === 'number' ? weeklyCompletion : undefined}
                 progressTone={targetReached ? 'success' : (weeklyCompletion ?? 0) >= 60 ? 'violet' : 'danger'}
               />
@@ -476,19 +507,19 @@ export function MemberDashboardPage() {
 
             {dashboardQuery.isLoading && !dashboardQuery.data ? (
               <div className="rounded-[20px] border border-[var(--blue-border)] bg-[var(--blue-dim)] px-4 py-4 text-sm text-[var(--foreground)]">
-                Syncing your latest dashboard data...
+                {lt('Syncing your latest dashboard data...')}
               </div>
             ) : null}
 
             {data?.statsError || detail.estimateError || detail.policyError || detail.mistakesError || detail.deliveryBonusesError || detail.updatesError || detail.calendarError ? (
               <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/10 px-4 py-4 text-sm text-[var(--foreground)]">
-                {data?.statsError ? <p>Stats API unavailable: {data.statsError}</p> : null}
-                {detail.estimateError ? <p>Salary estimate API unavailable: {detail.estimateError}</p> : null}
-                {detail.policyError ? <p>Compensation policy API unavailable: {detail.policyError}</p> : null}
-                {detail.mistakesError ? <p>Mistake incidents API unavailable: {detail.mistakesError}</p> : null}
-                {detail.deliveryBonusesError ? <p>Delivery bonuses API unavailable: {detail.deliveryBonusesError}</p> : null}
-                {detail.updatesError ? <p>Update statistics unavailable: {detail.updatesError}</p> : null}
-                {detail.calendarError ? <p>Calendar API unavailable: {detail.calendarError}</p> : null}
+                {data?.statsError ? <p>{lt('Stats API unavailable:')} {data.statsError}</p> : null}
+                {detail.estimateError ? <p>{lt('Salary estimate API unavailable:')} {detail.estimateError}</p> : null}
+                {detail.policyError ? <p>{tr('Compensation policy API unavailable:', 'Kompensatsiya siyosati API mavjud emas:', 'API политики компенсации недоступен:')} {detail.policyError}</p> : null}
+                {detail.mistakesError ? <p>{tr('Mistake incidents API unavailable:', 'Xato hodisalari API mavjud emas:', 'API инцидентов ошибок недоступен:')} {detail.mistakesError}</p> : null}
+                {detail.deliveryBonusesError ? <p>{tr('Delivery bonuses API unavailable:', 'Topshirish bonuslari API mavjud emas:', 'API бонусов за сдачу недоступен:')} {detail.deliveryBonusesError}</p> : null}
+                {detail.updatesError ? <p>{lt('Update statistics unavailable:')} {detail.updatesError}</p> : null}
+                {detail.calendarError ? <p>{lt('Calendar API unavailable:')} {detail.calendarError}</p> : null}
               </div>
             ) : null}
           </div>
@@ -499,41 +530,41 @@ export function MemberDashboardPage() {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[11px] text-[var(--success-text)]">
-              Salary estimate for {month}/{year}
+              {salaryEstimateLabel}
             </p>
             <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-[var(--foreground)]">
-              My Salary Snapshot
+              {lt('My Salary Snapshot')}
             </h2>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={detail.report.hasPenalty ? 'danger' : 'outline'}>
-              {detail.report.hasPenalty ? 'Deduction applied' : 'No deductions'}
+              {detail.report.hasPenalty ? lt('Deduction applied') : lt('No deductions')}
             </Badge>
             <Badge variant={detail.report.hasBonus ? 'success' : 'outline'}>
-              {detail.report.hasBonus ? 'Bonus applied' : 'No bonus'}
+              {detail.report.hasBonus ? lt('Bonus applied') : lt('No bonus')}
             </Badge>
             <Badge variant={(monthlyCompletion ?? 0) >= 80 ? 'success' : (monthlyCompletion ?? 0) > 0 ? 'warning' : 'outline'}>
-              {formatPercent(monthlyCompletion)} monthly completion
+              {formatPercent(monthlyCompletion)} {lt('monthly completion')}
             </Badge>
           </div>
         </div>
 
         <div className="mt-5 grid gap-4 xl:grid-cols-6">
-          <DetailStatTile label="Estimated salary" value={formatAmount(detail.report.estimatedSalary)} tone="success" />
-          <DetailStatTile label="Final salary" value={formatAmount(detail.report.finalSalary)} />
-          <DetailStatTile label="Base salary" value={formatAmount(detail.report.baseSalary)} />
-          <DetailStatTile label="Deduction amount" value={formatAmount(detail.report.deductionAmount)} tone="danger" />
-          <DetailStatTile label="Bonus amount" value={formatAmount(detail.report.bonusAmount)} tone="success" />
-          <DetailStatTile label="Bonus %" value={formatPercent(detail.report.totalBonusPercent)} tone="success" />
+          <DetailStatTile label={lt('Estimated salary')} value={formatAmount(detail.report.estimatedSalary)} tone="success" />
+          <DetailStatTile label={lt('Final salary')} value={formatAmount(detail.report.finalSalary)} />
+          <DetailStatTile label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
+          <DetailStatTile label={lt('Deduction amount')} value={formatAmount(detail.report.deductionAmount)} tone="danger" />
+          <DetailStatTile label={lt('Bonus amount')} value={formatAmount(detail.report.bonusAmount)} tone="success" />
+          <DetailStatTile label={lt('Bonus %')} value={formatPercent(detail.report.totalBonusPercent)} tone="success" />
         </div>
 
         <div className="mt-4 grid gap-4 xl:grid-cols-5">
           <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label="Mistakes" value={formatCount(detail.report.mistakesCount)} tone="danger" />
-          <DetailStatTile label="Delivery bonuses" value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
+          <DetailStatTile label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
+          <DetailStatTile label={lt('Delivery bonuses')} value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
           <DetailStatTile
-            label="Productivity"
+            label={lt('Productivity')}
             value={Number.isFinite(detail.report.productivityPercentage)
               ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)} / ${formatPercent(detail.report.productivityPercentage)}`
               : '-'}
