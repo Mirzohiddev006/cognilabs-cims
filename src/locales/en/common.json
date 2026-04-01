@@ -383,7 +383,6 @@
   "customers.section.list.description": "Manage your customers ({{visible}} of {{total}} records)",
   "customers.section.list.visible_badge": "{{count}} visible",
   "customers.section.list.filters_badge": "{{count}} filters",
-  "customers.filters.title": "Filters",
   "customers.filters.search_label": "Search",
   "customers.filters.search_placeholder": "Name, username, note, or phone",
   "customers.filters.status_label": "Status",

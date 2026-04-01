@@ -374,7 +374,6 @@
   "customers.section.list.description": "Управляйте клиентами ({{visible}} из {{total}} записей)",
   "customers.section.list.visible_badge": "{{count}} видно",
   "customers.section.list.filters_badge": "{{count}} фильтров",
-  "customers.filters.title": "Фильтры",
   "customers.filters.search_label": "Поиск",
   "customers.filters.search_placeholder": "По имени, username, заметке или телефону",
   "customers.filters.status_label": "Статус",

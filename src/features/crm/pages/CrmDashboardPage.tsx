@@ -813,10 +813,7 @@ export function CrmDashboardPage() {
             isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
           )}
         >
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-(--muted)">
-              {t('customers.filters.title', 'Filters')}
-            </p>
+          <div className="mb-3 flex items-center justify-end">
             {activeFilterCount > 0 && (
               <Button variant="ghost" size="sm" onClick={resetFilters} className="h-7 px-2 text-xs">
                 {t('common.clear', 'Clear')}

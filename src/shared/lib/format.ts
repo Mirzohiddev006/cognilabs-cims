@@ -1,4 +1,60 @@
-import { getIntlLocale } from '../i18n/translations'
+import { getIntlLocale, getStoredLocale, type AppLocale } from '../i18n/translations'
+
+const localizedMonthNames: Record<AppLocale, string[]> = {
+  en: [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ],
+  uz: [
+    'Yanvar',
+    'Fevral',
+    'Mart',
+    'Aprel',
+    'May',
+    'Iyun',
+    'Iyul',
+    'Avgust',
+    'Sentabr',
+    'Oktabr',
+    'Noyabr',
+    'Dekabr',
+  ],
+  ru: [
+    'январь',
+    'февраль',
+    'март',
+    'апрель',
+    'май',
+    'июнь',
+    'июль',
+    'август',
+    'сентябрь',
+    'октябрь',
+    'ноябрь',
+    'декабрь',
+  ],
+}
+
+export function getLocalizedMonthName(month: number, locale: AppLocale = getStoredLocale()) {
+  const index = Math.trunc(month) - 1
+
+  if (index < 0 || index >= 12) {
+    return ''
+  }
+
+  // Some browsers can return month codes like "M04" for month-only Intl formatting in Uzbek.
+  return localizedMonthNames[locale][index]
+}
 
 export function formatCurrency(value: number, currency = 'UZS') {
   return new Intl.NumberFormat(getIntlLocale(), {

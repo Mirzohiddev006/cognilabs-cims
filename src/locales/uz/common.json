@@ -383,7 +383,6 @@
   "customers.section.list.description": "Mijozlarni boshqaring ({{visible}} / {{total}} yozuv)",
   "customers.section.list.visible_badge": "{{count}} ta ko'rinmoqda",
   "customers.section.list.filters_badge": "{{count}} ta filtr",
-  "customers.filters.title": "Filtrlar",
   "customers.filters.search_label": "Qidirish",
   "customers.filters.search_placeholder": "Ism, username, izoh yoki telefon bo'yicha",
   "customers.filters.status_label": "Holat",

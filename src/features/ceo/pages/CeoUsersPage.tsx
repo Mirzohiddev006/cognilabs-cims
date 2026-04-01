@@ -1232,17 +1232,17 @@ export function CeoUsersPage() {
                 </div>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3">
-                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.sent')}</p>
+              <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(96px,1fr))]">
+                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                  <p className="text-[9px] font-semibold uppercase leading-[1.35] tracking-[0.12em] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.sent')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
                 </div>
-                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.incoming')}</p>
+                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                  <p className="text-[9px] font-semibold uppercase leading-[1.35] tracking-[0.12em] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.incoming')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
                 </div>
-                <div className="rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--caption)]">{t('ceo.users.thread.latest')}</p>
+                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                  <p className="text-[9px] font-semibold uppercase leading-[1.35] tracking-[0.12em] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.latest')}</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {activeConversation.entries.length > 0
                       ? formatShortDate(activeConversation.entries[activeConversation.entries.length - 1]?.sentAt)

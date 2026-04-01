@@ -5,6 +5,7 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
+import { getLocalizedMonthName } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -391,7 +392,7 @@ function getFirstArray(source: UnknownRecord, keys: string[]) {
 }
 
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
+  return getLocalizedMonthName(month)
 }
 
 function monthNameToNumber(value: string): number | null {

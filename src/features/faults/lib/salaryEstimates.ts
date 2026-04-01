@@ -6,6 +6,7 @@ import type {
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import type { WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getLocalizedMonthName } from '../../../shared/lib/format'
 
 export type UnknownRecord = Record<string, unknown>
 
@@ -747,7 +748,7 @@ export function sumByKeys(items: unknown[], keys: string[]): number {
 }
 
 export function getMonthName(month: number) {
-  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2026, month - 1))
+  return getLocalizedMonthName(month)
 }
 
 export function getMonthOptions() {

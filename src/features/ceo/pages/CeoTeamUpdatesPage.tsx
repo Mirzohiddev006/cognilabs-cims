@@ -10,7 +10,7 @@ import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../.
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
-import { formatShortDate } from '../../../shared/lib/format'
+import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/format'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -63,7 +63,7 @@ type TeamSalaryEntry = {
 
 /* Month Name Helper */
 function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
+  return getLocalizedMonthName(month)
 }
 
 function getDaysInMonth(month: number, year: number) {
