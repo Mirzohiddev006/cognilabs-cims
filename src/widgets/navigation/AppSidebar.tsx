@@ -42,12 +42,17 @@ type MemberProfileFormState = {
 
 export function AppSidebar() {
   const location = useLocation()
-  const { closeSidebar, isSidebarCollapsed, isSidebarOpen, toggleSidebarCollapsed } = useAppShell()
+  const { closeSidebar, isSidebarCollapsed, isSidebarOpen, toggleSidebar, toggleSidebarCollapsed } = useAppShell()
   const { t } = useLocale()
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { user, hasPermission, refreshUser } = useAuth()
   const isLight = theme === 'light'
+  const isMobileViewport =
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 960px)').matches
+      : false
+  const isSidebarVisible = isMobileViewport ? isSidebarOpen : !isSidebarCollapsed
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
   const sidebarNavigation = useMemo(
     () => (
@@ -166,14 +171,24 @@ export function AppSidebar() {
     setProfileImageFile(null)
   }
 
-  function handleSidebarPanelToggle() {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
-      closeSidebar()
+  function handleSidebarToggle() {
+    if (isMobileViewport) {
+      toggleSidebar()
       return
     }
 
     toggleSidebarCollapsed()
   }
+
+  const sidebarToggleStyle = isMobileViewport
+    ? {
+        left: isSidebarOpen ? 'calc(min(88vw, 320px) - 3.65rem)' : '1rem',
+        top: '1rem',
+      }
+    : {
+        left: isSidebarCollapsed ? '1rem' : 'calc(var(--app-shell-sidebar-width, 272px) - 3.65rem)',
+        top: '1rem',
+      }
 
   function updateMemberForm<K extends keyof MemberProfileFormState>(key: K, value: MemberProfileFormState[K]) {
     setMemberForm((current) => ({
@@ -258,6 +273,37 @@ export function AppSidebar() {
     <>
       <button
         type="button"
+        onClick={handleSidebarToggle}
+        aria-label={t('shell.toggle_navigation')}
+        style={sidebarToggleStyle}
+        className={cn(
+          'fixed z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-[0_14px_32px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-[left,top,background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:bg-[var(--accent-soft)] hover:shadow-[0_18px_36px_rgba(15,23,42,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+          isSidebarVisible && 'bg-[var(--muted-surface)]',
+        )}
+      >
+        <span className="relative h-4 w-4">
+          <span
+            className={cn(
+              'absolute left-0 top-1/2 h-0.5 w-4 -translate-y-[6px] rounded-full bg-current transition-transform duration-300',
+              isSidebarVisible && 'translate-y-0 rotate-45',
+            )}
+          />
+          <span
+            className={cn(
+              'absolute left-0 top-1/2 h-0.5 w-4 -translate-y-1/2 rounded-full bg-current transition-opacity duration-300',
+              isSidebarVisible && 'opacity-0',
+            )}
+          />
+          <span
+            className={cn(
+              'absolute left-0 top-1/2 h-0.5 w-4 translate-y-[5px] rounded-full bg-current transition-transform duration-300',
+              isSidebarVisible && 'translate-y-0 -rotate-45',
+            )}
+          />
+        </span>
+      </button>
+      <button
+        type="button"
         aria-label={t('shell.close_navigation_overlay')}
         onClick={closeSidebar}
         className={cn(
@@ -274,46 +320,30 @@ export function AppSidebar() {
             : 'min-[961px]:translate-x-0 min-[961px]:opacity-100',
         )}
       >
-        <div className="glass-panel flex h-full flex-col overflow-hidden rounded-xl px-3 py-3 sm:px-4">
-          <div className="border-b border-[var(--border)] px-2 pb-4 pt-2">
-            <div className="relative">
-              <button
-                type="button"
-                onClick={toggleSidebarCollapsed}
-                aria-label={t('shell.toggle_navigation')}
-                className="absolute right-0 top-0 hidden h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:inline-flex"
-              >
-                <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
-              </button>
-              <button
-                type="button"
-                onClick={handleSidebarPanelToggle}
-                aria-label={t('shell.close_navigation')}
-                className="absolute right-0 top-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:hidden"
-              >
-                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                  <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
-                </svg>
-              </button>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
-              <div className="mt-2 flex w-full items-center gap-2 text-left">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
+        <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
+          <div className="border-b border-[var(--border)] px-2 pb-4">
+            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-(--shell-label-color)">Cognilabs</p>
+              <div className="mt-3 flex w-full items-center gap-3 text-left">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
                   <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
                 </div>
                 <div className="min-w-0 overflow-hidden">
-                  <h2 className="text-sm font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
-                  <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
+                  <h2 className="text-[14px] font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between px-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">{t('shell.menu')}</p>
-            <Badge>{sidebarNavigation.length} {t('shell.modules')}</Badge>
+          <div className="mt-5 flex items-center justify-between px-2">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">{t('shell.menu')}</p>
+            <Badge className="rounded-full border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 shadow-sm">
+              {sidebarNavigation.length} {t('shell.modules')}
+            </Badge>
           </div>
 
-          <nav className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
+          <nav className="mt-3 flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
             {sidebarNavigation.map((item) => {
               const itemLabel = getNavigationLabel(item.to, item.label)
               const itemGroup = getNavigationGroup(item.to, item.group)
@@ -327,19 +357,19 @@ export function AppSidebar() {
                         aria-label={itemLabel}
                         className={({ isActive }) =>
                           cn(
-                            'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 pr-12 text-sm transition-all duration-200',
+                            'group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 pr-12 text-sm transition-all duration-200',
                             isActive || isProjectsRoute
                               ? isLight
-                                ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                                ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
                                 : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
-                              : 'border-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
+                              : 'border-transparent bg-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
                           )
                         }
                         onClick={() => setIsProjectsExpanded(true)}
                       >
                         <div className={cn(
                           'grid place-items-center border text-(--muted-strong) transition-all duration-150',
-                          'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
+                          'h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
                         )}>
                           <NavGlyph name={getNavigationGlyphName(item.to)} />
                         </div>
@@ -351,7 +381,7 @@ export function AppSidebar() {
                               <Badge
                                 size="sm"
                                 variant={isProjectsRoute ? 'blue' : 'secondary'}
-                                className="rounded-full px-1.5 py-0 text-[9px]"
+                                className="rounded-full px-1.5 py-0 text-[9px] shadow-none"
                               >
                                 {sidebarProjects.length}
                               </Badge>
@@ -420,6 +450,7 @@ export function AppSidebar() {
                                 className={({ isActive }) =>
                                   cn(
                                     'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[12px] transition-all duration-150',
+                                    'rounded-xl',
                                     isActive || isActiveProject
                                       ? isLight
                                         ? 'border-blue-200 bg-blue-50 text-blue-700'
@@ -451,18 +482,18 @@ export function AppSidebar() {
                   aria-label={itemLabel}
                   className={({ isActive }) =>
                     cn(
-                      'group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm transition-all duration-200',
+                      'group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200',
                       isActive
                         ? isLight
-                          ? 'nav-active-accent border-blue-200 bg-blue-50 text-blue-700 shadow-sm'
+                          ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
                           : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
-                        : 'border-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
+                        : 'border-transparent bg-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
                     )
                   }
                 >
                   <div className={cn(
                     'grid place-items-center border text-(--muted-strong) transition-all duration-150',
-                    'h-8 w-8 rounded-lg border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
+                    'h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
                   )}>
                     <NavGlyph name={getNavigationGlyphName(item.to)} />
                   </div>
@@ -480,7 +511,7 @@ export function AppSidebar() {
             type="button"
             onClick={openMemberDialog}
             disabled={!user}
-            className="mt-4 w-full rounded-[22px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
+            className="mt-5 w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
             aria-label={t('profile.member_details')}
           >
             <div className="flex items-start gap-3">

@@ -1,6 +1,5 @@
 import { startTransition, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAppShell } from '../../app/hooks/useAppShell'
 import { useLocale } from '../../app/hooks/useLocale'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
@@ -37,7 +36,6 @@ const headerMetaChipClassName =
 export function AppHeader() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { isSidebarCollapsed } = useAppShell()
   const { locale, setLocale, t } = useLocale()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
