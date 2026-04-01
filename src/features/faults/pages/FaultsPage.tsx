@@ -311,12 +311,18 @@ export function FaultsPage() {
     [compensationPolicyQuery.data, deliveryBonusTarget],
   )
   const mistakeCategoryOptions = useMemo(
-    () => getCompensationPolicyCategoryOptions(mistakePolicy),
-    [mistakePolicy],
+    () => getCompensationPolicyCategoryOptions(mistakePolicy).map((option) => ({
+      ...option,
+      label: lt(option.label),
+    })),
+    [mistakePolicy, locale],
   )
   const severityOptions = useMemo(
-    () => getCompensationPolicySeverityOptions(mistakePolicy),
-    [mistakePolicy],
+    () => getCompensationPolicySeverityOptions(mistakePolicy).map((option) => ({
+      ...option,
+      label: lt(option.label),
+    })),
+    [mistakePolicy, locale],
   )
   const deliveryBonusTypeOptions = useMemo(
     () => getCompensationPolicyDeliveryBonusOptions(deliveryBonusPolicy).map((option) => ({

@@ -307,14 +307,14 @@ export function FaultsMemberDetailPage({
   const reviewerOptions = (allUsersQuery.data?.length
     ? allUsersQuery.data.map((user) => ({
         value: String(user.id),
-        label: `${user.name} ${user.surname}`.trim() || user.email || `${lt('Reviewer')} #${user.id}`,
+        label: `${user.name} ${user.surname}`.trim() || user.email || `${tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')} #${user.id}`,
       }))
     : (reviewerOptionsQuery.data ?? []).map((member) => ({
         value: String(member.id),
-        label: member.full_name || `${member.name} ${member.surname}`.trim() || `${lt('Reviewer')} #${member.id}`,
+        label: member.full_name || `${member.name} ${member.surname}`.trim() || `${tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')} #${member.id}`,
       })))
   const projectOptions = [
-    { value: '0', label: lt('No project') },
+    { value: '0', label: tr('No project', "Loyiha yo'q", 'Без проекта') },
     ...((projectsQuery.data?.projects ?? []).map((project) => ({
       value: String(project.id),
       label: project.project_name,
@@ -428,9 +428,18 @@ export function FaultsMemberDetailPage({
 
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
-  const mistakeCategoryOptions = getCompensationPolicyCategoryOptions(compensationPolicy)
-  const severityOptions = getCompensationPolicySeverityOptions(compensationPolicy)
-  const deliveryBonusTypeOptions = getCompensationPolicyDeliveryBonusOptions(compensationPolicy)
+  const mistakeCategoryOptions = getCompensationPolicyCategoryOptions(compensationPolicy).map((option) => ({
+    ...option,
+    label: lt(option.label),
+  }))
+  const severityOptions = getCompensationPolicySeverityOptions(compensationPolicy).map((option) => ({
+    ...option,
+    label: lt(option.label),
+  }))
+  const deliveryBonusTypeOptions = getCompensationPolicyDeliveryBonusOptions(compensationPolicy).map((option) => ({
+    ...option,
+    label: lt(option.label),
+  }))
   const defaultCategory = mistakeCategoryOptions[0]?.value ?? 'AI Integration'
   const defaultSeverity = severityOptions[0]?.value ?? 'Minor'
   const defaultDeliveryBonusType = deliveryBonusTypeOptions[0]?.value ?? 'early_delivery'
@@ -757,7 +766,7 @@ export function FaultsMemberDetailPage({
                   {detail.report.fullName}
                 </h1>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">
-                  {detail.report.roleLabel}
+                  {detail.report.roleLabel ? lt(detail.report.roleLabel) : lt('Member')}
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -806,12 +815,12 @@ export function FaultsMemberDetailPage({
               <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                 {showCompensationActions ? (
                   <Button variant="ghost" size="sm" onClick={() => openMistakeDialog()} className="rounded-xl">
-                    {tr('Add mistake', 'Xato qoshish', 'Dobavit oshibku')}
+                    {tr('Add mistake', "Xato qo'shish", 'Добавить ошибку')}
                   </Button>
                 ) : null}
                 {showCompensationActions ? (
                   <Button variant="success" size="sm" onClick={() => openDeliveryBonusDialog()} className="rounded-xl">
-                    {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
+                    {tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу')}
                   </Button>
                 ) : null}
                 <Button
@@ -822,7 +831,7 @@ export function FaultsMemberDetailPage({
                   loading={detailQuery.isLoading}
                   className="rounded-xl"
                 >
-                  {lt('Refresh details')}
+                  {tr('Refresh details', 'Tafsilotlarni yangilash', 'Обновить детали')}
                 </Button>
               </div>
             </div>
@@ -882,7 +891,7 @@ export function FaultsMemberDetailPage({
               {lt('Compensation flow')}
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Kak formiruetsya itogovaya zarplata')}
+              {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
             </h2>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -896,7 +905,7 @@ export function FaultsMemberDetailPage({
               className="rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)] dark:bg-white/[0.03]"
               onClick={() => setIsCompensationPolicyDrawerOpen(true)}
             >
-              {tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+              {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
             </Button>
           </div>
         </div>
@@ -905,14 +914,14 @@ export function FaultsMemberDetailPage({
           <DetailStatTile label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
           <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
           <DetailStatTile label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
-          <DetailStatTile label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
+          <DetailStatTile label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Бонусы за сдачу')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
         <button
           type="button"
           onClick={() => setIsCompensationPolicyDrawerOpen(true)}
           className="group mt-5 block w-full rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] transition hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-border)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] dark:border-white/8 dark:bg-black/15 dark:shadow-none dark:hover:border-[var(--blue-border)] dark:hover:bg-white/[0.04]"
-          aria-label={tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+          aria-label={tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
         >
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
@@ -929,8 +938,8 @@ export function FaultsMemberDetailPage({
               </div>
               <p className="mt-3 text-xs text-[var(--muted-strong)]">
                 {detail.report.qualifiesProductivityBonus
-                  ? lt('Productivity bonus qualified for this period.')
-                  : lt('Productivity bonus did not qualify for this period.')}
+                  ? tr('Productivity bonus qualified for this period.', 'Bu davr uchun mahsuldorlik bonusi tasdiqlandi.', 'Бонус за продуктивность подтверждён за этот период.')
+                  : tr('Productivity bonus did not qualify for this period.', 'Bu davr uchun mahsuldorlik bonusi tasdiqlanmadi.', 'Бонус за продуктивность не подтверждён за этот период.')}
               </p>
             </div>
 
@@ -950,10 +959,10 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--blue-text)]">
-              {tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+              {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'ОТКРЫТЬ ПОЛИТИКУ КОМПЕНСАЦИИ')}
             </p>
             <p className="text-xs text-[var(--muted)]">
-              {tr('Opens from the right panel', 'Ong paneldan ochiladi', 'Otkroetsya v pravoy paneli')}
+              {tr('Opens from the right panel', 'Ong paneldan ochiladi', 'Откроется в правой панели')}
             </p>
           </div>
         </button>
@@ -963,7 +972,7 @@ export function FaultsMemberDetailPage({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              {lt('Monthly execution')}
+              {tr('Monthly execution', 'Oylik bajarilish', 'Месячное выполнение')}
             </p>
             <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
               {lt('Salary context and update performance')}
@@ -974,7 +983,7 @@ export function FaultsMemberDetailPage({
           >
             {updatesSummary
               ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
-              : lt('No update stats')}
+              : tr('No update stats', "Update statistikasi yo'q", 'Нет статистики обновлений')}
           </Badge>
         </div>
 
@@ -993,23 +1002,23 @@ export function FaultsMemberDetailPage({
 
             <div className="mt-4 grid gap-3 xl:grid-cols-3">
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Last update', 'Oxirgi yangilanish', 'Poslednee obnovlenie')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Last update', 'Oxirgi yangilanish', 'Последнее обновление')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano')}
+                  {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Next payment date', 'Keyingi tolov sanasi', 'Data sleduyushchei oplaty')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Next payment date', "Keyingi to'lov sanasi", 'Дата следующей выплаты')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano')}
+                  {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
                 </p>
               </div>
               <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Salary amount in update record', 'Yangilanish yozuvidagi maosh summasi', 'Summa zarplaty v zapisi ob obnovlenii')}</p>
+                <p className="text-xs text-[var(--muted-strong)]">{tr('Salary amount in update record', 'Yangilanish yozuvidagi maosh summasi', 'Сумма зарплаты в записи обновления')}</p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
                   {typeof updatesSummary!.salaryAmount === 'number'
                     ? formatAmount(updatesSummary!.salaryAmount)
-                    : tr('Not returned', 'Qaytmadi', 'Ne vernulos')}
+                    : tr('Not returned', 'Qaytmadi', 'Не вернулось')}
                 </p>
               </div>
             </div>
@@ -1181,28 +1190,33 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={isMistakeDialogOpen}
           onClose={closeMistakeDialog}
-          title={`${editingMistake ? lt('Edit') : lt('Add')} ${lt('mistake for')} ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} ${lt('compensation mistake incident.')}`}
+          eyebrow={tr('Workspace dialog', 'Ish maydoni dialogi', 'Диалог рабочего пространства')}
+          title={`${editingMistake
+            ? tr('Edit mistake for', 'Xatoni tahrirlash:', 'Редактировать ошибку для')
+            : tr('Add mistake for', "Xato qo'shish:", 'Добавить ошибку для')} ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} ${tr('compensation mistake incident.', 'uchun kompensatsiya xatosi yozuvi.', 'компенсационная запись об ошибке.')}`}
           footer={
             <>
               <Button variant="secondary" onClick={closeMistakeDialog} disabled={isMistakeSubmitting}>
-                {lt('Cancel')}
+                {tr('Cancel', 'Bekor qilish', 'Отмена')}
               </Button>
               <Button variant="danger" onClick={() => void handleSubmitMistake()} loading={isMistakeSubmitting}>
-                {editingMistake ? lt('Update mistake') : lt('Save mistake')}
+                {editingMistake
+                  ? tr('Update mistake', 'Xatoni yangilash', 'Обновить ошибку')
+                  : tr('Save mistake', 'Xatoni saqlash', 'Сохранить ошибку')}
               </Button>
             </>
           }
         >
           <div className="grid gap-4">
             <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="text-xs text-[var(--muted-strong)]">{lt('Employee')}</p>
+              <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Reviewer')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')}</label>
                 {reviewerOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.reviewerId}
@@ -1216,13 +1230,13 @@ export function FaultsMemberDetailPage({
                     min="1"
                     value={mistakeDraft.reviewerId}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
-                    placeholder={lt('Reviewer ID')}
+                    placeholder={tr('Reviewer ID', "Ko'rib chiquvchi ID", 'ID проверяющего')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Project')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
                 {projectOptions.length > 1 ? (
                   <SelectField
                     value={mistakeDraft.projectId}
@@ -1236,7 +1250,7 @@ export function FaultsMemberDetailPage({
                     min="0"
                     value={mistakeDraft.projectId}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
-                    placeholder={lt('0 for no project')}
+                    placeholder={tr('0 for no project', "Loyiha bo'lmasa 0", '0 если проекта нет')}
                   />
                 )}
               </div>
@@ -1244,7 +1258,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Category')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Category', 'Kategoriya', 'Категория')}</label>
                 {mistakeCategoryOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.category}
@@ -1256,13 +1270,13 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={mistakeDraft.category}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
-                    placeholder={lt('AI Integration')}
+                    placeholder={tr('AI Integration', 'AI integratsiyasi', 'AI интеграция')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Severity')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Severity', 'Daraja', 'Степень')}</label>
                 {severityOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.severity}
@@ -1274,7 +1288,7 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={mistakeDraft.severity}
                     onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
-                    placeholder={lt('Minor')}
+                    placeholder={tr('Minor', 'Yengil', 'Незначительная')}
                   />
                 )}
               </div>
@@ -1282,16 +1296,16 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_180px]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Title')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
                 <Input
                   value={mistakeDraft.title}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
-                  placeholder={lt('Short mistake title')}
+                  placeholder={tr('Short mistake title', 'Qisqa xato sarlavhasi', 'Короткое название ошибки')}
                 />
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Incident date')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Incident date', "Sodir bo'lgan sana", 'Дата инцидента')}</label>
                 <Input
                   type="date"
                   value={mistakeDraft.incidentDate}
@@ -1301,11 +1315,11 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Description')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
               <Textarea
                 value={mistakeDraft.description}
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
-                placeholder={lt('Describe what happened')}
+                placeholder={tr('Describe what happened', "Nima bo'lganini yozing", 'Опишите, что произошло')}
               />
             </div>
 
@@ -1317,7 +1331,7 @@ export function FaultsMemberDetailPage({
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
-                {lt('Reached client')}
+                {tr('Reached client', 'Mijozga yetib borgan', 'Дошло до клиента')}
               </label>
 
               <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
@@ -1327,7 +1341,7 @@ export function FaultsMemberDetailPage({
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
-                {lt('Unclear task')}
+                {tr('Unclear task', 'Vazifa noaniq', 'Неясная задача')}
               </label>
             </div>
           </div>
@@ -1338,28 +1352,33 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={isDeliveryBonusDialogOpen}
           onClose={closeDeliveryBonusDialog}
-          title={`${editingDeliveryBonus ? lt('Edit') : lt('Add')} ${lt('delivery bonus for')} ${detail.report.fullName}`}
-          description={`${getMonthName(month)} ${year} ${lt('delivery bonus record.')}`}
+          eyebrow={tr('Workspace dialog', 'Ish maydoni dialogi', 'Диалог рабочего пространства')}
+          title={`${editingDeliveryBonus
+            ? tr('Edit delivery bonus for', 'Topshirish bonusini tahrirlash:', 'Редактировать бонус за сдачу для')
+            : tr('Add delivery bonus for', "Topshirish bonusini qo'shish:", 'Добавить бонус за сдачу для')} ${detail.report.fullName}`}
+          description={`${getMonthName(month)} ${year} ${tr('delivery bonus record.', 'uchun topshirish bonusi yozuvi.', 'запись о бонусе за сдачу.')}`}
           footer={
             <>
               <Button variant="secondary" onClick={closeDeliveryBonusDialog} disabled={isDeliveryBonusSubmitting}>
-                {lt('Cancel')}
+                {tr('Cancel', 'Bekor qilish', 'Отмена')}
               </Button>
               <Button variant="success" onClick={() => void handleSubmitDeliveryBonus()} loading={isDeliveryBonusSubmitting}>
-                {editingDeliveryBonus ? lt('Update delivery bonus') : lt('Save delivery bonus')}
+                {editingDeliveryBonus
+                  ? tr('Update delivery bonus', 'Topshirish bonusini yangilash', 'Обновить бонус за сдачу')
+                  : tr('Save delivery bonus', 'Topshirish bonusini saqlash', 'Сохранить бонус за сдачу')}
               </Button>
             </>
           }
         >
           <div className="grid gap-4">
             <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="text-xs text-[var(--muted-strong)]">{lt('Employee')}</p>
+              <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Bonus type')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Bonus type', 'Bonus turi', 'Тип бонуса')}</label>
                 {deliveryBonusTypeOptions.length > 0 ? (
                   <SelectField
                     value={deliveryBonusDraft.bonusType}
@@ -1371,13 +1390,13 @@ export function FaultsMemberDetailPage({
                   <Input
                     value={deliveryBonusDraft.bonusType}
                     onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, bonusType: event.target.value }))}
-                    placeholder={lt('early_delivery')}
+                    placeholder={tr('early_delivery', 'Erta topshirish', 'Ранняя сдача')}
                   />
                 )}
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Award date')}</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Award date', 'Berilgan sana', 'Дата выдачи')}</label>
                 <Input
                   type="date"
                   value={deliveryBonusDraft.awardDate}
@@ -1387,16 +1406,16 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Title')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
               <Input
                 value={deliveryBonusDraft.title}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
-                placeholder={lt('Short bonus title')}
+                placeholder={tr('Short bonus title', 'Qisqa bonus sarlavhasi', 'Короткое название бонуса')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Project')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
               {projectOptions.length > 1 ? (
                 <SelectField
                   value={deliveryBonusDraft.projectId}
@@ -1410,17 +1429,17 @@ export function FaultsMemberDetailPage({
                   min="0"
                   value={deliveryBonusDraft.projectId}
                   onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, projectId: event.target.value }))}
-                  placeholder={lt('0 for no project')}
+                  placeholder={tr('0 for no project', "Loyiha bo'lmasa 0", '0 если проекта нет')}
                 />
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{lt('Description')}</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
               <Textarea
                 value={deliveryBonusDraft.description}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
-                placeholder={lt('Describe why this delivery bonus was awarded')}
+                placeholder={tr('Describe why this delivery bonus was awarded', 'Nega bu bonus berilganini yozing', 'Опишите, почему был выдан этот бонус')}
               />
             </div>
           </div>

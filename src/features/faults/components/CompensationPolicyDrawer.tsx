@@ -121,7 +121,7 @@ export function CompensationPolicyDrawer({
                 {getMonthName(month)} {year} {tr(
                   'policy values returned from the compensation API.',
                   'kompensatsiya API dan qaytgan policy qiymatlari.',
-                  'znacheniya policy, vozvrashchennye compensation API.',
+                  'значения политики, возвращённые из compensation API.',
                 )}
               </p>
             </div>
@@ -155,7 +155,7 @@ export function CompensationPolicyDrawer({
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <p className="text-sm text-[var(--muted-strong)]">
-                    {tr('Policy inspector', 'Policy ko\'rinishi', 'Prosmotr policy')}
+                    {tr('Policy inspector', "Policy ko'rinishi", 'Просмотр политики')}
                   </p>
                   <h3 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-[var(--foreground)]">
                     {title}
@@ -164,7 +164,7 @@ export function CompensationPolicyDrawer({
                     {tr(
                       'Review deduction caps, split ratios, and bonus triggers from one place.',
                       'Ayirma limitlari, ulushlar va bonus triggerlarini bir joydan ko\'ring.',
-                      'Proveriaite limity uderzhaniy, doli i bonusnye trigery v odnom meste.',
+                      'Проверяйте лимиты удержаний, доли и бонусные триггеры в одном месте.',
                     )}
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export function CompensationPolicyDrawer({
                     {policy ? `${policy.deductionRates.length} ${lt('deduction rates')}` : lt('Unavailable')}
                   </Badge>
                   <Badge variant={policy ? 'secondary' : 'outline'}>
-                    {policy ? `${policy.bonusRates.length} ${lt('bonus rules')}` : tr('Not configured', 'Sozlanmagan', 'Ne nastroeno')}
+                    {policy ? `${policy.bonusRates.length} ${lt('bonus rules')}` : tr('Not configured', 'Sozlanmagan', 'Не настроено')}
                   </Badge>
                 </div>
               </div>

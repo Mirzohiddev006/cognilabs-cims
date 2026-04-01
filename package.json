@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "typecheck": "tsc -b",
     "build": "tsc -b && vite build",
+    "i18n:audit": "node scripts/i18n-audit.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

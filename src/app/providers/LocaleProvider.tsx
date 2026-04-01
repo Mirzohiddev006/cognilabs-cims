@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, type PropsWithChildren } from 'react'
 import { useTranslation } from 'react-i18next'
+import { observeDomTranslations } from '../../shared/i18n/dom'
 import { getStoredLocale, setCurrentLocale, type AppLocale, type TranslationParams } from '../../shared/i18n/translations'
 import { LocaleContext } from './LocaleContext'
-
-function LocaleRenderBoundary({ children }: PropsWithChildren) {
-  return <>{children}</>
-}
 
 export function LocaleProvider({ children }: PropsWithChildren) {
   const { i18n, t } = useTranslation()
@@ -24,6 +21,8 @@ export function LocaleProvider({ children }: PropsWithChildren) {
     setCurrentLocale(locale)
     window.localStorage.setItem('cims-locale', locale)
     document.documentElement.lang = locale
+
+    return observeDomTranslations(locale)
   }, [locale])
 
   const value = useMemo(() => ({
@@ -41,9 +40,7 @@ export function LocaleProvider({ children }: PropsWithChildren) {
 
   return (
     <LocaleContext.Provider value={value}>
-      <LocaleRenderBoundary key={locale}>
-        {children}
-      </LocaleRenderBoundary>
+      {children}
     </LocaleContext.Provider>
   )
 }

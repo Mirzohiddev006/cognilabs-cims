@@ -4,7 +4,7 @@ import { useTheme } from '../../../app/hooks/useTheme'
 import type { DayStatus } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
-import { formatShortMonthDayTime } from '../../../shared/lib/format'
+import { formatShortMonthDayTime, getLocalizedMonthName } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import type {
@@ -14,6 +14,16 @@ import type {
 
 const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const boardWeekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const longWeekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const weekdayLongFallbacks: Record<string, { uz: string; ru: string }> = {
+  Sunday: { uz: 'Yakshanba', ru: 'Voskresenye' },
+  Monday: { uz: 'Dushanba', ru: 'Ponedelnik' },
+  Tuesday: { uz: 'Seshanba', ru: 'Vtornik' },
+  Wednesday: { uz: 'Chorshanba', ru: 'Sreda' },
+  Thursday: { uz: 'Payshanba', ru: 'Chetverg' },
+  Friday: { uz: 'Juma', ru: 'Pyatnitsa' },
+  Saturday: { uz: 'Shanba', ru: 'Subbota' },
+}
 const lt = translateCurrentLiteral
 const tr = (key: string, uzFallback: string, ruFallback: string) => {
   const value = lt(key)
@@ -83,8 +93,30 @@ const dayFocusStyle: Record<DayStatus, string> = {
   neutral:   'cal-focus-neutral',
 }
 
+function getLocalizedLongWeekdayName(dayIndex: number) {
+  const label = longWeekdayLabels[dayIndex]
+
+  if (!label) {
+    return ''
+  }
+
+  const fallback = weekdayLongFallbacks[label]
+
+  if (!fallback) {
+    return lt(label)
+  }
+
+  return tr(label, fallback.uz, fallback.ru)
+}
+
 function formatStableMonthPeriod(month: number, year: number): string {
-  return `M${String(month).padStart(2, '0')} ${year}`
+  const monthName = getLocalizedMonthName(month)
+
+  if (!monthName) {
+    return `${year}`
+  }
+
+  return `${monthName} ${year}`
 }
 
 function formatLongDate(date: string) {
@@ -94,12 +126,14 @@ function formatLongDate(date: string) {
     return date
   }
 
-  return parsed.toLocaleDateString(getIntlLocale(), {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const weekdayName = getLocalizedLongWeekdayName(parsed.getDay())
+  const monthName = getLocalizedMonthName(parsed.getMonth() + 1)
+
+  if (getIntlLocale().startsWith('en')) {
+    return `${weekdayName}, ${monthName} ${parsed.getDate()}, ${parsed.getFullYear()}`
+  }
+
+  return `${parsed.getDate()} ${monthName} ${parsed.getFullYear()}, ${weekdayName}`
 }
 
 function formatEntryTimestamp(value?: string) {
@@ -315,7 +349,23 @@ function getBoardWeekday(day: MemberMonthlyUpdateDay) {
 }
 
 function getShortWeekday(day: MemberMonthlyUpdateDay) {
-  return day.weekdayShort.slice(0, 3)
+  const parsed = new Date(day.date)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return day.weekdayShort.slice(0, 3)
+  }
+
+  return lt(boardWeekdayLabels[parsed.getDay()])
+}
+
+function getLongWeekday(day: MemberMonthlyUpdateDay) {
+  const parsed = new Date(day.date)
+
+  if (Number.isNaN(parsed.getTime())) {
+    return day.weekdayLabel
+  }
+
+  return getLocalizedLongWeekdayName(parsed.getDay())
 }
 
 function getDaySummary(day: MemberMonthlyUpdateDay) {
@@ -605,8 +655,8 @@ export function MemberMonthlyUpdateCalendarBoard({
                       <Badge variant={getStatusVariant(selectedDay.status, selectedDay)} dot>
                         {getStatusLabel(selectedDay.status, selectedDay)}
                       </Badge>
-                      {selectedDay.weekdayLabel ? (
-                        <Badge variant="secondary">{selectedDay.weekdayLabel}</Badge>
+                      {getLongWeekday(selectedDay) ? (
+                        <Badge variant="secondary">{getLongWeekday(selectedDay)}</Badge>
                       ) : null}
                       {selectedDay.date === todayKey ? (
                         <Badge variant="blue">{lt('Today')}</Badge>
@@ -725,7 +775,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
-                    {stableMonthPeriod} {lt('Calendar')}
+                    {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Kalendary')}
                   </h3>
                   <p className="mt-1.5 text-[13px] text-[var(--muted)]">
                 {tr(

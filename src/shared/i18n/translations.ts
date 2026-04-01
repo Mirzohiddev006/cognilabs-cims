@@ -1,5 +1,10 @@
 import i18n from './i18n'
-import { literalPhrases } from './literalPhrases'
+import enLiteral from '../../locales/en/literal.json'
+import enLiteralOverrides from '../../locales/en/literal.overrides.json'
+import ruLiteral from '../../locales/ru/literal.json'
+import ruLiteralOverrides from '../../locales/ru/literal.overrides.json'
+import uzLiteral from '../../locales/uz/literal.json'
+import uzLiteralOverrides from '../../locales/uz/literal.overrides.json'
 
 export type AppLocale = 'en' | 'uz' | 'ru'
 
@@ -22,14 +27,21 @@ const intlLocaleMap: Record<AppLocale, string> = {
 
 let currentLocale: AppLocale = DEFAULT_LOCALE
 
-type LiteralPhrase = (typeof literalPhrases)[number]
+const literalResources = {
+  en: { ...enLiteral, ...enLiteralOverrides },
+  uz: { ...uzLiteral, ...uzLiteralOverrides },
+  ru: { ...ruLiteral, ...ruLiteralOverrides },
+} as const
 
-const literalLookup = new Map<string, LiteralPhrase>()
+type LiteralKey = keyof typeof literalResources.en & string
+type LiteralResourceMap = Record<LiteralKey, string>
 
-for (const phrase of literalPhrases) {
-  for (const locale of Object.keys(localeLabels) as AppLocale[]) {
-    const value = phrase[locale]
+const literalLookup = new Map<string, LiteralKey>()
 
+for (const locale of Object.keys(localeLabels) as AppLocale[]) {
+  const resource = literalResources[locale] as LiteralResourceMap
+
+  for (const [key, value] of Object.entries(resource) as [LiteralKey, string][]) {
     if (!value) {
       continue
     }
@@ -37,7 +49,7 @@ for (const phrase of literalPhrases) {
     const normalized = normalizeLiteral(value)
 
     if (!literalLookup.has(normalized)) {
-      literalLookup.set(normalized, phrase)
+      literalLookup.set(normalized, key)
     }
   }
 }
@@ -71,6 +83,11 @@ function normalizeLocale(value?: string | null): AppLocale {
 
 function normalizeLiteral(value: string) {
   return value
+    .normalize('NFKC')
+    .replace(/[\u2018\u2019\u201A\u02BC\u02BB\uFF07\u00B4`]/g, '\'')
+    .replace(/[\u201C\u201D\u201E]/g, '"')
+    .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-')
+    .replace(/\u00A0/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase()
@@ -94,6 +111,16 @@ function translatePattern(locale: AppLocale, value: string) {
   }
 
   return value
+}
+
+function translateLiteralKey(locale: AppLocale, key: LiteralKey) {
+  const translated = i18n.t(key, {
+    lng: locale,
+    ns: 'literal',
+    defaultValue: (literalResources.en as LiteralResourceMap)[key],
+  })
+
+  return typeof translated === 'string' ? translated : String(translated)
 }
 
 export function getStoredLocale(): AppLocale {
@@ -145,10 +172,10 @@ export function translateLiteral(locale: AppLocale, value: string) {
     return translate(locale, value)
   }
 
-  const phrase = literalLookup.get(normalizeLiteral(value))
+  const literalKey = literalLookup.get(normalizeLiteral(value))
 
-  if (phrase) {
-    return phrase[locale]
+  if (literalKey) {
+    return translateLiteralKey(locale, literalKey)
   }
 
   return translatePattern(locale, value)
