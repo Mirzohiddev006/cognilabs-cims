@@ -56,7 +56,8 @@ const accentClasses = {
     badge: 'blue' as const,
     iconWrap: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200',
     line: 'from-blue-500/40 via-cyan-400/20 to-transparent',
-    label: 'text-[#2576EF] dark:text-blue-200/95',
+    eyebrow: 'text-[#2576EF] dark:text-blue-200/95 [text-shadow:0_0_0.2px_currentColor]',
+    title: 'text-[#2576EF] dark:text-blue-200/98 [text-shadow:0_0_0.35px_currentColor]',
     button: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] hover:border-blue-400/40 hover:bg-blue-500/14 dark:border-blue-400/25 dark:bg-blue-500/12 dark:text-blue-50 dark:hover:border-blue-300/35 dark:hover:bg-blue-500/18',
   },
   violet: {
@@ -65,7 +66,8 @@ const accentClasses = {
     badge: 'violet' as const,
     iconWrap: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-100',
     line: 'from-violet-500/40 via-fuchsia-400/20 to-transparent',
-    label: 'text-[#8A3AED] dark:text-violet-200/95',
+    eyebrow: 'text-[#8A3AED] dark:text-violet-200/95 [text-shadow:0_0_0.2px_currentColor]',
+    title: 'text-[#8A3AED] dark:text-violet-200/98 [text-shadow:0_0_0.35px_currentColor]',
     button: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] hover:border-violet-400/40 hover:bg-violet-500/14 dark:border-violet-400/25 dark:bg-violet-500/12 dark:text-violet-50 dark:hover:border-violet-300/35 dark:hover:bg-violet-500/18',
   },
   amber: {
@@ -74,7 +76,8 @@ const accentClasses = {
     badge: 'warning' as const,
     iconWrap: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100',
     line: 'from-amber-500/40 via-orange-400/20 to-transparent',
-    label: 'text-[#B45309] dark:text-amber-200/95',
+    eyebrow: 'text-[#B45309] dark:text-amber-200/95 [text-shadow:0_0_0.2px_currentColor]',
+    title: 'text-[#B45309] dark:text-amber-200/98 [text-shadow:0_0_0.35px_currentColor]',
     button: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] hover:border-amber-400/40 hover:bg-amber-500/14 dark:border-amber-400/25 dark:bg-amber-500/12 dark:text-amber-50 dark:hover:border-amber-300/35 dark:hover:bg-amber-500/18',
   },
   emerald: {
@@ -83,7 +86,8 @@ const accentClasses = {
     badge: 'success' as const,
     iconWrap: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100',
     line: 'from-emerald-500/40 via-teal-400/20 to-transparent',
-    label: 'text-[#289075] dark:text-emerald-200/95',
+    eyebrow: 'text-[#289075] dark:text-emerald-200/95 [text-shadow:0_0_0.2px_currentColor]',
+    title: 'text-[#289075] dark:text-emerald-200/98 [text-shadow:0_0_0.35px_currentColor]',
     button: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] hover:border-emerald-400/40 hover:bg-emerald-500/14 dark:border-emerald-400/25 dark:bg-emerald-500/12 dark:text-emerald-50 dark:hover:border-emerald-300/35 dark:hover:bg-emerald-500/18',
   },
 } as const
@@ -137,8 +141,8 @@ export function CimsTeamPage() {
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className={cn('text-[10px] font-semibold uppercase tracking-[0.24em]', accent.label)}>{eyebrow}</p>
-                    <h3 className={cn('mt-1 text-xl font-semibold tracking-tight', accent.label)}>{title}</h3>
+                    <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em]', accent.eyebrow)}>{eyebrow}</p>
+                    <h3 className={cn('mt-1 text-xl font-bold tracking-tight', accent.title)}>{title}</h3>
                   </div>
                 </div>
 
