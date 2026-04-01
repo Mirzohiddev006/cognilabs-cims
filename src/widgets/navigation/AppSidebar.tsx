@@ -54,14 +54,7 @@ export function AppSidebar() {
       : false
   const isSidebarVisible = isMobileViewport ? isSidebarOpen : !isSidebarCollapsed
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
-  const sidebarNavigation = useMemo(
-    () => (
-      String(user?.role ?? '').toLowerCase() === 'member'
-        ? visibleNavigation.filter((item) => item.to !== '/projects')
-        : visibleNavigation
-    ),
-    [user?.role, visibleNavigation],
-  )
+  const sidebarNavigation = useMemo(() => visibleNavigation, [visibleNavigation])
   const hasProjectsAccess = sidebarNavigation.some((item) => item.to === '/projects')
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
   const canManageProjects = hasPermission('projects')
