@@ -42,7 +42,7 @@ type MemberProfileFormState = {
 
 export function AppSidebar() {
   const location = useLocation()
-  const { closeSidebar, isSidebarOpen } = useAppShell()
+  const { closeSidebar, isSidebarCollapsed, isSidebarOpen, toggleSidebarCollapsed } = useAppShell()
   const { t } = useLocale()
   const { theme } = useTheme()
   const { showToast } = useToast()
@@ -169,7 +169,19 @@ export function AppSidebar() {
   function closeSidebarFromBrand() {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
       closeSidebar()
+      return
     }
+
+    toggleSidebarCollapsed()
+  }
+
+  function handleSidebarPanelToggle() {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
+      closeSidebar()
+      return
+    }
+
+    toggleSidebarCollapsed()
   }
 
   function updateMemberForm<K extends keyof MemberProfileFormState>(key: K, value: MemberProfileFormState[K]) {
@@ -264,8 +276,11 @@ export function AppSidebar() {
       />
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:p-4 min-[961px]:pr-0',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0 min-[961px]:transition-[width,padding,opacity,transform] min-[961px]:duration-300',
           isSidebarOpen ? 'shell-sidebar--open' : 'shell-sidebar--closed',
+          isSidebarCollapsed
+            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:!p-0 min-[961px]:opacity-0 min-[961px]:-translate-x-6'
+            : 'min-[961px]:translate-x-0 min-[961px]:opacity-100',
         )}
       >
         <div className="glass-panel flex h-full flex-col overflow-hidden rounded-xl px-3 py-3 sm:px-4">
@@ -273,13 +288,21 @@ export function AppSidebar() {
             <div className="relative">
               <button
                 type="button"
-                onClick={closeSidebar}
+                onClick={handleSidebarPanelToggle}
                 aria-label={t('shell.close_navigation')}
                 className="absolute right-0 top-0 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:hidden"
               >
                 <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                   <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
                 </svg>
+              </button>
+              <button
+                type="button"
+                onClick={handleSidebarPanelToggle}
+                aria-label={t('shell.toggle_navigation')}
+                className="absolute right-0 top-0 hidden h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:inline-flex"
+              >
+                <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
               </button>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
               <button

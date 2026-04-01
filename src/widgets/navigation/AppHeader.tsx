@@ -37,7 +37,7 @@ const headerMetaChipClassName =
 export function AppHeader() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { openSidebar } = useAppShell()
+  const { toggleSidebar, toggleSidebarCollapsed } = useAppShell()
   const { locale, setLocale, t } = useLocale()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
@@ -77,6 +77,15 @@ export function AppHeader() {
   const { theme, toggleTheme } = useTheme()
   const routeLabel = currentItem ? t(`nav.${currentItem.to}.label`, currentItem.label) : env.appName
 
+  function handleNavigationToggle() {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
+      toggleSidebar()
+      return
+    }
+
+    toggleSidebarCollapsed()
+  }
+
   return (
     <header className="relative z-10 border-b border-(--border) bg-(--shell-header-bg) px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -84,8 +93,16 @@ export function AppHeader() {
           <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={openSidebar}
+                onClick={handleNavigationToggle}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-(--border) bg-(--accent-soft) text-(--foreground) shadow-lg min-[961px]:hidden"
+                aria-label={t('shell.toggle_navigation')}
+              >
+                <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNavigationToggle}
+                className="app-shell-collapse-toggle h-10 w-10 items-center justify-center rounded-xl border border-(--border) bg-(--accent-soft) text-(--foreground) shadow-lg"
                 aria-label={t('shell.toggle_navigation')}
               >
                 <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />

@@ -3,7 +3,7 @@ import { AppShellContext } from './AppShellContext'
 
 export function AppShellProvider({ children }: PropsWithChildren) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const isSidebarCollapsed = false
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const openSidebar = useCallback(() => {
     setIsSidebarOpen(true)
@@ -18,7 +18,7 @@ export function AppShellProvider({ children }: PropsWithChildren) {
   }, [])
 
   const toggleSidebarCollapsed = useCallback(() => {
-    // Desktop sidebar collapse was intentionally removed in favor of a fixed rail.
+    setIsSidebarCollapsed((current) => !current)
   }, [])
 
   const value = useMemo(
