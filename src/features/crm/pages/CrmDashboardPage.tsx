@@ -212,10 +212,6 @@ function normalizeFilterValue(value?: string | null) {
   return (value ?? '').trim().toLowerCase()
 }
 
-function normalizePhoneValue(value?: string | null) {
-  return (value ?? '').replace(/\D/g, '')
-}
-
 function summarizeCustomerNotes(value?: string | null, wordLimit = 3) {
   const notes = (value ?? '').replace(/\s+/g, ' ').trim()
 
@@ -452,8 +448,6 @@ export function CrmDashboardPage() {
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
-  const [phoneFilter, setPhoneFilter] = useState('')
-  const deferredPhoneFilter = useDeferredValue(phoneFilter)
   const [statusFilter, setStatusFilter] = useState('')
   const [platformFilter, setPlatformFilter] = useState('')
   const [dateStart, setDateStart] = useState('')
@@ -498,7 +492,6 @@ export function CrmDashboardPage() {
 
   const displayedCustomers = useMemo(() => {
     const normalizedSearch = normalizeFilterValue(deferredSearch)
-    const normalizedPhone = normalizePhoneValue(deferredPhoneFilter)
     const normalizedStatusFilter = normalizeStatusKey(statusFilter)
     const normalizedPlatformFilter = normalizeFilterValue(platformFilter)
     const startDate = dateStart ? new Date(`${dateStart}T00:00:00`) : null
@@ -522,10 +515,6 @@ export function CrmDashboardPage() {
             .some((value) => normalizeFilterValue(String(value)).includes(normalizedSearch))
         : true
 
-      const matchesPhone = normalizedPhone
-        ? normalizePhoneValue(customer.phone_number ?? customer.phone).includes(normalizedPhone)
-        : true
-
       const matchesStatus = normalizedStatusFilter
         ? getCustomerStatusKeys(customer, statusMetaMap).has(normalizedStatusFilter)
         : true
@@ -537,9 +526,9 @@ export function CrmDashboardPage() {
       const matchesStart = startDate && createdAt ? createdAt >= startDate : !startDate
       const matchesEnd = endDate && createdAt ? createdAt <= endDate : !endDate
 
-      return matchesSearch && matchesPhone && matchesStatus && matchesPlatform && matchesStart && matchesEnd
+      return matchesSearch && matchesStatus && matchesPlatform && matchesStart && matchesEnd
     })
-  }, [customers, dateEnd, dateStart, deferredPhoneFilter, deferredSearch, platformFilter, statusFilter, statusMetaMap])
+  }, [customers, dateEnd, dateStart, deferredSearch, platformFilter, statusFilter, statusMetaMap])
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -551,7 +540,6 @@ export function CrmDashboardPage() {
 
   function resetFilters() {
     setSearch('')
-    setPhoneFilter('')
     setStatusFilter('')
     setPlatformFilter('')
     setDateStart('')
@@ -730,7 +718,7 @@ export function CrmDashboardPage() {
     { value: '50', label: t('common.per_page', '{{count}} per page', { count: 50 }) },
     { value: '75', label: t('common.per_page', '{{count}} per page', { count: 75 }) },
   ]
-  const activeFilterCount = [search, phoneFilter, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
+  const activeFilterCount = [search, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
   const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
 
   return (
@@ -870,18 +858,6 @@ export function CrmDashboardPage() {
                 value={platformFilter}
                 options={platformFilterOptions}
                 onValueChange={setPlatformFilter}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
-                {t('customers.filters.phone_label', 'Phone')}
-              </label>
-              <Input
-                value={phoneFilter}
-                onChange={(event) => setPhoneFilter(event.target.value)}
-                placeholder={t('customers.filters.phone_placeholder', 'Search by phone')}
-                className="h-9"
               />
             </div>
 

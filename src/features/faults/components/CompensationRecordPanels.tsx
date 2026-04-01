@@ -77,7 +77,7 @@ export function MistakeIncidentSection({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#dc2626,rgba(220,38,38,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.94),rgba(251,113,133,0.44),transparent_78%)]" />
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#b91c1c] dark:text-rose-200/95">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#FF0000]">
             {tr('Mistake incidents', 'Xato holatlari', 'Sluchai oshibok')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">

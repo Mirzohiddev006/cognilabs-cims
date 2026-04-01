@@ -884,7 +884,7 @@ export function FaultsMemberDetailPage({
               {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Kak formiruetsya itogovaya zarplata')}
             </h2>
           </div>
-          <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
+          <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'} className="text-[#FF0000]">
             {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
           </Badge>
         </div>
@@ -1028,7 +1028,7 @@ export function FaultsMemberDetailPage({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#dc2626,rgba(220,38,38,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.94),rgba(251,113,133,0.44),transparent_78%)]" />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#b91c1c] dark:text-rose-200/95">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#FF0000]">
                 {tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1073,7 +1073,7 @@ export function FaultsMemberDetailPage({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#16a34a,rgba(22,163,74,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.94),rgba(52,211,153,0.44),transparent_78%)]" />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#166534] dark:text-emerald-200/95">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#48A111]">
                 {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1090,7 +1090,7 @@ export function FaultsMemberDetailPage({
               <div key={item.id} className="rounded-[18px] border border-[var(--success-border)] bg-emerald-100/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-emerald-500/18 dark:bg-black/15 dark:shadow-none">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+                    <p className="text-sm font-semibold text-[#48A111]">{item.title}</p>
                     {item.description ? (
                       <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
                         {item.description}

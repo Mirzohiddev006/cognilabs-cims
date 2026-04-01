@@ -166,6 +166,12 @@ export function AppSidebar() {
     setProfileImageFile(null)
   }
 
+  function closeSidebarFromBrand() {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 960px)').matches) {
+      closeSidebar()
+    }
+  }
+
   function updateMemberForm<K extends keyof MemberProfileFormState>(key: K, value: MemberProfileFormState[K]) {
     setMemberForm((current) => ({
       ...current,
@@ -276,7 +282,12 @@ export function AppSidebar() {
                 </svg>
               </button>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
-              <div className="mt-2 flex items-center gap-2 pr-12 min-[961px]:pr-0">
+              <button
+                type="button"
+                onClick={closeSidebarFromBrand}
+                aria-label={t('shell.close_navigation')}
+                className="mt-2 flex w-full items-center gap-2 pr-12 text-left transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent min-[961px]:cursor-default min-[961px]:pr-0 min-[961px]:focus-visible:ring-0"
+              >
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
                   <NavGlyph name="default" />
                 </div>
@@ -284,7 +295,7 @@ export function AppSidebar() {
                   <h2 className="text-sm font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
                   <p className="text-[9px] font-medium uppercase tracking-wider text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
 

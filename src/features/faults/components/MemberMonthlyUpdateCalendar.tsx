@@ -82,8 +82,8 @@ const dayFocusStyle: Record<DayStatus, string> = {
   neutral:   'cal-focus-neutral',
 }
 
-function getMonthName(month: number): string {
-  return new Intl.DateTimeFormat(getIntlLocale(), { month: 'long' }).format(new Date(2024, month - 1))
+function formatStableMonthPeriod(month: number, year: number): string {
+  return `M${String(month).padStart(2, '0')} ${year}`
 }
 
 function formatLongDate(date: string) {
@@ -504,7 +504,7 @@ export function MemberMonthlyUpdateCalendarBoard({
   const monthProgressPct = elapsedWorkingDays > 0
     ? (counts.submitted / elapsedWorkingDays) * 100
     : 0
-  const selectedMonthName = getMonthName(calendar.month)
+  const stableMonthPeriod = formatStableMonthPeriod(calendar.month, calendar.year)
   const focusDetailText = getFocusDetailText(selectedDay)
   const shouldShowFocusContent = Boolean(
     selectedDay?.hasUpdate ||
@@ -725,12 +725,12 @@ export function MemberMonthlyUpdateCalendarBoard({
       <div className={cn('w-full', className)}>
         <div className="cal-inner overflow-hidden rounded-[28px] border">
         <div className="border-b border-(--border) px-4 py-4 sm:px-5">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
-                {selectedMonthName} {calendar.year} {lt('Calendar')}
-              </h3>
-              <p className="mt-1.5 text-[13px] text-[var(--muted)]">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
+                    {stableMonthPeriod} {lt('Calendar')}
+                  </h3>
+                  <p className="mt-1.5 text-[13px] text-[var(--muted)]">
                 {tr(
                   'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
                   'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
@@ -769,7 +769,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                         isLight ? 'text-[var(--foreground)]' : 'text-white',
                       )}
                     >
-                      {selectedMonthName} {calendar.year}
+                      {stableMonthPeriod}
                     </h4>
                     <Badge
                       variant="violet"
@@ -820,7 +820,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       )}
                       style={isLight ? { color: '#14532d' } : undefined}
                     >
-                      {selectedMonthName} {calendar.year}
+                      {stableMonthPeriod}
                     </button>
                     <Button
                       variant="secondary"

@@ -6,6 +6,7 @@ import { membersService } from '../../../shared/api/services/members.service'
 import { projectsService } from '../../../shared/api/services/projects.service'
 import { updateTrackingService, type WorkdayOverrideMemberOption } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
@@ -195,11 +196,33 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
 }
 
 export function FaultsPage() {
-  const monthOptions = useMemo(() => getMonthOptions(), [])
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
+  const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tl = (en: string, uz: string, ru: string) => {
+    if (locale.startsWith('ru')) {
+      return ru
+    }
+
+    if (locale.startsWith('en')) {
+      return en
+    }
+
+    return uz
+  }
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    return tl(key, uzFallback, ruFallback)
+  }
+  const monthOptions = useMemo(() => getMonthOptions(), [locale])
   const [mistakeTarget, setMistakeTarget] = useState<EmployeeSalaryReport | null>(null)
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusTarget, setDeliveryBonusTarget] = useState<EmployeeSalaryReport | null>(null)
@@ -240,7 +263,7 @@ export function FaultsPage() {
       enabled: employeeIds.length > 0,
       onError: (error) => {
         showToast({
-          title: 'Compensation policy API failed',
+          title: tr('Compensation policy API failed', 'Kompensatsiya siyosati API muvaffaqiyatsiz tugadi', 'Ошибка API политики компенсации'),
           description: getApiErrorMessage(error),
           tone: 'error',
         })
@@ -267,13 +290,13 @@ export function FaultsPage() {
   )
   const projectOptions = useMemo(
     () => [
-      { value: '0', label: 'No project' },
+      { value: '0', label: tr('No project', 'Loyihasiz', 'Без проекта') },
       ...((projectsQuery.data?.projects ?? []).map((project) => ({
         value: String(project.id),
         label: project.project_name,
       }))),
     ],
-    [projectsQuery.data],
+    [locale, projectsQuery.data],
   )
   const defaultReviewerId = useMemo(
     () => reviewerOptions.find((option) => Number(option.value) === currentUser?.id)?.value ?? reviewerOptions[0]?.value ?? '',
@@ -296,8 +319,16 @@ export function FaultsPage() {
     [mistakePolicy],
   )
   const deliveryBonusTypeOptions = useMemo(
-    () => getCompensationPolicyDeliveryBonusOptions(deliveryBonusPolicy),
-    [deliveryBonusPolicy],
+    () => getCompensationPolicyDeliveryBonusOptions(deliveryBonusPolicy).map((option) => ({
+      ...option,
+      label:
+        option.value === 'early_delivery'
+          ? tr('Early Delivery', 'Erta topshirish', 'Ранняя сдача')
+          : option.value === 'major_early_delivery'
+            ? tr('Major Early Delivery', 'Juda erta topshirish', 'Досрочная сдача')
+            : option.label,
+    })),
+    [deliveryBonusPolicy, locale],
   )
 
   const updatesAllQuery = useAsyncData(
@@ -306,7 +337,7 @@ export function FaultsPage() {
     {
       onError: (error) => {
         showToast({
-          title: 'Employee updates API failed',
+          title: lt('Employee updates API failed'),
           description: getApiErrorMessage(error),
           tone: 'error',
         })
@@ -320,7 +351,7 @@ export function FaultsPage() {
     {
       onError: (error) => {
         showToast({
-          title: 'Employee summary API failed',
+          title: lt('Employee summary API failed'),
           description: getApiErrorMessage(error),
           tone: 'error',
         })
@@ -334,7 +365,7 @@ export function FaultsPage() {
       enabled: employeeIds.length > 0,
       onError: (error) => {
         showToast({
-          title: 'Employee salary estimates API failed',
+          title: lt('Employee salary estimates API failed'),
           description: getApiErrorMessage(error),
           tone: 'error',
         })
@@ -394,7 +425,7 @@ export function FaultsPage() {
       salaryResult.status === 'rejected'
     ) {
       showToast({
-        title: 'Refresh failed',
+        title: lt('Refresh failed'),
         description: getApiErrorMessage(
           membersResult.reason ?? reviewersResult.reason ?? policyResult.reason ?? updatesResult.reason ?? statisticsResult.reason ?? salaryResult.reason,
         ),
@@ -404,8 +435,12 @@ export function FaultsPage() {
     }
 
     showToast({
-      title: 'Salary report refreshed',
-      description: `${getMonthName(month)} ${year} report updated.`,
+      title: lt('Salary report refreshed'),
+      description: tl(
+        `${getMonthName(month)} ${year} report updated.`,
+        `${getMonthName(month)} ${year} hisobot yangilandi.`,
+        `Отчет за ${getMonthName(month)} ${year} обновлен.`,
+      ),
       tone: 'success',
     })
   }
@@ -463,8 +498,12 @@ export function FaultsPage() {
 
     if (!reviewerId) {
       showToast({
-        title: 'Reviewer is required',
-        description: 'Select a valid reviewer before saving this mistake incident.',
+        title: tr('Reviewer is required', "Ko'rib chiquvchi majburiy", 'Нужно выбрать проверяющего'),
+        description: tr(
+          'Select a valid reviewer before saving this mistake incident.',
+          "Bu xato yozuvini saqlashdan oldin to'g'ri ko'rib chiquvchini tanlang.",
+          'Перед сохранением этой ошибки выберите корректного проверяющего.',
+        ),
         tone: 'error',
       })
       return null
@@ -472,8 +511,8 @@ export function FaultsPage() {
 
     if (!mistakeDraft.title.trim() || !mistakeDraft.category.trim() || !mistakeDraft.severity.trim()) {
       showToast({
-        title: 'Mistake details incomplete',
-        description: 'Title, category, and severity are required.',
+        title: tr('Mistake details incomplete', "Xato tafsilotlari to'liq emas", 'Данные ошибки заполнены не полностью'),
+        description: tr('Title, category, and severity are required.', 'Sarlavha, kategoriya va daraja majburiy.', 'Название, категория и степень обязательны.'),
         tone: 'error',
       })
       return null
@@ -500,8 +539,12 @@ export function FaultsPage() {
 
     if (!deliveryBonusDraft.title.trim() || !deliveryBonusDraft.bonusType.trim()) {
       showToast({
-        title: 'Delivery bonus details incomplete',
-        description: 'Title and bonus type are required.',
+        title: tr(
+          'Delivery bonus details incomplete',
+          "Topshirish bonusi tafsilotlari to'liq emas",
+          'Данные бонуса за сдачу заполнены не полностью',
+        ),
+        description: tr('Title and bonus type are required.', 'Sarlavha va bonus turi majburiy.', 'Название и тип бонуса обязательны.'),
         tone: 'error',
       })
       return null
@@ -532,13 +575,13 @@ export function FaultsPage() {
       await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
       closeMistakeDialog()
       showToast({
-        title: 'Mistake added',
+        title: tr('Mistake added', "Xato qo'shildi", 'Ошибка добавлена'),
         description: getSuccessMessage(response, `${mistakeTarget.fullName} updated.`),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Mistake not added',
+        title: tr('Mistake not added', "Xato qo'shilmadi", 'Ошибка не добавлена'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -562,13 +605,13 @@ export function FaultsPage() {
       await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
       closeDeliveryBonusDialog()
       showToast({
-        title: 'Delivery bonus added',
+        title: tr('Delivery bonus added', "Topshirish bonusi qo'shildi", 'Бонус за сдачу добавлен'),
         description: getSuccessMessage(response, `${deliveryBonusTarget.fullName} updated.`),
         tone: 'success',
       })
     } catch (error) {
       showToast({
-        title: 'Delivery bonus not added',
+        title: tr('Delivery bonus not added', "Topshirish bonusi qo'shilmadi", 'Бонус за сдачу не добавлен'),
         description: getApiErrorMessage(error),
         tone: 'error',
       })
@@ -580,9 +623,9 @@ export function FaultsPage() {
   if (!hasReports && (memberOptionsQuery.isLoading || updatesAllQuery.isLoading || statisticsQuery.isLoading || salaryEstimatesQuery.isLoading)) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Salary"
-        title="Loading employee salary report"
-        description="Fetching employee monthly salary and update statistics from the Employees API."
+        eyebrow={tr('CEO / Salary', 'CEO / Maosh', 'CEO / Зарплата')}
+        title={tr('Loading employee salary report', 'Xodimlar maosh hisoboti yuklanmoqda', 'Загрузка отчета по зарплате сотрудников')}
+        description={lt('Fetching employee monthly salary and update statistics from the Employees API.')}
       />
     )
   }
@@ -590,10 +633,10 @@ export function FaultsPage() {
   if (!hasReports && updatesAllQuery.isError && salaryEstimatesQuery.isError) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Salary"
-        title="Salary report unavailable"
-        description="Could not fetch employee monthly salary data from the Employees API."
-        actionLabel="Retry"
+        eyebrow={tr('CEO / Salary', 'CEO / Maosh', 'CEO / Зарплата')}
+        title={lt('Salary report unavailable')}
+        description={lt('Could not fetch employee monthly salary data from the Employees API.')}
+        actionLabel={lt('Retry')}
         onAction={() => {
           void handleRefresh()
         }}
@@ -604,9 +647,9 @@ export function FaultsPage() {
   if (!hasReports) {
     return (
       <EmptyStateBlock
-        eyebrow="CEO / Salary"
-        title="No salary estimates returned"
-        description="The Employees API did not return any salary estimates for the selected period."
+        eyebrow={tr('CEO / Salary', 'CEO / Maosh', 'CEO / Зарплата')}
+        title={tr('No salary estimates returned', 'Maosh hisobi topilmadi', 'Оценки зарплаты не получены')}
+        description={lt('The Employees API did not return any salary estimates for the selected period.')}
       />
     )
   }
@@ -623,13 +666,17 @@ export function FaultsPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
-                  CEO Salary Estimates
+                  {lt('CEO Salary Estimates')}
                 </p>
                 <h1 className="page-header-title mt-2 text-3xl font-semibold tracking-tight">
-                  Salary Estimates, Penalties and Bonuses
+                  {lt('Salary Estimates, Penalties and Bonuses')}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm text-[var(--muted)]">
-                  Monthly breakdown for active employees. Open a member to inspect the full salary detail on its own page.
+                  {tr(
+                    'Monthly breakdown for active employees. Open a member to inspect the full salary detail on its own page.',
+                    "Faol xodimlar uchun oylik kesim. To'liq maosh tafsilotini ko'rish uchun xodimni oching.",
+                    'Помесячная сводка по активным сотрудникам. Откройте сотрудника, чтобы посмотреть полные детали зарплаты.',
+                  )}
                 </p>
               </div>
 
@@ -641,21 +688,21 @@ export function FaultsPage() {
                   variant={(apiSummary.employeesWithPenalties ?? 0) > 0 ? 'danger' : 'outline'}
                   className="rounded-full px-3 py-1 text-xs"
                 >
-                  {formatCount(apiSummary.employeesWithPenalties)} with penalties
+                  {formatCount(apiSummary.employeesWithPenalties)} {lt('with penalties')}
                 </Badge>
                 <Badge
                   variant={(apiSummary.employeesWithBonuses ?? 0) > 0 ? 'success' : 'outline'}
                   className="rounded-full px-3 py-1 text-xs"
                 >
-                  {formatCount(apiSummary.employeesWithBonuses)} with bonuses
+                  {formatCount(apiSummary.employeesWithBonuses)} {lt('with bonuses')}
                 </Badge>
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">Employee API summary</Badge>
+                <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">{tr('Employee API summary', 'Employee API xulosasi', 'Сводка Employee API')}</Badge>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Year</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tr('Year', 'Yil', 'Год')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -667,7 +714,7 @@ export function FaultsPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">Month</label>
+                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tr('Month', 'Oy', 'Месяц')}</label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -684,7 +731,7 @@ export function FaultsPage() {
                   onClick={() => void handleRefresh()}
                   className="w-full justify-center rounded-xl md:w-auto"
                 >
-                  Refresh
+                  {lt('Refresh')}
                 </Button>
               </div>
             </div>
@@ -693,24 +740,24 @@ export function FaultsPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <DetailStatTile label="Employees" value={formatCount(apiSummary.totalEmployees)} />
-        <DetailStatTile label="Base salary total" value={formatAmount(apiSummary.totalBaseSalary ?? 0)} />
-        <DetailStatTile label="Applied deductions" value={formatAmount(apiSummary.totalDeductionAmount ?? 0)} tone="danger" />
-        <DetailStatTile label="Bonus total" value={formatAmount(apiSummary.totalBonusAmount ?? 0)} tone="success" />
-        <DetailStatTile label="Estimated total" value={formatAmount(apiSummary.totalEstimatedSalary ?? 0)} />
-        <DetailStatTile label="Final salary total" value={formatAmount(apiSummary.totalFinalSalary ?? apiSummary.totalSalaryAmount ?? 0)} tone="success" />
+        <DetailStatTile label={tr('Employees', 'Xodimlar', 'Сотрудники')} value={formatCount(apiSummary.totalEmployees)} />
+        <DetailStatTile label={tr('Base salary total', 'Jami asosiy maosh', 'Сумма базовой зарплаты')} value={formatAmount(apiSummary.totalBaseSalary ?? 0)} />
+        <DetailStatTile label={tr('Applied deductions', "Qo'llangan ayirmalar", 'Примененные удержания')} value={formatAmount(apiSummary.totalDeductionAmount ?? 0)} tone="danger" />
+        <DetailStatTile label={tr('Bonus total', 'Jami bonus', 'Сумма бонусов')} value={formatAmount(apiSummary.totalBonusAmount ?? 0)} tone="success" />
+        <DetailStatTile label={tr('Estimated total', 'Jami taxminiy maosh', 'Сумма оценки')} value={formatAmount(apiSummary.totalEstimatedSalary ?? 0)} />
+        <DetailStatTile label={tr('Final salary total', 'Jami yakuniy maosh', 'Итоговая сумма зарплаты')} value={formatAmount(apiSummary.totalFinalSalary ?? apiSummary.totalSalaryAmount ?? 0)} tone="success" />
       </div>
 
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="mb-5 flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-white">All Members</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-white">{lt('All Members')}</h2>
           <p className="text-sm text-[var(--muted-strong)]">
-            Detailed salary-estimate breakdown for the selected period.
+            {tr('Detailed salary-estimate breakdown for the selected period.', 'Tanlangan davr uchun batafsil maosh hisobi.', 'Подробная разбивка оценки зарплаты за выбранный период.')}
           </p>
         </div>
 
         <DataTable
-          caption="Salary estimate breakdown"
+          caption={lt('Salary estimate breakdown')}
           rows={reports}
           pageSize={75}
           compact
@@ -720,7 +767,7 @@ export function FaultsPage() {
           columns={[
             {
               key: 'user',
-              header: 'User',
+              header: tr('User', 'Xodim', 'Сотрудник'),
               width: '280px',
               render: (row) => {
                 const rosterUser = rosterUsersById.get(row.id)
@@ -749,21 +796,21 @@ export function FaultsPage() {
             },
             {
               key: 'base',
-              header: 'Base',
+              header: tr('Base', 'Asosiy', 'База'),
               align: 'right',
               minWidth: '120px',
               render: (row) => formatAmount(row.baseSalary),
             },
             {
               key: 'afterPenalty',
-              header: 'After penalty',
+              header: lt('After penalty'),
               align: 'right',
               minWidth: '140px',
               render: (row) => formatAmount(row.afterPenalty),
             },
             {
               key: 'bonusAmount',
-              header: 'Bonus amount',
+              header: lt('Bonus amount'),
               align: 'right',
               minWidth: '130px',
               render: (row) => (
@@ -774,7 +821,7 @@ export function FaultsPage() {
             },
             {
               key: 'bonusPercent',
-              header: 'Bonus %',
+              header: tr('Bonus %', 'Bonus %', 'Бонус %'),
               align: 'right',
               minWidth: '110px',
               render: (row) => (
@@ -792,7 +839,7 @@ export function FaultsPage() {
             },
             {
               key: 'productivity',
-              header: 'Productivity',
+              header: lt('Productivity'),
               align: 'right',
               minWidth: '180px',
               render: (row) => (
@@ -812,7 +859,7 @@ export function FaultsPage() {
             },
             {
               key: 'finalSalary',
-              header: 'Final salary',
+              header: lt('Final salary'),
               align: 'right',
               minWidth: '130px',
               render: (row) => (
@@ -823,25 +870,25 @@ export function FaultsPage() {
             },
             {
               key: 'actions',
-              header: 'Actions',
+              header: tr('Actions', 'Amallar', 'Действия'),
               align: 'right',
               minWidth: '88px',
               render: (row) => (
                 <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
                   <ActionsMenu
-                    label={`Open actions for ${row.fullName}`}
+                    label={tl(`Open actions for ${row.fullName}`, `${row.fullName} uchun amallarni ochish`, `Открыть действия для ${row.fullName}`)}
                     items={[
                       {
-                        label: 'View details',
+                        label: lt('View details'),
                         onSelect: () => openDetailPage(row),
                       },
                       {
-                        label: 'Add mistake',
+                        label: tr('Add mistake', "Xato qo'shish", 'Добавить ошибку'),
                         onSelect: () => openMistakeDialog(row),
                         tone: 'danger',
                       },
                       {
-                        label: 'Add delivery bonus',
+                        label: tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу'),
                         onSelect: () => openDeliveryBonusDialog(row),
                       },
                     ]}
@@ -880,8 +927,16 @@ export function FaultsPage() {
       <Dialog
         open={Boolean(mistakeTarget)}
         onClose={closeMistakeDialog}
-        title={mistakeTarget ? `Add mistake for ${mistakeTarget.fullName}` : 'Add mistake'}
-        description={mistakeTarget ? `${getMonthName(month)} ${year} compensation mistake entry.` : undefined}
+        title={mistakeTarget
+          ? tl(`Add mistake for ${mistakeTarget.fullName}`, `${mistakeTarget.fullName} uchun xato qo'shish`, `Добавить ошибку для ${mistakeTarget.fullName}`)
+          : tr('Add mistake', "Xato qo'shish", 'Добавить ошибку')}
+        description={mistakeTarget
+          ? tl(
+            `${getMonthName(month)} ${year} compensation mistake entry.`,
+            `${getMonthName(month)} ${year} uchun kompensatsiya xatosi yozuvi.`,
+            `Запись ошибки компенсации за ${getMonthName(month)} ${year}.`,
+          )
+          : undefined}
         footer={
           <>
             <Button
@@ -889,23 +944,23 @@ export function FaultsPage() {
               onClick={closeMistakeDialog}
               disabled={isMistakeSubmitting}
             >
-              Cancel
+              {lt('Cancel')}
             </Button>
             <Button variant="danger" onClick={() => void handleSubmitMistake()} loading={isMistakeSubmitting}>
-              Save mistake
+              {tr('Save mistake', 'Xatoni saqlash', 'Сохранить ошибку')}
             </Button>
           </>
         }
       >
         <div className="grid gap-4">
           <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+            <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{mistakeTarget?.fullName ?? '-'}</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Reviewer</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')}</label>
               {reviewerOptions.length > 0 ? (
                 <SelectField
                   value={mistakeDraft.reviewerId}
@@ -914,18 +969,18 @@ export function FaultsPage() {
                   className="rounded-xl"
                 />
               ) : (
-                <Input
-                  type="number"
-                  min="1"
-                  value={mistakeDraft.reviewerId}
-                  onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
-                  placeholder="Reviewer ID"
-                />
+                  <Input
+                    type="number"
+                    min="1"
+                    value={mistakeDraft.reviewerId}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, reviewerId: event.target.value }))}
+                    placeholder={tr('Reviewer ID', "Ko'rib chiquvchi ID", 'ID проверяющего')}
+                  />
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
               {projectOptions.length > 1 ? (
                 <SelectField
                   value={mistakeDraft.projectId}
@@ -934,20 +989,20 @@ export function FaultsPage() {
                   className="rounded-xl"
                 />
               ) : (
-                <Input
-                  type="number"
-                  min="0"
-                  value={mistakeDraft.projectId}
-                  onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
-                  placeholder="0 for no project"
-                />
+                  <Input
+                    type="number"
+                    min="0"
+                    value={mistakeDraft.projectId}
+                    onChange={(event) => setMistakeDraft((current) => ({ ...current, projectId: event.target.value }))}
+                    placeholder={tr('0 for no project', "Loyiha bo'lmasa 0", '0 если проекта нет')}
+                  />
               )}
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Category</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Category', 'Kategoriya', 'Категория')}</label>
               {mistakeCategoryOptions.length > 0 ? (
                 <SelectField
                   value={mistakeDraft.category}
@@ -959,13 +1014,13 @@ export function FaultsPage() {
                 <Input
                   value={mistakeDraft.category}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, category: event.target.value }))}
-                  placeholder="AI Integration"
+                  placeholder={tr('AI Integration', 'AI integratsiyasi', 'AI интеграция')}
                 />
               )}
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Severity</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Severity', 'Daraja', 'Степень')}</label>
               {severityOptions.length > 0 ? (
                 <SelectField
                   value={mistakeDraft.severity}
@@ -977,7 +1032,7 @@ export function FaultsPage() {
                 <Input
                   value={mistakeDraft.severity}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, severity: event.target.value }))}
-                  placeholder="Minor"
+                  placeholder={tr('Minor', 'Yengil', 'Незначительная')}
                 />
               )}
             </div>
@@ -985,16 +1040,16 @@ export function FaultsPage() {
 
           <div className="grid gap-4 md:grid-cols-[1fr_180px]">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
               <Input
                 value={mistakeDraft.title}
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
-                placeholder="Short mistake title"
+                placeholder={tr('Short mistake title', 'Qisqa xato sarlavhasi', 'Короткое название ошибки')}
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Incident date</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Incident date', "Sodir bo'lgan sana", 'Дата инцидента')}</label>
               <Input
                 type="date"
                 value={mistakeDraft.incidentDate}
@@ -1004,11 +1059,11 @@ export function FaultsPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
+            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
             <Textarea
               value={mistakeDraft.description}
               onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
-              placeholder="Describe what happened"
+              placeholder={tr('Describe what happened', "Nima bo'lganini yozing", 'Опишите, что произошло')}
             />
           </div>
 
@@ -1020,7 +1075,7 @@ export function FaultsPage() {
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, reachedClient: event.target.checked }))}
                 className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
               />
-              Reached client
+              {tr('Reached client', 'Mijozga yetib borgan', 'Дошло до клиента')}
             </label>
 
             <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
@@ -1030,7 +1085,7 @@ export function FaultsPage() {
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, unclearTask: event.target.checked }))}
                 className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
               />
-              Unclear task
+              {tr('Unclear task', 'Vazifa noaniq', 'Неясная задача')}
             </label>
           </div>
         </div>
@@ -1039,8 +1094,20 @@ export function FaultsPage() {
       <Dialog
         open={Boolean(deliveryBonusTarget)}
         onClose={closeDeliveryBonusDialog}
-        title={deliveryBonusTarget ? `Add delivery bonus for ${deliveryBonusTarget.fullName}` : 'Add delivery bonus'}
-        description={deliveryBonusTarget ? `${getMonthName(month)} ${year} delivery bonus entry.` : undefined}
+        title={deliveryBonusTarget
+          ? tl(
+            `Add delivery bonus for ${deliveryBonusTarget.fullName}`,
+            `${deliveryBonusTarget.fullName} uchun topshirish bonusini qo'shish`,
+            `Добавить бонус за сдачу для ${deliveryBonusTarget.fullName}`,
+          )
+          : tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу')}
+        description={deliveryBonusTarget
+          ? tl(
+            `${getMonthName(month)} ${year} delivery bonus entry.`,
+            `${getMonthName(month)} ${year} uchun topshirish bonusi yozuvi.`,
+            `Запись бонуса за сдачу за ${getMonthName(month)} ${year}.`,
+          )
+          : undefined}
         footer={
           <>
             <Button
@@ -1048,23 +1115,23 @@ export function FaultsPage() {
               onClick={closeDeliveryBonusDialog}
               disabled={isDeliveryBonusSubmitting}
             >
-              Cancel
+              {lt('Cancel')}
             </Button>
             <Button variant="success" onClick={() => void handleSubmitDeliveryBonus()} loading={isDeliveryBonusSubmitting}>
-              Save delivery bonus
+              {tr('Save delivery bonus', "Topshirish bonusini saqlash", 'Сохранить бонус за сдачу')}
             </Button>
           </>
         }
       >
         <div className="grid gap-4">
           <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-            <p className="text-xs text-[var(--muted-strong)]">Employee</p>
+            <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{deliveryBonusTarget?.fullName ?? '-'}</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Bonus type</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Bonus type', 'Bonus turi', 'Тип бонуса')}</label>
               {deliveryBonusTypeOptions.length > 0 ? (
                 <SelectField
                   value={deliveryBonusDraft.bonusType}
@@ -1082,7 +1149,7 @@ export function FaultsPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Award date</label>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Award date', 'Berilgan sana', 'Дата выдачи')}</label>
               <Input
                 type="date"
                 value={deliveryBonusDraft.awardDate}
@@ -1092,16 +1159,16 @@ export function FaultsPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Title</label>
+            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
             <Input
               value={deliveryBonusDraft.title}
               onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
-              placeholder="Short bonus title"
+              placeholder={tr('Short bonus title', 'Qisqa bonus sarlavhasi', 'Короткое название бонуса')}
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Project</label>
+            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
             {projectOptions.length > 1 ? (
               <SelectField
                 value={deliveryBonusDraft.projectId}
@@ -1115,17 +1182,17 @@ export function FaultsPage() {
                 min="0"
                 value={deliveryBonusDraft.projectId}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, projectId: event.target.value }))}
-                placeholder="0 for no project"
+                placeholder={tr('0 for no project', "Loyiha bo'lmasa 0", '0 если проекта нет')}
               />
             )}
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">Description</label>
+            <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
             <Textarea
               value={deliveryBonusDraft.description}
               onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
-              placeholder="Describe why this delivery bonus was awarded"
+              placeholder={tr('Describe why this delivery bonus was awarded', "Bu topshirish bonusi nega berilganini yozing", 'Опишите, почему был выдан этот бонус за сдачу')}
             />
           </div>
         </div>

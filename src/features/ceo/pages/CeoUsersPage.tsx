@@ -934,6 +934,7 @@ export function CeoUsersPage() {
             caption={lt('CEO users table')}
             rows={filteredUsers}
             getRowKey={(row) => String(row.id)}
+            onRowClick={openProfileDialog}
             emptyState={
               <EmptyStateBlock
                 eyebrow={lt('Users')}
@@ -948,7 +949,10 @@ export function CeoUsersPage() {
                 render: (row) => (
                   <button
                     type="button"
-                    onClick={() => openProfileDialog(row)}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      openProfileDialog(row)
+                    }}
                     className="group/user -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-[18px] px-2 py-1 text-left transition hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
                     aria-label={`${lt('Profile')}: ${row.name} ${row.surname}`}
                   >
@@ -1019,7 +1023,10 @@ export function CeoUsersPage() {
                   return (
                     <button
                       type="button"
-                      onClick={() => openMessageDialog(row)}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        openMessageDialog(row)
+                      }}
                       className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-left transition hover:border-blue-400/30 hover:bg-blue-500/8"
                     >
                       <svg
@@ -1061,36 +1068,38 @@ export function CeoUsersPage() {
                 key: 'actions',
                 header: lt('Actions'),
                 render: (row) => (
-                  <ActionsMenu
-                    label={`${lt('Open actions for')} ${row.email}`}
-                    items={[
-                      {
-                        label: lt('Profile'),
-                        onSelect: () => openProfileDialog(row),
-                      },
-                      {
-                        label: lt('Salary detail'),
-                        onSelect: () => openSalaryDetail(row),
-                      },
-                      {
-                        label: lt('Edit'),
-                        onSelect: () => openEditUserModal(row),
-                      },
-                      {
-                        label: lt('Permissions'),
-                        onSelect: () => openPermissionModal(row),
-                      },
-                      {
-                        label: row.is_active ? lt('Deactivate') : lt('Activate'),
-                        onSelect: () => void handleToggleUser(row),
-                      },
-                      {
-                        label: lt('Delete'),
-                        onSelect: () => void handleDeleteUser(row),
-                        tone: 'danger',
-                      },
-                    ]}
-                  />
+                  <div onClick={(event) => event.stopPropagation()}>
+                    <ActionsMenu
+                      label={`${lt('Open actions for')} ${row.email}`}
+                      items={[
+                        {
+                          label: lt('Profile'),
+                          onSelect: () => openProfileDialog(row),
+                        },
+                        {
+                          label: lt('Salary detail'),
+                          onSelect: () => openSalaryDetail(row),
+                        },
+                        {
+                          label: lt('Edit'),
+                          onSelect: () => openEditUserModal(row),
+                        },
+                        {
+                          label: lt('Permissions'),
+                          onSelect: () => openPermissionModal(row),
+                        },
+                        {
+                          label: row.is_active ? lt('Deactivate') : lt('Activate'),
+                          onSelect: () => void handleToggleUser(row),
+                        },
+                        {
+                          label: lt('Delete'),
+                          onSelect: () => void handleDeleteUser(row),
+                          tone: 'danger',
+                        },
+                      ]}
+                    />
+                  </div>
                 ),
               },
             ]}

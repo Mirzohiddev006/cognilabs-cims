@@ -489,7 +489,7 @@ export function MemberDashboardPage() {
       <Card className="rounded-[28px] border-[var(--border)] bg-[var(--card)] p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-200/70">
+            <p className="text-[11px] text-[#48A111]">
               Salary estimate for {month}/{year}
             </p>
             <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-[var(--foreground)]">
@@ -531,12 +531,12 @@ export function MemberDashboardPage() {
             tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
           />
           <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
-            <p className="text-xs text-rose-600 dark:text-rose-100/78">{tr('Deduction percentage', 'Ayirma foizi', 'Процент удержания')}</p>
+            <p className="text-xs text-[#FF0000]">{tr('Deduction percentage', 'Ayirma foizi', 'Процент удержания')}</p>
             <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-[1.05rem] font-semibold tracking-tight text-rose-600 dark:text-rose-300">
+              <p className="text-[1.05rem] font-semibold tracking-tight text-[#FF0000]">
                 {formatPercent(detail.report.penaltyPercentage)}
               </p>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-rose-500/80 dark:text-rose-200/62">{tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}</span>
+              <span className="text-[10px] uppercase tracking-[0.18em] text-[#FF0000]">{tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}</span>
             </div>
             <div className="mt-3">
               <ProgressBar value={Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0} tone={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'violet'} />
@@ -548,7 +548,7 @@ export function MemberDashboardPage() {
           <div className="rounded-[22px] border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-500 dark:text-rose-200/70">{tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FF0000]">{tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-strong)]">
                   {detail.penalties.length > 0 ? `${detail.penalties.length} ${lt('entries')}` : tr('No deductions were recorded for this period.', 'Bu davr uchun ayirma qayd etilmadi.', 'За этот период удержания не зафиксированы.')}
                 </p>
@@ -583,7 +583,7 @@ export function MemberDashboardPage() {
           <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-200/70">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#48A111]">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-strong)]">
                   {detail.bonuses.length > 0 ? `${detail.bonuses.length} ${lt('entries')}` : tr('No bonus records returned.', 'Bonus yozuvlari qaytmadi.', 'Записи бонусов не вернулись.')}
                 </p>
@@ -598,7 +598,7 @@ export function MemberDashboardPage() {
                 <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-200">{item.title}</p>
+                      <p className="text-sm font-semibold text-[#48A111]">{item.title}</p>
                       <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? tr('No reason provided.', 'Sabab ko‘rsatilmagan.', 'Причина не указана.')}</p>
                     </div>
                     <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">{formatDetailDate(item.createdAt)}</p>
