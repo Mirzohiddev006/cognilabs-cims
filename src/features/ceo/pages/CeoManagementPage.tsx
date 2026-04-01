@@ -122,8 +122,8 @@ const managementStaticCardSurface =
 const managementStaticCardTopLine =
   'bg-[linear-gradient(90deg,#2576EF,rgba(37,118,239,0.42),transparent_82%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.95),rgba(96,165,250,0.42),transparent_82%)]'
 const managementStaticCardTitle = 'text-[#1A5FD4] dark:text-blue-300'
-const managementStaticCardValue = 'text-[#0F3A8A] dark:text-white'
-const managementStaticCardHint = 'text-[#2E4F8A] dark:text-blue-200'
+const managementStaticCardValue = 'text-[#0A1E5C] dark:text-white'
+const managementStaticCardHint = 'text-[#1A3060] dark:text-blue-200'
 
 function SummaryCard({
   label,
