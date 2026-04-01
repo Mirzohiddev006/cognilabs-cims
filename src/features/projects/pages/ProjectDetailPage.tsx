@@ -75,7 +75,21 @@ export function ProjectDetailPage() {
         return projectsService.getProject(id)
       }
 
-      return projectsService.getUserOpenProjectDetail(id, user.id)
+      const [projectsResponse, boardsResponse] = await Promise.all([
+        projectsService.listUserOpenProjects(user.id),
+        projectsService.listUserOpenProjectBoards(id, user.id),
+      ])
+
+      const accessibleProject = projectsResponse.projects.find((project) => project.id === id)
+
+      if (!accessibleProject) {
+        throw new Error('Project not found in user open projects')
+      }
+
+      return {
+        ...accessibleProject,
+        boards: boardsResponse.boards,
+      }
     },
     [canManageProjects, id, user?.id],
     { enabled: !Number.isNaN(id) && Boolean(user) },

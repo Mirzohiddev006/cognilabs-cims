@@ -116,11 +116,13 @@ export function ProjectsListPage() {
         return []
       }
 
+      if (!canManageProjects) {
+        return projects
+      }
+
       const details = await Promise.allSettled(
         projects.map((project) => (
-          canManageProjects
-            ? projectsService.getProject(project.id)
-            : projectsService.getUserOpenProjectDetail(project.id, user.id)
+          projectsService.getProject(project.id)
         )),
       )
 
