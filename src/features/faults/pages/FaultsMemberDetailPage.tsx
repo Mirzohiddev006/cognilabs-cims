@@ -22,7 +22,7 @@ import { SelectField } from '../../../shared/ui/select-field'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useAuth } from '../../auth/hooks/useAuth'
-import { CompensationPolicyPanel } from '../components/CompensationPolicyPanel'
+import { CompensationPolicyDrawer } from '../components/CompensationPolicyDrawer'
 import {
   DeliveryBonusSection,
   MistakeIncidentSection,
@@ -251,6 +251,7 @@ export function FaultsMemberDetailPage({
   const [deleteTarget, setDeleteTarget] = useState<CompensationDeleteTarget | null>(null)
   const [isMistakeDialogOpen, setIsMistakeDialogOpen] = useState(false)
   const [isDeliveryBonusDialogOpen, setIsDeliveryBonusDialogOpen] = useState(false)
+  const [isCompensationPolicyDrawerOpen, setIsCompensationPolicyDrawerOpen] = useState(false)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
@@ -884,9 +885,20 @@ export function FaultsMemberDetailPage({
               {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Kak formiruetsya itogovaya zarplata')}
             </h2>
           </div>
-          <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'} className="text-[#FF0000]">
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+            <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'} className="text-[#FF0000]">
             {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
-          </Badge>
+            </Badge>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)] dark:bg-white/[0.03]"
+              onClick={() => setIsCompensationPolicyDrawerOpen(true)}
+            >
+              {tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+            </Button>
+          </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -896,30 +908,55 @@ export function FaultsMemberDetailPage({
           <DetailStatTile label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
         </div>
 
-        <div className="mt-5 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
-          <div className="flex flex-wrap items-center gap-3 text-sm">
-            <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
-            <span className="text-[var(--muted)]">-</span>
-            <span className="font-semibold text-rose-400">{formatAmount(detail.report.deductionAmount)}</span>
-            <span className="text-[var(--muted)]">+</span>
-            <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
-            <span className="text-[var(--muted)]">=</span>
-            <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
-              {formatAmount(detail.report.finalSalary)}
+        <button
+          type="button"
+          onClick={() => setIsCompensationPolicyDrawerOpen(true)}
+          className="group mt-5 block w-full rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] transition hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-border)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] dark:border-white/8 dark:bg-black/15 dark:shadow-none dark:hover:border-[var(--blue-border)] dark:hover:bg-white/[0.04]"
+          aria-label={tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
+                <span className="text-[var(--muted)]">-</span>
+                <span className="font-semibold text-rose-500 dark:text-rose-400">{formatAmount(detail.report.deductionAmount)}</span>
+                <span className="text-[var(--muted)]">+</span>
+                <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
+                <span className="text-[var(--muted)]">=</span>
+                <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
+                  {formatAmount(detail.report.finalSalary)}
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-[var(--muted-strong)]">
+                {detail.report.qualifiesProductivityBonus
+                  ? lt('Productivity bonus qualified for this period.')
+                  : lt('Productivity bonus did not qualify for this period.')}
+              </p>
+            </div>
+
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] transition group-hover:translate-x-0.5 dark:bg-[var(--blue-dim)]">
+              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M6 3.5 10.5 8 6 12.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
           </div>
-          <p className="mt-3 text-xs text-[var(--muted-strong)]">
-            {detail.report.qualifiesProductivityBonus
-              ? lt('Productivity bonus qualified for this period.')
-              : lt('Productivity bonus did not qualify for this period.')}
-          </p>
+
           <div className="mt-4 h-2 rounded-full bg-[var(--surface-elevated)] dark:bg-white/8">
             <div
               className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
               style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
             />
           </div>
-        </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--blue-text)]">
+              {tr('Open compensation policy', 'Kompensatsiya policy ochish', 'Otkryt compensation policy')}
+            </p>
+            <p className="text-xs text-[var(--muted)]">
+              {tr('Opens from the right panel', 'Ong paneldan ochiladi', 'Otkroetsya v pravoy paneli')}
+            </p>
+          </div>
+        </button>
       </Card>
 
       <Card className="rounded-[24px] border-white/10 p-6">
@@ -1131,7 +1168,14 @@ export function FaultsMemberDetailPage({
         />
       </div>
 
-      <CompensationPolicyPanel policy={detail.compensationPolicy} />
+      <CompensationPolicyDrawer
+        open={isCompensationPolicyDrawerOpen}
+        policy={detail.compensationPolicy}
+        memberName={detail.report.fullName}
+        month={month}
+        year={year}
+        onClose={() => setIsCompensationPolicyDrawerOpen(false)}
+      />
 
       {showCompensationActions ? (
         <Dialog

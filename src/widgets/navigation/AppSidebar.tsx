@@ -296,23 +296,15 @@ export function AppSidebar() {
                   <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
                 </svg>
               </button>
-              <button
-                type="button"
-                onClick={handleSidebarPanelToggle}
-                aria-label={t('shell.toggle_navigation')}
-                className="absolute right-0 top-0 hidden h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] transition hover:bg-[var(--accent-soft)] min-[961px]:inline-flex"
-              >
-                <span className="block h-0.5 w-5 bg-current shadow-[0_6px_0_currentColor,0_-6px_0_currentColor]" />
-              </button>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--shell-label-color)">Cognilabs</p>
               <button
                 type="button"
                 onClick={closeSidebarFromBrand}
                 aria-label={t('shell.close_navigation')}
-                className="mt-2 flex w-full items-center gap-2 pr-12 text-left transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent min-[961px]:cursor-default min-[961px]:pr-0 min-[961px]:focus-visible:ring-0"
+                className="mt-2 flex w-full items-center gap-2 text-left transition hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
               >
                 <div className="grid h-10 w-10 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-700/20">
-                  <NavGlyph name="default" />
+                  <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
                 </div>
                 <div className="min-w-0 overflow-hidden">
                   <h2 className="text-sm font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>

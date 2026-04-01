@@ -14,13 +14,17 @@ import {
 type CompensationPolicyPanelProps = {
   policy: EmployeeCompensationPolicy | null
   className?: string
+  collapsible?: boolean
+  defaultExpanded?: boolean
 }
 
 export function CompensationPolicyPanel({
   policy,
   className,
+  collapsible = true,
+  defaultExpanded = false,
 }: CompensationPolicyPanelProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || !collapsible)
   const { theme } = useTheme()
   const isLight = theme === 'light'
   const lt = translateCurrentLiteral
@@ -90,34 +94,27 @@ export function CompensationPolicyPanel({
 
   const bonusTitleStyle = isLight ? { color: 'var(--success-text)' } : undefined
   const bonusHintStyle = isLight ? { color: 'var(--success-text)' } : undefined
-
-  return (
-    <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.42),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(191,219,254,0.9),rgba(96,165,250,0.34),transparent_76%)]" />
-      <button
-        type="button"
-        onClick={() => setIsExpanded((current) => !current)}
-        aria-expanded={isExpanded}
-        aria-label={lt('Compensation policy')}
-        className="flex w-full items-start justify-between gap-4 px-6 py-6 text-left transition hover:bg-[var(--card-hover)]"
-      >
-        <div className="min-w-0">
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--blue-text)]">
-            {lt('Compensation policy')}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            {lt('Configured salary rules')}
-          </h2>
-          <p className="mt-2 text-sm text-[var(--muted-strong)]">
-            {lt('Read-only policy values returned by the compensation policy API.')}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            {policy.employeeName ? <Badge variant="outline">{policy.employeeName}</Badge> : null}
-            <Badge variant="secondary">{policy.deductionRates.length} {lt('deduction rates')}</Badge>
-            <Badge variant="secondary">{policy.bonusRates.length} {lt('bonus rules')}</Badge>
-          </div>
+  const isContentExpanded = collapsible ? isExpanded : true
+  const headerContent = (
+    <>
+      <div className="min-w-0">
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--blue-text)]">
+          {lt('Compensation policy')}
+        </p>
+        <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
+          {lt('Configured salary rules')}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--muted-strong)]">
+          {lt('Read-only policy values returned by the compensation policy API.')}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {policy.employeeName ? <Badge variant="outline">{policy.employeeName}</Badge> : null}
+          <Badge variant="secondary">{policy.deductionRates.length} {lt('deduction rates')}</Badge>
+          <Badge variant="secondary">{policy.bonusRates.length} {lt('bonus rules')}</Badge>
         </div>
+      </div>
 
+      {collapsible ? (
         <div className="flex shrink-0 items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]">
             <svg
@@ -132,16 +129,37 @@ export function CompensationPolicyPanel({
             </svg>
           </span>
         </div>
-      </button>
+      ) : null}
+    </>
+  )
 
-      {isExpanded ? (
+  return (
+    <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.42),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(191,219,254,0.9),rgba(96,165,250,0.34),transparent_76%)]" />
+      {collapsible ? (
+        <button
+          type="button"
+          onClick={() => setIsExpanded((current) => !current)}
+          aria-expanded={isExpanded}
+          aria-label={lt('Compensation policy')}
+          className="flex w-full items-start justify-between gap-4 px-6 py-6 text-left transition hover:bg-[var(--card-hover)]"
+        >
+          {headerContent}
+        </button>
+      ) : (
+        <div className="flex items-start justify-between gap-4 px-6 py-6">
+          {headerContent}
+        </div>
+      )}
+
+      {isContentExpanded ? (
         <div className="border-t border-[var(--border)] px-6 pb-6 pt-5">
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <DetailStatTile label={lt('Salary base')} value={formatAmount(policy.salaryBase)} />
-            <DetailStatTile label={lt('Deduction cap %')} value={formatPercent(policy.monthlyDeductionCapPercent)} tone="danger" />
-            <DetailStatTile label={lt('Cap amount')} value={formatAmount(policy.monthlyDeductionCapAmount)} tone="danger" />
-            <DetailStatTile label={lt('Developer split')} value={formatPercent(policy.responsibilitySplit.developerPercent)} tone="blue" />
-            <DetailStatTile label={lt('Reviewer split')} value={formatPercent(policy.responsibilitySplit.reviewerPercent)} tone="blue" />
+            <DetailStatTile label={lt('Salary base')} value={formatAmount(policy.salaryBase)} theme={theme} />
+            <DetailStatTile label={lt('Deduction cap %')} value={formatPercent(policy.monthlyDeductionCapPercent)} tone="danger" theme={theme} />
+            <DetailStatTile label={lt('Cap amount')} value={formatAmount(policy.monthlyDeductionCapAmount)} tone="danger" theme={theme} />
+            <DetailStatTile label={lt('Developer split')} value={formatPercent(policy.responsibilitySplit.developerPercent)} tone="blue" theme={theme} />
+            <DetailStatTile label={lt('Reviewer split')} value={formatPercent(policy.responsibilitySplit.reviewerPercent)} tone="blue" theme={theme} />
           </div>
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
