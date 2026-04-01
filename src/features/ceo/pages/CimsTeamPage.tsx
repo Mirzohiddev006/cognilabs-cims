@@ -1,7 +1,6 @@
 import { ArrowUpRight, Bot, Copy, Instagram, Send, Sparkles } from 'lucide-react'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { useToast } from '../../../shared/toast/useToast'
-import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { cn } from '../../../shared/lib/cn'
@@ -49,46 +48,31 @@ const teamLinks = [
   },
 ] as const
 
-const accentClasses = {
+function withAlpha(hex: string, alpha: number) {
+  const normalized = hex.replace('#', '')
+  const safeHex = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized
+
+  const red = Number.parseInt(safeHex.slice(0, 2), 16)
+  const green = Number.parseInt(safeHex.slice(2, 4), 16)
+  const blue = Number.parseInt(safeHex.slice(4, 6), 16)
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
+const accentThemes = {
   blue: {
-    border: 'border-[var(--blue-border)] dark:border-blue-500/18',
-    glow: 'shadow-[inset_0_0_0_1px_rgba(59,130,246,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(59,130,246,0.08)]',
-    badge: 'blue' as const,
-    iconWrap: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-200',
-    line: 'from-blue-500/40 via-cyan-400/20 to-transparent',
-    eyebrow: 'text-[#2576EF] dark:text-blue-200/95 [text-shadow:0_0_0.2px_currentColor]',
-    title: 'text-[#2576EF] dark:text-blue-200/98 [text-shadow:0_0_0.35px_currentColor]',
-    button: 'border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] hover:border-blue-400/40 hover:bg-blue-500/14 dark:border-blue-400/25 dark:bg-blue-500/12 dark:text-blue-50 dark:hover:border-blue-300/35 dark:hover:bg-blue-500/18',
+    color: '#2576EF',
   },
   violet: {
-    border: 'border-[var(--violet-border)] dark:border-violet-500/18',
-    glow: 'shadow-[inset_0_0_0_1px_rgba(139,92,246,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(139,92,246,0.08)]',
-    badge: 'violet' as const,
-    iconWrap: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-100',
-    line: 'from-violet-500/40 via-fuchsia-400/20 to-transparent',
-    eyebrow: 'text-[#8A3AED] dark:text-violet-200/95 [text-shadow:0_0_0.2px_currentColor]',
-    title: 'text-[#8A3AED] dark:text-violet-200/98 [text-shadow:0_0_0.35px_currentColor]',
-    button: 'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)] hover:border-violet-400/40 hover:bg-violet-500/14 dark:border-violet-400/25 dark:bg-violet-500/12 dark:text-violet-50 dark:hover:border-violet-300/35 dark:hover:bg-violet-500/18',
+    color: '#8A3AED',
   },
   amber: {
-    border: 'border-[var(--warning-border)] dark:border-amber-500/18',
-    glow: 'shadow-[inset_0_0_0_1px_rgba(245,158,11,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(245,158,11,0.08)]',
-    badge: 'warning' as const,
-    iconWrap: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100',
-    line: 'from-amber-500/40 via-orange-400/20 to-transparent',
-    eyebrow: 'text-[#B45309] dark:text-amber-200/95 [text-shadow:0_0_0.2px_currentColor]',
-    title: 'text-[#B45309] dark:text-amber-200/98 [text-shadow:0_0_0.35px_currentColor]',
-    button: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)] hover:border-amber-400/40 hover:bg-amber-500/14 dark:border-amber-400/25 dark:bg-amber-500/12 dark:text-amber-50 dark:hover:border-amber-300/35 dark:hover:bg-amber-500/18',
+    color: '#B45309',
   },
   emerald: {
-    border: 'border-[var(--success-border)] dark:border-emerald-500/18',
-    glow: 'shadow-[inset_0_0_0_1px_rgba(34,197,94,0.08),0_20px_45px_rgba(0,0,0,0.22),0_0_40px_rgba(34,197,94,0.08)]',
-    badge: 'success' as const,
-    iconWrap: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100',
-    line: 'from-emerald-500/40 via-teal-400/20 to-transparent',
-    eyebrow: 'text-[#289075] dark:text-emerald-200/95 [text-shadow:0_0_0.2px_currentColor]',
-    title: 'text-[#289075] dark:text-emerald-200/98 [text-shadow:0_0_0.35px_currentColor]',
-    button: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[#32a852] hover:border-emerald-400/40 hover:bg-emerald-500/14 dark:border-emerald-400/25 dark:bg-emerald-500/12 dark:text-emerald-50 dark:hover:border-emerald-300/35 dark:hover:bg-emerald-500/18',
+    color: '#289075',
   },
 } as const
 
@@ -118,35 +102,67 @@ export function CimsTeamPage() {
       <div className="grid gap-4 xl:grid-cols-2">
         {teamLinks.map((link) => {
           const Icon = link.icon
-          const accent = accentClasses[link.accent]
+          const accent = accentThemes[link.accent]
           const title = t(link.titleKey)
           const eyebrow = t(link.eyebrowKey)
           const note = t(link.noteKey)
           const category = t(link.categoryKey)
+          const accentColor = accent.color
+          const cardBorder = withAlpha(accentColor, 0.26)
+          const cardSurface = withAlpha(accentColor, 0.08)
+          const cardGlow = withAlpha(accentColor, 0.10)
+          const iconSurface = withAlpha(accentColor, 0.12)
+          const iconBorder = withAlpha(accentColor, 0.24)
+          const chipSurface = withAlpha(accentColor, 0.10)
+          const chipBorder = withAlpha(accentColor, 0.26)
+          const actionSurface = withAlpha(accentColor, 0.14)
+          const actionBorder = withAlpha(accentColor, 0.28)
+          const topLine = `linear-gradient(90deg, ${withAlpha(accentColor, 0.54)} 0%, ${withAlpha(accentColor, 0.22)} 58%, transparent 86%)`
+          const cardBackground = `linear-gradient(180deg, ${cardSurface} 0%, rgba(255,255,255,0.98) 100%)`
+          const cardShadow = `inset 0 0 0 1px ${withAlpha(accentColor, 0.08)}, 0 18px 42px rgba(15,23,42,0.10), 0 0 32px ${cardGlow}`
 
           return (
             <Card
               key={link.href}
               className={cn(
                 'group relative overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 transition-transform duration-200 hover:-translate-y-[2px]',
-                accent.border,
-                accent.glow,
               )}
+              style={{
+                borderColor: cardBorder,
+                background: cardBackground,
+                boxShadow: cardShadow,
+              }}
             >
-              <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r', accent.line)} />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: topLine }} />
 
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className={cn('grid h-12 w-12 place-items-center rounded-[18px] border', accent.iconWrap)}>
+                  <div
+                    className="grid h-12 w-12 place-items-center rounded-[18px] border"
+                    style={{
+                      borderColor: iconBorder,
+                      backgroundColor: iconSurface,
+                      color: accentColor,
+                    }}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em]', accent.eyebrow)}>{eyebrow}</p>
-                    <h3 className={cn('mt-1 text-xl font-bold tracking-tight', accent.title)}>{title}</h3>
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.24em]" style={{ color: accentColor }}>{eyebrow}</p>
+                    <h3 className="mt-1 text-xl font-extrabold tracking-tight" style={{ color: accentColor }}>{title}</h3>
                   </div>
                 </div>
 
-                <Badge variant={accent.badge}>{category}</Badge>
+                <span
+                  className="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap"
+                  style={{
+                    color: accentColor,
+                    borderColor: chipBorder,
+                    backgroundColor: chipSurface,
+                  }}
+                >
+                  {category}
+                </span>
               </div>
 
               <div className="mt-6">
@@ -160,10 +176,12 @@ export function CimsTeamPage() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className={cn(
-                    'inline-flex min-h-11 items-center justify-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-medium transition',
-                    accent.button,
-                  )}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-semibold transition hover:-translate-y-[1px]"
+                  style={{
+                    color: accentColor,
+                    borderColor: actionBorder,
+                    backgroundColor: actionSurface,
+                  }}
                 >
                   {t('cims.open_link')}
                   <ArrowUpRight className="h-4 w-4" />
