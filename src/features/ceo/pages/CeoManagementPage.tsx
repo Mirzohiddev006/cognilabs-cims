@@ -118,10 +118,11 @@ const initialRoleForm: RoleFormState = {
 }
 
 const managementStaticCardSurface =
-  'border-[var(--blue-border)] bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(255,255,255,0.96))] shadow-[0_14px_30px_rgba(59,130,246,0.10),inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-blue-400/22 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(59,130,246,0.06))] dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.28)]'
-const managementStaticCardTitle = 'text-[#1d4ed8] dark:text-blue-100'
-const managementStaticCardValue = 'text-[#173d97] dark:text-blue-50'
-const managementStaticCardHint = 'text-[#4e72be] dark:text-blue-100/84'
+  'border-[#2576EF]/24 bg-[linear-gradient(180deg,rgba(37,118,239,0.12),rgba(255,255,255,0.98))] shadow-[inset_0_0_0_1px_rgba(37,118,239,0.07),0_16px_32px_rgba(37,118,239,0.10)] dark:border-blue-400/22 dark:bg-[linear-gradient(180deg,rgba(37,118,239,0.18),rgba(37,118,239,0.06))] dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.28)]'
+const managementStaticCardTopLine = 'bg-[linear-gradient(90deg,#2576EF,rgba(37,118,239,0.42),transparent_82%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.94),rgba(96,165,250,0.40),transparent_82%)]'
+const managementStaticCardTitle = 'text-[#2576EF] dark:text-blue-100'
+const managementStaticCardValue = 'text-[#1649A8] dark:text-blue-50'
+const managementStaticCardHint = 'text-[#5D7FC0] dark:text-blue-100/84'
 
 function SummaryCard({
   label,
@@ -135,7 +136,7 @@ function SummaryCard({
   const lt = translateCurrentLiteral
   return (
     <div className={cn('relative overflow-hidden rounded-[22px] px-5 py-4', managementStaticCardSurface)}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.44),transparent_80%)] dark:bg-[linear-gradient(90deg,rgba(96,165,250,0.92),rgba(96,165,250,0.38),transparent_80%)]" />
+      <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-[3px]', managementStaticCardTopLine)} />
       <p className={cn('text-[12px] font-extrabold uppercase tracking-[0.24em]', managementStaticCardTitle)}>{lt(label)}</p>
       <p className={cn('mt-2 text-[2rem] font-bold tracking-tight', managementStaticCardValue)}>{value}</p>
       <p className={cn('mt-2 text-[13px] font-semibold leading-5', managementStaticCardHint)}>{lt(hint)}</p>
@@ -1050,11 +1051,11 @@ export function CeoManagementPage() {
             className={cn(
               'rounded-[20px] border px-4 py-4 text-left transition',
               activeTab === tab.key
-                ? 'border-[rgba(59,130,246,0.34)] bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(255,255,255,0.96))] text-[var(--foreground)] shadow-[0_16px_30px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.78)] dark:border-blue-400/28 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.22),rgba(59,130,246,0.08))] dark:text-white dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.26)]'
-                : 'border-[var(--blue-border)] bg-[linear-gradient(180deg,rgba(59,130,246,0.10),rgba(255,255,255,0.98))] text-[var(--foreground)] shadow-[0_12px_24px_rgba(59,130,246,0.06),inset_0_1px_0_rgba(255,255,255,0.8)] hover:border-[rgba(59,130,246,0.36)] hover:bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(255,255,255,0.98))] dark:border-blue-500/18 dark:bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(59,130,246,0.05))] dark:text-white/84 dark:shadow-[0_0_0_1px_rgba(96,165,250,0.06),0_16px_28px_rgba(15,23,42,0.24)] dark:hover:border-blue-400/26 dark:hover:bg-[linear-gradient(180deg,rgba(59,130,246,0.18),rgba(59,130,246,0.06))]',
+                ? 'border-[#2576EF]/32 bg-[linear-gradient(180deg,rgba(37,118,239,0.18),rgba(255,255,255,0.98))] shadow-[inset_0_0_0_1px_rgba(37,118,239,0.08),0_18px_34px_rgba(37,118,239,0.12)] dark:border-blue-400/28 dark:bg-[linear-gradient(180deg,rgba(37,118,239,0.22),rgba(37,118,239,0.08))] dark:text-white dark:shadow-[0_0_0_1px_rgba(96,165,250,0.08),0_18px_36px_rgba(15,23,42,0.26)]'
+                : 'border-[#2576EF]/22 bg-[linear-gradient(180deg,rgba(37,118,239,0.10),rgba(255,255,255,1))] shadow-[inset_0_0_0_1px_rgba(37,118,239,0.05),0_12px_24px_rgba(37,118,239,0.07)] hover:border-[#2576EF]/30 hover:bg-[linear-gradient(180deg,rgba(37,118,239,0.14),rgba(255,255,255,1))] dark:border-blue-500/18 dark:bg-[linear-gradient(180deg,rgba(37,118,239,0.14),rgba(37,118,239,0.05))] dark:text-white/84 dark:shadow-[0_0_0_1px_rgba(96,165,250,0.06),0_16px_28px_rgba(15,23,42,0.24)] dark:hover:border-blue-400/26 dark:hover:bg-[linear-gradient(180deg,rgba(37,118,239,0.18),rgba(37,118,239,0.06))]',
             )}
           >
-            <p className={cn('text-sm font-semibold', activeTab === tab.key ? managementStaticCardValue : managementStaticCardTitle)}>{lt(tab.label)}</p>
+            <p className={cn('text-sm font-bold', activeTab === tab.key ? managementStaticCardValue : managementStaticCardTitle)}>{lt(tab.label)}</p>
             <p className={cn('mt-2 text-[13px] leading-5 font-semibold', managementStaticCardHint)}>{lt(tab.description)}</p>
           </button>
         ))}
