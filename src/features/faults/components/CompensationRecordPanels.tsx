@@ -161,11 +161,14 @@ export function DeliveryBonusSection({
   className,
 }: DeliveryBonusSectionProps) {
   return (
-    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]', className)}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#16a34a,rgba(22,163,74,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.94),rgba(52,211,153,0.44),transparent_78%)]" />
+    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-[var(--success-border)] dark:bg-[var(--card)]', className)}>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+        style={{ background: 'linear-gradient(90deg, var(--success-text), rgba(var(--success-rgb),0.72), transparent 78%)' }}
+      />
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#166534] dark:text-emerald-200/95">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--success-text)]">
             {tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')}
           </p>
           <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -177,7 +180,7 @@ export function DeliveryBonusSection({
             {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl font-semibold text-[#166534] hover:text-[#14532d] dark:text-emerald-100/92 dark:hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl font-semibold text-[var(--success-text)] transition-opacity hover:opacity-80">
               {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
             </Button>
           ) : null}
@@ -186,7 +189,7 @@ export function DeliveryBonusSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-emerald-100/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-emerald-500/18 dark:bg-black/15 dark:shadow-none">
+          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -218,7 +221,7 @@ export function DeliveryBonusSection({
             </div>
           </div>
         )) : (
-          <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-emerald-100/75 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-emerald-500/18 dark:bg-black/10">
+          <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
             {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
           </div>
         )}

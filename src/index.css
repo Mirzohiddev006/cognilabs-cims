@@ -60,8 +60,11 @@
   /* Semantic */
   --success:           #22c55e;
   --success-dim:       rgba(34, 197, 94, 0.12);
+  --success-soft:      rgba(34, 197, 94, 0.10);
+  --success-strong:    rgba(34, 197, 94, 0.14);
   --success-border:    rgba(34, 197, 94, 0.25);
   --success-text:      #4ade80;
+  --success-rgb:       74, 222, 128;
 
   --warning:           #f59e0b;
   --warning-dim:       rgba(245, 158, 11, 0.10);
@@ -158,8 +161,11 @@ html.light {
   /* Semantic */
   --success:           #22C55E;
   --success-dim:       rgba(34,197,94,0.10);
+  --success-soft:      rgba(34,197,94,0.08);
+  --success-strong:    rgba(34,197,94,0.12);
   --success-border:    #BBF7D0;
   --success-text:      #15803D;
+  --success-rgb:       21, 128, 61;
   --warning:           #F59E0B;
   --warning-dim:       rgba(245,158,11,0.10);
   --warning-border:    #FDE68A;

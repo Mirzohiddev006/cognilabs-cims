@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { CurrentUser } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
@@ -76,6 +76,15 @@ type MemberDashboardData = {
 
 const MEMBER_DASHBOARD_CACHE_PREFIX = 'cims:member-dashboard:'
 const memberDashboardCache = new Map<string, MemberDashboardData>()
+const memberDashboardSuccessTheme = {
+  '--success': '#32A852',
+  '--success-dim': 'rgba(50, 168, 82, 0.10)',
+  '--success-soft': 'rgba(50, 168, 82, 0.10)',
+  '--success-strong': 'rgba(50, 168, 82, 0.13)',
+  '--success-border': 'rgba(50, 168, 82, 0.26)',
+  '--success-text': '#32A852',
+  '--success-rgb': '50, 168, 82',
+} as CSSProperties
 
 function getMemberDashboardCacheKey(userId: number, year: number, month: number) {
   return `${userId}:${year}:${month}`
@@ -181,7 +190,7 @@ function ProgressBar({
 }) {
   const colorClassName = {
     violet: 'bg-violet-400',
-    success: 'bg-emerald-400',
+    success: 'bg-[var(--success-text)]',
     danger: 'bg-rose-400',
   } as const
 
@@ -380,10 +389,10 @@ export function MemberDashboardPage() {
   }
 
   return (
-    <section className="space-y-6 page-enter">
+    <section className="space-y-6 page-enter" style={memberDashboardSuccessTheme}>
       <Card variant="glass" noPadding className="overflow-hidden rounded-[30px] border-white/10">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(16,185,129,0.12),transparent_24%)]" />
+          <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(var(--success-rgb),0.12),transparent_24%)]" />
 
           <div className="relative z-10 flex flex-col gap-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -489,7 +498,7 @@ export function MemberDashboardPage() {
       <Card className="rounded-[28px] border-[var(--border)] bg-[var(--card)] p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-[11px] text-[#48A111]">
+            <p className="text-[11px] text-[var(--success-text)]">
               Salary estimate for {month}/{year}
             </p>
             <h2 className="mt-2 text-[1.7rem] font-semibold tracking-tight text-[var(--foreground)]">
@@ -580,10 +589,10 @@ export function MemberDashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-emerald-500/20 bg-emerald-50/90 p-4 dark:bg-black/18">
+          <div className="rounded-[22px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:bg-[var(--success-dim)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#48A111]">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--success-text)]">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
                 <p className="mt-1 text-sm text-[var(--muted-strong)]">
                   {detail.bonuses.length > 0 ? `${detail.bonuses.length} ${lt('entries')}` : tr('No bonus records returned.', 'Bonus yozuvlari qaytmadi.', 'Записи бонусов не вернулись.')}
                 </p>
@@ -595,20 +604,20 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-emerald-500/16 bg-white px-4 py-3 dark:bg-black/20">
+                <div key={item.id} className="rounded-[16px] border border-[var(--success-border)] bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#48A111]">{item.title}</p>
+                      <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
                       <p className="mt-1 text-xs text-[var(--muted-strong)]">{item.description ?? tr('No reason provided.', 'Sabab ko‘rsatilmagan.', 'Причина не указана.')}</p>
                     </div>
-                    <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-300">{formatDetailDate(item.createdAt)}</p>
+                    <p className="text-sm font-semibold text-[var(--success-text)]">{formatDetailDate(item.createdAt)}</p>
                   </div>
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="success">{formatAmount(item.amount)}</Badge>
                   </div>
                 </div>
               )) : (
-                <div className="rounded-[16px] border border-dashed border-emerald-500/18 bg-emerald-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+                <div className="rounded-[16px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                   {tr('No bonus line-items were returned for the selected month.', 'Tanlangan oy uchun bonus yozuvlari qaytmadi.', 'За выбранный месяц не вернулись записи бонусов.')}
                 </div>
               )}

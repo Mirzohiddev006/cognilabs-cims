@@ -170,9 +170,14 @@ function is404Error(error: unknown) {
 export const updateTrackingService = {
   async myStats() {
     try {
-      return await request<UpdateTrackingStats>({
+      const payload = await request<unknown>({
         path: '/update-tracking/stats/me',
+        query: {
+          detailed: false,
+        },
       })
+
+      return normalizeStatsPayload(payload)
     } catch (error) {
       if (!is404Error(error)) {
         throw error

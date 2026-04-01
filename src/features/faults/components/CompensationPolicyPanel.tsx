@@ -78,18 +78,18 @@ export function CompensationPolicyPanel({
 
   const bonusPanelStyle = isLight
     ? {
-        borderColor: '#9ae6b4',
-        background: 'linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.86), 0 10px 22px rgba(34,168,82,0.06)',
+        borderColor: 'var(--success-border)',
+        background: 'linear-gradient(180deg, var(--success-soft) 0%, var(--success-strong) 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.86), 0 10px 22px rgba(var(--success-rgb),0.06)',
       }
     : undefined
 
   const bonusPanelLineStyle = isLight
-    ? { background: 'linear-gradient(90deg, #228446 0%, rgba(34,132,70,0.42) 38%, transparent 74%)' }
+    ? { background: 'linear-gradient(90deg, var(--success-text) 0%, rgba(var(--success-rgb),0.42) 38%, transparent 74%)' }
     : undefined
 
-  const bonusTitleStyle = isLight ? { color: '#166534' } : undefined
-  const bonusHintStyle = isLight ? { color: '#166534' } : undefined
+  const bonusTitleStyle = isLight ? { color: 'var(--success-text)' } : undefined
+  const bonusHintStyle = isLight ? { color: 'var(--success-text)' } : undefined
 
   return (
     <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
@@ -187,17 +187,17 @@ export function CompensationPolicyPanel({
             </div>
 
             <div
-              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-emerald-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-emerald-500/18 dark:bg-emerald-950/15 dark:shadow-none"
+              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none"
               style={bonusPanelStyle}
             >
               <div
-                className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#228446,rgba(34,132,70,0.42),transparent_74%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.88),rgba(52,211,153,0.32),transparent_74%)]"
+                className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
                 style={bonusPanelLineStyle}
               />
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p
-                    className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#228446] dark:text-emerald-200/95"
+                    className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--success-text)]"
                     style={bonusTitleStyle}
                   >
                     {lt('Bonus rates')}
@@ -218,7 +218,7 @@ export function CompensationPolicyPanel({
 
               <div className="mt-4 space-y-3">
                 {policy.bonusRates.map((rate) => (
-                  <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-emerald-50/88 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-emerald-500/18 dark:bg-black/18 dark:shadow-none">
+                  <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.label)}</p>
                       <Badge variant="success">{formatPercent(rate.percent)}</Badge>
