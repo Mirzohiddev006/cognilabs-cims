@@ -1613,9 +1613,22 @@ export function UpdateTrackingPage() {
                           variant="secondary"
                           size="sm"
                           onClick={handleJumpToToday}
-                          className="min-h-11 rounded-[14px] border-[#9ED6B2] bg-[linear-gradient(180deg,#ECFDF3,#DDF7E8)] px-5 font-semibold tracking-[0.01em] text-[#166534] shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_20px_rgba(22,101,52,0.08)] hover:border-[#79C797] hover:bg-[linear-gradient(180deg,#E1FAEB,#CEF2DE)] hover:text-[#14532D] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
+                          data-keep-color="true"
+                          style={{
+                            color: '#14532D',
+                            WebkitTextFillColor: '#14532D',
+                            borderColor: '#9ED6B2',
+                            background: 'linear-gradient(180deg, #ECFDF3, #DDF7E8)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), 0 8px 20px rgba(22,101,52,0.08)',
+                          }}
+                          className="min-h-11 rounded-[14px] px-5 hover:border-[#79C797] hover:bg-[linear-gradient(180deg,#E1FAEB,#CEF2DE)] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
                         >
-                          {selectedMonthName} {year}
+                          <span
+                            className="relative z-[1] font-semibold tracking-[0.01em]"
+                            style={{ color: '#14532D', WebkitTextFillColor: '#14532D' }}
+                          >
+                            {selectedMonthName} {year}
+                          </span>
                         </Button>
                         <Button
                           variant="secondary"
