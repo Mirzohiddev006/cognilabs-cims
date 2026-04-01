@@ -282,24 +282,9 @@ export function AppSidebar() {
         )}
       >
         <span className="relative h-4 w-4">
-          <span
-            className={cn(
-              'absolute left-0 top-1/2 h-0.5 w-4 -translate-y-[6px] rounded-full bg-current transition-transform duration-300',
-              isSidebarVisible && 'translate-y-0 rotate-45',
-            )}
-          />
-          <span
-            className={cn(
-              'absolute left-0 top-1/2 h-0.5 w-4 -translate-y-1/2 rounded-full bg-current transition-opacity duration-300',
-              isSidebarVisible && 'opacity-0',
-            )}
-          />
-          <span
-            className={cn(
-              'absolute left-0 top-1/2 h-0.5 w-4 translate-y-[5px] rounded-full bg-current transition-transform duration-300',
-              isSidebarVisible && 'translate-y-0 -rotate-45',
-            )}
-          />
+          <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-[6px] rounded-full bg-current" />
+          <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-1/2 rounded-full bg-current" />
+          <span className="absolute left-0 top-1/2 h-0.5 w-4 translate-y-[5px] rounded-full bg-current" />
         </span>
       </button>
       <button
