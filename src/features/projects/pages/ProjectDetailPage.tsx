@@ -71,9 +71,13 @@ export function ProjectDetailPage() {
         throw new Error('User session is unavailable')
       }
 
-      return projectsService.getProject(id)
+      if (canManageProjects) {
+        return projectsService.getProject(id)
+      }
+
+      return projectsService.getUserOpenProjectDetail(id, user.id)
     },
-    [id, user?.id],
+    [canManageProjects, id, user?.id],
     { enabled: !Number.isNaN(id) && Boolean(user) },
   )
 

@@ -66,9 +66,13 @@ export function ProjectsListPage() {
         throw new Error('User session is unavailable')
       }
 
-      return projectsService.listProjects()
+      if (canManageProjects) {
+        return projectsService.listProjects()
+      }
+
+      return projectsService.listUserOpenProjects(user.id)
     },
-    [user?.id],
+    [canManageProjects, user?.id],
     { enabled: Boolean(user) },
   )
 
@@ -113,12 +117,16 @@ export function ProjectsListPage() {
       }
 
       const details = await Promise.allSettled(
-        projects.map((project) => projectsService.getProject(project.id)),
+        projects.map((project) => (
+          canManageProjects
+            ? projectsService.getProject(project.id)
+            : projectsService.getUserOpenProjectDetail(project.id, user.id)
+        )),
       )
 
       return details.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
     },
-    [projectIdsKey, user?.id],
+    [canManageProjects, projectIdsKey, user?.id],
     { enabled: projects.length > 0 && Boolean(user) },
   )
 

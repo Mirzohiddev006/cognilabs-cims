@@ -125,9 +125,13 @@ export function BoardWorkspace({
         throw new Error('User session is unavailable')
       }
 
-      return projectsService.getBoard(boardId)
+      if (canManageProjects) {
+        return projectsService.getBoard(boardId)
+      }
+
+      return projectsService.getUserOpenBoardDetail(boardId, user.id, projectId)
     },
-    [boardId, projectId, user?.id],
+    [boardId, canManageProjects, projectId, user?.id],
     { enabled: boardId > 0 && Boolean(user) },
   )
 
