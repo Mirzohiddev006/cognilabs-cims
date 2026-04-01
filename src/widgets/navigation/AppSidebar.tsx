@@ -268,17 +268,19 @@ export function AppSidebar() {
       setIsSavingMember(false)
     }
   }
-
   return (
     <>
+      {/* Burger — faqat sidebar yopiq paytda ko'rinadi */}
       <button
         type="button"
         onClick={handleSidebarToggle}
         aria-label={t('shell.toggle_navigation')}
         style={sidebarToggleStyle}
         className={cn(
-          'fixed z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-[0_14px_32px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-[left,top,background-color,border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:bg-[var(--accent-soft)] hover:shadow-[0_18px_36px_rgba(15,23,42,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
-          isSidebarVisible && 'bg-[var(--muted-surface)]',
+          'fixed z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-[0_14px_32px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-[left,top,background-color,border-color,box-shadow,transform,opacity] duration-300 hover:-translate-y-0.5 hover:bg-[var(--accent-soft)] hover:shadow-[0_18px_36px_rgba(15,23,42,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
+          isSidebarVisible
+            ? 'pointer-events-none opacity-0'
+            : 'bg-[var(--muted-surface)]',
         )}
       >
         <span className="relative h-4 w-4">
@@ -307,7 +309,12 @@ export function AppSidebar() {
       >
         <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
           <div className="border-b border-[var(--border)] px-2 pb-4">
-            <div className="rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+            {/* Cognilabs bloki — yopish tugmasi */}
+            <button
+              type="button"
+              onClick={handleSidebarToggle}
+              className="w-full rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] text-left transition-opacity duration-150 hover:opacity-80 focus-visible:outline-none"
+            >
               <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-(--shell-label-color)">Cognilabs</p>
               <div className="mt-3 flex w-full items-center gap-3 text-left">
                 <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
@@ -318,7 +325,7 @@ export function AppSidebar() {
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           <div className="mt-5 flex items-center justify-between px-2">
