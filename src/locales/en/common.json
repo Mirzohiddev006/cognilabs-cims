@@ -52,10 +52,9 @@
   "common.language.en": "English",
   "common.scope.local": "Local",
   "common.scope.international": "International",
-
   "shell.language": "Language",
   "shell.menu": "Menu",
-  "shell.modules": "modules",
+  "shell.modules": "Modules",
   "shell.logout": "Log out",
   "shell.logging_out": "Logging out...",
   "shell.close": "Close",
@@ -77,7 +76,6 @@
   "shell.switch_to_dark": "Switch to dark mode",
   "shell.logged_out": "Logged out",
   "shell.session_closed": "Session closed. You can log in again.",
-
   "profile.member_details": "Member details",
   "profile.current_user": "Current authenticated user",
   "profile.role": "Role",
@@ -88,7 +86,7 @@
   "profile.name": "Name",
   "profile.surname": "Surname",
   "profile.permissions": "Permissions",
-  "profile.enabled": "enabled",
+  "profile.enabled": "Enabled",
   "profile.no_active_permissions": "No active permissions available.",
   "profile.updated": "Profile updated",
   "profile.update_failed": "Profile update failed",
@@ -103,7 +101,6 @@
   "profile.current_password_hint": "Fill this in only if you want to change the password",
   "profile.new_password": "New password",
   "profile.new_password_hint": "Leave blank to keep the current password",
-
   "status.active": "Active",
   "status.inactive": "Inactive",
   "status.pending": "Pending",
@@ -114,7 +111,6 @@
   "status.continuing": "Continuing",
   "status.finished": "Finished",
   "status.rejected": "Rejected",
-
   "auth.protected.session": "Session",
   "auth.protected.verifying": "Verifying credentials",
   "auth.protected.description": "Validating access tokens, refresh flow, and user permissions.",
@@ -204,12 +200,10 @@
   "auth.redirect.eyebrow": "Redirecting",
   "auth.redirect.title": "Opening your dashboard",
   "auth.redirect.description": "We are determining the best entry point for your account role. One moment...",
-
   "errors.not_found.code": "Error 404",
   "errors.not_found.title": "Page not found",
   "errors.not_found.description": "The requested route is not available. Please check the URL or navigate back to the dashboard.",
   "errors.not_found.back": "Back to Dashboard",
-
   "nav./member/dashboard.label": "Member Dashboard",
   "nav./member/dashboard.group": "Member",
   "nav./ceo/dashboard.label": "CEO Dashboard",
@@ -236,11 +230,10 @@
   "nav./ceo/management.group": "CEO",
   "nav./cims-team.label": "CIMS Team",
   "nav./cims-team.group": "Workspace",
-
   "cims.copy": "Copy",
   "cims.open_link": "Open link",
   "cims.link_copied": "Link copied",
-  "cims.link_copied_desc": "link copied to the clipboard.",
+  "cims.link_copied_desc": "Link copied to the clipboard.",
   "cims.copy_failed": "Copy failed",
   "cims.copy_failed_desc": "Clipboard access is not available in this browser.",
   "cims.handle": "Handle",
@@ -259,7 +252,6 @@
   "cims.update.title": "Update Bot",
   "cims.update.eyebrow": "Operations",
   "cims.update.note": "Dedicated update-tracking entry point for daily operational use.",
-
   "projects.unknown_user": "Unknown user",
   "projects.unknown_date": "Unknown date",
   "projects.relative.upcoming": "Upcoming",
@@ -343,7 +335,6 @@
   "projects.search_members": "Search members",
   "projects.unassigned": "Unassigned",
   "projects.upload_image": "Upload image",
-
   "customers.list": "Customer list",
   "customers.detail": "Customer detail",
   "customers.page.eyebrow": "CRM workspace",
@@ -491,7 +482,7 @@
   "ceo.users.form.description": "Create or update users with the same fields used during registration.",
   "ceo.users.form.create": "Create user",
   "ceo.users.form.company_code": "Company code",
-  "ceo.users.form.company_code_placeholder": "e.g. oddiy",
+  "ceo.users.form.company_code_placeholder": "E.g. oddiy",
   "ceo.users.form.name_placeholder": "First name",
   "ceo.users.form.surname_placeholder": "Last name",
   "ceo.users.form.job_title_placeholder": "Sales Manager",
@@ -657,7 +648,6 @@
   "ceo.dashboard.payments.pending_count": "{{count}} pending",
   "ceo.dashboard.payments.empty_title": "No payments yet",
   "ceo.dashboard.payments.empty_description": "The CEO payments endpoint returned an empty list.",
-
   "crm.charts.filters.all_leads": "All leads",
   "crm.charts.header.eyebrow": "CRM",
   "crm.charts.header.title": "CRM Lead Flow",
@@ -679,13 +669,12 @@
   "crm.charts.card.weekly_description": "Short-range lead flow for the last week.",
   "crm.charts.card.monthly_title": "30-Day View",
   "crm.charts.card.monthly_description": "Longer-range lead flow for the last month.",
-  "crm.charts.units.leads": "leads",
+  "crm.charts.units.leads": "Leads",
   "crm.charts.states.no_dataset": "No dataset yet",
   "crm.charts.states.waiting_api": "Waiting for API",
   "crm.charts.states.no_peak": "No peak",
   "crm.charts.states.trend_empty": "Trend dataset is empty for this period.",
   "crm.charts.states.load_failed": "Chart API could not be loaded. Retry the dashboard charts request.",
-
   "ceo.workday.header.eyebrow": "CEO Workspace",
   "ceo.workday.header.title": "Workday Overrides",
   "ceo.workday.header.description": "Configure holidays and short working days that affect update expectations.",
@@ -742,8 +731,8 @@
   "ceo.workday.form.selected_count": "{{count}} selected",
   "ceo.workday.form.loading_members": "Loading member options...",
   "ceo.workday.form.applies_to_all": "This override will apply to every member in the company.",
-  "ceo.workday.form.selected_member": "selected member",
-  "ceo.workday.form.selected_members_count": "selected members",
+  "ceo.workday.form.selected_member": "Selected member",
+  "ceo.workday.form.selected_members_count": "Selected members",
   "ceo.workday.form.preview_title_placeholder": "Override title will appear here.",
   "ceo.workday.form.no_date": "No date selected"
 }

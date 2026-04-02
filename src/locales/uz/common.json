@@ -52,10 +52,9 @@
   "common.language.en": "Ingliz",
   "common.scope.local": "Mahalliy",
   "common.scope.international": "Xalqaro",
-
   "shell.language": "Til",
   "shell.menu": "Menyu",
-  "shell.modules": "modul",
+  "shell.modules": "Modul",
   "shell.logout": "Chiqish",
   "shell.logging_out": "Chiqilmoqda...",
   "shell.close": "Yopish",
@@ -77,7 +76,6 @@
   "shell.switch_to_dark": "Qorong'i mavzuga o'tish",
   "shell.logged_out": "Sessiya yopildi",
   "shell.session_closed": "Sessiya yopildi. Qayta tizimga kirishingiz mumkin.",
-
   "profile.member_details": "Xodim ma'lumotlari",
   "profile.current_user": "Joriy foydalanuvchi",
   "profile.role": "Rol",
@@ -88,7 +86,7 @@
   "profile.name": "Ism",
   "profile.surname": "Familiya",
   "profile.permissions": "Ruxsatlar",
-  "profile.enabled": "yoqilgan",
+  "profile.enabled": "Yoqilgan",
   "profile.no_active_permissions": "Faol ruxsatlar yo'q.",
   "profile.updated": "Profil yangilandi",
   "profile.update_failed": "Profilni yangilab bo'lmadi",
@@ -103,7 +101,6 @@
   "profile.current_password_hint": "Faqat parolni almashtirmoqchi bo'lsangiz to'ldiring",
   "profile.new_password": "Yangi parol",
   "profile.new_password_hint": "Joriy parol saqlansin desa bo'sh qoldiring",
-
   "status.active": "Faol",
   "status.inactive": "Nofaol",
   "status.pending": "Kutilmoqda",
@@ -114,7 +111,6 @@
   "status.continuing": "Davom etmoqda",
   "status.finished": "Yakunlangan",
   "status.rejected": "Rad etilgan",
-
   "auth.protected.session": "Sessiya",
   "auth.protected.verifying": "Ma'lumotlar tekshirilmoqda",
   "auth.protected.description": "Access token, refresh jarayoni va foydalanuvchi ruxsatlari tekshirilmoqda.",
@@ -204,12 +200,10 @@
   "auth.redirect.eyebrow": "Yo'naltirilmoqda",
   "auth.redirect.title": "Panel ochilmoqda",
   "auth.redirect.description": "Rolingizga mos kirish nuqtasi aniqlanmoqda. Bir oz kuting...",
-
   "errors.not_found.code": "Xato 404",
   "errors.not_found.title": "Sahifa topilmadi",
   "errors.not_found.description": "So'ralgan sahifa mavjud emas. URL manzilini tekshiring yoki bosh sahifaga qayting.",
   "errors.not_found.back": "Panelga qaytish",
-
   "nav./member/dashboard.label": "Xodim paneli",
   "nav./member/dashboard.group": "Xodim",
   "nav./ceo/dashboard.label": "CEO paneli",
@@ -236,11 +230,10 @@
   "nav./ceo/management.group": "CEO",
   "nav./cims-team.label": "CIMS jamoasi",
   "nav./cims-team.group": "Ish maydoni",
-
   "cims.copy": "Nusxalash",
   "cims.open_link": "Havolani ochish",
   "cims.link_copied": "Havola nusxalandi",
-  "cims.link_copied_desc": "havola clipboardga nusxalandi.",
+  "cims.link_copied_desc": "Havola clipboardga nusxalandi.",
   "cims.copy_failed": "Nusxalab bo'lmadi",
   "cims.copy_failed_desc": "Bu brauzerda clipboard ruxsati mavjud emas.",
   "cims.handle": "Handle",
@@ -259,7 +252,6 @@
   "cims.update.title": "Update bot",
   "cims.update.eyebrow": "Operatsiyalar",
   "cims.update.note": "Kundalik foydalanish uchun yangilanishlarni kuzatish botiga kirish nuqtasi.",
-
   "projects.unknown_user": "Noma'lum foydalanuvchi",
   "projects.unknown_date": "Noma'lum sana",
   "projects.relative.upcoming": "Yaqinlashmoqda",
@@ -343,7 +335,6 @@
   "projects.search_members": "Xodim qidirish",
   "projects.unassigned": "Biriktirilmagan",
   "projects.upload_image": "Rasm yuklash",
-
   "customers.list": "Mijozlar ro'yxati",
   "customers.detail": "Mijoz tafsiloti",
   "customers.page.eyebrow": "CRM ish maydoni",
@@ -491,7 +482,7 @@
   "ceo.users.form.description": "Ro'yxatdan o'tishdagi maydonlar bilan foydalanuvchini yarating yoki yangilang.",
   "ceo.users.form.create": "Foydalanuvchi yaratish",
   "ceo.users.form.company_code": "Kompaniya kodi",
-  "ceo.users.form.company_code_placeholder": "masalan, oddiy",
+  "ceo.users.form.company_code_placeholder": "Masalan, oddiy",
   "ceo.users.form.name_placeholder": "Ism",
   "ceo.users.form.surname_placeholder": "Familiya",
   "ceo.users.form.job_title_placeholder": "Sotuv menejeri",
@@ -657,7 +648,6 @@
   "ceo.dashboard.payments.pending_count": "{{count}} kutilmoqda",
   "ceo.dashboard.payments.empty_title": "To'lovlar yo'q",
   "ceo.dashboard.payments.empty_description": "CEO to'lovlar endpointi bo'sh ro'yxat qaytardi.",
-
   "crm.charts.filters.all_leads": "Barcha lidlar",
   "crm.charts.header.eyebrow": "CRM",
   "crm.charts.header.title": "CRM Lidlar Oqimi",
@@ -679,13 +669,12 @@
   "crm.charts.card.weekly_description": "So'nggi hafta bo'yicha qisqa muddatli lidlar oqimi.",
   "crm.charts.card.monthly_title": "30 Kunlik Ko'rinish",
   "crm.charts.card.monthly_description": "So'nggi oy bo'yicha kengroq lidlar oqimi.",
-  "crm.charts.units.leads": "lid",
+  "crm.charts.units.leads": "Lid",
   "crm.charts.states.no_dataset": "Hozircha ma'lumot yo'q",
   "crm.charts.states.waiting_api": "API kutilmoqda",
   "crm.charts.states.no_peak": "Pik yo'q",
   "crm.charts.states.trend_empty": "Shu davr uchun trend ma'lumoti yo'q.",
   "crm.charts.states.load_failed": "Chart API yuklanmadi. Dashboard chart so'rovini qayta urinib ko'ring.",
-
   "ceo.workday.header.eyebrow": "CEO Ish Maydoni",
   "ceo.workday.header.title": "Ish Kuni Overridelari",
   "ceo.workday.header.description": "Yangilanish kutilishini boshqaruvchi bayram va qisqa ish kunlarini sozlang.",
@@ -742,8 +731,8 @@
   "ceo.workday.form.selected_count": "{{count}} ta tanlangan",
   "ceo.workday.form.loading_members": "A'zolar variantlari yuklanmoqda...",
   "ceo.workday.form.applies_to_all": "Bu override kompaniyadagi har bir a'zoga qo'llanadi.",
-  "ceo.workday.form.selected_member": "tanlangan a'zo",
-  "ceo.workday.form.selected_members_count": "tanlangan a'zolar",
+  "ceo.workday.form.selected_member": "Tanlangan a'zo",
+  "ceo.workday.form.selected_members_count": "Tanlangan a'zolar",
   "ceo.workday.form.preview_title_placeholder": "Override sarlavhasi shu yerda ko'rinadi.",
   "ceo.workday.form.no_date": "Sana tanlanmagan"
 }
