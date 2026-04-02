@@ -29,7 +29,7 @@ const tonePalette = {
     areaEnd: 'rgba(167,139,250,0.03)',
     dot: '#ddd6fe',
     ring: 'border-violet-500/16 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.08),0_0_24px_rgba(139,92,246,0.05)]',
-    label: 'text-violet-700 dark:text-violet-200',
+    label: 'text-[#A78BFA]',
     badge: 'violet' as const,
     bar: 'bg-violet-400',
   },
