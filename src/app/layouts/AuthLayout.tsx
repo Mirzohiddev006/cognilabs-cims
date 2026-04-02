@@ -1,4 +1,6 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useLocale } from '../hooks/useLocale'
+import { translateCurrentLiteral } from '../../shared/i18n/translations'
 
 const routeCopy = {
   '/auth/login': {
@@ -39,10 +41,43 @@ const previewStats = [
 ]
 
 export function AuthLayout() {
+  const { locale } = useLocale()
   const location = useLocation()
   const copy = routeCopy[location.pathname as keyof typeof routeCopy] ?? routeCopy['/auth/login']
   const isLoginRoute = location.pathname === '/auth/login'
   const routeAnimationKey = `${location.pathname}${location.search}`
+  const tr = (en: string, uz: string, ru: string) => {
+    if (locale === 'ru') return ru
+    if (locale === 'uz') return uz
+    return en
+  }
+  const tl = (value: string) => translateCurrentLiteral(value)
+  const badgeText = (() => {
+    switch (copy.badge) {
+      case 'Live access portal':
+        return tr('Live access portal', 'Jonli kirish portali', 'Портал прямого доступа')
+      case 'Reset support':
+        return tr('Reset support', 'Tiklash yordami', 'Поддержка восстановления')
+      case 'Password reset':
+        return tr('Password reset', 'Parolni tiklash', 'Сброс пароля')
+      default:
+        return tl(copy.badge)
+    }
+  })()
+  const panelEyebrow = isLoginRoute
+    ? tl('Direct access')
+    : tr('Support flow', 'Yordam oqimi', 'Сценарий поддержки')
+  const panelDescription = isLoginRoute
+    ? tr(
+        'Use your work credentials to continue into the platform.',
+        'Platformaga davom etish uchun ish akkauntingiz maʼlumotlaridan foydalaning.',
+        'Используйте рабочие учётные данные, чтобы продолжить вход в платформу.',
+      )
+    : tr(
+        'The extra header buttons are removed, but recovery and verification remain available here.',
+        'Headerdagi qo‘shimcha tugmalar olib tashlangan, lekin tiklash va tasdiqlash shu yerda mavjud.',
+        'Дополнительные кнопки в шапке убраны, но восстановление и подтверждение по-прежнему доступны здесь.',
+      )
 
   return (
     <div className="auth-portal">
@@ -53,9 +88,9 @@ export function AuthLayout() {
         <section className="auth-visual-panel order-2 lg:order-1">
           <div key={`visual-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--visual">
             <div className="relative z-10 max-w-xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80">{copy.eyebrow}</p>
-              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-[var(--foreground)] md:text-5xl">{copy.title}</h1>
-              <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">{copy.description}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80">{tl(copy.eyebrow)}</p>
+              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-[var(--foreground)] md:text-5xl">{tl(copy.title)}</h1>
+              <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">{tl(copy.description)}</p>
             </div>
 
             <div className="auth-preview-card">
@@ -64,21 +99,29 @@ export function AuthLayout() {
               <div className="relative z-10 space-y-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/75">{copy.badge}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/75">{badgeText}</p>
                     <h2 className="mt-3 max-w-sm text-2xl font-semibold leading-tight text-[var(--foreground)] md:text-3xl">
-                      Permissions, sessions, and recovery stay inside one motion-driven surface.
+                      {tl('Permissions, sessions, and recovery stay inside one motion-driven surface.')}
                     </h2>
                   </div>
                   <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                    Online
+                    {tl('Online')}
                   </span>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {previewStats.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{item.label}</p>
-                      <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">{item.value}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{tl(item.label)}</p>
+                      <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+                        {item.value === 'Realtime token guard'
+                          ? tr('Realtime token guard', 'Realtime token himoyasi', 'Защита токена в реальном времени')
+                          : item.value === 'Role-based access'
+                            ? tr('Role-based access', 'Rolga asoslangan kirish', 'Доступ по ролям')
+                            : item.value === 'Verify and reset ready'
+                              ? tr('Verify and reset ready', 'Tasdiqlash va tiklash tayyor', 'Подтверждение и сброс готовы')
+                              : tr('Single workspace entry', 'Yagona workspace kirishi', 'Единая точка входа в рабочее пространство')}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -93,12 +136,10 @@ export function AuthLayout() {
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    {isLoginRoute ? 'Direct access' : 'Support flow'}
+                    {panelEyebrow}
                   </p>
                   <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--muted)]">
-                    {isLoginRoute
-                      ? 'Use your work credentials to continue into the platform.'
-                      : 'The extra header buttons are removed, but recovery and verification remain available here.'}
+                    {panelDescription}
                   </p>
                 </div>
 
@@ -107,7 +148,7 @@ export function AuthLayout() {
                     to="/auth/login"
                     className="rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] transition hover:bg-[var(--accent-soft)]"
                   >
-                    Back to login
+                    {tl('Back to login')}
                   </Link>
                 ) : null}
               </div>
