@@ -116,7 +116,9 @@ export function SalaryEstimateDrawer({
             )}
           >
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">{lt('Salary estimate')}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
+                {tr('Salary estimate', 'Maosh hisobi', 'Оценка зарплаты')}
+              </p>
               <h2 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                 {report.fullName}
               </h2>

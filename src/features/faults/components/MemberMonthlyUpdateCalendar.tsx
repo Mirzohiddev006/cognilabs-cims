@@ -16,13 +16,13 @@ const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const boardWeekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const longWeekdayLabels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const weekdayLongFallbacks: Record<string, { uz: string; ru: string }> = {
-  Sunday: { uz: 'Yakshanba', ru: 'Voskresenye' },
-  Monday: { uz: 'Dushanba', ru: 'Ponedelnik' },
-  Tuesday: { uz: 'Seshanba', ru: 'Vtornik' },
-  Wednesday: { uz: 'Chorshanba', ru: 'Sreda' },
-  Thursday: { uz: 'Payshanba', ru: 'Chetverg' },
-  Friday: { uz: 'Juma', ru: 'Pyatnitsa' },
-  Saturday: { uz: 'Shanba', ru: 'Subbota' },
+  Sunday: { uz: 'Yakshanba', ru: 'Воскресенье' },
+  Monday: { uz: 'Dushanba', ru: 'Понедельник' },
+  Tuesday: { uz: 'Seshanba', ru: 'Вторник' },
+  Wednesday: { uz: 'Chorshanba', ru: 'Среда' },
+  Thursday: { uz: 'Payshanba', ru: 'Четверг' },
+  Friday: { uz: 'Juma', ru: 'Пятница' },
+  Saturday: { uz: 'Shanba', ru: 'Суббота' },
 }
 const lt = translateCurrentLiteral
 const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -210,7 +210,7 @@ function getWorkedDurationLabel(day: MemberMonthlyUpdateDay) {
   const checkOutMinutes = getMinutesFromTime(day.checkOutTime)
 
   if (checkInMinutes === null || checkOutMinutes === null || checkOutMinutes < checkInMinutes) {
-    return tr('Hours not returned', 'Ish soatlari qaytmadi', 'Chasy raboty ne vernulis')
+    return tr('Hours not returned', 'Ish soatlari qaytmadi', 'Часы работы не получены')
   }
 
   const totalMinutes = checkOutMinutes - checkInMinutes
@@ -237,7 +237,9 @@ function getSpecialDayLabel(day: MemberMonthlyUpdateDay | null | undefined) {
     return null
   }
 
-  return day.workdayOverride.day_type === 'short_day' ? lt('Short Day') : lt('Holiday')
+  return day.workdayOverride.day_type === 'short_day'
+    ? tr('Short Day', 'Qisqa kun', 'Короткий день')
+    : tr('Holiday', 'Bayram', 'Праздник')
 }
 
 function isHolidayDay(day: MemberMonthlyUpdateDay | null | undefined) {
@@ -299,11 +301,11 @@ function getDayFocusClass(day: MemberMonthlyUpdateDay | null) {
 function getStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return lt('Submitted')
-  if (status === 'missing') return lt('Missing')
-  if (status === 'sunday') return specialLabel ?? lt('Off Day')
-  if (status === 'future') return lt('Upcoming')
-  return lt('Open')
+  if (status === 'submitted') return tr('Submitted', 'Topshirildi', 'Обновлено')
+  if (status === 'missing') return tr('Missing', 'Yetishmadi', 'Пропущено')
+  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Выходной день')
+  if (status === 'future') return tr('Upcoming', 'Yaqinlashmoqda', 'Скоро')
+  return tr('Open', 'Ochiq', 'Открыто')
 }
 
 function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
@@ -318,20 +320,24 @@ function getStatusVariant(status: DayStatus, day?: MemberMonthlyUpdateDay | null
 function getCalendarCellStatusLabel(status: DayStatus, day?: MemberMonthlyUpdateDay | null) {
   const specialLabel = getSpecialDayLabel(day)
 
-  if (status === 'submitted') return tr('Updated', 'Yangilangan', 'Obnovleno')
-  if (status === 'missing') return tr('Missed', 'Otib yuborilgan', 'Propushcheno')
-  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Vyhodnoi den')
-  if (status === 'future') return tr('Soon', 'Yaqinda', 'Skoro')
-  return tr('Open', 'Ochiq', 'Otkryto')
+  if (status === 'submitted') return tr('Updated', 'Yangilangan', 'Обновлено')
+  if (status === 'missing') return tr('Missed', 'Otib yuborilgan', 'Пропущено')
+  if (status === 'sunday') return specialLabel ?? tr('Off Day', 'Dam olish kuni', 'Выходной день')
+  if (status === 'future') return tr('Soon', 'Yaqinda', 'Скоро')
+  return tr('Open', 'Ochiq', 'Открыто')
 }
 
 function getCalendarCellHint(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
-  if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
-  if (day.status === 'missing') return lt('Needs submission')
-  if (day.status === 'sunday') return isHolidayDay(day) ? tr('Holiday schedule', 'Bayram jadvali', 'Prazdnichnyi grafik') : tr('Weekend / off day', 'Dam olish / off day', 'Vyhodnoi / off day')
-  if (day.status === 'future') return lt('Awaiting date')
-  return lt('No update yet')
+  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Обновление зафиксировано')
+  if (day.workdayOverride) return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || tr('Special day', 'Maxsus kun', 'Особый день')
+  if (day.status === 'missing') return tr('Needs submission', 'Yuborish kerak', 'Нужно отправить')
+  if (day.status === 'sunday') {
+    return isHolidayDay(day)
+      ? tr('Holiday schedule', 'Bayram jadvali', 'Праздничный график')
+      : tr('Weekend / off day', 'Dam olish / off day', 'Выходной / нерабочий день')
+  }
+  if (day.status === 'future') return tr('Awaiting date', 'Sana kutilmoqda', 'Ожидание даты')
+  return tr('No update yet', 'Hali update yoq', 'Обновления пока нет')
 }
 
 function getEntryCount(day: MemberMonthlyUpdateDay) {
@@ -369,12 +375,12 @@ function getLongWeekday(day: MemberMonthlyUpdateDay) {
 }
 
 function getDaySummary(day: MemberMonthlyUpdateDay) {
-  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Obnovlenie zafiksirovano')
-  if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || lt('Special day')
-  if (day.status === 'missing') return lt('Needs submission')
-  if (day.status === 'sunday') return isHolidayDay(day) ? tr('Holiday', 'Bayram', 'Prazdnik') : tr('Off day', 'Dam olish kuni', 'Vyhodnoi den')
-  if (day.status === 'future') return lt('Awaiting date')
-  return lt('No explicit status returned')
+  if (day.hasUpdate) return tr('Update captured', 'Yangilanish qayd etilgan', 'Обновление зафиксировано')
+  if (day.workdayOverride) return day.workdayOverride.title?.trim() || getSpecialDayLabel(day) || tr('Special day', 'Maxsus kun', 'Особый день')
+  if (day.status === 'missing') return tr('Needs submission', 'Yuborish kerak', 'Нужно отправить')
+  if (day.status === 'sunday') return isHolidayDay(day) ? tr('Holiday', 'Bayram', 'Праздник') : tr('Off day', 'Dam olish kuni', 'Выходной день')
+  if (day.status === 'future') return tr('Awaiting date', 'Sana kutilmoqda', 'Ожидание даты')
+  return tr('No explicit status returned', 'Aniq status qaytmadi', 'Явный статус не возвращён')
 }
 
 function shouldShowTimePanel(day: MemberMonthlyUpdateDay) {
@@ -383,14 +389,18 @@ function shouldShowTimePanel(day: MemberMonthlyUpdateDay) {
 
 function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
   if (!day) {
-    return lt('Select a calendar day to inspect the update returned by the API.')
+    return tr(
+      'Select a calendar day to inspect the update returned by the API.',
+      'API qaytargan update ni tekshirish uchun kalendardan kun tanlang.',
+      'Выберите день в календаре, чтобы проверить обновление, полученное от API.',
+    )
   }
 
   if (day.entries.length > 0) {
     return day.entries
       .map((entry, index) => {
-        const title = entry.title?.trim() || `${lt('Update entry')} #${index + 1}`
-        const text = entry.text?.trim() || lt('Update submitted for this date.')
+        const title = entry.title?.trim() || `${tr('Update entry', 'Yangilanish yozuvi', 'Запись обновления')} #${index + 1}`
+        const text = entry.text?.trim() || tr('Update submitted for this date.', 'Bu sana uchun update yuborilgan.', 'Для этой даты обновление отправлено.')
         const timestamp = formatEntryTimestamp(entry.createdAt)
 
         return `${title}${timestamp ? ` (${timestamp})` : ''}\n${text}`
@@ -404,13 +414,17 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
 
   if (day.workdayOverride) {
     const specialLabel = getSpecialDayLabel(day)
-    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? lt('Special day')} ${lt('is configured for this date.')}`
+    return day.workdayOverride.note?.trim() || day.workdayOverride.title?.trim() || `${specialLabel ?? tr('Special day', 'Maxsus kun', 'Особый день')} ${tr('is configured for this date.', 'bu sana uchun sozlangan.', 'настроен для этой даты.')}`
   }
 
-  if (day.status === 'missing') return lt('No update was submitted for this working day.')
-  if (day.status === 'sunday') return isHolidayDay(day) ? lt('This date is marked as a holiday.') : lt('This date is an off day.')
-  if (day.status === 'future') return lt('This date is still in the future.')
-  return lt('No update content was returned by the API for this date.')
+  if (day.status === 'missing') return tr('No update was submitted for this working day.', 'Bu ish kuni uchun update yuborilmagan.', 'Для этого рабочего дня обновление не было отправлено.')
+  if (day.status === 'sunday') {
+    return isHolidayDay(day)
+      ? tr('This date is marked as a holiday.', 'Bu sana bayram kuni deb belgilangan.', 'Эта дата отмечена как праздничный день.')
+      : tr('This date is an off day.', 'Bu sana dam olish kuni.', 'Эта дата является выходным днём.')
+  }
+  if (day.status === 'future') return tr('This date is still in the future.', 'Bu sana hali kelajakda.', 'Эта дата всё ещё в будущем.')
+  return tr('No update content was returned by the API for this date.', 'API bu sana uchun update kontentini qaytarmadi.', 'API не вернул содержимое обновления для этой даты.')
 }
 
 function CompletionBar({ pct }: { pct: number }) {
@@ -520,7 +534,7 @@ export function MemberMonthlyUpdateCalendarBoard({
   }, [calendar.days, selectedDate, todayKey])
 
   const selectedKey = selectedDay?.date ?? null
-  const selectedLabel = selectedDay ? formatLongDate(selectedDay.date) : lt('No date selected')
+  const selectedLabel = selectedDay ? formatLongDate(selectedDay.date) : tr('No date selected', 'Sana tanlanmagan', 'Дата не выбрана')
   const latestSubmittedDay = useMemo(() => (
     [...calendar.days]
       .filter((day) => day.status === 'submitted')
@@ -563,10 +577,10 @@ export function MemberMonthlyUpdateCalendarBoard({
     ? `${getShortWeekday(nextUpcomingDay)} ${nextUpcomingDay.day}`
     : latestSubmittedDay
       ? `${getShortWeekday(latestSubmittedDay)} ${latestSubmittedDay.day}`
-      : lt('None')
+      : tr('None', "Yo'q", 'Нет')
   const completionSummaryText = elapsedWorkingDays > 0
-    ? `${counts.submitted} ${tr('of', 'dan', 'iz')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'zavershennykh rabochikh dney obnovleno.')}`
-    : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Zavershennykh rabochikh dney poka net.')
+    ? `${counts.submitted} ${tr('of', 'dan', 'из')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'завершённых рабочих дней обновлено.')}`
+    : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Завершённых рабочих дней пока нет.')
   const canJumpToToday = Boolean(onJumpToToday)
   const selectedDayDrawer = isFocusPanelOpen && selectedDay && typeof document !== 'undefined'
     ? createPortal(
@@ -604,13 +618,13 @@ export function MemberMonthlyUpdateCalendarBoard({
             >
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
-                  {lt('Focus Day')}
+                  {tr('Focus Day', 'Fokus kuni', 'Фокусный день')}
                 </p>
                 <h3 className="mt-1 truncate text-lg font-semibold tracking-tight text-[var(--foreground)]">
                   {selectedLabel}
                 </h3>
                 <p className="mt-1 text-xs text-[var(--muted-strong)]">
-                  {selectedDay ? getDaySummary(selectedDay) : lt('Pick a date from the month grid to inspect details.')}
+                  {selectedDay ? getDaySummary(selectedDay) : tr('Pick a date from the month grid to inspect details.', 'Tafsilotlarni korish uchun oy setkasidan sana tanlang.', 'Выберите дату из сетки месяца, чтобы посмотреть детали.')}
                 </p>
               </div>
 
@@ -659,14 +673,14 @@ export function MemberMonthlyUpdateCalendarBoard({
                         <Badge variant="secondary">{getLongWeekday(selectedDay)}</Badge>
                       ) : null}
                       {selectedDay.date === todayKey ? (
-                        <Badge variant="blue">{lt('Today')}</Badge>
+                        <Badge variant="blue">{tr('Today', 'Bugun', 'Сегодня')}</Badge>
                       ) : null}
                       {selectedDay.hasUpdate ? (
                         <Badge variant="violet">{lt('Payload available')}</Badge>
                       ) : null}
                       {selectedDay.workdayOverride ? (
                         <Badge variant={isHolidayDay(selectedDay) ? 'blue' : 'warning'}>
-                          {getSpecialDayLabel(selectedDay) ?? lt('Special day')}
+                          {getSpecialDayLabel(selectedDay) ?? tr('Special day', 'Maxsus kun', 'Особый день')}
                         </Badge>
                       ) : null}
                     </div>
@@ -680,19 +694,19 @@ export function MemberMonthlyUpdateCalendarBoard({
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{lt('Status')}</p>
+                  <p>{tr('Status', 'Holat', 'Статус')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {getStatusLabel(selectedDay.status, selectedDay)}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{lt('Submission')}</p>
+                  <p>{tr('Submission', 'Yuborish', 'Отправка')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
-                    {selectedDay.hasUpdate ? lt('Available') : lt('None')}
+                    {selectedDay.hasUpdate ? tr('Available', 'Mavjud', 'Доступно') : tr('None', "Yo'q", 'Нет')}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{lt('Validation')}</p>
+                  <p>{tr('Validation', 'Validatsiya', 'Валидация')}</p>
                   <p
                     className={cn(
                       'mt-1 font-medium',
@@ -707,19 +721,19 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{lt('Entries')}</p>
+                  <p>{tr('Entries', 'Yozuvlar', 'Записи')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {getEntryCount(selectedDay)}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{tr('Check in time', 'Kirish vaqti', 'Vremya vhoda')}</p>
+                  <p>{tr('Check in time', 'Kirish vaqti', 'Время входа')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {formatWorkTime(selectedDay.checkInTime)}
                   </p>
                 </div>
                 <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
-                  <p>{tr('Check out time', 'Chiqish vaqti', 'Vremya vykhoda')}</p>
+                  <p>{tr('Check out time', 'Chiqish vaqti', 'Время выхода')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {formatWorkTime(selectedDay.checkOutTime)}
                   </p>
@@ -734,14 +748,16 @@ export function MemberMonthlyUpdateCalendarBoard({
                         {selectedDay.hasUpdate ? lt('Update Content') : lt('Special Day')}
                       </p>
                       <h4 className="mt-2 text-base font-semibold tracking-tight text-[var(--foreground)]">
-                        {selectedDay.hasUpdate ? lt('Returned content for this date') : lt('Details for this date')}
+                        {selectedDay.hasUpdate
+                          ? tr('Returned content for this date', 'Bu sana uchun qaytgan kontent', 'Контент, возвращённый для этой даты')
+                          : tr('Details for this date', 'Bu sana uchun tafsilotlar', 'Детали для этой даты')}
                       </h4>
                     </div>
                     {selectedDay.hasUpdate ? (
                       <Badge variant="blue">{lt('API payload')}</Badge>
                     ) : selectedDay.workdayOverride ? (
                       <Badge variant={isHolidayDay(selectedDay) ? 'blue' : 'warning'}>
-                        {getSpecialDayLabel(selectedDay) ?? lt('Special day')}
+                        {getSpecialDayLabel(selectedDay) ?? tr('Special day', 'Maxsus kun', 'Особый день')}
                       </Badge>
                     ) : null}
                   </div>
@@ -754,7 +770,7 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                   {selectedDay.isValid === false ? (
                     <p className="mt-3 text-xs text-amber-600 dark:text-amber-300">
-                      {lt('This update was returned with an invalid flag by the API.')}
+                      {tr('This update was returned with an invalid flag by the API.', "Bu update API dan noto'g'ri flag bilan qaytdi.", 'Это обновление было возвращено API с некорректным флагом.')}
                     </p>
                   ) : null}
                 </div>
@@ -775,23 +791,23 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                   <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
-                    {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Kalendary')}
+                    {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Календарь')}
                   </h3>
                   <p className="mt-1.5 text-[13px] text-[var(--muted)]">
                 {tr(
                   'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
                   'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
-                  'Mesyachnaya doska po referensu s plotnymi kartami dnei, liniyami nedel i proverkoj v odin klik.',
+                  'Ежемесячная доска по референсу с плотными карточками дней, недельными линиями и проверкой в один клик.',
                 )}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="success" dot>{counts.submitted} {lt('submitted')}</Badge>
-              <Badge variant="danger" dot>{counts.missing} {lt('missing')}</Badge>
-              {counts.holiday > 0 ? <Badge variant="blue" dot>{counts.holiday} {lt('holidays')}</Badge> : null}
-              <Badge variant="warning" dot>{counts.offDay} {lt('off days')}</Badge>
-              {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} {lt('upcoming')}</Badge> : null}
+              <Badge variant="success" dot>{counts.submitted} {tr('Submitted', 'Topshirildi', 'Обновлено')}</Badge>
+              <Badge variant="danger" dot>{counts.missing} {tr('Missing', 'Yetishmadi', 'Пропущено')}</Badge>
+              {counts.holiday > 0 ? <Badge variant="blue" dot>{counts.holiday} {tr('Holidays', 'Bayramlar', 'Праздники')}</Badge> : null}
+              <Badge variant="warning" dot>{counts.offDay} {tr('Off days', 'Dam olish kunlari', 'Выходные')}</Badge>
+              {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} {tr('Upcoming', 'Yaqinlashmoqda', 'Скоро')}</Badge> : null}
             </div>
           </div>
         </div>
@@ -829,7 +845,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                     {tr(
                       'Dense monthly board for fast scanning, modeled after the reference calendar layout.',
                       'Tez korib chiqish uchun zich oylik taxta, referens kalendar asosida tuzilgan.',
-                      'Plotnaya mesyachnaya doska dlya bystrogo prosmotra, postroennaya po etalonnomu kalendaryu.',
+                      'Плотная ежемесячная доска для быстрого просмотра, построенная по эталонному календарю.',
                     )}
                   </p>
                 </div>
@@ -913,16 +929,16 @@ export function MemberMonthlyUpdateCalendarBoard({
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                   <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.submitted} {tr('updated', 'yangilangan', 'obnovleno')}
+                    {counts.submitted} {tr('Updated', 'Yangilangan', 'Обновлено')}
                   </Badge>
                   <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {counts.missing} {tr('missed', 'otib yuborilgan', 'propushcheno')}
+                    {counts.missing} {tr('Missed', 'Otib yuborilgan', 'Пропущено')}
                   </Badge>
                   <Badge variant="secondary" className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
-                    {attentionDays} {tr('attention', 'etibor', 'vnimanie')}
+                    {attentionDays} {tr('Attention', "E'tibor", 'Внимание')}
                   </Badge>
                   <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
-                    <span className="truncate">{tr('Next', 'Keyingi', 'Sleduyushchii')}: {nextDayLabel}</span>
+                    <span className="truncate">{tr('Next', 'Keyingi', 'Следующий')}: {nextDayLabel}</span>
                   </Badge>
                 </div>
 
@@ -1005,7 +1021,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 : 'hover:-translate-y-[1px] hover:border-white/14',
                               isToday && !isSelected && 'border-sky-400 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] shadow-[inset_0_0_0_1px_rgba(96,165,250,0.92),0_0_0_3px_rgba(191,219,254,0.78),0_14px_30px_rgba(59,130,246,0.18)] dark:border-[var(--border)] dark:bg-transparent dark:shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
                             )}
-                            title={`${isSelected ? `${lt('Selected')}: ` : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
+                            title={`${isSelected ? `${tr('Selected', 'Tanlangan', 'Выбрано')}: ` : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
                           >
                             <span className={cn('absolute inset-x-3.5 top-0 h-[2px] rounded-full', getDayAccentClass(day))} />
                             <span className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_42%)] opacity-0 transition group-hover:opacity-100" />
@@ -1044,7 +1060,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                      {lt('In')}
+                                      {tr('In', 'Kirish', 'Вход')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
                                       {formatWorkTime(day.checkInTime)}
@@ -1052,13 +1068,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                                   </div>
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
-                                      <span>{lt('Out')}</span>
+                                      <span>{tr('Out', 'Chiqish', 'Выход')}</span>
                                     </p>
                                     {isCheckoutMissing ? (
                                       <p
                                         className="mt-1 inline-flex w-full items-center justify-center text-[18px] leading-none"
-                                        aria-label={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
-                                        title={tr('Missing checkout', 'Checkout yoq', 'Net checkout')}
+                                        aria-label={tr('Missing checkout', "Checkout yo'q", 'Нет отметки выхода')}
+                                        title={tr('Missing checkout', "Checkout yo'q", 'Нет отметки выхода')}
                                       >
                                         🚷
                                       </p>
@@ -1102,23 +1118,23 @@ export function MemberMonthlyUpdateCalendarBoard({
             <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-[var(--muted)]">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.55)]" />
-                {lt('Selected')}
+                {tr('Selected', 'Tanlangan', 'Выбрано')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_8px_rgba(125,211,252,0.55)]" />
-                {lt('Today')}
+                {tr('Today', 'Bugun', 'Сегодня')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
-                {lt('Updated')}
+                {tr('Updated', 'Yangilangan', 'Обновлено')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-rose-500/30 bg-rose-500/20" />
-                {lt('Missed')}
+                {tr('Missed', 'Otib yuborilgan', 'Пропущено')}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-sm border border-[var(--border)] bg-white dark:border-white/10 dark:bg-white/4" />
-                {lt('Open or upcoming')}
+                {tr('Open or upcoming', 'Ochiq yoki yaqinlashayotgan', 'Открыто или скоро')}
               </span>
             </div>
           </div>
