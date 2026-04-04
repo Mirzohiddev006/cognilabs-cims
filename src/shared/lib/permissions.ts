@@ -1,8 +1,12 @@
 import type { CurrentUser } from '../api/types'
 import { navigationItems, type NavigationAudience, type NavigationItem } from '../config/navigation'
 
-export function hasProjectsFullAccess(user: CurrentUser | null) {
-  return Boolean(user)
+export function canReadManagedProjects(user: CurrentUser | null) {
+  if (!user) {
+    return false
+  }
+
+  return user.role === 'CEO' || user.role === 'Admin'
 }
 
 export function hasPermission(user: CurrentUser | null, permissionKey?: string) {
