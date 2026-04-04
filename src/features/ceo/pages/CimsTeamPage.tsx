@@ -1,4 +1,5 @@
 import { ArrowUpRight, Bot, Copy, Instagram, Send, Sparkles } from 'lucide-react'
+import { useTheme } from '../../../app/hooks/useTheme'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { useToast } from '../../../shared/toast/useToast'
 import { Button } from '../../../shared/ui/button'
@@ -63,22 +64,28 @@ function withAlpha(hex: string, alpha: number) {
 
 const accentThemes = {
   blue: {
-    color: '#2576EF',
+    lightColor: '#2576EF',
+    darkColor: '#60A5FA',
   },
   violet: {
-    color: '#8A3AED',
+    lightColor: '#8A3AED',
+    darkColor: '#A78BFA',
   },
   amber: {
-    color: '#B45309',
+    lightColor: '#B45309',
+    darkColor: '#FBBF24',
   },
   emerald: {
-    color: '#289075',
+    lightColor: '#289075',
+    darkColor: '#34D399',
   },
 } as const
 
 export function CimsTeamPage() {
+  const { theme } = useTheme()
   const { t } = useLocale()
   const { showToast } = useToast()
+  const isLight = theme === 'light'
 
   async function handleCopyLink(link: string, label: string) {
     try {
@@ -107,25 +114,29 @@ export function CimsTeamPage() {
           const eyebrow = t(link.eyebrowKey)
           const note = t(link.noteKey)
           const category = t(link.categoryKey)
-          const accentColor = accent.color
-          const cardBorder = withAlpha(accentColor, 0.26)
-          const cardSurface = withAlpha(accentColor, 0.08)
-          const cardGlow = withAlpha(accentColor, 0.10)
-          const iconSurface = withAlpha(accentColor, 0.12)
-          const iconBorder = withAlpha(accentColor, 0.24)
-          const chipSurface = withAlpha(accentColor, 0.10)
-          const chipBorder = withAlpha(accentColor, 0.26)
-          const actionSurface = withAlpha(accentColor, 0.14)
-          const actionBorder = withAlpha(accentColor, 0.28)
+          const accentColor = isLight ? accent.lightColor : accent.darkColor
+          const cardBorder = withAlpha(accentColor, isLight ? 0.26 : 0.32)
+          const cardSurface = withAlpha(accentColor, isLight ? 0.08 : 0.18)
+          const cardGlow = withAlpha(accentColor, isLight ? 0.10 : 0.14)
+          const iconSurface = withAlpha(accentColor, isLight ? 0.12 : 0.16)
+          const iconBorder = withAlpha(accentColor, isLight ? 0.24 : 0.28)
+          const chipSurface = withAlpha(accentColor, isLight ? 0.10 : 0.14)
+          const chipBorder = withAlpha(accentColor, isLight ? 0.26 : 0.30)
+          const actionSurface = withAlpha(accentColor, isLight ? 0.14 : 0.12)
+          const actionBorder = withAlpha(accentColor, isLight ? 0.28 : 0.30)
           const topLine = `linear-gradient(90deg, ${withAlpha(accentColor, 0.54)} 0%, ${withAlpha(accentColor, 0.22)} 58%, transparent 86%)`
-          const cardBackground = `linear-gradient(180deg, ${cardSurface} 0%, rgba(255,255,255,0.98) 100%)`
-          const cardShadow = `inset 0 0 0 1px ${withAlpha(accentColor, 0.08)}, 0 18px 42px rgba(15,23,42,0.10), 0 0 32px ${cardGlow}`
+          const cardBackground = isLight
+            ? `linear-gradient(180deg, ${cardSurface} 0%, rgba(255,255,255,0.98) 100%)`
+            : `linear-gradient(180deg, ${cardSurface} 0%, rgba(18,22,32,0.98) 56%, rgba(10,13,20,0.98) 100%)`
+          const cardShadow = isLight
+            ? `inset 0 0 0 1px ${withAlpha(accentColor, 0.08)}, 0 18px 42px rgba(15,23,42,0.10), 0 0 32px ${cardGlow}`
+            : `inset 0 0 0 1px ${withAlpha(accentColor, 0.10)}, 0 18px 42px rgba(0,0,0,0.34), 0 0 32px ${cardGlow}`
 
           return (
             <Card
               key={link.href}
               className={cn(
-                'group relative overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 transition-transform duration-200 hover:-translate-y-[2px]',
+                'group relative overflow-hidden rounded-[28px] border p-6 transition-transform duration-200 hover:-translate-y-[2px]',
               )}
               style={{
                 borderColor: cardBorder,
@@ -166,8 +177,8 @@ export function CimsTeamPage() {
               </div>
 
               <div className="mt-6">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)] dark:text-white/48">{t('cims.handle')}</p>
-                <p className="mt-2 break-all font-mono text-[15px] text-[var(--foreground)] dark:text-white/92">{link.handle}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{t('cims.handle')}</p>
+                <p className="mt-2 break-all font-mono text-[15px] text-[var(--foreground)]">{link.handle}</p>
                 <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">{note}</p>
               </div>
 
@@ -190,7 +201,7 @@ export function CimsTeamPage() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="justify-center rounded-[16px] border border-[var(--border)] bg-white text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/78 dark:hover:border-white/14 dark:hover:bg-white/[0.06] dark:hover:text-white"
+                  className="justify-center rounded-[16px] border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)]"
                   leftIcon={<Copy className="h-4 w-4" />}
                   onClick={() => void handleCopyLink(link.href, title)}
                 >
