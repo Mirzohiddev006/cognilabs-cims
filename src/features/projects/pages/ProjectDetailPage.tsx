@@ -16,6 +16,7 @@ import {
   type UserOpenCardRecord,
 } from '../../../shared/api/services/projects.service'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
+import { hasProjectsFullAccess } from '../../../shared/lib/permissions'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { Avatar } from '../components/Avatar'
 import { BoardFormModal } from '../components/BoardFormModal'
@@ -40,7 +41,7 @@ export function ProjectDetailPage() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -62,7 +63,7 @@ export function ProjectDetailPage() {
   }
 
   const id = Number(projectId)
-  const canManageProjects = hasPermission('projects')
+  const canManageProjects = hasProjectsFullAccess(user)
   const isDark = theme === 'dark'
 
   const projectQuery = useAsyncData(

@@ -6,6 +6,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { hasProjectsFullAccess } from '../../../shared/lib/permissions'
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -113,10 +114,10 @@ export function BoardWorkspace({
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
 
-  const canManageProjects = hasPermission('projects')
+  const canManageProjects = hasProjectsFullAccess(user)
   const isEmbedded = mode === 'embedded'
 
   const boardQuery = useAsyncData(

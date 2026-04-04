@@ -1,6 +1,10 @@
 import type { CurrentUser } from '../api/types'
 import { navigationItems, type NavigationAudience, type NavigationItem } from '../config/navigation'
 
+export function hasProjectsFullAccess(user: CurrentUser | null) {
+  return Boolean(user)
+}
+
 export function hasPermission(user: CurrentUser | null, permissionKey?: string) {
   if (!permissionKey) {
     return true

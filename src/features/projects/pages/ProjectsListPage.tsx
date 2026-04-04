@@ -6,6 +6,7 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
+import { hasProjectsFullAccess } from '../../../shared/lib/permissions'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -34,7 +35,7 @@ export function ProjectsListPage() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -57,7 +58,7 @@ export function ProjectsListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isDark = theme === 'dark'
 
-  const canManageProjects = hasPermission('projects')
+  const canManageProjects = hasProjectsFullAccess(user)
   const priorityConfigMap = getPriorityConfig()
 
   const projectsQuery = useAsyncData(

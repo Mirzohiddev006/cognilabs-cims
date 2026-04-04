@@ -9,7 +9,7 @@ import { projectsService } from '../../shared/api/services/projects.service'
 import { env } from '../../shared/config/env'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
-import { getAccessibleNavigation } from '../../shared/lib/permissions'
+import { getAccessibleNavigation, hasProjectsFullAccess } from '../../shared/lib/permissions'
 import { getApiErrorMessage } from '../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../shared/lib/media-url'
 import { useToast } from '../../shared/toast/useToast'
@@ -46,7 +46,7 @@ export function AppSidebar() {
   const { t } = useLocale()
   const { theme } = useTheme()
   const { showToast } = useToast()
-  const { user, hasPermission, refreshUser } = useAuth()
+  const { user, refreshUser } = useAuth()
   const isLight = theme === 'light'
   const isMobileViewport =
     typeof window !== 'undefined'
@@ -57,7 +57,7 @@ export function AppSidebar() {
   const sidebarNavigation = useMemo(() => visibleNavigation, [visibleNavigation])
   const hasProjectsAccess = sidebarNavigation.some((item) => item.to === '/projects')
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
-  const canManageProjects = hasPermission('projects')
+  const canManageProjects = hasProjectsFullAccess(user)
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
   const [isEditingMember, setIsEditingMember] = useState(false)
   const [memberForm, setMemberForm] = useState<MemberProfileFormState>({
