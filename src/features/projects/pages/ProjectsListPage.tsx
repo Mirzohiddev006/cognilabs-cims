@@ -6,7 +6,6 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
-import { canReadManagedProjects } from '../../../shared/lib/permissions'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -35,7 +34,7 @@ export function ProjectsListPage() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -58,8 +57,7 @@ export function ProjectsListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isDark = theme === 'dark'
 
-  const canManageProjects = hasPermission('projects')
-  const canReadAllProjects = canReadManagedProjects(user)
+  const canManageProjects = Boolean(user)
   const priorityConfigMap = getPriorityConfig()
 
   const projectsQuery = useAsyncData(
@@ -68,13 +66,9 @@ export function ProjectsListPage() {
         throw new Error('User session is unavailable')
       }
 
-      if (canReadAllProjects) {
-        return projectsService.listProjects()
-      }
-
-      return projectsService.listUserOpenProjects(user.id)
+      return projectsService.listReadableProjects(user.id)
     },
-    [canReadAllProjects, user?.id],
+    [user?.id],
     { enabled: Boolean(user) },
   )
 
@@ -118,19 +112,15 @@ export function ProjectsListPage() {
         return []
       }
 
-      if (!canReadAllProjects) {
-        return projects
-      }
-
       const details = await Promise.allSettled(
         projects.map((project) => (
-          projectsService.getProject(project.id)
+          projectsService.getReadableProjectDetail(project.id, user.id)
         )),
       )
 
       return details.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
     },
-    [canReadAllProjects, projectIdsKey, user?.id],
+    [projectIdsKey, user?.id],
     { enabled: projects.length > 0 && Boolean(user) },
   )
 
@@ -363,9 +353,7 @@ export function ProjectsListPage() {
     }
 
     try {
-      const detail = canReadAllProjects
-        ? await projectsService.getProject(project.id)
-        : await projectsService.getUserOpenProjectDetail(project.id, user.id)
+      const detail = await projectsService.getReadableProjectDetail(project.id, user.id)
       setEditProject(detail)
     } catch {
       showToast({ title: lt('Failed to load project members'), tone: 'error' })

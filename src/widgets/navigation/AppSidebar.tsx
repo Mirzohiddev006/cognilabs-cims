@@ -9,7 +9,7 @@ import { projectsService } from '../../shared/api/services/projects.service'
 import { env } from '../../shared/config/env'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
-import { canReadManagedProjects, getAccessibleNavigation } from '../../shared/lib/permissions'
+import { getAccessibleNavigation } from '../../shared/lib/permissions'
 import { getApiErrorMessage } from '../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../shared/lib/media-url'
 import { useToast } from '../../shared/toast/useToast'
@@ -57,7 +57,6 @@ export function AppSidebar() {
   const sidebarNavigation = useMemo(() => visibleNavigation, [visibleNavigation])
   const hasProjectsAccess = sidebarNavigation.some((item) => item.to === '/projects')
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
-  const canReadAllProjects = canReadManagedProjects(user)
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
   const [isEditingMember, setIsEditingMember] = useState(false)
   const [memberForm, setMemberForm] = useState<MemberProfileFormState>({
@@ -81,12 +80,8 @@ export function AppSidebar() {
   const getNavigationLabel = (path: string, fallback: string) => t(`nav.${path}.label`, fallback)
   const getNavigationGroup = (path: string, fallback: string) => t(`nav.${path}.group`, fallback)
   const projectsQuery = useAsyncData(
-    () => (
-      canReadAllProjects || !user
-        ? projectsService.listProjects()
-        : projectsService.listUserOpenProjects(user.id)
-    ),
-    [canReadAllProjects, hasProjectsAccess, projectsRefreshKey, user?.id],
+    () => projectsService.listReadableProjects(user?.id),
+    [hasProjectsAccess, projectsRefreshKey, user?.id],
     { enabled: hasProjectsAccess && Boolean(user) },
   )
   const sidebarProjects = useMemo(

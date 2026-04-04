@@ -317,6 +317,236 @@ function normalizeBoardDetail(board: ApiBoardDetail): BoardDetail {
   }
 }
 
+function pickString(...values: Array<string | null | undefined>) {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      return value
+    }
+  }
+
+  return ''
+}
+
+function pickNullableString(...values: Array<string | null | undefined>) {
+  const picked = pickString(...values)
+  return picked || null
+}
+
+function mergeUserSummary(left?: UserSummary | null, right?: UserSummary | null): UserSummary {
+  return {
+    id: right?.id ?? left?.id ?? 0,
+    name: pickString(right?.name, left?.name),
+    surname: pickString(right?.surname, left?.surname),
+    email: pickString(right?.email, left?.email),
+    job_title: pickNullableString(right?.job_title, left?.job_title),
+    profile_image: pickNullableString(right?.profile_image, left?.profile_image),
+  }
+}
+
+function mergeUserSummaryLists(...groups: Array<UserSummary[] | null | undefined>) {
+  const users = new Map<number, UserSummary>()
+
+  for (const group of groups) {
+    for (const user of group ?? []) {
+      if (user.id <= 0) {
+        continue
+      }
+
+      const current = users.get(user.id)
+      users.set(user.id, current ? mergeUserSummary(current, user) : user)
+    }
+  }
+
+  return Array.from(users.values()).sort((left, right) =>
+    `${left.name} ${left.surname}`.localeCompare(`${right.name} ${right.surname}`),
+  )
+}
+
+function mergeCardImages(...groups: Array<CardImage[] | null | undefined>) {
+  const images = new Map<string, CardImage>()
+
+  for (const group of groups) {
+    for (const image of group ?? []) {
+      const key = image.id > 0 ? `id:${image.id}` : `url:${image.url}`
+      const current = images.get(key)
+
+      images.set(key, current
+        ? {
+            id: image.id || current.id,
+            url: pickString(image.url, current.url),
+            url_path: pickNullableString(image.url_path, current.url_path) ?? undefined,
+            filename: pickString(image.filename, current.filename),
+          }
+        : image)
+    }
+  }
+
+  return Array.from(images.values())
+}
+
+function mergeCardRecord(left: CardRecord, right: CardRecord): CardRecord {
+  return {
+    id: right.id || left.id,
+    title: pickString(right.title, left.title),
+    description: pickNullableString(right.description, left.description),
+    order: right.order ?? left.order,
+    priority: right.priority ?? left.priority ?? null,
+    assignee: right.assignee || left.assignee ? mergeUserSummary(left.assignee, right.assignee) : null,
+    assignee_id: right.assignee_id ?? left.assignee_id ?? null,
+    due_date: pickNullableString(right.due_date, left.due_date),
+    column_id: right.column_id || left.column_id,
+    created_by: mergeUserSummary(left.created_by, right.created_by),
+    created_at: pickString(left.created_at, right.created_at),
+    updated_at: pickString(right.updated_at, left.updated_at),
+    images: mergeCardImages(left.images, right.images),
+    files: mergeCardImages(left.files, right.files),
+  }
+}
+
+function mergeCardLists(...groups: Array<CardRecord[] | null | undefined>) {
+  const cards = new Map<number, CardRecord>()
+
+  for (const group of groups) {
+    for (const card of group ?? []) {
+      if (card.id <= 0) {
+        continue
+      }
+
+      const current = cards.get(card.id)
+      cards.set(card.id, current ? mergeCardRecord(current, card) : card)
+    }
+  }
+
+  return Array.from(cards.values()).sort((left, right) =>
+    left.order - right.order || right.updated_at.localeCompare(left.updated_at) || left.id - right.id,
+  )
+}
+
+function mergeColumnRecord(left: ColumnRecord, right: ColumnRecord): ColumnRecord {
+  return {
+    id: right.id || left.id,
+    name: pickString(right.name, left.name),
+    color: pickNullableString(right.color, left.color),
+    order: right.order ?? left.order,
+    board_id: right.board_id || left.board_id,
+    cards: mergeCardLists(left.cards, right.cards),
+  }
+}
+
+function mergeColumnLists(...groups: Array<ColumnRecord[] | null | undefined>) {
+  const columns = new Map<number, ColumnRecord>()
+
+  for (const group of groups) {
+    for (const column of group ?? []) {
+      if (column.id <= 0) {
+        continue
+      }
+
+      const current = columns.get(column.id)
+      columns.set(column.id, current ? mergeColumnRecord(current, column) : column)
+    }
+  }
+
+  return Array.from(columns.values()).sort((left, right) => left.order - right.order || left.id - right.id)
+}
+
+function mergeBoardRecord(left: BoardRecord, right: BoardRecord): BoardRecord {
+  return {
+    id: right.id || left.id,
+    name: pickString(right.name, left.name),
+    description: pickNullableString(right.description, left.description),
+    project_id: right.project_id || left.project_id,
+    created_by: mergeUserSummary(left.created_by, right.created_by),
+    is_archived: left.is_archived && right.is_archived,
+    created_at: pickString(left.created_at, right.created_at),
+    updated_at: pickString(right.updated_at, left.updated_at),
+  }
+}
+
+function mergeBoardDetailRecord(left: BoardDetail, right: BoardDetail): BoardDetail {
+  return {
+    ...mergeBoardRecord(left, right),
+    columns: mergeColumnLists(left.columns, right.columns),
+    files: mergeCardImages(left.files, right.files).map((file) => ({
+      id: file.id,
+      url: file.url,
+      url_path: file.url_path,
+      filename: file.filename,
+      created_at: '',
+    })),
+  }
+}
+
+function mergeBoardRecordLists(...groups: Array<BoardRecord[] | null | undefined>) {
+  const boards = new Map<number, BoardRecord>()
+
+  for (const group of groups) {
+    for (const board of group ?? []) {
+      if (board.id <= 0) {
+        continue
+      }
+
+      const current = boards.get(board.id)
+
+      if (!current) {
+        boards.set(board.id, board)
+        continue
+      }
+
+      boards.set(board.id, mergeBoardRecord(current, board))
+    }
+  }
+
+  return Array.from(boards.values()).sort((left, right) =>
+    right.updated_at.localeCompare(left.updated_at) || right.id - left.id)
+}
+
+function mergeProjectRecord(left: ProjectRecord, right: ProjectRecord): ProjectRecord {
+  return {
+    id: right.id || left.id,
+    project_name: pickString(right.project_name, left.project_name),
+    project_description: pickNullableString(right.project_description, left.project_description),
+    project_url: pickNullableString(right.project_url, left.project_url),
+    image: pickNullableString(right.image, left.image),
+    created_by: mergeUserSummary(left.created_by, right.created_by),
+    members: mergeUserSummaryLists(left.members, right.members),
+    boards_count: Math.max(left.boards_count, right.boards_count),
+    created_at: pickString(left.created_at, right.created_at),
+    updated_at: pickString(right.updated_at, left.updated_at),
+  }
+}
+
+function mergeProjectDetailRecord(left: ProjectDetail, right: ProjectDetail): ProjectDetail {
+  const boards = mergeBoardRecordLists(left.boards, right.boards)
+
+  return {
+    ...mergeProjectRecord(left, right),
+    boards_count: Math.max(left.boards_count, right.boards_count, boards.length),
+    boards,
+  }
+}
+
+function flattenBoardCards(project: Pick<ProjectRecord, 'id' | 'project_name'>, boards: BoardDetail[]): UserOpenCardRecord[] {
+  const cards: UserOpenCardRecord[] = []
+
+  for (const board of boards) {
+    for (const column of board.columns) {
+      for (const card of column.cards) {
+        cards.push({
+          ...card,
+          board_id: board.id,
+          project_id: project.id,
+          project_name: project.project_name,
+          board_name: board.name,
+          column_name: column.name,
+        })
+      }
+    }
+  }
+
+  return cards
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const projectsService = {
@@ -339,6 +569,36 @@ export const projectsService = {
     }))
   },
 
+  async listReadableProjects(preferredUserId?: number | null) {
+    const users = await this.getAllUsers()
+    const candidateUserIds = Array.from(new Set(
+      [preferredUserId ?? null, ...users.map((user) => user.id)]
+        .filter((userId): userId is number => typeof userId === 'number' && Number.isFinite(userId) && userId > 0),
+    ))
+
+    const results = await Promise.allSettled(candidateUserIds.map((userId) => this.listUserOpenProjects(userId)))
+    const projects = new Map<number, ProjectRecord>()
+
+    for (const result of results) {
+      if (result.status !== 'fulfilled') {
+        continue
+      }
+
+      for (const project of result.value.projects) {
+        const current = projects.get(project.id)
+        projects.set(project.id, current ? mergeProjectRecord(current, project) : project)
+      }
+    }
+
+    const mergedProjects = Array.from(projects.values()).sort((left, right) =>
+      right.updated_at.localeCompare(left.updated_at) || left.project_name.localeCompare(right.project_name))
+
+    return {
+      projects: mergedProjects,
+      total_count: mergedProjects.length,
+    }
+  },
+
   getAllUsers() {
     return request<UserSummary[]>({ path: '/projects/users/all' })
   },
@@ -359,6 +619,35 @@ export const projectsService = {
     return request<ApiProjectDetail>({
       path: `/open/projects/${projectId}/detail/user/${userId}`,
     }).then(normalizeProjectDetail)
+  },
+
+  async getReadableProjectDetail(projectId: number, preferredUserId?: number | null) {
+    const users = await this.getAllUsers()
+    const candidateUserIds = Array.from(new Set(
+      [preferredUserId ?? null, ...users.map((user) => user.id)]
+        .filter((userId): userId is number => typeof userId === 'number' && Number.isFinite(userId) && userId > 0),
+    ))
+
+    const accessResults = await Promise.allSettled(candidateUserIds.map((userId) => this.listUserOpenProjects(userId)))
+    const readableUserIds = candidateUserIds.filter((_, index) => {
+      const result = accessResults[index]
+      return result?.status === 'fulfilled' && result.value.projects.some((project) => project.id === projectId)
+    })
+
+    const details = await Promise.allSettled(readableUserIds.map((userId) => this.getUserOpenProjectDetail(projectId, userId)))
+    const mergedDetail = details.reduce<ProjectDetail | null>((current, result) => {
+      if (result.status !== 'fulfilled') {
+        return current
+      }
+
+      return current ? mergeProjectDetailRecord(current, result.value) : result.value
+    }, null)
+
+    if (!mergedDetail) {
+      throw new Error('Project not found in readable projects')
+    }
+
+    return mergedDetail
   },
 
   updateProject(projectId: number, formData: FormData) {
@@ -391,6 +680,43 @@ export const projectsService = {
     }))
   },
 
+  async getReadableProjectBoards(projectId: number, preferredUserId?: number | null) {
+    const users = await this.getAllUsers()
+    const candidateUserIds = Array.from(new Set(
+      [preferredUserId ?? null, ...users.map((user) => user.id)]
+        .filter((userId): userId is number => typeof userId === 'number' && Number.isFinite(userId) && userId > 0),
+    ))
+
+    const accessResults = await Promise.allSettled(candidateUserIds.map((userId) => this.listUserOpenProjects(userId)))
+    const readableUserIds = candidateUserIds.filter((_, index) => {
+      const result = accessResults[index]
+      return result?.status === 'fulfilled' && result.value.projects.some((project) => project.id === projectId)
+    })
+
+    const boardResults = await Promise.allSettled(readableUserIds.map((userId) => this.listUserOpenProjectBoards(projectId, userId)))
+    const boards = new Map<number, BoardDetail>()
+
+    for (const result of boardResults) {
+      if (result.status !== 'fulfilled') {
+        continue
+      }
+
+      for (const board of result.value.boards) {
+        const current = boards.get(board.id)
+        boards.set(board.id, current ? mergeBoardDetailRecord(current, board) : board)
+      }
+    }
+
+    const mergedBoards = Array.from(boards.values()).sort((left, right) =>
+      right.updated_at.localeCompare(left.updated_at) || right.id - left.id)
+
+    return {
+      project_id: projectId,
+      boards: mergedBoards,
+      total_count: mergedBoards.length,
+    }
+  },
+
   async getUserOpenBoardDetail(boardId: number, userId: number, projectId?: number | null) {
     const scopedProjectIds = typeof projectId === 'number' && Number.isFinite(projectId) && projectId > 0
       ? [projectId]
@@ -406,6 +732,23 @@ export const projectsService = {
     }
 
     throw new Error('Board not found in open user projects')
+  },
+
+  async getReadableBoardDetail(boardId: number, projectId?: number | null, preferredUserId?: number | null) {
+    const scopedProjectIds = typeof projectId === 'number' && Number.isFinite(projectId) && projectId > 0
+      ? [projectId]
+      : (await this.listReadableProjects(preferredUserId)).projects.map((project) => project.id)
+
+    for (const nextProjectId of scopedProjectIds) {
+      const response = await this.getReadableProjectBoards(nextProjectId, preferredUserId)
+      const matchedBoard = response.boards.find((board) => board.id === boardId)
+
+      if (matchedBoard) {
+        return matchedBoard
+      }
+    }
+
+    throw new Error('Board not found in readable projects')
   },
 
   createBoard(projectId: number, payload: { name: string; description?: string }) {
@@ -490,7 +833,36 @@ export const projectsService = {
       ...response,
       cards: Array.isArray(response.cards) ? response.cards.map(normalizeOpenCard) : [],
       total_count: response.total_count ?? (Array.isArray(response.cards) ? response.cards.length : 0),
-    }))
+    })).catch(async () => {
+      const projects = projectId
+        ? (await this.listUserOpenProjects(userId)).projects.filter((project) => project.id === projectId)
+        : (await this.listUserOpenProjects(userId)).projects
+
+      const boardResults = await Promise.allSettled(
+        projects.map((project) => this.listUserOpenProjectBoards(project.id, userId).then((response) => ({
+          project,
+          boards: response.boards,
+        }))),
+      )
+
+      const cards = boardResults.flatMap((result) => {
+        if (result.status !== 'fulfilled') {
+          return []
+        }
+
+        return flattenBoardCards(result.value.project, result.value.boards)
+      })
+
+      return {
+        cards: cards.sort((left, right) =>
+          left.project_name.localeCompare(right.project_name) ||
+          left.board_name.localeCompare(right.board_name) ||
+          left.column_name.localeCompare(right.column_name) ||
+          left.order - right.order ||
+          left.id - right.id),
+        total_count: cards.length,
+      }
+    })
   },
 
   getUserOpenCard(cardId: number, userId: number) {

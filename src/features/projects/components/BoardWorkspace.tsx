@@ -6,7 +6,6 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { canReadManagedProjects } from '../../../shared/lib/permissions'
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -114,11 +113,10 @@ export function BoardWorkspace({
   const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
 
-  const canManageProjects = hasPermission('projects')
-  const canReadAllProjects = canReadManagedProjects(user)
+  const canManageProjects = Boolean(user)
   const isEmbedded = mode === 'embedded'
 
   const boardQuery = useAsyncData(
@@ -127,13 +125,9 @@ export function BoardWorkspace({
         throw new Error('User session is unavailable')
       }
 
-      if (canReadAllProjects) {
-        return projectsService.getBoard(boardId)
-      }
-
-      return projectsService.getUserOpenBoardDetail(boardId, user.id, projectId)
+      return projectsService.getReadableBoardDetail(boardId, projectId, user.id)
     },
-    [boardId, canReadAllProjects, projectId, user?.id],
+    [boardId, projectId, user?.id],
     { enabled: boardId > 0 && Boolean(user) },
   )
 

@@ -16,7 +16,6 @@ import {
   type UserOpenCardRecord,
 } from '../../../shared/api/services/projects.service'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
-import { canReadManagedProjects } from '../../../shared/lib/permissions'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { Avatar } from '../components/Avatar'
 import { BoardFormModal } from '../components/BoardFormModal'
@@ -41,7 +40,7 @@ export function ProjectDetailPage() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const { user, hasPermission } = useAuth()
+  const { user } = useAuth()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -63,8 +62,7 @@ export function ProjectDetailPage() {
   }
 
   const id = Number(projectId)
-  const canManageProjects = hasPermission('projects')
-  const canReadAllProjects = canReadManagedProjects(user)
+  const canManageProjects = Boolean(user)
   const isDark = theme === 'dark'
 
   const projectQuery = useAsyncData(
@@ -73,27 +71,9 @@ export function ProjectDetailPage() {
         throw new Error('User session is unavailable')
       }
 
-      if (canReadAllProjects) {
-        return projectsService.getProject(id)
-      }
-
-      const [projectsResponse, boardsResponse] = await Promise.all([
-        projectsService.listUserOpenProjects(user.id),
-        projectsService.listUserOpenProjectBoards(id, user.id),
-      ])
-
-      const accessibleProject = projectsResponse.projects.find((project) => project.id === id)
-
-      if (!accessibleProject) {
-        throw new Error('Project not found in user open projects')
-      }
-
-      return {
-        ...accessibleProject,
-        boards: boardsResponse.boards,
-      }
+      return projectsService.getReadableProjectDetail(id, user.id)
     },
-    [canReadAllProjects, id, user?.id],
+    [id, user?.id],
     { enabled: !Number.isNaN(id) && Boolean(user) },
   )
 
