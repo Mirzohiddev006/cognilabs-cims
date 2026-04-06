@@ -1,10 +1,21 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../features/auth/hooks/useAuth'
-import { CimsAiWorkspace } from '../../features/ceo/components/CimsAiWorkspace'
+import { CimsAiProvider } from '../../features/ceo/context/CimsAiContext'
 import { translateCurrentLiteral } from '../../shared/i18n/translations'
 import { cn } from '../../shared/lib/cn'
+import { AsyncContentLoader } from '../../shared/ui/async-content-loader'
 import { NavGlyph } from '../navigation/NavGlyph'
+
+async function loadCimsAiWorkspace() {
+  const module = await import('../../features/ceo/components/CimsAiWorkspace')
+
+  return {
+    default: module.CimsAiWorkspace,
+  }
+}
+
+const CimsAiWorkspace = lazy(loadCimsAiWorkspace)
 
 export function CimsAiLauncher() {
   const location = useLocation()
@@ -15,6 +26,10 @@ export function CimsAiLauncher() {
 
   const canUseAi = isAuthenticated && hasPermission('ceo')
   const isAiPage = location.pathname === '/ceo/ai'
+
+  function preloadWorkspace() {
+    void loadCimsAiWorkspace()
+  }
 
   useEffect(() => {
     if (!isOpen) {
@@ -77,7 +92,13 @@ export function CimsAiLauncher() {
       >
         <div className="overflow-hidden rounded-[32px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] shadow-[var(--shadow-xl)] backdrop-blur-2xl">
           <div className="h-[min(84vh,780px)]">
-            <CimsAiWorkspace mode="dialog" />
+            {isOpen ? (
+              <Suspense fallback={<AsyncContentLoader variant="dialog" />}>
+                <CimsAiProvider>
+                  <CimsAiWorkspace mode="dialog" />
+                </CimsAiProvider>
+              </Suspense>
+            ) : null}
           </div>
         </div>
       </div>
@@ -85,7 +106,15 @@ export function CimsAiLauncher() {
       <button
         ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen((current) => !current)}
+        onMouseEnter={preloadWorkspace}
+        onFocus={preloadWorkspace}
+        onClick={() => {
+          if (!isOpen) {
+            preloadWorkspace()
+          }
+
+          setIsOpen((current) => !current)
+        }}
         className="fixed bottom-6 right-4 z-[66] grid h-14 w-14 place-items-center rounded-[20px] border border-blue-400/22 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.28),rgba(15,23,42,0.98))] text-white shadow-[0_18px_60px_rgba(37,99,235,0.24)] transition hover:scale-[1.02] hover:border-blue-300/35 hover:shadow-[0_24px_70px_rgba(37,99,235,0.34)] sm:right-6"
         aria-label={isOpen ? translateCurrentLiteral('Close CIMS AI launcher') : translateCurrentLiteral('Open CIMS AI launcher')}
       >

@@ -10,6 +10,10 @@ import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/form
 
 export type UnknownRecord = Record<string, unknown>
 
+const parsedJsonStringCache = new Map<string, unknown>()
+const estimateEntriesCache = new WeakMap<object, UnknownRecord[]>()
+const normalizedEstimateEntryCache = new WeakMap<UnknownRecord, SalaryEstimateSnapshot>()
+
 function translateSalaryEstimateText(en: string, uz: string, ru: string) {
   const translated = translateCurrentLiteral(en)
 
@@ -272,9 +276,16 @@ export function parseMaybeJson(value: unknown): unknown {
     return value
   }
 
+  if (parsedJsonStringCache.has(trimmed)) {
+    return parsedJsonStringCache.get(trimmed)
+  }
+
   try {
-    return JSON.parse(trimmed) as unknown
+    const parsed = JSON.parse(trimmed) as unknown
+    parsedJsonStringCache.set(trimmed, parsed)
+    return parsed
   } catch {
+    parsedJsonStringCache.set(trimmed, value)
     return value
   }
 }
@@ -934,48 +945,68 @@ function looksLikeEstimateEntry(value: UnknownRecord) {
 export function extractEstimateEntries(payload: unknown): UnknownRecord[] {
   const data = parseMaybeJson(payload)
 
-  if (Array.isArray(data)) {
-    return data.filter(isRecord)
-  }
+  if (data && typeof data === 'object') {
+    const cachedEntries = estimateEntriesCache.get(data as object)
 
-  if (!isRecord(data)) {
-    return []
-  }
-
-  for (const key of [
-    'employees',
-    'members',
-    'items',
-    'results',
-    'data',
-    'salary_estimates',
-    'salaryEstimates',
-    'estimates',
-    'rows',
-  ]) {
-    const candidate = data[key]
-
-    if (Array.isArray(candidate)) {
-      return candidate.filter(isRecord)
+    if (cachedEntries) {
+      return cachedEntries
     }
+  }
 
-    if (isRecord(candidate)) {
-      const nestedItems = Object.values(candidate).filter(isRecord)
+  let resolvedEntries: UnknownRecord[] = []
 
-      if (nestedItems.length > 0) {
-        return nestedItems
+  if (Array.isArray(data)) {
+    resolvedEntries = data.filter(isRecord)
+  } else if (isRecord(data)) {
+    for (const key of [
+      'employees',
+      'members',
+      'items',
+      'results',
+      'data',
+      'salary_estimates',
+      'salaryEstimates',
+      'estimates',
+      'rows',
+    ]) {
+      const candidate = data[key]
+
+      if (Array.isArray(candidate)) {
+        resolvedEntries = candidate.filter(isRecord)
+        break
+      }
+
+      if (isRecord(candidate)) {
+        const nestedItems = Object.values(candidate).filter(isRecord)
+
+        if (nestedItems.length > 0) {
+          resolvedEntries = nestedItems
+          break
+        }
       }
     }
+
+    if (resolvedEntries.length === 0) {
+      resolvedEntries = looksLikeEstimateEntry(data)
+        ? [data]
+        : Object.values(data).filter(isRecord).filter(looksLikeEstimateEntry)
+    }
   }
 
-  if (looksLikeEstimateEntry(data)) {
-    return [data]
+  if (data && typeof data === 'object') {
+    estimateEntriesCache.set(data as object, resolvedEntries)
   }
 
-  return Object.values(data).filter(isRecord).filter(looksLikeEstimateEntry)
+  return resolvedEntries
 }
 
 export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnapshot {
+  const cachedSnapshot = normalizedEstimateEntryCache.get(entry)
+
+  if (cachedSnapshot) {
+    return cachedSnapshot
+  }
+
   const parsedEntry = parseMaybeJson(entry)
 
   if (!isRecord(parsedEntry)) {
@@ -1053,7 +1084,7 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
   const userLabel =
     typeof userId === 'number' && Number.isFinite(userId) ? `User #${userId}` : undefined
 
-  return {
+  const normalizedSnapshot = {
     userId,
     userLabel,
     userName,
@@ -1078,6 +1109,14 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     productivityPercentage,
     qualifiesProductivityBonus: qualifiesProductivityBonus ?? undefined,
   }
+
+  normalizedEstimateEntryCache.set(entry, normalizedSnapshot)
+
+  if (parsedEntry !== entry) {
+    normalizedEstimateEntryCache.set(parsedEntry, normalizedSnapshot)
+  }
+
+  return normalizedSnapshot
 }
 
 export function isEmployeeUser(user: CeoUserRecord) {
@@ -1340,25 +1379,23 @@ export function getEstimateRecordForMember(
     return isRecord(parsedPayload) ? parsedPayload : null
   }
 
-  if (typeof memberId === 'number' && Number.isFinite(memberId) && memberId > 0) {
-    const matchedById = entries.find((entry) => normalizeEstimateEntry(entry).userId === memberId)
-
-    if (matchedById) {
-      return matchedById
-    }
-  }
-
   const normalizedMemberName = memberName?.trim().toLowerCase()
+  const hasMemberId = typeof memberId === 'number' && Number.isFinite(memberId) && memberId > 0
+  let matchedByName: UnknownRecord | null = null
 
-  if (normalizedMemberName) {
-    const matchedByName = entries.find((entry) => normalizeEstimateEntry(entry).userName?.trim().toLowerCase() === normalizedMemberName)
+  for (const entry of entries) {
+    const normalizedEntry = normalizeEstimateEntry(entry)
 
-    if (matchedByName) {
-      return matchedByName
+    if (hasMemberId && normalizedEntry.userId === memberId) {
+      return entry
+    }
+
+    if (!matchedByName && normalizedMemberName && normalizedEntry.userName?.trim().toLowerCase() === normalizedMemberName) {
+      matchedByName = entry
     }
   }
 
-  return entries[0]
+  return matchedByName ?? entries[0]
 }
 
 export function buildSalaryLedgerItems(

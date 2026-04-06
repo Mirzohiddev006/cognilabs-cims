@@ -5,7 +5,6 @@ import { useTheme } from '../hooks/useTheme'
 import { AppShellProvider } from '../providers/AppShellProvider'
 import { AppHeader } from '../../widgets/navigation/AppHeader'
 import { AppSidebar } from '../../widgets/navigation/AppSidebar'
-import { CimsAiProvider } from '../../features/ceo/context/CimsAiContext'
 import { CimsAiLauncher } from '../../widgets/ai/CimsAiLauncher'
 
 function RootLayoutFrame() {
@@ -57,9 +56,7 @@ function RootLayoutFrame() {
 export function RootLayout() {
   return (
     <AppShellProvider>
-      <CimsAiProvider>
-        <RootLayoutFrame />
-      </CimsAiProvider>
+      <RootLayoutFrame />
     </AppShellProvider>
   )
 }

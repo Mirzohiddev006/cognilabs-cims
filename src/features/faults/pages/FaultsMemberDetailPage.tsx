@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type {
@@ -8,7 +8,6 @@ import type {
   MemberMistakeRecord,
 } from '../../../shared/api/types'
 import { membersService } from '../../../shared/api/services/members.service'
-import { projectsService } from '../../../shared/api/services/projects.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -19,10 +18,10 @@ import { Card } from '../../../shared/ui/card'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
+import { AsyncContentLoader } from '../../../shared/ui/async-content-loader'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useAuth } from '../../auth/hooks/useAuth'
-import { CompensationPolicyDrawer } from '../components/CompensationPolicyDrawer'
 import {
   DeliveryBonusSection,
   MistakeIncidentSection,
@@ -53,6 +52,14 @@ import {
   parseMaybeJson,
   resolveRecordDisplayName,
 } from '../lib/salaryEstimates'
+
+const CompensationPolicyDrawer = lazy(async () => {
+  const module = await import('../components/CompensationPolicyDrawer')
+
+  return {
+    default: module.CompensationPolicyDrawer,
+  }
+})
 
 type FaultsMemberDetailPageMode = 'salary-detail' | 'member-updates'
 
@@ -288,23 +295,32 @@ export function FaultsMemberDetailPage({
   const backTarget = isMemberUpdatesMode ? '/member/dashboard' : `/faults?year=${year}&month=${month}`
   const topHeaderEyebrow = isMemberUpdatesMode ? lt('My Update Detail') : lt('CEO Salary Detail')
   const showCompensationActions = !isMemberUpdatesMode
+  const needsMistakeSupportData = showCompensationActions && isMistakeDialogOpen
+  const needsDeliveryBonusSupportData = showCompensationActions && isDeliveryBonusDialogOpen
+  const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
 
   const reviewerOptionsQuery = useAsyncData(
     () => updateTrackingService.workdayOverrideMemberOptions(),
     [],
-    { enabled: showCompensationActions },
+    { enabled: needsMistakeSupportData },
   )
   const projectsQuery = useAsyncData(
-    () => projectsService.listProjects(),
+    async () => {
+      const { projectsService } = await import('../../../shared/api/services/projects.service')
+      return projectsService.listProjects()
+    },
     [],
-    { enabled: showCompensationActions },
+    { enabled: needsProjectSupportData },
   )
   const allUsersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
+    async () => {
+      const { projectsService } = await import('../../../shared/api/services/projects.service')
+      return projectsService.getAllUsers()
+    },
     [],
-    { enabled: showCompensationActions },
+    { enabled: needsMistakeSupportData },
   )
-  const reviewerOptions = (allUsersQuery.data?.length
+  const reviewerOptionsRaw = (allUsersQuery.data?.length
     ? allUsersQuery.data.map((user) => ({
         value: String(user.id),
         label: `${user.name} ${user.surname}`.trim() || user.email || `${tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')} #${user.id}`,
@@ -313,17 +329,20 @@ export function FaultsMemberDetailPage({
         value: String(member.id),
         label: member.full_name || `${member.name} ${member.surname}`.trim() || `${tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')} #${member.id}`,
       })))
-  const projectOptions = [
+  const projectOptionsRaw = [
     { value: '0', label: tr('No project', "Loyiha yo'q", 'Без проекта') },
     ...((projectsQuery.data?.projects ?? []).map((project) => ({
       value: String(project.id),
       label: project.project_name,
     }))),
   ]
-  const defaultReviewerId =
-    reviewerOptions.find((option) => Number(option.value) === currentUser?.id)?.value ??
-    reviewerOptions[0]?.value ??
+  const defaultReviewerIdRaw =
+    reviewerOptionsRaw.find((option) => Number(option.value) === currentUser?.id)?.value ??
+    reviewerOptionsRaw[0]?.value ??
     ''
+  const reviewerOptions = useMemo(() => reviewerOptionsRaw, [reviewerOptionsRaw])
+  const projectOptions = useMemo(() => projectOptionsRaw, [projectOptionsRaw])
+  const defaultReviewerId = useMemo(() => defaultReviewerIdRaw, [defaultReviewerIdRaw])
 
   const detailQuery = useAsyncData(
     async () => {
@@ -1177,14 +1196,18 @@ export function FaultsMemberDetailPage({
         />
       </div>
 
-      <CompensationPolicyDrawer
-        open={isCompensationPolicyDrawerOpen}
-        policy={detail.compensationPolicy}
-        memberName={detail.report.fullName}
-        month={month}
-        year={year}
-        onClose={() => setIsCompensationPolicyDrawerOpen(false)}
-      />
+      {isCompensationPolicyDrawerOpen ? (
+        <Suspense fallback={<AsyncContentLoader variant="dialog" />}>
+          <CompensationPolicyDrawer
+            open={isCompensationPolicyDrawerOpen}
+            policy={detail.compensationPolicy}
+            memberName={detail.report.fullName}
+            month={month}
+            year={year}
+            onClose={() => setIsCompensationPolicyDrawerOpen(false)}
+          />
+        </Suspense>
+      ) : null}
 
       {showCompensationActions ? (
         <Dialog

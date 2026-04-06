@@ -1,33 +1,114 @@
+import { Suspense, lazy, type ReactElement } from 'react'
 import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AuthLayout } from './layouts/AuthLayout'
 import { RootLayout } from './layouts/RootLayout'
 import { GuestRoute } from '../features/auth/components/GuestRoute'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
-import { DashboardRedirectPage } from '../features/auth/pages/DashboardRedirectPage'
-import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage'
-import { LoginPage } from '../features/auth/pages/LoginPage'
-import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage'
-import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage'
-import { CeoDashboardPage } from '../features/ceo/pages/CeoDashboardPage'
-import { CeoAiChatPage } from '../features/ceo/pages/CeoAiChatPage'
-import { CimsTeamPage } from '../features/ceo/pages/CimsTeamPage'
-import { CeoManagementPage } from '../features/ceo/pages/CeoManagementPage'
-import { CeoTeamUpdatesPage } from '../features/ceo/pages/CeoTeamUpdatesPage'
-import { CeoUsersPage } from '../features/ceo/pages/CeoUsersPage'
-import { WebsiteStatsPage } from '../features/ceo/pages/WebsiteStatsPage'
-import { CeoWorkdayOverridesPage } from '../features/ceo/pages/CeoWorkdayOverridesPage'
-import { CrmDashboardPage } from '../features/crm/pages/CrmDashboardPage'
-import { CustomerDetailPage } from '../features/crm/pages/CustomerDetailPage'
-import { FaultsMemberDetailPage } from '../features/faults/pages/FaultsMemberDetailPage'
-import { FaultsPage } from '../features/faults/pages/FaultsPage'
-import { MemberDashboardPage } from '../features/member/pages/MemberDashboardPage'
-import { NotFoundPage } from '../features/errors/pages/NotFoundPage'
-import { MemberUpdatesDetailPage } from '../features/updateTracking/pages/MemberUpdatesDetailPage'
-import { UpdateTrackingPage } from '../features/updateTracking/pages/UpdateTrackingPage'
-import { ProjectsListPage } from '../features/projects/pages/ProjectsListPage'
-import { ProjectDetailPage } from '../features/projects/pages/ProjectDetailPage'
-import { BoardDetailPage } from '../features/projects/pages/BoardDetailPage'
 import { RouterAuthBoundary } from './providers/RouterAuthBoundary'
+import { AsyncContentLoader } from '../shared/ui/async-content-loader'
+
+function lazyPage<T extends string>(
+  loader: () => Promise<Record<T, () => ReactElement | null>>,
+  exportName: T,
+) {
+  return lazy(async () => {
+    const module = await loader()
+
+    return {
+      default: module[exportName],
+    }
+  })
+}
+
+function withPageLoader(element: ReactElement, variant: 'page' | 'panel' = 'page') {
+  return (
+    <Suspense fallback={<AsyncContentLoader variant={variant} />}>
+      {element}
+    </Suspense>
+  )
+}
+
+const DashboardRedirectPage = lazyPage(
+  () => import('../features/auth/pages/DashboardRedirectPage'),
+  'DashboardRedirectPage',
+)
+const ForgotPasswordPage = lazyPage(
+  () => import('../features/auth/pages/ForgotPasswordPage'),
+  'ForgotPasswordPage',
+)
+const LoginPage = lazyPage(() => import('../features/auth/pages/LoginPage'), 'LoginPage')
+const ResetPasswordPage = lazyPage(
+  () => import('../features/auth/pages/ResetPasswordPage'),
+  'ResetPasswordPage',
+)
+const VerifyEmailPage = lazyPage(
+  () => import('../features/auth/pages/VerifyEmailPage'),
+  'VerifyEmailPage',
+)
+const CeoDashboardPage = lazyPage(
+  () => import('../features/ceo/pages/CeoDashboardPage'),
+  'CeoDashboardPage',
+)
+const CeoAiChatPage = lazyPage(
+  () => import('../features/ceo/pages/CeoAiChatPage'),
+  'CeoAiChatPage',
+)
+const CimsTeamPage = lazyPage(() => import('../features/ceo/pages/CimsTeamPage'), 'CimsTeamPage')
+const CeoManagementPage = lazyPage(
+  () => import('../features/ceo/pages/CeoManagementPage'),
+  'CeoManagementPage',
+)
+const CeoTeamUpdatesPage = lazyPage(
+  () => import('../features/ceo/pages/CeoTeamUpdatesPage'),
+  'CeoTeamUpdatesPage',
+)
+const CeoUsersPage = lazyPage(() => import('../features/ceo/pages/CeoUsersPage'), 'CeoUsersPage')
+const WebsiteStatsPage = lazyPage(
+  () => import('../features/ceo/pages/WebsiteStatsPage'),
+  'WebsiteStatsPage',
+)
+const CeoWorkdayOverridesPage = lazyPage(
+  () => import('../features/ceo/pages/CeoWorkdayOverridesPage'),
+  'CeoWorkdayOverridesPage',
+)
+const CrmDashboardPage = lazyPage(
+  () => import('../features/crm/pages/CrmDashboardPage'),
+  'CrmDashboardPage',
+)
+const CustomerDetailPage = lazyPage(
+  () => import('../features/crm/pages/CustomerDetailPage'),
+  'CustomerDetailPage',
+)
+const FaultsMemberDetailPage = lazyPage(
+  () => import('../features/faults/pages/FaultsMemberDetailPage'),
+  'FaultsMemberDetailPage',
+)
+const FaultsPage = lazyPage(() => import('../features/faults/pages/FaultsPage'), 'FaultsPage')
+const MemberDashboardPage = lazyPage(
+  () => import('../features/member/pages/MemberDashboardPage'),
+  'MemberDashboardPage',
+)
+const NotFoundPage = lazyPage(() => import('../features/errors/pages/NotFoundPage'), 'NotFoundPage')
+const MemberUpdatesDetailPage = lazyPage(
+  () => import('../features/updateTracking/pages/MemberUpdatesDetailPage'),
+  'MemberUpdatesDetailPage',
+)
+const UpdateTrackingPage = lazyPage(
+  () => import('../features/updateTracking/pages/UpdateTrackingPage'),
+  'UpdateTrackingPage',
+)
+const ProjectsListPage = lazyPage(
+  () => import('../features/projects/pages/ProjectsListPage'),
+  'ProjectsListPage',
+)
+const ProjectDetailPage = lazyPage(
+  () => import('../features/projects/pages/ProjectDetailPage'),
+  'ProjectDetailPage',
+)
+const BoardDetailPage = lazyPage(
+  () => import('../features/projects/pages/BoardDetailPage'),
+  'BoardDetailPage',
+)
 
 export const router = createBrowserRouter([
   {
@@ -42,17 +123,17 @@ export const router = createBrowserRouter([
             children: [
               {
                 index: true,
-                element: <DashboardRedirectPage />,
+                element: withPageLoader(<DashboardRedirectPage />),
               },
               {
                 path: 'dashboard-redirect',
-                element: <DashboardRedirectPage />,
+                element: withPageLoader(<DashboardRedirectPage />),
               },
               {
                 path: 'member/dashboard',
                 element: (
                   <ProtectedRoute audience="member">
-                    <MemberDashboardPage />
+                    {withPageLoader(<MemberDashboardPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -68,7 +149,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/dashboard',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoDashboardPage />
+                    {withPageLoader(<CeoDashboardPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -84,7 +165,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/users',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoUsersPage />
+                    {withPageLoader(<CeoUsersPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -92,13 +173,13 @@ export const router = createBrowserRouter([
                 path: 'ceo/ai',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoAiChatPage />
+                    {withPageLoader(<CeoAiChatPage />)}
                   </ProtectedRoute>
                 ),
               },
               {
                 path: 'cims-team',
-                element: <CimsTeamPage />,
+                element: withPageLoader(<CimsTeamPage />),
               },
               {
                 path: 'ceo/cims-team',
@@ -110,7 +191,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/management',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoManagementPage />
+                    {withPageLoader(<CeoManagementPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -118,7 +199,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/team-updates',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoTeamUpdatesPage />
+                    {withPageLoader(<CeoTeamUpdatesPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -126,7 +207,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/website-stats',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <WebsiteStatsPage />
+                    {withPageLoader(<WebsiteStatsPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -134,7 +215,7 @@ export const router = createBrowserRouter([
                 path: 'ceo/workday-overrides',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <CeoWorkdayOverridesPage />
+                    {withPageLoader(<CeoWorkdayOverridesPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -142,7 +223,7 @@ export const router = createBrowserRouter([
                 path: 'crm',
                 element: (
                   <ProtectedRoute permissionKey="crm">
-                    <CrmDashboardPage />
+                    {withPageLoader(<CrmDashboardPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -150,7 +231,7 @@ export const router = createBrowserRouter([
                 path: 'crm/customers/:customerId',
                 element: (
                   <ProtectedRoute permissionKey="crm">
-                    <CustomerDetailPage />
+                    {withPageLoader(<CustomerDetailPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -158,7 +239,7 @@ export const router = createBrowserRouter([
                 path: 'faults',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <FaultsPage />
+                    {withPageLoader(<FaultsPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -166,7 +247,7 @@ export const router = createBrowserRouter([
                 path: 'faults/members/:memberId',
                 element: (
                   <ProtectedRoute permissionKey="ceo">
-                    <FaultsMemberDetailPage />
+                    {withPageLoader(<FaultsMemberDetailPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -174,7 +255,7 @@ export const router = createBrowserRouter([
                 path: 'updates',
                 element: (
                   <ProtectedRoute permissionKey="update_list" audience="member">
-                    <UpdateTrackingPage />
+                    {withPageLoader(<UpdateTrackingPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -182,7 +263,7 @@ export const router = createBrowserRouter([
                 path: 'updates/detail',
                 element: (
                   <ProtectedRoute permissionKey="update_list" audience="member">
-                    <MemberUpdatesDetailPage />
+                    {withPageLoader(<MemberUpdatesDetailPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -190,7 +271,7 @@ export const router = createBrowserRouter([
                 path: 'projects',
                 element: (
                   <ProtectedRoute>
-                    <ProjectsListPage />
+                    {withPageLoader(<ProjectsListPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -198,7 +279,7 @@ export const router = createBrowserRouter([
                 path: 'projects/:projectId',
                 element: (
                   <ProtectedRoute>
-                    <ProjectDetailPage />
+                    {withPageLoader(<ProjectDetailPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -206,7 +287,7 @@ export const router = createBrowserRouter([
                 path: 'boards/:boardId',
                 element: (
                   <ProtectedRoute>
-                    <BoardDetailPage />
+                    {withPageLoader(<BoardDetailPage />)}
                   </ProtectedRoute>
                 ),
               },
@@ -227,7 +308,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'login',
-                element: <LoginPage />,
+                element: withPageLoader(<LoginPage />, 'panel'),
               },
               {
                 path: 'register',
@@ -235,15 +316,15 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'verify-email',
-                element: <VerifyEmailPage />,
+                element: withPageLoader(<VerifyEmailPage />, 'panel'),
               },
               {
                 path: 'forgot-password',
-                element: <ForgotPasswordPage />,
+                element: withPageLoader(<ForgotPasswordPage />, 'panel'),
               },
               {
                 path: 'reset-password',
-                element: <ResetPasswordPage />,
+                element: withPageLoader(<ResetPasswordPage />, 'panel'),
               },
             ],
           },
@@ -251,7 +332,7 @@ export const router = createBrowserRouter([
       },
       {
         path: '*',
-        element: <NotFoundPage />,
+        element: withPageLoader(<NotFoundPage />),
       },
     ],
   },

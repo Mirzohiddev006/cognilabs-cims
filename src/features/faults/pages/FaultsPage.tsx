@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react'
+import { Suspense, lazy, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { MemberDeliveryBonusPayload, MemberMistakePayload } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
-import { projectsService } from '../../../shared/api/services/projects.service'
 import { updateTrackingService, type WorkdayOverrideMemberOption } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
@@ -19,11 +18,11 @@ import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { MemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
+import { AsyncContentLoader } from '../../../shared/ui/async-content-loader'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
-import { SalaryEstimateDrawer } from '../components/SalaryEstimateDrawer'
 import {
   buildEmployeeCompensationPolicy,
   buildEmployeeReports,
@@ -44,6 +43,14 @@ import {
   isRecord,
   parseMaybeJson,
 } from '../lib/salaryEstimates'
+
+const SalaryEstimateDrawer = lazy(async () => {
+  const module = await import('../components/SalaryEstimateDrawer')
+
+  return {
+    default: module.SalaryEstimateDrawer,
+  }
+})
 
 type MistakeFormState = {
   reviewerId: string
@@ -230,6 +237,9 @@ export function FaultsPage() {
   const [activeReportId, setActiveReportId] = useState<number | null>(null)
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
+  const needsMistakeSupportData = mistakeTarget !== null
+  const needsDeliveryBonusSupportData = deliveryBonusTarget !== null || activeReportId !== null
+  const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberOptionsQuery = useAsyncData(
@@ -237,12 +247,20 @@ export function FaultsPage() {
     [],
   )
   const projectsQuery = useAsyncData(
-    () => projectsService.listProjects(),
+    async () => {
+      const { projectsService } = await import('../../../shared/api/services/projects.service')
+      return projectsService.listProjects()
+    },
     [],
+    { enabled: needsProjectSupportData },
   )
   const reviewersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
+    async () => {
+      const { projectsService } = await import('../../../shared/api/services/projects.service')
+      return projectsService.getAllUsers()
+    },
     [],
+    { enabled: needsMistakeSupportData },
   )
   const rosterUsers = useMemo(
     () => createRosterUsers(memberOptionsQuery.data ?? []),
@@ -906,29 +924,33 @@ export function FaultsPage() {
         />
       </Card>
 
-      <SalaryEstimateDrawer
-        open={Boolean(activeDrawerReport)}
-        report={activeDrawerReport}
-        month={month}
-        year={year}
-        onClose={() => setActiveReportId(null)}
-        onOpenDetail={() => {
-          if (!activeDrawerReport) {
-            return
-          }
+      {activeDrawerReport ? (
+        <Suspense fallback={<AsyncContentLoader variant="dialog" />}>
+          <SalaryEstimateDrawer
+            open={Boolean(activeDrawerReport)}
+            report={activeDrawerReport}
+            month={month}
+            year={year}
+            onClose={() => setActiveReportId(null)}
+            onOpenDetail={() => {
+              if (!activeDrawerReport) {
+                return
+              }
 
-          setActiveReportId(null)
-          openDetailPage(activeDrawerReport)
-        }}
-        onAddDeliveryBonus={() => {
-          if (!activeDrawerReport) {
-            return
-          }
+              setActiveReportId(null)
+              openDetailPage(activeDrawerReport)
+            }}
+            onAddDeliveryBonus={() => {
+              if (!activeDrawerReport) {
+                return
+              }
 
-          setActiveReportId(null)
-          openDeliveryBonusDialog(activeDrawerReport)
-        }}
-      />
+              setActiveReportId(null)
+              openDeliveryBonusDialog(activeDrawerReport)
+            }}
+          />
+        </Suspense>
+      ) : null}
 
       <Dialog
         open={Boolean(mistakeTarget)}

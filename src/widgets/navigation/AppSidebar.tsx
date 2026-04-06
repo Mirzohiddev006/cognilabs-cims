@@ -5,7 +5,6 @@ import { useLocale } from '../../app/hooks/useLocale'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { authService } from '../../shared/api/services/auth.service'
-import { projectsService } from '../../shared/api/services/projects.service'
 import { env } from '../../shared/config/env'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
@@ -67,6 +66,7 @@ export function AppSidebar() {
   })
   const [isSavingMember, setIsSavingMember] = useState(false)
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(isProjectsRoute)
+  const shouldLoadProjects = hasProjectsAccess && Boolean(user) && (isProjectsExpanded || isProjectsRoute)
   const [projectsRefreshKey, setProjectsRefreshKey] = useState(0)
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const profileImageInputRef = useRef<HTMLInputElement>(null)
@@ -80,9 +80,12 @@ export function AppSidebar() {
   const getNavigationLabel = (path: string, fallback: string) => t(`nav.${path}.label`, fallback)
   const getNavigationGroup = (path: string, fallback: string) => t(`nav.${path}.group`, fallback)
   const projectsQuery = useAsyncData(
-    () => projectsService.listReadableProjects(user?.id),
-    [hasProjectsAccess, projectsRefreshKey, user?.id],
-    { enabled: hasProjectsAccess && Boolean(user) },
+    async () => {
+      const { projectsService } = await import('../../shared/api/services/projects.service')
+      return projectsService.listReadableProjects(user?.id)
+    },
+    [projectsRefreshKey, shouldLoadProjects, user?.id],
+    { enabled: shouldLoadProjects },
   )
   const sidebarProjects = useMemo(
     () => [...(projectsQuery.data?.projects ?? [])].sort((left, right) => left.project_name.localeCompare(right.project_name)),
