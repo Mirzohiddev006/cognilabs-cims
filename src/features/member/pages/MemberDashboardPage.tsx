@@ -4,9 +4,10 @@ import type { CurrentUser } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { memberKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
@@ -134,17 +135,7 @@ function writeMemberDashboardCache(cacheKey: string, data: MemberDashboardData) 
   }
 }
 
-async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number, force = false): Promise<MemberDashboardData> {
-  const cacheKey = getMemberDashboardCacheKey(memberUser.id, year, month)
-
-  if (!force) {
-    const cached = readMemberDashboardCache(cacheKey)
-
-    if (cached) {
-      return cached
-    }
-  }
-
+async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number): Promise<MemberDashboardData> {
   const [estimateResult, policyResult, mistakesResult, deliveryBonusesResult, calendarResult, statsResult] = await Promise.allSettled([
     membersService.mySalaryEstimate(year, month),
     membersService.compensationPolicy({ employeeIds: [memberUser.id] }),
@@ -154,7 +145,7 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
     updateTrackingService.myStats(),
   ])
 
-  const result: MemberDashboardData = {
+  return {
     detail: buildEmployeeSalaryDetail({
       report: buildReportFromUser(memberUser),
       user: memberUser,
@@ -164,21 +155,18 @@ async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, 
       deliveryBonusesPayload: deliveryBonusesResult.status === 'fulfilled' ? deliveryBonusesResult.value : null,
       updatesPayload: null,
       calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
-      estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
-      policyError: policyResult.status === 'rejected' ? getApiErrorMessage(policyResult.reason) : null,
-      mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
-      deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
+      estimateError: estimateResult.status === 'rejected' ? getErrorMessage(estimateResult.reason) : null,
+      policyError: policyResult.status === 'rejected' ? getErrorMessage(policyResult.reason) : null,
+      mistakesError: mistakesResult.status === 'rejected' ? getErrorMessage(mistakesResult.reason) : null,
+      deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getErrorMessage(deliveryBonusesResult.reason) : null,
       updatesError: null,
-      calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
+      calendarError: calendarResult.status === 'rejected' ? getErrorMessage(calendarResult.reason) : null,
       year,
       month,
     }),
     stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
-    statsError: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
+    statsError: statsResult.status === 'rejected' ? getErrorMessage(statsResult.reason) : null,
   }
-
-  writeMemberDashboardCache(cacheKey, result)
-  return result
 }
 
 function ProgressBar({
@@ -256,31 +244,27 @@ export function MemberDashboardPage() {
   }
   const { user } = useAuth()
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberUser = user ? createMemberUser(user) : null
-  const cacheKey = memberUser ? getMemberDashboardCacheKey(memberUser.id, year, month) : null
-  const cachedDashboardData = cacheKey ? readMemberDashboardCache(cacheKey) : undefined
-  const shouldFetchDashboard = Boolean(memberUser) && !cachedDashboardData
 
-  const dashboardQuery = useAsyncData(
-    async () => {
+  const dashboardQueryKey = memberUser
+    ? memberKeys.dashboard(memberUser.id, year, month)
+    : memberKeys.all
+  const dashboardQuery = useQuery({
+    queryKey: dashboardQueryKey,
+    queryFn: async () => {
       if (!memberUser) {
         throw new Error('Authenticated member not found.')
       }
-
       return loadMemberDashboardData(memberUser, year, month)
     },
-    [memberUser?.id, month, year],
-    { enabled: shouldFetchDashboard, initialData: cachedDashboardData },
-  )
+    enabled: Boolean(memberUser),
+  })
 
-  const hasLiveDashboardDataForPeriod =
-    dashboardQuery.data?.detail.memberId === memberUser?.id &&
-    dashboardQuery.data?.detail.year === year &&
-    dashboardQuery.data?.detail.month === month
-  const data = cachedDashboardData ?? (hasLiveDashboardDataForPeriod ? dashboardQuery.data : undefined)
+  const data = dashboardQuery.data
   const isDashboardPending = Boolean(memberUser) && !data && !dashboardQuery.isError
 
   const calendarCounts = useMemo(() => {
@@ -338,8 +322,7 @@ export function MemberDashboardPage() {
         return
       }
 
-      const nextData = await loadMemberDashboardData(memberUser, year, month, true)
-      dashboardQuery.setData(nextData)
+      await queryClient.invalidateQueries({ queryKey: dashboardQueryKey })
       showToast({
         title: tr('Member dashboard refreshed', 'Xodim paneli yangilandi', 'Панель сотрудника обновлена'),
         description: tr(
@@ -352,7 +335,7 @@ export function MemberDashboardPage() {
     } catch (error) {
       showToast({
         title: lt('Refresh failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }

@@ -6,7 +6,8 @@ import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
 import { StateBlock } from '../../../shared/ui/state-block'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { projectKeys } from '../lib/queryKeys'
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -64,18 +65,16 @@ export function ProjectDetailPage() {
   const id = Number(projectId)
   const canManageProjects = Boolean(user)
   const isDark = theme === 'dark'
+  const queryClient = useQueryClient()
 
-  const projectQuery = useAsyncData(
-    async () => {
-      if (!user) {
-        throw new Error('User session is unavailable')
-      }
-
+  const projectQuery = useQuery({
+    queryKey: projectKeys.detail(id),
+    queryFn: async () => {
+      if (!user) throw new Error('User session is unavailable')
       return projectsService.getReadableProjectDetail(id, user.id)
     },
-    [id, user?.id],
-    { enabled: !Number.isNaN(id) && Boolean(user) },
-  )
+    enabled: !Number.isNaN(id) && Boolean(user),
+  })
 
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false)
@@ -119,18 +118,15 @@ export function ProjectDetailPage() {
     [expandedMemberId, projectMembers],
   )
 
-  const expandedMemberTasksQuery = useAsyncData(
-    async () => {
-      if (expandedMemberId === null) {
-        return [] as UserOpenCardRecord[]
-      }
-
+  const expandedMemberTasksQuery = useQuery({
+    queryKey: [...projectKeys.all, 'member-cards', expandedMemberId, id] as const,
+    queryFn: async () => {
+      if (expandedMemberId === null) return [] as UserOpenCardRecord[]
       const response = await projectsService.listUserOpenCards(expandedMemberId, id)
       return response.cards
     },
-    [expandedMemberId, id],
-    { enabled: expandedMemberId !== null && !Number.isNaN(id) },
-  )
+    enabled: expandedMemberId !== null && !Number.isNaN(id),
+  })
 
   const expandedMemberTasks = useMemo(() => {
     if (expandedMemberId === null) {
@@ -247,7 +243,7 @@ export function ProjectDetailPage() {
       await projectsService.updateProject(project.id, fd)
       showToast({ title: lt('Project updated'), tone: 'success' })
       setIsEditProjectOpen(false)
-      await projectQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: projectKeys.detail(id) })
       notifyProjectsNavigationChanged()
     } catch {
       showToast({ title: lt('Failed to update project'), tone: 'error' })
@@ -291,7 +287,7 @@ export function ProjectDetailPage() {
       const createdBoard = await projectsService.createBoard(project.id, values)
       showToast({ title: lt('Board created'), tone: 'success' })
       setIsCreateBoardOpen(false)
-      await projectQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: projectKeys.detail(id) })
       selectBoard(createdBoard.id)
       notifyProjectsNavigationChanged()
     } catch {
@@ -594,7 +590,7 @@ export function ProjectDetailPage() {
                         title={lt('Failed to load member tasks')}
                         description={lt('There was an error loading this member tasks.')}
                         actionLabel={lt('Retry')}
-                        onAction={() => expandedMemberTasksQuery.refetch()}
+                        onAction={() => queryClient.invalidateQueries({ queryKey: [...projectKeys.all, "member-cards", expandedMemberId, id] })}
                       />
                     ) : expandedMemberTasks.length === 0 ? (
                       <StateBlock
@@ -778,7 +774,7 @@ export function ProjectDetailPage() {
                   boardId={selectedBoard.id}
                   projectId={project.id}
                   mode="embedded"
-                  onBoardsChanged={() => projectQuery.refetch()}
+                  onBoardsChanged={() => queryClient.invalidateQueries({ queryKey: projectKeys.detail(id) })}
                 />
               ) : null}
             </>

@@ -4,8 +4,9 @@ import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery } from '@tanstack/react-query'
 import { projectsService, type ProjectRecord } from '../../../shared/api/services/projects.service'
+import { projectKeys } from '../lib/queryKeys'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { buildFormData } from '../lib/formdata'
 import { MemberSelector } from './MemberSelector'
@@ -51,11 +52,11 @@ export function ProjectFormModal({
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormValues, string>>>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const usersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
-    [open],
-    { enabled: open },
-  )
+  const usersQuery = useQuery({
+    queryKey: projectKeys.users(),
+    queryFn: () => projectsService.getAllUsers(),
+    enabled: open,
+  })
 
   useEffect(() => {
     if (open) {

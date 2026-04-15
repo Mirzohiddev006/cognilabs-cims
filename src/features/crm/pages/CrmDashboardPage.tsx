@@ -1,13 +1,14 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { cn } from '../../../shared/lib/cn'
+import { crmKeys } from '../lib/queryKeys'
 import {
   formatUsernameHandle,
   getCustomerDisplayName,
@@ -464,9 +465,10 @@ export function CrmDashboardPage() {
 
   const pageSizeValue = Number(pageSize) || 75
 
-  const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
-  const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
-  const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
+  const queryClient = useQueryClient()
+  const dashboardQuery = useQuery({ queryKey: crmKeys.dashboard(), queryFn: () => crmService.dashboardWithAllCustomers() })
+  const statusesQuery = useQuery({ queryKey: crmKeys.customers('statuses'), queryFn: () => crmService.dynamicStatuses() })
+  const summaryQuery = useQuery({ queryKey: crmKeys.customers('summary'), queryFn: () => crmService.summaryStats() })
 
   const customers = dashboardQuery.data?.customers ?? emptyCustomers
   const statusOptions = statusesQuery.data ?? emptyStatuses
@@ -532,9 +534,9 @@ export function CrmDashboardPage() {
 
   async function refreshAll() {
     await Promise.allSettled([
-      dashboardQuery.refetch(),
-      statusesQuery.refetch(),
-      summaryQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: crmKeys.dashboard() }),
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers('statuses') }),
+      queryClient.invalidateQueries({ queryKey: crmKeys.customers('summary') }),
     ])
   }
 
@@ -567,19 +569,6 @@ export function CrmDashboardPage() {
   }
 
   function syncCustomerInUi(nextCustomer: CustomerSummary) {
-    dashboardQuery.setData((current) => {
-      if (!current) {
-        return current
-      }
-
-      return {
-        ...current,
-        customers: current.customers.map((customer) =>
-          customer.id === nextCustomer.id ? { ...customer, ...nextCustomer } : customer,
-        ),
-      }
-    })
-
     setSelectedCustomer((current) => (current?.id === nextCustomer.id ? nextCustomer : current))
     setDetailCustomer((current) => (current?.id === nextCustomer.id ? nextCustomer : current))
   }
@@ -600,7 +589,10 @@ export function CrmDashboardPage() {
 
     try {
       await crmService.deleteCustomer(customer.id)
-      await Promise.allSettled([dashboardQuery.refetch(), summaryQuery.refetch()])
+      await Promise.allSettled([
+        queryClient.invalidateQueries({ queryKey: crmKeys.dashboard() }),
+        queryClient.invalidateQueries({ queryKey: crmKeys.customers('summary') }),
+      ])
       showToast({
         title: t('customers.toast.deleted.title', 'Customer deleted'),
         description: t('customers.toast.deleted.description', '{{name}} has been removed from the CRM list.', { name: customerName }),
@@ -609,7 +601,7 @@ export function CrmDashboardPage() {
     } catch (error) {
       showToast({
         title: t('customers.errors.delete_failed', 'Delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -654,9 +646,9 @@ export function CrmDashboardPage() {
       setIsFormOpen(false)
       setAudioFile(null)
       await Promise.allSettled([
-        dashboardQuery.refetch(),
-        summaryQuery.refetch(),
-        statusesQuery.refetch(),
+        queryClient.invalidateQueries({ queryKey: crmKeys.dashboard() }),
+        queryClient.invalidateQueries({ queryKey: crmKeys.customers('summary') }),
+        queryClient.invalidateQueries({ queryKey: crmKeys.customers('statuses') }),
       ])
 
       if (updatedCustomer) {
@@ -675,7 +667,7 @@ export function CrmDashboardPage() {
     } catch (error) {
       showToast({
         title: t('customers.errors.save_failed', 'Save failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {

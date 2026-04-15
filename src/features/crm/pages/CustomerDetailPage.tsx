@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { crmService } from '../../../shared/api/services/crm.service'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Button } from '../../../shared/ui/button'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerDetailContent } from '../components/CustomerDetailDrawer'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
+import { crmKeys } from '../lib/queryKeys'
 
 export function CustomerDetailPage() {
   const { t } = useTranslation()
@@ -14,11 +15,11 @@ export function CustomerDetailPage() {
   const params = useParams()
   const customerId = Number(params.customerId)
 
-  const detailQuery = useAsyncData(
-    () => crmService.detail(customerId),
-    [customerId],
-    { enabled: Number.isFinite(customerId) && customerId > 0 },
-  )
+  const detailQuery = useQuery({
+    queryKey: crmKeys.customer(customerId),
+    queryFn: () => crmService.detail(customerId),
+    enabled: !!customerId && Number.isFinite(customerId) && customerId > 0,
+  })
 
   const audioSource = useMemo(
     () => resolveCustomerAudioUrl(detailQuery.data?.audio_file_id, detailQuery.data?.audio_url),

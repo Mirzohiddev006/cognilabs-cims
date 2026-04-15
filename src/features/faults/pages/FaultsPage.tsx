@@ -1,12 +1,13 @@
-import { Suspense, lazy, useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import type { MemberDeliveryBonusPayload, MemberMistakePayload } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService, type WorkdayOverrideMemberOption } from '../../../shared/api/services/updateTracking.service'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { faultKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
@@ -207,6 +208,7 @@ export function FaultsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tl = (en: string, uz: string, ru: string) => {
@@ -242,26 +244,26 @@ export function FaultsPage() {
   const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
-  const memberOptionsQuery = useAsyncData(
-    () => updateTrackingService.workdayOverrideMemberOptions(),
-    [],
-  )
-  const projectsQuery = useAsyncData(
-    async () => {
+  const memberOptionsQuery = useQuery({
+    queryKey: faultKeys.members(),
+    queryFn: () => updateTrackingService.workdayOverrideMemberOptions(),
+  })
+  const projectsQuery = useQuery({
+    queryKey: [...faultKeys.all, 'projects'] as const,
+    queryFn: async () => {
       const { projectsService } = await import('../../../shared/api/services/projects.service')
       return projectsService.listProjects()
     },
-    [],
-    { enabled: needsProjectSupportData },
-  )
-  const reviewersQuery = useAsyncData(
-    async () => {
+    enabled: needsProjectSupportData,
+  })
+  const reviewersQuery = useQuery({
+    queryKey: [...faultKeys.all, 'reviewers'] as const,
+    queryFn: async () => {
       const { projectsService } = await import('../../../shared/api/services/projects.service')
       return projectsService.getAllUsers()
     },
-    [],
-    { enabled: needsMistakeSupportData },
-  )
+    enabled: needsMistakeSupportData,
+  })
   const rosterUsers = useMemo(
     () => createRosterUsers(memberOptionsQuery.data ?? []),
     [memberOptionsQuery.data],
@@ -274,20 +276,22 @@ export function FaultsPage() {
     () => rosterUsers.map((user) => user.id),
     [rosterUsers],
   )
-  const compensationPolicyQuery = useAsyncData(
-    () => membersService.compensationPolicy({ employeeIds }),
-    [employeeIds.join(',')],
-    {
-      enabled: employeeIds.length > 0,
-      onError: (error) => {
-        showToast({
-          title: tr('Compensation policy API failed', 'Kompensatsiya siyosati API muvaffaqiyatsiz tugadi', 'Ошибка API политики компенсации'),
-          description: getApiErrorMessage(error),
-          tone: 'error',
-        })
-      },
-    },
-  )
+  const compensationPolicyQuery = useQuery({
+    queryKey: faultKeys.compensationPolicy(employeeIds),
+    queryFn: () => membersService.compensationPolicy({ employeeIds }),
+    enabled: employeeIds.length > 0,
+  })
+  const compensationPolicyErrorRef = useRef<unknown>(null)
+  useEffect(() => {
+    if (compensationPolicyQuery.error && compensationPolicyQuery.error !== compensationPolicyErrorRef.current) {
+      compensationPolicyErrorRef.current = compensationPolicyQuery.error
+      showToast({
+        title: tr('Compensation policy API failed', 'Kompensatsiya siyosati API muvaffaqiyatsiz tugadi', 'Ошибка API политики компенсации'),
+        description: getErrorMessage(compensationPolicyQuery.error),
+        tone: 'error',
+      })
+    }
+  }, [compensationPolicyQuery.error])
   const reviewerOptions = useMemo(
     () => {
       const allUsers = reviewersQuery.data ?? []
@@ -355,47 +359,42 @@ export function FaultsPage() {
     [deliveryBonusPolicy, locale],
   )
 
-  const updatesAllQuery = useAsyncData(
-    () => membersService.updatesAll({ year, month }),
-    [year, month],
-    {
-      onError: (error) => {
-        showToast({
-          title: lt('Employee updates API failed'),
-          description: getApiErrorMessage(error),
-          tone: 'error',
-        })
-      },
-    },
-  )
+  const updatesAllQuery = useQuery({
+    queryKey: [...faultKeys.all, 'updates-all', year, month] as const,
+    queryFn: () => membersService.updatesAll({ year, month }),
+  })
+  const updatesAllErrorRef = useRef<unknown>(null)
+  useEffect(() => {
+    if (updatesAllQuery.error && updatesAllQuery.error !== updatesAllErrorRef.current) {
+      updatesAllErrorRef.current = updatesAllQuery.error
+      showToast({ title: lt('Employee updates API failed'), description: getErrorMessage(updatesAllQuery.error), tone: 'error' })
+    }
+  }, [updatesAllQuery.error])
 
-  const statisticsQuery = useAsyncData(
-    () => membersService.updatesStatistics({ year, month }),
-    [year, month],
-    {
-      onError: (error) => {
-        showToast({
-          title: lt('Employee summary API failed'),
-          description: getApiErrorMessage(error),
-          tone: 'error',
-        })
-      },
-    },
-  )
-  const salaryEstimatesQuery = useAsyncData(
-    () => membersService.salaryEstimates({ year, month, employeeIds }),
-    [year, month, employeeIds.join(',')],
-    {
-      enabled: employeeIds.length > 0,
-      onError: (error) => {
-        showToast({
-          title: lt('Employee salary estimates API failed'),
-          description: getApiErrorMessage(error),
-          tone: 'error',
-        })
-      },
-    },
-  )
+  const statisticsQuery = useQuery({
+    queryKey: [...faultKeys.all, 'statistics', year, month] as const,
+    queryFn: () => membersService.updatesStatistics({ year, month }),
+  })
+  const statisticsErrorRef = useRef<unknown>(null)
+  useEffect(() => {
+    if (statisticsQuery.error && statisticsQuery.error !== statisticsErrorRef.current) {
+      statisticsErrorRef.current = statisticsQuery.error
+      showToast({ title: lt('Employee summary API failed'), description: getErrorMessage(statisticsQuery.error), tone: 'error' })
+    }
+  }, [statisticsQuery.error])
+
+  const salaryEstimatesQuery = useQuery({
+    queryKey: faultKeys.salaryEstimates(year, month),
+    queryFn: () => membersService.salaryEstimates({ year, month, employeeIds }),
+    enabled: employeeIds.length > 0,
+  })
+  const salaryEstimatesErrorRef = useRef<unknown>(null)
+  useEffect(() => {
+    if (salaryEstimatesQuery.error && salaryEstimatesQuery.error !== salaryEstimatesErrorRef.current) {
+      salaryEstimatesErrorRef.current = salaryEstimatesQuery.error
+      showToast({ title: lt('Employee salary estimates API failed'), description: getErrorMessage(salaryEstimatesQuery.error), tone: 'error' })
+    }
+  }, [salaryEstimatesQuery.error])
 
   const reports = useMemo(
     () => buildEmployeeReports(rosterUsers, salaryEstimatesQuery.data ?? updatesAllQuery.data, { includeFallbackUsers: true }),
@@ -431,32 +430,14 @@ export function FaultsPage() {
   const hasReports = reports.length > 0
 
   async function handleRefresh() {
-    const [membersResult, reviewersResult, policyResult, updatesResult, statisticsResult, salaryResult] = await Promise.allSettled([
-      memberOptionsQuery.refetch(),
-      reviewersQuery.refetch(),
-      employeeIds.length > 0 ? compensationPolicyQuery.refetch() : Promise.resolve(undefined),
-      updatesAllQuery.refetch(),
-      statisticsQuery.refetch(),
-      employeeIds.length > 0 ? salaryEstimatesQuery.refetch() : Promise.resolve(undefined),
+    await Promise.allSettled([
+      queryClient.invalidateQueries({ queryKey: faultKeys.members() }),
+      queryClient.invalidateQueries({ queryKey: [...faultKeys.all, 'reviewers'] }),
+      queryClient.invalidateQueries({ queryKey: faultKeys.compensationPolicy(employeeIds) }),
+      queryClient.invalidateQueries({ queryKey: [...faultKeys.all, 'updates-all', year, month] }),
+      queryClient.invalidateQueries({ queryKey: [...faultKeys.all, 'statistics', year, month] }),
+      queryClient.invalidateQueries({ queryKey: faultKeys.salaryEstimates(year, month) }),
     ])
-
-    if (
-      membersResult.status === 'rejected' &&
-      reviewersResult.status === 'rejected' &&
-      policyResult.status === 'rejected' &&
-      updatesResult.status === 'rejected' &&
-      statisticsResult.status === 'rejected' &&
-      salaryResult.status === 'rejected'
-    ) {
-      showToast({
-        title: lt('Refresh failed'),
-        description: getApiErrorMessage(
-          membersResult.reason ?? reviewersResult.reason ?? policyResult.reason ?? updatesResult.reason ?? statisticsResult.reason ?? salaryResult.reason,
-        ),
-        tone: 'error',
-      })
-      return
-    }
 
     showToast({
       title: lt('Salary report refreshed'),
@@ -596,7 +577,11 @@ export function FaultsPage() {
     try {
       const response = await membersService.createMistake(payload)
 
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [...faultKeys.all, "updates-all", year, month] }),
+        queryClient.invalidateQueries({ queryKey: [...faultKeys.all, "statistics", year, month] }),
+        queryClient.invalidateQueries({ queryKey: faultKeys.salaryEstimates(year, month) }),
+      ])
       closeMistakeDialog()
       showToast({
         title: tr('Mistake added', "Xato qo'shildi", 'Ошибка добавлена'),
@@ -606,7 +591,7 @@ export function FaultsPage() {
     } catch (error) {
       showToast({
         title: tr('Mistake not added', "Xato qo'shilmadi", 'Ошибка не добавлена'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -626,7 +611,11 @@ export function FaultsPage() {
     try {
       const response = await membersService.createDeliveryBonus(payload)
 
-      await Promise.all([updatesAllQuery.refetch(), statisticsQuery.refetch(), salaryEstimatesQuery.refetch()])
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [...faultKeys.all, "updates-all", year, month] }),
+        queryClient.invalidateQueries({ queryKey: [...faultKeys.all, "statistics", year, month] }),
+        queryClient.invalidateQueries({ queryKey: faultKeys.salaryEstimates(year, month) }),
+      ])
       closeDeliveryBonusDialog()
       showToast({
         title: tr('Delivery bonus added', "Topshirish bonusi qo'shildi", 'Бонус за сдачу добавлен'),
@@ -636,7 +625,7 @@ export function FaultsPage() {
     } catch (error) {
       showToast({
         title: tr('Delivery bonus not added', "Topshirish bonusi qo'shilmadi", 'Бонус за сдачу не добавлен'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {

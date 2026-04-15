@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { managementService } from '../../../shared/api/services/management.service'
 import type {
   ManagementImageCategory,
@@ -15,9 +16,9 @@ import type {
   ManagementStatusUpdatePayload,
 } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
+import { ceoKeys } from '../lib/queryKeys'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
@@ -273,6 +274,7 @@ function getImageCategoryLabel(category?: ManagementImageCategory | null) {
 export function CeoManagementPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const queryClient = useQueryClient()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -320,23 +322,32 @@ export function CeoManagementPage() {
   const [selectedImagePaths, setSelectedImagePaths] = useState<string[]>([])
   const [imageDetailPath, setImageDetailPath] = useState<string | null>(null)
 
-  const pagesQuery = useAsyncData(() => managementService.listPages(), [])
-  const statusesQuery = useAsyncData(() => managementService.listStatuses(), [])
-  const rolesQuery = useAsyncData(() => managementService.listRoles(), [])
-  const imagesQuery = useAsyncData(
-    () => managementService.listImages({
+  const pagesQuery = useQuery({
+    queryKey: ceoKeys.management.pages(),
+    queryFn: () => managementService.listPages(),
+  })
+  const statusesQuery = useQuery({
+    queryKey: ceoKeys.management.statuses(),
+    queryFn: () => managementService.listStatuses(),
+  })
+  const rolesQuery = useQuery({
+    queryKey: ceoKeys.management.roles(),
+    queryFn: () => managementService.listRoles(),
+  })
+  const imagesQuery = useQuery({
+    queryKey: ceoKeys.management.images({ category: imageCategoryFilter, referenceFilter: imageReferenceFilter, tab: activeTab }),
+    queryFn: () => managementService.listImages({
       category: (imageCategoryFilter || undefined) as ManagementImageCategory | undefined,
       referenced_only: imageReferenceFilter === 'referenced',
       unreferenced_only: imageReferenceFilter === 'unreferenced',
     }),
-    [activeTab, imageCategoryFilter, imageReferenceFilter],
-    { enabled: activeTab === 'images' },
-  )
-  const imageDetailQuery = useAsyncData(
-    () => managementService.getImageDetail(imageDetailPath ?? ''),
-    [imageDetailPath],
-    { enabled: Boolean(imageDetailPath) },
-  )
+    enabled: activeTab === 'images',
+  })
+  const imageDetailQuery = useQuery({
+    queryKey: ceoKeys.management.imageDetail(imageDetailPath),
+    queryFn: () => managementService.getImageDetail(imageDetailPath ?? ''),
+    enabled: !!imageDetailPath,
+  })
 
   const pageItems = useMemo(
     () => [...(pagesQuery.data ?? [])].sort((left, right) => left.order - right.order || left.display_name.localeCompare(right.display_name)),
@@ -455,7 +466,7 @@ export function CeoManagementPage() {
     if (failed && failed.status === 'rejected') {
       showToast({
         title: lt('Management refresh failed'),
-        description: getApiErrorMessage(failed.reason),
+        description: getErrorMessage(failed.reason),
         tone: 'error',
       })
       return
@@ -545,7 +556,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Image delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -620,7 +631,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Page save failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -653,7 +664,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -740,7 +751,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Status save failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -773,7 +784,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -828,7 +839,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Role save failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -861,7 +872,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -907,7 +918,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: lt('Selected delete failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -973,7 +984,7 @@ export function CeoManagementPage() {
     } catch (error) {
       showToast({
         title: 'Bulk cleanup failed',
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {

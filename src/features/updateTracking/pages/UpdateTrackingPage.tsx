@@ -1,9 +1,10 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { updateTrackingService, type WorkdayOverrideRecord } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, UpdateTrackingStats } from '../../../shared/api/types'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { updateTrackingKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { cn } from '../../../shared/lib/cn'
 import { getLocalizedMonthName } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
@@ -156,17 +157,7 @@ function getUpdateTrackingCacheKey(month: number, year: number) {
   return `${year}-${month}`
 }
 
-async function loadUpdateTrackingPageData(month: number, year: number, force = false): Promise<UpdateTrackingPageData> {
-  const cacheKey = getUpdateTrackingCacheKey(month, year)
-
-  if (!force) {
-    const cached = updateTrackingPageCache.get(cacheKey)
-
-    if (cached) {
-      return cached
-    }
-  }
-
+async function loadUpdateTrackingPageData(month: number, year: number): Promise<UpdateTrackingPageData> {
   const [statsResult, calendarResult, trendsResult, recentResult] = await Promise.allSettled([
     updateTrackingService.myStats(),
     updateTrackingService.calendar(month, year),
@@ -180,24 +171,21 @@ async function loadUpdateTrackingPageData(month: number, year: number, force = f
     trendsResult.status === 'rejected' &&
     recentResult.status === 'rejected'
   ) {
-    throw new Error(getApiErrorMessage(calendarResult.reason))
+    throw new Error(getErrorMessage(calendarResult.reason))
   }
 
-  const result: UpdateTrackingPageData = {
+  return {
     stats: statsResult.status === 'fulfilled' ? statsResult.value : emptyStats,
     calendarPayload: calendarResult.status === 'fulfilled' ? calendarResult.value : null,
     trendsPayload: trendsResult.status === 'fulfilled' ? trendsResult.value : null,
     recentPayload: recentResult.status === 'fulfilled' ? recentResult.value : null,
     errors: {
-      stats: statsResult.status === 'rejected' ? getApiErrorMessage(statsResult.reason) : null,
-      calendar: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
-      trends: trendsResult.status === 'rejected' ? getApiErrorMessage(trendsResult.reason) : null,
-      recent: recentResult.status === 'rejected' ? getApiErrorMessage(recentResult.reason) : null,
+      stats: statsResult.status === 'rejected' ? getErrorMessage(statsResult.reason) : null,
+      calendar: calendarResult.status === 'rejected' ? getErrorMessage(calendarResult.reason) : null,
+      trends: trendsResult.status === 'rejected' ? getErrorMessage(trendsResult.reason) : null,
+      recent: recentResult.status === 'rejected' ? getErrorMessage(recentResult.reason) : null,
     },
   }
-
-  updateTrackingPageCache.set(cacheKey, result)
-  return result
 }
 
 function parsePayload(payload: unknown): unknown {
@@ -1335,18 +1323,16 @@ export function UpdateTrackingPage() {
     [locale],
   )
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [yearInput, setYearInput] = useState(String(now.getFullYear()))
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const todayKey = formatDateKey(todayStart)
-  const cacheKey = getUpdateTrackingCacheKey(month, year)
-  const cachedPageData = updateTrackingPageCache.get(cacheKey)
-  const pageQuery = useAsyncData(
-    () => loadUpdateTrackingPageData(month, year),
-    [month, year],
-    { initialData: cachedPageData },
-  )
+  const pageQuery = useQuery({
+    queryKey: updateTrackingKeys.page(month, year),
+    queryFn: () => loadUpdateTrackingPageData(month, year),
+  })
 
   const stats = pageQuery.data?.stats ?? emptyStats
   const calendar = useMemo(
@@ -1368,15 +1354,14 @@ export function UpdateTrackingPage() {
 
   async function handleRefresh() {
     try {
-      const nextData = await loadUpdateTrackingPageData(month, year, true)
-      pageQuery.setData(nextData)
+      await queryClient.invalidateQueries({ queryKey: updateTrackingKeys.page(month, year) })
       showToast({
         title: tr('Refreshed', 'Yangilandi', 'Obnovleno'),
         description: tr('Your update data has been reloaded.', 'Update malumotlaringiz qayta yuklandi.', 'Vashi dannye obnovleniy byli perezagruzheny.'),
         tone: 'success',
       })
     } catch (error) {
-      showToast({ title: tr('Refresh failed', 'Yangilash muvaffaqiyatsiz tugadi', 'Obnovlenie ne udalos'), description: getApiErrorMessage(error), tone: 'error' })
+      showToast({ title: tr('Refresh failed', 'Yangilash muvaffaqiyatsiz tugadi', 'Obnovlenie ne udalos'), description: getErrorMessage(error), tone: 'error' })
     }
   }
 

@@ -10,7 +10,8 @@ import {
   type UserPayload,
 } from '../../../shared/api/services/ceo.service'
 import type { PermissionMap } from '../../../shared/api/types'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ceoKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { formatCompactNumber, formatShortDate, formatShortMonthDayTime } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -334,10 +335,11 @@ export function CeoUsersPage() {
     return uzFallback
   }
 
-  const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
-  const permissionsOverviewQuery = useAsyncData(() => ceoService.permissionsOverview(), [])
-  const sentMessagesQuery = useAsyncData(() => ceoService.listMessages(), [])
-  const incomingMessagesQuery = useAsyncData(() => ceoService.listMyMessages(), [])
+  const queryClient = useQueryClient()
+  const dashboardQuery = useQuery({ queryKey: ceoKeys.dashboard(), queryFn: () => ceoService.getDashboard() })
+  const permissionsOverviewQuery = useQuery({ queryKey: [...ceoKeys.all, 'permissions-overview'] as const, queryFn: () => ceoService.permissionsOverview() })
+  const sentMessagesQuery = useQuery({ queryKey: ceoKeys.messages(), queryFn: () => ceoService.listMessages() })
+  const incomingMessagesQuery = useQuery({ queryKey: [...ceoKeys.all, 'incoming-messages'] as const, queryFn: () => ceoService.listMyMessages() })
 
   const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create')
   const [selectedUser, setSelectedUser] = useState<CeoUserRecord | null>(null)
@@ -525,10 +527,10 @@ export function CeoUsersPage() {
 
   function refreshAll() {
     return Promise.all([
-      dashboardQuery.refetch(),
-      permissionsOverviewQuery.refetch(),
-      sentMessagesQuery.refetch(),
-      incomingMessagesQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: ceoKeys.dashboard() }),
+      queryClient.invalidateQueries({ queryKey: [...ceoKeys.all, 'permissions-overview'] }),
+      queryClient.invalidateQueries({ queryKey: ceoKeys.messages() }),
+      queryClient.invalidateQueries({ queryKey: [...ceoKeys.all, 'incoming-messages'] }),
     ])
   }
 
@@ -675,7 +677,7 @@ export function CeoUsersPage() {
 
     try {
       await ceoService.toggleUserActive(user.id)
-      await dashboardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.dashboard() })
       showToast({
         title: `${lt('User set to')} ${lt(nextStatusLabel)}`,
         description: `${user.email} ${lt('is now marked as')} ${lt(nextStatusLabel)}.`,
@@ -711,7 +713,7 @@ export function CeoUsersPage() {
 
     try {
       await ceoService.updateUserPermissions(permissionTargetUser.id, permissionState)
-      await permissionsOverviewQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: [...ceoKeys.all, 'permissions-overview'] })
       const nextActiveCount = Object.values(permissionState).filter(Boolean).length
       setActivePermissionsCount(nextActiveCount)
       showToast({
@@ -742,7 +744,7 @@ export function CeoUsersPage() {
       const refreshed = await ceoService.getUserPermissions(permissionTargetUser.id)
       setPermissionState(refreshed.permissions)
       setActivePermissionsCount(refreshed.active_permissions_count)
-      await permissionsOverviewQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: [...ceoKeys.all, 'permissions-overview'] })
       showToast({
         title: lt('Permissions added'),
         description: lt('Selected permissions have been added to the user.'),
@@ -771,7 +773,7 @@ export function CeoUsersPage() {
         [permissionKey]: false,
       }))
       setActivePermissionsCount((current) => Math.max(0, current - 1))
-      await permissionsOverviewQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: [...ceoKeys.all, 'permissions-overview'] })
       showToast({
         title: lt('Permission removed'),
         description: `${permissionKey} ${lt('has been removed from the user.')}`,

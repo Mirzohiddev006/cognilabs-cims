@@ -9,8 +9,9 @@ import type {
 } from '../../../shared/api/types'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getErrorMessage } from '../../../shared/lib/error'
+import { faultKeys } from '../lib/queryKeys'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -251,6 +252,7 @@ export function FaultsMemberDetailPage({
   const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusDraft, setDeliveryBonusDraft] = useState<DeliveryBonusFormState>(() => createDeliveryBonusFormState())
   const [editingMistake, setEditingMistake] = useState<MemberMistakeRecord | null>(null)
@@ -299,27 +301,27 @@ export function FaultsMemberDetailPage({
   const needsDeliveryBonusSupportData = showCompensationActions && isDeliveryBonusDialogOpen
   const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
 
-  const reviewerOptionsQuery = useAsyncData(
-    () => updateTrackingService.workdayOverrideMemberOptions(),
-    [],
-    { enabled: needsMistakeSupportData },
-  )
-  const projectsQuery = useAsyncData(
-    async () => {
+  const reviewerOptionsQuery = useQuery({
+    queryKey: faultKeys.reviewerOptions(),
+    queryFn: () => updateTrackingService.workdayOverrideMemberOptions(),
+    enabled: needsMistakeSupportData,
+  })
+  const projectsQuery = useQuery({
+    queryKey: faultKeys.projectOptions(),
+    queryFn: async () => {
       const { projectsService } = await import('../../../shared/api/services/projects.service')
       return projectsService.listProjects()
     },
-    [],
-    { enabled: needsProjectSupportData },
-  )
-  const allUsersQuery = useAsyncData(
-    async () => {
+    enabled: needsProjectSupportData,
+  })
+  const allUsersQuery = useQuery({
+    queryKey: faultKeys.allUsers(),
+    queryFn: async () => {
       const { projectsService } = await import('../../../shared/api/services/projects.service')
       return projectsService.getAllUsers()
     },
-    [],
-    { enabled: needsMistakeSupportData },
-  )
+    enabled: needsMistakeSupportData,
+  })
   const reviewerOptionsRaw = (allUsersQuery.data?.length
     ? allUsersQuery.data.map((user) => ({
         value: String(user.id),
@@ -344,8 +346,11 @@ export function FaultsMemberDetailPage({
   const projectOptions = useMemo(() => projectOptionsRaw, [projectOptionsRaw])
   const defaultReviewerId = useMemo(() => defaultReviewerIdRaw, [defaultReviewerIdRaw])
 
-  const detailQuery = useAsyncData(
-    async () => {
+  const detailQueryKey = faultKeys.member(memberId, year, month)
+  const detailQuery = useQuery({
+    queryKey: detailQueryKey,
+    enabled: Number.isFinite(memberId) && memberId > 0,
+    queryFn: async () => {
       const [estimateResult, policyResult, mistakesResult, deliveryBonusesResult, updatesResult, calendarResult, historyResult] = await Promise.allSettled([
         membersService.salaryEstimates({ year, month, employeeIds: [memberId] }),
         membersService.compensationPolicy({ employeeIds: [memberId] }),
@@ -429,21 +434,17 @@ export function FaultsMemberDetailPage({
         deliveryBonusesPayload,
         updatesPayload,
         calendarPayload,
-        estimateError: estimateResult.status === 'rejected' ? getApiErrorMessage(estimateResult.reason) : null,
-        policyError: policyResult.status === 'rejected' ? getApiErrorMessage(policyResult.reason) : null,
-        mistakesError: mistakesResult.status === 'rejected' ? getApiErrorMessage(mistakesResult.reason) : null,
-        deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getApiErrorMessage(deliveryBonusesResult.reason) : null,
-        updatesError: updatesResult.status === 'rejected' ? getApiErrorMessage(updatesResult.reason) : null,
-        calendarError: calendarResult.status === 'rejected' ? getApiErrorMessage(calendarResult.reason) : null,
+        estimateError: estimateResult.status === 'rejected' ? getErrorMessage(estimateResult.reason) : null,
+        policyError: policyResult.status === 'rejected' ? getErrorMessage(policyResult.reason) : null,
+        mistakesError: mistakesResult.status === 'rejected' ? getErrorMessage(mistakesResult.reason) : null,
+        deliveryBonusesError: deliveryBonusesResult.status === 'rejected' ? getErrorMessage(deliveryBonusesResult.reason) : null,
+        updatesError: updatesResult.status === 'rejected' ? getErrorMessage(updatesResult.reason) : null,
+        calendarError: calendarResult.status === 'rejected' ? getErrorMessage(calendarResult.reason) : null,
         year,
         month,
       })
     },
-    [memberId, year, month],
-    {
-      enabled: Number.isFinite(memberId) && memberId > 0,
-    },
-  )
+  })
 
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
@@ -489,10 +490,10 @@ export function FaultsMemberDetailPage({
 
   async function handleRefresh() {
     try {
-      await Promise.all([
-        detailQuery.refetch(),
-        showCompensationActions ? allUsersQuery.refetch() : Promise.resolve(undefined),
-      ])
+      await queryClient.invalidateQueries({ queryKey: detailQueryKey })
+      if (showCompensationActions) {
+        await queryClient.invalidateQueries({ queryKey: faultKeys.allUsers() })
+      }
       showToast({
         title: lt('Member detail refreshed'),
         description: `${detail?.report.fullName ?? lt('Member')} ${lt('synced for')} ${getMonthName(month)} ${year}.`,
@@ -501,7 +502,7 @@ export function FaultsMemberDetailPage({
     } catch (error) {
       showToast({
         title: lt('Member detail refresh failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -632,7 +633,7 @@ export function FaultsMemberDetailPage({
         ? await membersService.updateMistake(editingMistake.id, payload)
         : await membersService.createMistake(payload)
 
-      await detailQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: detailQueryKey })
       closeMistakeDialog()
       showToast({
         title: editingMistake ? lt('Mistake updated') : lt('Mistake added'),
@@ -642,7 +643,7 @@ export function FaultsMemberDetailPage({
     } catch (error) {
       showToast({
         title: editingMistake ? lt('Mistake not updated') : lt('Mistake not added'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -664,7 +665,7 @@ export function FaultsMemberDetailPage({
         ? await membersService.updateDeliveryBonus(editingDeliveryBonus.id, payload)
         : await membersService.createDeliveryBonus(payload)
 
-      await detailQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: detailQueryKey })
       closeDeliveryBonusDialog()
       showToast({
         title: editingDeliveryBonus ? lt('Delivery bonus updated') : lt('Delivery bonus added'),
@@ -674,7 +675,7 @@ export function FaultsMemberDetailPage({
     } catch (error) {
       showToast({
         title: editingDeliveryBonus ? lt('Delivery bonus not updated') : lt('Delivery bonus not added'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -695,7 +696,7 @@ export function FaultsMemberDetailPage({
           ? await membersService.deleteMistake(deleteTarget.record.id)
           : await membersService.deleteDeliveryBonus(deleteTarget.record.id)
 
-      await detailQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: detailQueryKey })
       showToast({
         title: deleteTarget.kind === 'mistake' ? lt('Mistake deleted') : lt('Delivery bonus deleted'),
         description: getSuccessMessage(response, `${deleteTarget.record.title} ${lt('removed.')}`),
@@ -705,7 +706,7 @@ export function FaultsMemberDetailPage({
     } catch (error) {
       showToast({
         title: deleteTarget.kind === 'mistake' ? lt('Mistake not deleted') : lt('Delivery bonus not deleted'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {

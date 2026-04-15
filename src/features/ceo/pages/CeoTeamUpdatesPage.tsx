@@ -7,11 +7,12 @@ import {
   type WorkdayOverrideRecord,
 } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ceoKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/format'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -1643,12 +1644,16 @@ function filterAndSort(
 export function CeoTeamUpdatesPage() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear]   = useState(now.getFullYear())
   const [search, setSearch]             = useState('')
   const [sortKey, setSortKey]           = useState<SortKey>('submitted')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const memberOptionsQuery = useAsyncData(() => updateTrackingService.workdayOverrideMemberOptions(), [])
+  const memberOptionsQuery = useQuery({
+    queryKey: ceoKeys.teamMemberOptions(),
+    queryFn: () => updateTrackingService.workdayOverrideMemberOptions(),
+  })
   const rosterEmployees = useMemo(
     () => buildEmployeesFromRoster(memberOptionsQuery.data ?? []),
     [memberOptionsQuery.data],
@@ -1658,14 +1663,14 @@ export function CeoTeamUpdatesPage() {
     [rosterEmployees],
   )
 
-  const historyQuery = useAsyncData(
-    () => membersService.updatesAll({
+  const historyQuery = useQuery({
+    queryKey: ceoKeys.teamHistory(year, month, rosterEmployeeIds.join(',')),
+    queryFn: () => membersService.updatesAll({
       year,
       month,
       employeeIds: rosterEmployeeIds.length > 0 ? rosterEmployeeIds : undefined,
     }),
-    [year, month, rosterEmployeeIds.join(',')],
-  )
+  })
   const historyByEmployee = useMemo(
     () => parseUpdatesAllByEmployee(historyQuery.data),
     [historyQuery.data],
@@ -1683,28 +1688,28 @@ export function CeoTeamUpdatesPage() {
     [historyEmployees, rosterEmployeeIds],
   )
 
-  const trackingMonthlyQuery = useAsyncData(
-    () => updateTrackingService.teamMonthly(month, year),
-    [month, year],
-  )
-  const missingTodayQuery = useAsyncData(
-    () => updateTrackingService.missing(currentDateKey),
-    [],
-  )
-  const teamQuery    = useAsyncData(
-    () => membersService.updatesStatistics({ month, year, employeeIds }),
-    [month, year, employeeIds.join(',')],
-    { enabled: employeeIds.length > 0 },
-  )
-  const salaryQuery = useAsyncData(
-    () => membersService.salaryEstimates({ year, month, employeeIds }),
-    [month, year, employeeIds.join(',')],
-    { enabled: employeeIds.length > 0 },
-  )
-  const workdayOverridesQuery = useAsyncData(
-    () => updateTrackingService.workdayOverrides({ month, year }),
-    [month, year],
-  )
+  const trackingMonthlyQuery = useQuery({
+    queryKey: ceoKeys.teamMonthly(month, year),
+    queryFn: () => updateTrackingService.teamMonthly(month, year),
+  })
+  const missingTodayQuery = useQuery({
+    queryKey: ceoKeys.missingToday(currentDateKey),
+    queryFn: () => updateTrackingService.missing(currentDateKey),
+  })
+  const teamQuery = useQuery({
+    queryKey: ceoKeys.teamStats(year, month, employeeIds.join(',')),
+    queryFn: () => membersService.updatesStatistics({ month, year, employeeIds }),
+    enabled: employeeIds.length > 0,
+  })
+  const salaryQuery = useQuery({
+    queryKey: ceoKeys.teamSalary(year, month, employeeIds.join(',')),
+    queryFn: () => membersService.salaryEstimates({ year, month, employeeIds }),
+    enabled: employeeIds.length > 0,
+  })
+  const workdayOverridesQuery = useQuery({
+    queryKey: ceoKeys.teamWorkdayOverrides(month, year),
+    queryFn: () => updateTrackingService.workdayOverrides({ month, year }),
+  })
   const teamSummary = useMemo(
     () => parseTeamUpdatesSummary(teamQuery.data),
     [teamQuery.data],
@@ -1833,32 +1838,27 @@ export function CeoTeamUpdatesPage() {
   }, [mergedEmployees, month, rawEmployees, reconciledTrackingEmployees, salaryByEmployee, year])
 
   async function handleRefresh() {
-    const results = await Promise.allSettled([
-      memberOptionsQuery.refetch(),
-      trackingMonthlyQuery.refetch(),
-      missingTodayQuery.refetch(),
-      teamQuery.refetch(),
-      historyQuery.refetch(),
-      salaryQuery.refetch(),
-      workdayOverridesQuery.refetch(),
-    ])
-
-    const failed = results.find((result) => result.status === 'rejected')
-
-    if (failed?.status === 'rejected') {
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ceoKeys.teamMemberOptions() }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.teamMonthly(month, year) }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.missingToday(currentDateKey) }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.teamHistory(year, month) }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.teamSalary(year, month) }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.teamWorkdayOverrides(month, year) }),
+      ])
+      showToast({
+        title: translateCurrentLiteral('Refreshed'),
+        description: translateCurrentLiteral('Team monthly data reloaded.'),
+        tone: 'success',
+      })
+    } catch (error) {
       showToast({
         title: translateCurrentLiteral('Refresh failed'),
-        description: getApiErrorMessage(failed.reason),
+        description: getErrorMessage(error),
         tone: 'error',
       })
-      return
     }
-
-    showToast({
-      title: translateCurrentLiteral('Refreshed'),
-      description: translateCurrentLiteral('Team monthly data reloaded.'),
-      tone: 'success',
-    })
   }
 
   function openMemberDetail(employee: EmployeeMonthlyStats) {

@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../../auth/hooks/useAuth'
 import { aiService } from '../../../shared/api/services/ai.service'
 import type { AiChatResponse } from '../../../shared/api/types'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { useToast } from '../../../shared/toast/useToast'
 import {
   cimsAiLoadingStages,
@@ -144,7 +144,7 @@ export function CimsAiProvider({ children }: PropsWithChildren) {
     } catch (error) {
       showToast({
         title: 'AI request failed',
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {

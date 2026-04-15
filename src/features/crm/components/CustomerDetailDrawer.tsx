@@ -3,7 +3,8 @@ import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary } from '../../../shared/api/types'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { crmKeys } from '../lib/queryKeys'
 import {
   formatUsernameHandle,
   getCustomerDisplayMeta,
@@ -276,11 +277,12 @@ export function CustomerDetailDrawer({
   onClose: () => void
 }) {
   const { t } = useTranslation()
-  const detailQuery = useAsyncData(
-    () => crmService.detail(customerId ?? 0),
-    [customerId, open],
-    { enabled: open && Boolean(customerId && customerId > 0) },
-  )
+  const queryClient = useQueryClient()
+  const detailQuery = useQuery({
+    queryKey: crmKeys.customer(customerId ?? 0),
+    queryFn: () => crmService.detail(customerId ?? 0),
+    enabled: open && Boolean(customerId && customerId > 0),
+  })
 
   useEffect(() => {
     if (!open) {
@@ -361,7 +363,7 @@ export function CustomerDetailDrawer({
                 description={t('customers.errors.detail_unavailable.description', 'The CRM detail endpoint could not return this customer.')}
                 actionLabel={t('common.retry', 'Retry')}
                 onAction={() => {
-                  void detailQuery.refetch()
+                  void queryClient.invalidateQueries({ queryKey: crmKeys.customer(customerId ?? 0) })
                 }}
               />
             ) : customer ? (

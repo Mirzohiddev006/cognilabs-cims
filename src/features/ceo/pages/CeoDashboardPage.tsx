@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ceoService, type CeoMessageRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { PaymentItem } from '../../../shared/api/types'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { formatCurrency, formatShortDate } from '../../../shared/lib/format'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -19,6 +20,8 @@ import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
 import { PaymentFormModal, type PaymentFormValues } from '../components/PaymentFormModal'
+import { ceoKeys } from '../lib/queryKeys'
+import { crmKeys } from '../../crm/lib/queryKeys'
 
 const initialBroadcastMessage: MessageComposerValues = {
   subject: '',
@@ -95,14 +98,33 @@ export function CeoDashboardPage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const queryClient = useQueryClient()
 
-  const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
-  const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
-  const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
-  const companyPaymentsQuery = useAsyncData(() => ceoService.listCompanyPayments(), [])
+  const dashboardQuery = useQuery({
+    queryKey: ceoKeys.dashboard(),
+    queryFn: () => ceoService.getDashboard(),
+  })
+
+  const messagesQuery = useQuery({
+    queryKey: ceoKeys.messages(),
+    queryFn: () => ceoService.listMessages(),
+  })
+
+  const paymentsQuery = useQuery({
+    queryKey: ceoKeys.payments(),
+    queryFn: () => ceoService.listPayments(),
+  })
+
+  const companyPaymentsQuery = useQuery({
+    queryKey: ceoKeys.companyPayments(),
+    queryFn: () => ceoService.listCompanyPayments(),
+  })
+
   const [chartCustomerType, setChartCustomerType] = useState('')
-  const chartsQuery = useAsyncData(
-    async () => {
+
+  const chartsQuery = useQuery({
+    queryKey: crmKeys.charts({ customerType: chartCustomerType }),
+    queryFn: async () => {
       const selectedCustomerType = chartCustomerType || undefined
       const [weekly, monthly] = await Promise.all([
         crmService.salesDashboardCharts({
@@ -119,8 +141,7 @@ export function CeoDashboardPage() {
 
       return { weekly, monthly }
     },
-    [chartCustomerType],
-  )
+  })
 
   const [broadcastValues, setBroadcastValues] = useState<MessageComposerValues>(initialBroadcastMessage)
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false)
@@ -145,19 +166,15 @@ export function CeoDashboardPage() {
   const activeRecurringPayments = useMemo(() => {
     return companyPayments.filter((payment) => payment.is_active).length
   }, [companyPayments])
+
   const totalRecurringPaymentsAmount = useMemo(() => {
     return companyPaymentsQuery.data?.totalAmount
       ?? companyPayments.reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0)
   }, [companyPayments, companyPaymentsQuery.data?.totalAmount])
 
   async function refreshAll() {
-    await Promise.allSettled([
-      dashboardQuery.refetch(),
-      messagesQuery.refetch(),
-      paymentsQuery.refetch(),
-      companyPaymentsQuery.refetch(),
-      chartsQuery.refetch(),
-    ])
+    await queryClient.invalidateQueries({ queryKey: ceoKeys.all })
+    await queryClient.invalidateQueries({ queryKey: crmKeys.charts() })
   }
 
   async function handleSendBroadcast() {
@@ -177,7 +194,8 @@ export function CeoDashboardPage() {
         subject: broadcastValues.subject.trim(),
         body: broadcastValues.body.trim(),
       })
-      await Promise.all([messagesQuery.refetch(), dashboardQuery.refetch()])
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.messages() })
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.dashboard() })
       setBroadcastValues(initialBroadcastMessage)
       setIsBroadcastOpen(false)
       showToast({
@@ -188,7 +206,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.broadcast_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.broadcast_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.broadcast_failed_description')),
         tone: 'error',
       })
     } finally {
@@ -253,7 +271,7 @@ export function CeoDashboardPage() {
         })
       }
 
-      await paymentsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.payments() })
       setIsPaymentOpen(false)
       showToast({
         title: paymentMode === 'create'
@@ -265,7 +283,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.payment_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.payment_failed_description')),
         tone: 'error',
       })
     } finally {
@@ -301,7 +319,7 @@ export function CeoDashboardPage() {
         await ceoService.updateCompanyPayment(selectedCompanyPayment.id, payload)
       }
 
-      await companyPaymentsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.companyPayments() })
       setIsCompanyPaymentOpen(false)
       showToast({
         title: companyPaymentMode === 'create'
@@ -313,7 +331,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.reminder_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.reminder_failed_description')),
         tone: 'error',
       })
     } finally {
@@ -336,7 +354,8 @@ export function CeoDashboardPage() {
 
     try {
       await ceoService.deleteMessage(message.id)
-      await Promise.all([messagesQuery.refetch(), dashboardQuery.refetch()])
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.messages() })
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.dashboard() })
       showToast({
         title: t('ceo.dashboard.toast.message_deleted_title'),
         description: t('ceo.dashboard.toast.message_deleted_description'),
@@ -345,7 +364,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.message_delete_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.message_delete_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.message_delete_failed_description')),
         tone: 'error',
       })
     }
@@ -354,7 +373,7 @@ export function CeoDashboardPage() {
   async function handleTogglePayment(payment: PaymentItem) {
     try {
       await ceoService.togglePayment(payment.id)
-      await paymentsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.payments() })
       showToast({
         title: t('ceo.dashboard.toast.payment_status_title'),
         description: t('ceo.dashboard.toast.payment_status_description', { project: payment.project }),
@@ -363,7 +382,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.payment_toggle_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_toggle_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.payment_toggle_failed_description')),
         tone: 'error',
       })
     }
@@ -384,7 +403,7 @@ export function CeoDashboardPage() {
 
     try {
       await ceoService.deletePayment(payment.id)
-      await paymentsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.payments() })
       showToast({
         title: t('ceo.dashboard.toast.payment_deleted_title'),
         description: t('ceo.dashboard.toast.payment_deleted_description'),
@@ -393,7 +412,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.payment_delete_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.payment_delete_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.payment_delete_failed_description')),
         tone: 'error',
       })
     }
@@ -414,7 +433,7 @@ export function CeoDashboardPage() {
 
     try {
       await ceoService.deleteCompanyPayment(payment.id)
-      await companyPaymentsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.companyPayments() })
       showToast({
         title: t('ceo.dashboard.toast.reminder_deleted_title'),
         description: t('ceo.dashboard.toast.reminder_deleted_description'),
@@ -423,7 +442,7 @@ export function CeoDashboardPage() {
     } catch (error) {
       showToast({
         title: t('ceo.dashboard.toast.reminder_delete_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_delete_failed_description'),
+        description: getErrorMessage(error, t('ceo.dashboard.toast.reminder_delete_failed_description')),
         tone: 'error',
       })
     }
@@ -577,7 +596,7 @@ export function CeoDashboardPage() {
         isLoading={chartsQuery.isLoading}
         isError={chartsQuery.isError}
         onRetry={() => {
-          void chartsQuery.refetch()
+          void queryClient.invalidateQueries({ queryKey: crmKeys.charts() })
         }}
       />
 

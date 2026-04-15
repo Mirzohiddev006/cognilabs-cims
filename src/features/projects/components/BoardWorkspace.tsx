@@ -5,7 +5,8 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { StateBlock } from '../../../shared/ui/state-block'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { projectKeys } from '../lib/queryKeys'
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -115,27 +116,27 @@ export function BoardWorkspace({
   const { confirm } = useConfirm()
   const { user } = useAuth()
   const lt = translateCurrentLiteral
+  const queryClient = useQueryClient()
 
   const canManageProjects = Boolean(user)
   const isEmbedded = mode === 'embedded'
 
-  const boardQuery = useAsyncData(
-    async () => {
-      if (!user) {
-        throw new Error('User session is unavailable')
-      }
+  const boardQueryKey = projectKeys.board(boardId, projectId, user?.id)
 
+  const boardQuery = useQuery({
+    queryKey: boardQueryKey,
+    queryFn: async () => {
+      if (!user) throw new Error('User session is unavailable')
       return projectsService.getReadableBoardDetail(boardId, projectId, user.id)
     },
-    [boardId, projectId, user?.id],
-    { enabled: boardId > 0 && Boolean(user) },
-  )
+    enabled: boardId > 0 && Boolean(user),
+  })
 
-  const usersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
-    [],
-    { enabled: canManageProjects },
-  )
+  const usersQuery = useQuery({
+    queryKey: projectKeys.users(),
+    queryFn: () => projectsService.getAllUsers(),
+    enabled: canManageProjects,
+  })
 
   const [isEditBoardOpen, setIsEditBoardOpen] = useState(false)
   const [isAddColumnOpen, setIsAddColumnOpen] = useState(false)
@@ -177,7 +178,7 @@ export function BoardWorkspace({
       await projectsService.updateBoard(board.id, values)
       showToast({ title: lt('Board updated'), tone: 'success' })
       setIsEditBoardOpen(false)
-      await Promise.allSettled([boardQuery.refetch(), notifyBoardsChanged()])
+      await Promise.allSettled([queryClient.invalidateQueries({ queryKey: boardQueryKey }), notifyBoardsChanged()])
     } catch {
       showToast({ title: lt('Failed to update board'), tone: 'error' })
     } finally {
@@ -225,7 +226,7 @@ export function BoardWorkspace({
       await projectsService.createColumn(board.id, values)
       showToast({ title: lt('Column added'), tone: 'success' })
       setIsAddColumnOpen(false)
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to create column'), tone: 'error' })
     } finally {
@@ -243,7 +244,7 @@ export function BoardWorkspace({
       await projectsService.updateColumn(editColumnState.column.id, values)
       showToast({ title: lt('Column updated'), tone: 'success' })
       setEditColumnState(null)
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to update column'), tone: 'error' })
     } finally {
@@ -269,7 +270,7 @@ export function BoardWorkspace({
     try {
       await projectsService.deleteColumn(columnId)
       showToast({ title: lt('Column deleted'), tone: 'success' })
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to delete column'), tone: 'error' })
     }
@@ -285,7 +286,7 @@ export function BoardWorkspace({
       await projectsService.createCard(addCardState.columnId, fd)
       showToast({ title: lt('Card created'), tone: 'success' })
       setAddCardState(null)
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to create card'), tone: 'error' })
     } finally {
@@ -306,7 +307,7 @@ export function BoardWorkspace({
       if (detailCard?.id === editCardState.card.id) {
         setDetailCard(null)
       }
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to update card'), tone: 'error' })
     } finally {
@@ -335,7 +336,7 @@ export function BoardWorkspace({
       if (detailCard?.id === cardId) {
         setDetailCard(null)
       }
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
     } catch {
       showToast({ title: lt('Failed to delete card'), tone: 'error' })
     }
@@ -348,10 +349,10 @@ export function BoardWorkspace({
 
     try {
       await projectsService.moveCard(cardId, columnId, order)
-      boardQuery.setData((current) => (current ? moveCardInBoard(current, cardId, columnId, order) : current))
+      queryClient.setQueryData(boardQueryKey, (current: BoardDetail | undefined) => current ? moveCardInBoard(current, cardId, columnId, order) : current)
     } catch {
       showToast({ title: lt('Failed to move card, changes reverted.'), tone: 'error' })
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
       throw new Error('moveCard failed')
     }
   }
@@ -363,10 +364,10 @@ export function BoardWorkspace({
 
     try {
       await projectsService.moveColumn(columnId, order)
-      boardQuery.setData((current) => (current ? moveColumnInBoard(current, columnId, order) : current))
+      queryClient.setQueryData(boardQueryKey, (current: BoardDetail | undefined) => current ? moveColumnInBoard(current, columnId, order) : current)
     } catch {
       showToast({ title: lt('Failed to reorder column, changes reverted.'), tone: 'error' })
-      await boardQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: boardQueryKey })
       throw new Error('moveColumn failed')
     }
   }

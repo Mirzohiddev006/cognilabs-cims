@@ -1,64 +1,53 @@
-import { startTransition, useMemo, useState, type FormEvent } from 'react'
+import { startTransition } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
+import { extractFieldErrors, getErrorMessage } from '../../../shared/lib/error'
 import { AuthFeedback } from '../components/AuthFeedback'
 import { AuthField } from '../components/AuthField'
 import { AuthFormShell } from '../components/AuthFormShell'
 import { PasswordField } from '../components/PasswordField'
 import { useAuth } from '../hooks/useAuth'
-import { extractFieldErrors, getErrorMessage } from '../lib/formErrors'
-import { validateLogin } from '../lib/validators'
-
-type LoginValues = {
-  username: string
-  password: string
-}
+import { loginSchema, type LoginSchema } from '../lib/schemas'
 
 export function LoginPage() {
   const { t } = useLocale()
   const navigate = useNavigate()
   const location = useLocation()
   const { acceptTokens } = useAuth()
-  const initialMessage = useMemo(() => {
-    const state = location.state as { statusMessage?: string } | null
-    return state?.statusMessage ?? ''
-  }, [location.state])
 
-  const [values, setValues] = useState<LoginValues>({
-    username: '',
-    password: '',
+  const initialMessage = (location.state as { statusMessage?: string } | null)?.statusMessage ?? ''
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginSchema>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { username: '', password: '' },
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [statusMessage, setStatusMessage] = useState(initialMessage)
-  const [submitError, setSubmitError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-
-    const validationErrors = validateLogin(values)
-    setErrors(validationErrors)
-    setSubmitError('')
-    setStatusMessage('')
-
-    if (Object.keys(validationErrors).length > 0) {
-      return
-    }
-
-    setIsSubmitting(true)
-
+  async function onSubmit(values: LoginSchema) {
     try {
       const response = await authService.login(values)
       await acceptTokens(response)
-
       startTransition(() => navigate('/', { replace: true }))
     } catch (error) {
-      setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, t('auth.login_failed', 'Login failed. Check your email or password and try again.')))
-    } finally {
-      setIsSubmitting(false)
+      const fieldErrors = extractFieldErrors(error)
+
+      if (Object.keys(fieldErrors).length > 0) {
+        for (const [field, message] of Object.entries(fieldErrors)) {
+          setError(field as keyof LoginSchema, { message })
+        }
+      } else {
+        setError('root', {
+          message: getErrorMessage(error, t('auth.login_failed', 'Login failed. Check your email or password and try again.')),
+        })
+      }
     }
   }
 
@@ -69,9 +58,9 @@ export function LoginPage() {
       description={t('auth.login.description', 'Enter your email below to login to your account.')}
       footerLinks={[]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
-        <AuthFeedback tone="success" message={statusMessage} />
-        <AuthFeedback tone="error" message={submitError} />
+      <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
+        {initialMessage && <AuthFeedback tone="success" message={initialMessage} />}
+        {errors.root && <AuthFeedback tone="error" message={errors.root.message ?? ''} />}
 
         <AuthField
           label={t('auth.email', 'Email')}
@@ -79,21 +68,20 @@ export function LoginPage() {
           type="email"
           autoComplete="email"
           placeholder="user@example.com"
-          value={values.username}
-          error={errors.username}
+          error={errors.username?.message}
           className="min-h-11"
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              username: event.target.value,
-            }))
-          }
+          {...register('username')}
         />
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{t('auth.password', 'Password')}</span>
-            <Link className="text-xs text-[var(--muted)] transition hover:text-[var(--foreground)]" to="/auth/forgot-password">
+            <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">
+              {t('auth.password', 'Password')}
+            </span>
+            <Link
+              className="text-xs text-[var(--muted)] transition hover:text-[var(--foreground)]"
+              to="/auth/forgot-password"
+            >
               {t('auth.forgot_password', 'Forgot password?')}
             </Link>
           </div>
@@ -103,15 +91,9 @@ export function LoginPage() {
             name="password"
             autoComplete="current-password"
             placeholder={t('auth.password.enter', 'Enter your password')}
-            value={values.password}
-            error={errors.password}
+            error={errors.password?.message}
             className="min-h-11"
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                password: event.target.value,
-              }))
-            }
+            {...register('password')}
           />
         </div>
 
@@ -121,7 +103,10 @@ export function LoginPage() {
 
         <div className="text-center text-xs text-[var(--muted)]">
           {t('auth.verify_prompt', 'Email not verified?')}{' '}
-          <Link className="underline underline-offset-4 transition hover:text-[var(--foreground)]" to="/auth/verify-email">
+          <Link
+            className="underline underline-offset-4 transition hover:text-[var(--foreground)]"
+            to="/auth/verify-email"
+          >
             {t('auth.verify_email', 'Verify email')}
           </Link>
         </div>

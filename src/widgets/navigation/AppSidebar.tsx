@@ -6,10 +6,11 @@ import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { authService } from '../../shared/api/services/auth.service'
 import { env } from '../../shared/config/env'
-import { useAsyncData } from '../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { projectKeys } from '../../features/projects/lib/queryKeys'
 import { cn } from '../../shared/lib/cn'
 import { getAccessibleNavigation } from '../../shared/lib/permissions'
-import { getApiErrorMessage } from '../../shared/lib/api-error'
+import { getErrorMessage } from '../../shared/lib/error'
 import { resolveMediaUrl } from '../../shared/lib/media-url'
 import { useToast } from '../../shared/toast/useToast'
 import { Badge } from '../../shared/ui/badge'
@@ -67,7 +68,7 @@ export function AppSidebar() {
   const [isSavingMember, setIsSavingMember] = useState(false)
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(isProjectsRoute)
   const shouldLoadProjects = hasProjectsAccess && Boolean(user) && (isProjectsExpanded || isProjectsRoute)
-  const [projectsRefreshKey, setProjectsRefreshKey] = useState(0)
+  const queryClient = useQueryClient()
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const profileImageInputRef = useRef<HTMLInputElement>(null)
   const activePermissions = useMemo(
@@ -79,14 +80,14 @@ export function AppSidebar() {
   )
   const getNavigationLabel = (path: string, fallback: string) => t(`nav.${path}.label`, fallback)
   const getNavigationGroup = (path: string, fallback: string) => t(`nav.${path}.group`, fallback)
-  const projectsQuery = useAsyncData(
-    async () => {
+  const projectsQuery = useQuery({
+    queryKey: projectKeys.list(user?.id),
+    queryFn: async () => {
       const { projectsService } = await import('../../shared/api/services/projects.service')
       return projectsService.listReadableProjects(user?.id)
     },
-    [projectsRefreshKey, shouldLoadProjects, user?.id],
-    { enabled: shouldLoadProjects },
-  )
+    enabled: shouldLoadProjects,
+  })
   const sidebarProjects = useMemo(
     () => [...(projectsQuery.data?.projects ?? [])].sort((left, right) => left.project_name.localeCompare(right.project_name)),
     [projectsQuery.data?.projects],
@@ -116,7 +117,7 @@ export function AppSidebar() {
     }
 
     function handleProjectsNavigationUpdated() {
-      setProjectsRefreshKey((current) => current + 1)
+      void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
     }
 
     window.addEventListener(PROJECTS_NAVIGATION_UPDATED_EVENT, handleProjectsNavigationUpdated)
@@ -252,7 +253,7 @@ export function AppSidebar() {
     } catch (error) {
       showToast({
         title: t('profile.update_failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -413,7 +414,7 @@ export function AppSidebar() {
                         ) : projectsQuery.isError ? (
                           <button
                             type="button"
-                            onClick={() => void projectsQuery.refetch()}
+                            onClick={() => void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })}
                             className="w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[11px] text-[var(--danger-text)] transition hover:bg-red-500/10"
                           >
                             {t('shell.failed_load_projects')} {t('shell.retry')}

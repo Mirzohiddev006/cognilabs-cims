@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { websiteStatsService, type WebsiteAnalyticsRow } from '../../../shared/api/services/website-stats.service'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { formatCompactNumber } from '../../../shared/lib/format'
+import { ceoKeys } from '../lib/queryKeys'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -103,7 +104,7 @@ function getAnalyticsRowSubLabel(row: WebsiteAnalyticsRow) {
 }
 
 function getWebsiteStatsErrorMessage(error: unknown, fallback: string) {
-  const message = getApiErrorMessage(error, fallback)
+  const message = getErrorMessage(error, fallback)
 
   if (/failed to fetch/i.test(message) || /err_name_not_resolved/i.test(message)) {
     return `Analytics hostiga ulanib bo'lmadi (${websiteStatsApiHost}). Backend proxy yoki DNS ni tekshiring.`
@@ -116,21 +117,22 @@ export function WebsiteStatsPage() {
   const { t } = useTranslation()
   const { isAuthenticated } = useAuth()
   const { showToast } = useToast()
+  const queryClient = useQueryClient()
   const [analyticsRange, setAnalyticsRange] = useState('30')
 
   const analyticsWindow = useMemo(() => resolveAnalyticsQuery(analyticsRange), [analyticsRange])
 
-  const analyticsQuery = useAsyncData(
-    () => websiteStatsService.getAnalytics(analyticsWindow),
-    [analyticsWindow.days, analyticsWindow.startDate, analyticsWindow.endDate, isAuthenticated],
-    { enabled: isAuthenticated },
-  )
+  const analyticsQuery = useQuery({
+    queryKey: ceoKeys.analytics({ days: analyticsWindow.days, startDate: analyticsWindow.startDate, endDate: analyticsWindow.endDate }),
+    queryFn: () => websiteStatsService.getAnalytics(analyticsWindow),
+    enabled: isAuthenticated,
+  })
 
-  const realtimeAnalyticsQuery = useAsyncData(
-    () => websiteStatsService.getRealtimeAnalytics(),
-    [isAuthenticated],
-    { enabled: isAuthenticated },
-  )
+  const realtimeAnalyticsQuery = useQuery({
+    queryKey: ceoKeys.realtimeAnalytics(),
+    queryFn: () => websiteStatsService.getRealtimeAnalytics(),
+    enabled: isAuthenticated,
+  })
 
   const analyticsSummary = analyticsQuery.data?.summary ?? {}
   const realtimeSummary = realtimeAnalyticsQuery.data?.summary ?? {}
@@ -168,27 +170,24 @@ export function WebsiteStatsPage() {
   const realtimeActiveUsersMetric = getAnalyticsMetric(realtimeSummary, ['activeUsers', 'users', 'totalUsers'])
 
   async function handleRefresh() {
-    const results = await Promise.allSettled([
-      analyticsQuery.refetch(),
-      realtimeAnalyticsQuery.refetch(),
-    ])
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ceoKeys.analytics() }),
+        queryClient.invalidateQueries({ queryKey: ceoKeys.realtimeAnalytics() }),
+      ])
 
-    const failed = results.find((result) => result.status === 'rejected')
-
-    if (failed?.status === 'rejected') {
+      showToast({
+        title: t('ceo.website.refreshed'),
+        description: t('ceo.website.refreshed_description'),
+        tone: 'success',
+      })
+    } catch (error) {
       showToast({
         title: t('ceo.website.refresh_failed'),
-        description: getWebsiteStatsErrorMessage(failed.reason, t('ceo.website.refresh_failed_description')),
+        description: getWebsiteStatsErrorMessage(error, t('ceo.website.refresh_failed_description')),
         tone: 'error',
       })
-      return
     }
-
-    showToast({
-      title: t('ceo.website.refreshed'),
-      description: t('ceo.website.refreshed_description'),
-      tone: 'success',
-    })
   }
 
   return (
@@ -310,7 +309,7 @@ export function WebsiteStatsPage() {
                 )}
                 actionLabel={t('common.retry')}
                 onAction={() => {
-                  void analyticsQuery.refetch().catch(() => null)
+                  void queryClient.invalidateQueries({ queryKey: ceoKeys.analytics() })
                 }}
               />
             ) : (
@@ -388,7 +387,7 @@ export function WebsiteStatsPage() {
                 )}
                 actionLabel={t('common.retry')}
                 onAction={() => {
-                  void realtimeAnalyticsQuery.refetch().catch(() => null)
+                  void queryClient.invalidateQueries({ queryKey: ceoKeys.realtimeAnalytics() })
                 }}
               />
             ) : realtimeRows.length === 0 ? (

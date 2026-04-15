@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useTheme } from '../../../app/hooks/useTheme'
 import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { projectKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
@@ -34,6 +35,7 @@ export function ProjectsListPage() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const queryClient = useQueryClient()
   const { user } = useAuth()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
@@ -60,23 +62,20 @@ export function ProjectsListPage() {
   const canManageProjects = Boolean(user)
   const priorityConfigMap = getPriorityConfig()
 
-  const projectsQuery = useAsyncData(
-    async () => {
-      if (!user) {
-        throw new Error('User session is unavailable')
-      }
-
+  const projectsQuery = useQuery({
+    queryKey: projectKeys.list(user?.id),
+    queryFn: async () => {
+      if (!user) throw new Error('User session is unavailable')
       return projectsService.listReadableProjects(user.id)
     },
-    [user?.id],
-    { enabled: Boolean(user) },
-  )
+    enabled: Boolean(user),
+  })
 
-  const membersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
-    [],
-    { enabled: canManageProjects },
-  )
+  const membersQuery = useQuery({
+    queryKey: projectKeys.users(),
+    queryFn: () => projectsService.getAllUsers(),
+    enabled: canManageProjects,
+  })
 
   const [search, setSearch] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -87,16 +86,16 @@ export function ProjectsListPage() {
   const projects = projectsQuery.data?.projects ?? []
   const total = projectsQuery.data?.total_count ?? projects.length
 
-  const selectedMemberProjectsQuery = useAsyncData(
-    () => projectsService.listUserOpenProjects(selectedMemberId ?? 0),
-    [selectedMemberId],
-    { enabled: selectedMemberId !== null },
-  )
-  const selectedMemberCardsQuery = useAsyncData(
-    () => projectsService.listUserOpenCards(selectedMemberId ?? 0),
-    [selectedMemberId],
-    { enabled: selectedMemberId !== null },
-  )
+  const selectedMemberProjectsQuery = useQuery({
+    queryKey: [...projectKeys.all, 'member-projects', selectedMemberId] as const,
+    queryFn: () => projectsService.listUserOpenProjects(selectedMemberId ?? 0),
+    enabled: selectedMemberId !== null,
+  })
+  const selectedMemberCardsQuery = useQuery({
+    queryKey: [...projectKeys.all, 'member-cards', selectedMemberId] as const,
+    queryFn: () => projectsService.listUserOpenCards(selectedMemberId ?? 0),
+    enabled: selectedMemberId !== null,
+  })
 
   const selectedMemberProjects = selectedMemberProjectsQuery.data?.projects ?? []
   const selectedMemberCards = selectedMemberCardsQuery.data?.cards ?? []
@@ -106,23 +105,17 @@ export function ProjectsListPage() {
     [projects],
   )
 
-  const projectDetailsQuery = useAsyncData(
-    async () => {
-      if (!user) {
-        return []
-      }
-
+  const projectDetailsQuery = useQuery({
+    queryKey: [...projectKeys.all, 'details', projectIdsKey, user?.id] as const,
+    queryFn: async () => {
+      if (!user) return []
       const details = await Promise.allSettled(
-        projects.map((project) => (
-          projectsService.getReadableProjectDetail(project.id, user.id)
-        )),
+        projects.map((project) => projectsService.getReadableProjectDetail(project.id, user.id)),
       )
-
       return details.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []))
     },
-    [projectIdsKey, user?.id],
-    { enabled: projects.length > 0 && Boolean(user) },
-  )
+    enabled: projects.length > 0 && Boolean(user),
+  })
 
   const detailedProjectsMap = useMemo(
     () => new Map((projectDetailsQuery.data ?? []).map((project) => [project.id, project])),
@@ -265,7 +258,7 @@ export function ProjectsListPage() {
       await projectsService.createProject(fd)
       showToast({ title: lt('Project created'), tone: 'success' })
       setIsCreateOpen(false)
-      await projectsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: projectKeys.list(user?.id) })
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
@@ -285,8 +278,8 @@ export function ProjectsListPage() {
       await projectsService.updateProject(editProject.id, fd)
       showToast({ title: lt('Project updated'), tone: 'success' })
       setEditProject(null)
-      await projectsQuery.refetch()
-      await projectDetailsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: projectKeys.list(user?.id) })
+      await queryClient.invalidateQueries({ queryKey: [...projectKeys.all, 'details'] })
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
@@ -314,7 +307,7 @@ export function ProjectsListPage() {
     try {
       await projectsService.deleteProject(project.id)
       showToast({ title: lt('Project deleted'), tone: 'success' })
-      await projectsQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: projectKeys.list(user?.id) })
       refetchSelectedMemberData()
       notifyProjectsNavigationChanged()
     } catch {
@@ -342,8 +335,8 @@ export function ProjectsListPage() {
     }
 
     void Promise.allSettled([
-      selectedMemberProjectsQuery.refetch(),
-      selectedMemberCardsQuery.refetch(),
+      queryClient.invalidateQueries({ queryKey: [...projectKeys.all, 'member-projects', selectedMemberId] }),
+      queryClient.invalidateQueries({ queryKey: [...projectKeys.all, 'member-cards', selectedMemberId] }),
     ])
   }
 
@@ -668,7 +661,7 @@ export function ProjectsListPage() {
             title={lt('Failed to load projects')}
             description={lt('Something went wrong. Please try again.')}
             actionLabel={lt('Retry')}
-            onAction={selectedMemberId !== null ? refetchSelectedMemberData : () => void projectsQuery.refetch()}
+            onAction={selectedMemberId !== null ? refetchSelectedMemberData : () => void queryClient.invalidateQueries({ queryKey: projectKeys.list(user?.id) })}
           />
         ) : filteredProjects.length === 0 ? (
           <StateBlock

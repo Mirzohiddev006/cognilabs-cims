@@ -7,9 +7,10 @@ import {
   type WorkdayOverrideRecord,
 } from '../../../shared/api/services/updateTracking.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ceoKeys } from '../lib/queryKeys'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { getApiErrorMessage } from '../../../shared/lib/api-error'
+import { getErrorMessage } from '../../../shared/lib/error'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate, formatShortDateTime, getLocalizedMonthName } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
@@ -266,6 +267,7 @@ export function CeoWorkdayOverridesPage() {
   )
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const queryClient = useQueryClient()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
@@ -280,14 +282,14 @@ export function CeoWorkdayOverridesPage() {
     [locale],
   )
 
-  const overridesQuery = useAsyncData(
-    () => updateTrackingService.workdayOverrides({ month, year }),
-    [month, year],
-  )
-  const memberOptionsQuery = useAsyncData(
-    () => updateTrackingService.workdayOverrideMemberOptions(),
-    [],
-  )
+  const overridesQuery = useQuery({
+    queryKey: [...ceoKeys.workdayOverrides(), month, year] as const,
+    queryFn: () => updateTrackingService.workdayOverrides({ month, year }),
+  })
+  const memberOptionsQuery = useQuery({
+    queryKey: [...ceoKeys.workdayOverrides(), 'member-options'] as const,
+    queryFn: () => updateTrackingService.workdayOverrideMemberOptions(),
+  })
 
   const overrides = useMemo(
     () => [...(overridesQuery.data ?? [])].sort((left, right) => {
@@ -336,7 +338,10 @@ export function CeoWorkdayOverridesPage() {
 
   async function handleRefresh() {
     try {
-      await Promise.all([overridesQuery.refetch(), memberOptionsQuery.refetch()])
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ceoKeys.workdayOverrides() }),
+        queryClient.invalidateQueries({ queryKey: [...ceoKeys.workdayOverrides(), "member-options"] }),
+      ])
       showToast({
         title: lt('Workday overrides refreshed'),
         description: `${lt('Overrides for')} ${getMonthName(month)} ${year} ${lt('reloaded')}.`,
@@ -345,7 +350,7 @@ export function CeoWorkdayOverridesPage() {
     } catch (error) {
       showToast({
         title: lt('Refresh failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -365,7 +370,7 @@ export function CeoWorkdayOverridesPage() {
 
     try {
       await updateTrackingService.deleteWorkdayOverride(item.id)
-      await overridesQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.workdayOverrides() })
       showToast({
         title: lt('Override deleted'),
         description: `${item.title} ${lt('removed successfully.')}`,
@@ -374,7 +379,7 @@ export function CeoWorkdayOverridesPage() {
     } catch (error) {
       showToast({
         title: 'Delete failed',
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     }
@@ -454,12 +459,12 @@ export function CeoWorkdayOverridesPage() {
         })
       }
 
-      await overridesQuery.refetch()
+      await queryClient.invalidateQueries({ queryKey: ceoKeys.workdayOverrides() })
       closeDialog()
     } catch (error) {
       showToast({
         title: editingOverride ? lt('Update failed') : lt('Create failed'),
-        description: getApiErrorMessage(error),
+        description: getErrorMessage(error),
         tone: 'error',
       })
     } finally {
@@ -484,7 +489,7 @@ export function CeoWorkdayOverridesPage() {
         title={tx('ceo.workday.states.error_title', 'Overrides unavailable')}
         description={tx('ceo.workday.states.error_description', 'Could not load holiday and short-day overrides.')}
         actionLabel={t('common.retry')}
-        onAction={() => void overridesQuery.refetch()}
+        onAction={() => void queryClient.invalidateQueries({ queryKey: ceoKeys.workdayOverrides() })}
       />
     )
   }
