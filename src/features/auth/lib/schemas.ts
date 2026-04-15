@@ -23,6 +23,9 @@ export const registerSchema = z.object({
   surname: z.string().min(1, 'Familiya majburiy'),
   password: passwordSchema,
   company_code: z.string().min(1, 'Kompaniya kodi majburiy'),
+  telegram_id: z.string().optional(),
+  job_title: z.string().optional(),
+  role: z.string().min(1, 'Rol majburiy'),
 })
 
 export type RegisterSchema = z.infer<typeof registerSchema>

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
@@ -22,6 +22,15 @@ const sizeClasses = {
   xl: 'max-w-4xl',
 }
 
+const FOCUSABLE_SELECTORS = [
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'textarea:not([disabled])',
+  'select:not([disabled])',
+  'a[href]',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
 export function Dialog({
   open,
   onClose,
@@ -34,10 +43,12 @@ export function Dialog({
   tone = 'default',
   headerIcon,
 }: DialogProps) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+
+  /* Body scroll lock + Escape key */
   useEffect(() => {
-    if (!open) {
-      return
-    }
+    if (!open) return
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -56,6 +67,47 @@ export function Dialog({
     }
   }, [onClose, open])
 
+  /* Focus trap: capture focus on open, restore on close */
+  useEffect(() => {
+    if (!open || !dialogRef.current) return
+
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    const focusableElements = Array.from(
+      dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS),
+    )
+
+    focusableElements[0]?.focus()
+
+    function handleTab(event: KeyboardEvent) {
+      if (event.key !== 'Tab' || !dialogRef.current) return
+
+      const elements = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS),
+      )
+      const first = elements[0]
+      const last = elements[elements.length - 1]
+
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault()
+          last?.focus()
+        }
+      } else {
+        if (document.activeElement === last) {
+          event.preventDefault()
+          first?.focus()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleTab)
+
+    return () => {
+      window.removeEventListener('keydown', handleTab)
+      previouslyFocused?.focus()
+    }
+  }, [open])
+
   if (!open) {
     return null
   }
@@ -72,8 +124,13 @@ export function Dialog({
             : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),rgba(0,0,0,0.72)]',
         )}
         onClick={onClose}
+        tabIndex={-1}
       />
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={cn(
           'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
           tone === 'danger' && 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]',
@@ -102,7 +159,10 @@ export function Dialog({
             )}>
               {translateCurrentLiteral(eyebrow ?? 'Workspace dialog')}
             </p>
-            <h2 className="ui-dialog-title mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]">
+            <h2
+              id={titleId}
+              className="ui-dialog-title mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]"
+            >
               {translateCurrentLiteral(title)}
             </h2>
             {description ? (
@@ -118,7 +178,7 @@ export function Dialog({
             type="button"
             onClick={onClose}
             className={cn(
-              'inline-flex h-10 w-10 items-center justify-center rounded-xl border bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:text-[var(--foreground)]',
+              'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:text-[var(--foreground)]',
               tone === 'danger'
                 ? 'border-red-500/15 hover:border-red-500/30 hover:bg-red-500/10'
                 : 'border-[var(--border)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',

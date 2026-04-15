@@ -6,9 +6,9 @@ type AuthFeedbackProps = {
 }
 
 const toneClasses = {
-  error: 'border-red-500/20 bg-red-500/10 text-red-300',
+  error:   'border-red-500/20 bg-red-500/10 text-red-300',
   success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
-  info: 'border-white/10 bg-white/5 text-[var(--muted-strong)]',
+  info:    'border-white/10 bg-white/5 text-[var(--muted-strong)]',
 }
 
 export function AuthFeedback({ tone = 'info', message }: AuthFeedbackProps) {
@@ -17,7 +17,11 @@ export function AuthFeedback({ tone = 'info', message }: AuthFeedbackProps) {
   }
 
   return (
-    <div className={cn('rounded-md border px-3 py-2.5 text-xs', toneClasses[tone])}>
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      aria-live={tone === 'error' ? 'assertive' : 'polite'}
+      className={cn('rounded-md border px-3 py-2.5 text-xs leading-5', toneClasses[tone])}
+    >
       {message}
     </div>
   )

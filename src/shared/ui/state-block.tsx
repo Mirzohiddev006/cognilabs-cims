@@ -78,6 +78,8 @@ export function StateBlock({
 
   return (
     <div
+      role={isLoading ? 'status' : isError ? 'alert' : undefined}
+      aria-live={isLoading ? 'polite' : isError ? 'assertive' : undefined}
       className={
         isError
           ? 'flex flex-col items-center gap-3 rounded-xl border border-[var(--danger-border)] bg-[var(--danger-dim)] px-6 py-10 text-center'

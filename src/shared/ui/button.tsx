@@ -121,6 +121,7 @@ export function Button({
     <button
       className={combinedClassName}
       disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
       {loading ? (

@@ -15,10 +15,15 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
   const { t } = useLocale()
   const [visible, setVisible] = useState(false)
   const inputId = id ?? props.name
+  const errorId = error ? `${inputId}-error` : undefined
+  const hintId = hint && !error ? `${inputId}-hint` : undefined
+  const describedBy = errorId ?? hintId
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      {label ? <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span> : null}
+      {label ? (
+        <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
+      ) : null}
       <div className="relative group">
         {leadingIcon ? (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
@@ -28,7 +33,16 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
         <Input
           id={inputId}
           type={visible ? 'text' : 'password'}
-          className={cn('pr-14', leadingIcon ? 'pl-10' : null, className)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(
+            'pr-14',
+            leadingIcon ? 'pl-10' : null,
+            error
+              ? 'border-rose-500/50 focus:border-rose-500/70 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(239,68,68,0.12)]'
+              : null,
+            className,
+          )}
           {...props}
         />
         <button
@@ -37,27 +51,34 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
           aria-label={visible ? t('auth.password.hide', 'Hide password') : t('auth.password.show', 'Show password')}
           aria-pressed={visible}
           className={cn(
-            'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 transition-all',
+            'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[var(--muted)] transition-all',
             'hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
           )}
         >
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4.5 w-4.5"
-          >
-            <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
-            <circle cx="12" cy="12" r="2.75" />
-          </svg>
+          {visible ? (
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+              <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
+              <circle cx="12" cy="12" r="2.75" />
+              <line x1="3" y1="3" x2="21" y2="21" strokeWidth="1.8" />
+            </svg>
+          ) : (
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+              <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
+              <circle cx="12" cy="12" r="2.75" />
+            </svg>
+          )}
         </button>
       </div>
-      {error ? <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
-      {!error && hint ? <span className="text-[11px] font-medium text-zinc-500">{hint}</span> : null}
+      {error ? (
+        <span id={errorId} role="alert" className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+          {error}
+        </span>
+      ) : null}
+      {!error && hint ? (
+        <span id={hintId} className="text-[11px] font-medium text-[var(--muted)]">
+          {hint}
+        </span>
+      ) : null}
     </label>
   )
 }

@@ -11,10 +11,15 @@ type AuthFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 
 export function AuthField({ label, error, hint, id, className, leadingIcon, ...props }: AuthFieldProps) {
   const inputId = id ?? props.name
+  const errorId = error ? `${inputId}-error` : undefined
+  const hintId = hint && !error ? `${inputId}-hint` : undefined
+  const describedBy = errorId ?? hintId
 
   return (
     <label className="grid gap-2" htmlFor={inputId}>
-      <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
+      {label ? (
+        <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
+      ) : null}
       <div className="relative">
         {leadingIcon ? (
           <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
@@ -24,12 +29,28 @@ export function AuthField({ label, error, hint, id, className, leadingIcon, ...p
 
         <Input
           id={inputId}
-          className={cn(leadingIcon ? 'pl-10' : null, className)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={cn(
+            leadingIcon ? 'pl-10' : null,
+            error
+              ? 'border-rose-500/50 focus:border-rose-500/70 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(239,68,68,0.12)]'
+              : null,
+            className,
+          )}
           {...props}
         />
       </div>
-      {error ? <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
-      {!error && hint ? <span className="text-[11px] font-medium text-zinc-500">{hint}</span> : null}
+      {error ? (
+        <span id={errorId} role="alert" className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+          {error}
+        </span>
+      ) : null}
+      {!error && hint ? (
+        <span id={hintId} className="text-[11px] font-medium text-[var(--muted)]">
+          {hint}
+        </span>
+      ) : null}
     </label>
   )
 }

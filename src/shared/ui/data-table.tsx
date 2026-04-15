@@ -147,10 +147,13 @@ export function DataTable<T>({
                 <tr
                   key={getRowKey(row)}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row) } } : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? 'button' : undefined}
                   className={cn(
                     'table-row-hover group border-b border-[var(--border)] last:border-b-0',
                     zebra && isEven && 'bg-white/[0.012]',
-                    onRowClick && 'cursor-pointer',
+                    onRowClick && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/20',
                   )}
                 >
                   {columns.map((col) => (

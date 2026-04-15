@@ -1,49 +1,43 @@
-import { startTransition, useState, type FormEvent } from 'react'
+import { startTransition } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../app/hooks/useLocale'
-import type { RegisterPayload } from '../../../shared/api/services/auth.service'
 import { authService } from '../../../shared/api/services/auth.service'
+import { extractFieldErrors, getErrorMessage } from '../../../shared/lib/error'
 import { Button } from '../../../shared/ui/button'
 import { SelectField } from '../../../shared/ui/select-field'
 import { AuthFeedback } from '../components/AuthFeedback'
 import { AuthField } from '../components/AuthField'
 import { AuthFormShell } from '../components/AuthFormShell'
 import { PasswordField } from '../components/PasswordField'
-import { extractFieldErrors, getErrorMessage } from '../lib/formErrors'
-import { validateRegister } from '../lib/validators'
-
-const initialValues: RegisterPayload = {
-  email: '',
-  name: '',
-  surname: '',
-  password: '',
-  company_code: 'oddiy',
-  telegram_id: '',
-  job_title: '',
-  role: 'Customer',
-}
+import { registerSchema, type RegisterSchema } from '../lib/schemas'
 
 export function RegisterPage() {
   const { t } = useLocale()
   const navigate = useNavigate()
-  const [values, setValues] = useState<RegisterPayload>(initialValues)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitError, setSubmitError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    setError,
+    control,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterSchema>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      email: '',
+      name: '',
+      surname: '',
+      password: '',
+      company_code: 'oddiy',
+      telegram_id: '',
+      job_title: '',
+      role: 'Customer',
+    },
+  })
 
-    const validationErrors = validateRegister(values)
-    setErrors(validationErrors)
-    setSubmitError('')
-
-    if (Object.keys(validationErrors).length > 0) {
-      return
-    }
-
-    setIsSubmitting(true)
-
+  async function onSubmit(values: RegisterSchema) {
     try {
       await authService.register({
         ...values,
@@ -54,16 +48,23 @@ export function RegisterPage() {
       startTransition(() =>
         navigate(`/auth/verify-email?email=${encodeURIComponent(values.email)}`, {
           replace: true,
-            state: {
+          state: {
             statusMessage: t('auth.register.success', 'Registration successful. Please enter the code sent to your email.'),
           },
         }),
       )
     } catch (error) {
-      setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, t('auth.register.failed', 'Registration failed.')))
-    } finally {
-      setIsSubmitting(false)
+      const fieldErrors = extractFieldErrors(error)
+
+      if (Object.keys(fieldErrors).length > 0) {
+        for (const [field, message] of Object.entries(fieldErrors)) {
+          setError(field as keyof RegisterSchema, { message })
+        }
+      } else {
+        setError('root', {
+          message: getErrorMessage(error, t('auth.register.failed', 'Registration failed.')),
+        })
+      }
     }
   }
 
@@ -84,8 +85,8 @@ export function RegisterPage() {
         { label: t('auth.verify_email', 'Verify email'), to: '/auth/verify-email' },
       ]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
-        <AuthFeedback tone="error" message={submitError} />
+      <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
+        {errors.root && <AuthFeedback tone="error" message={errors.root.message ?? ''} />}
 
         <div className="grid gap-5 md:grid-cols-2">
           <AuthField
@@ -94,17 +95,15 @@ export function RegisterPage() {
             type="email"
             autoComplete="email"
             placeholder="user@example.com"
-            value={values.email}
-            error={errors.email}
-            onChange={(event) => setValues((current) => ({ ...current, email: event.target.value }))}
+            error={errors.email?.message}
+            {...register('email')}
           />
           <AuthField
             label={t('auth.register.company_code', 'Company code')}
             name="company_code"
             placeholder="oddiy"
-            value={values.company_code}
-            error={errors.company_code}
-            onChange={(event) => setValues((current) => ({ ...current, company_code: event.target.value }))}
+            error={errors.company_code?.message}
+            {...register('company_code')}
           />
         </div>
 
@@ -114,18 +113,16 @@ export function RegisterPage() {
             name="name"
             autoComplete="given-name"
             placeholder="Ibrohim"
-            value={values.name}
-            error={errors.name}
-            onChange={(event) => setValues((current) => ({ ...current, name: event.target.value }))}
+            error={errors.name?.message}
+            {...register('name')}
           />
           <AuthField
             label={t('auth.register.surname', 'Surname')}
             name="surname"
             autoComplete="family-name"
             placeholder="Ibrohimjonov"
-            value={values.surname}
-            error={errors.surname}
-            onChange={(event) => setValues((current) => ({ ...current, surname: event.target.value }))}
+            error={errors.surname?.message}
+            {...register('surname')}
           />
         </div>
 
@@ -134,9 +131,8 @@ export function RegisterPage() {
           name="password"
           autoComplete="new-password"
           placeholder={t('auth.register.password_placeholder', 'Minimum 6 characters')}
-          value={values.password}
-          error={errors.password}
-          onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
+          error={errors.password?.message}
+          {...register('password')}
         />
 
         <div className="grid gap-5 md:grid-cols-3">
@@ -144,27 +140,36 @@ export function RegisterPage() {
             label={t('auth.register.telegram_id', 'Telegram ID')}
             name="telegram_id"
             placeholder={t('auth.register.telegram_placeholder', '@username or ID')}
-            value={values.telegram_id}
-            error={errors.telegram_id}
-            onChange={(event) => setValues((current) => ({ ...current, telegram_id: event.target.value }))}
+            error={errors.telegram_id?.message}
+            {...register('telegram_id')}
           />
           <AuthField
             label={t('auth.register.job_title', 'Job title')}
             name="job_title"
             placeholder={t('auth.register.job_title_placeholder', 'Sales Manager')}
-            value={values.job_title ?? ''}
-            error={errors.job_title}
-            onChange={(event) => setValues((current) => ({ ...current, job_title: event.target.value }))}
+            error={errors.job_title?.message}
+            {...register('job_title')}
           />
 
           <label className="grid gap-2">
             <span className="text-xs font-bold text-white tracking-tight">{t('auth.register.role', 'Role')}</span>
-            <SelectField
-              value={values.role}
-              onValueChange={(value) => setValues((current) => ({ ...current, role: value }))}
-              options={roleOptions}
-              className="min-h-12 rounded-xl px-4"
+            <Controller
+              control={control}
+              name="role"
+              render={({ field }) => (
+                <SelectField
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  options={roleOptions}
+                  className="min-h-12 rounded-xl px-4"
+                />
+              )}
             />
+            {errors.role && (
+              <span className="text-[11px] font-bold uppercase tracking-wider text-red-500">
+                {errors.role.message}
+              </span>
+            )}
           </label>
         </div>
 

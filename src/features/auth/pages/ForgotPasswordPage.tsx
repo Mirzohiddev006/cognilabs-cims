@@ -1,50 +1,53 @@
-import { startTransition, useState, type FormEvent } from 'react'
+import { startTransition } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from 'react-router-dom'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { authService } from '../../../shared/api/services/auth.service'
+import { extractFieldErrors, getErrorMessage } from '../../../shared/lib/error'
 import { Button } from '../../../shared/ui/button'
 import { AuthFeedback } from '../components/AuthFeedback'
 import { AuthField } from '../components/AuthField'
 import { AuthFormShell } from '../components/AuthFormShell'
-import { extractFieldErrors, getErrorMessage } from '../lib/formErrors'
-import { validateEmailOnly } from '../lib/validators'
+import { forgotPasswordSchema, type ForgotPasswordSchema } from '../lib/schemas'
 
 export function ForgotPasswordPage() {
   const { t } = useLocale()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [submitError, setSubmitError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors, isSubmitting },
+  } = useForm<ForgotPasswordSchema>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: '' },
+  })
 
-    const validationErrors = validateEmailOnly(email)
-    setErrors(validationErrors)
-    setSubmitError('')
-
-    if (Object.keys(validationErrors).length > 0) {
-      return
-    }
-
-    setIsSubmitting(true)
-
+  async function onSubmit(values: ForgotPasswordSchema) {
     try {
-      const response = await authService.forgotPassword(email)
+      const response = await authService.forgotPassword(values.email)
       startTransition(() =>
-        navigate(`/auth/reset-password?email=${encodeURIComponent(email)}`, {
+        navigate(`/auth/reset-password?email=${encodeURIComponent(values.email)}`, {
           replace: true,
-            state: {
+          state: {
             statusMessage: response.message || t('auth.reset_code_sent', 'A reset code has been sent. Please enter your new password.'),
           },
         }),
       )
     } catch (error) {
-      setErrors(extractFieldErrors(error))
-      setSubmitError(getErrorMessage(error, t('auth.send_reset_failed', 'Failed to send reset code.')))
-    } finally {
-      setIsSubmitting(false)
+      const fieldErrors = extractFieldErrors(error)
+
+      if (Object.keys(fieldErrors).length > 0) {
+        for (const [field, message] of Object.entries(fieldErrors)) {
+          setError(field as keyof ForgotPasswordSchema, { message })
+        }
+      } else {
+        setError('root', {
+          message: getErrorMessage(error, t('auth.send_reset_failed', 'Failed to send reset code.')),
+        })
+      }
     }
   }
 
@@ -55,7 +58,7 @@ export function ForgotPasswordPage() {
       description={t('auth.recovery.description', 'Request a reset code or switch to password reset if you already received one.')}
       footerLinks={[{ label: t('auth.back_to_login', 'Back to login'), to: '/auth/login' }]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
           <span className="rounded-md bg-[var(--card)] px-3 py-1.5 text-center text-xs font-medium text-[var(--foreground)]">
             {t('auth.forgot_password_tab', 'Forgot Password')}
@@ -68,7 +71,7 @@ export function ForgotPasswordPage() {
           </Link>
         </div>
 
-        <AuthFeedback tone="error" message={submitError} />
+        {errors.root && <AuthFeedback tone="error" message={errors.root.message ?? ''} />}
 
         <AuthField
           label={t('auth.email', 'Email')}
@@ -76,9 +79,8 @@ export function ForgotPasswordPage() {
           type="email"
           autoComplete="email"
           placeholder="user@example.com"
-          value={email}
-          error={errors.email}
-          onChange={(event) => setEmail(event.target.value)}
+          error={errors.email?.message}
+          {...register('email')}
         />
 
         <Button size="lg" type="submit" disabled={isSubmitting} className="w-full">
