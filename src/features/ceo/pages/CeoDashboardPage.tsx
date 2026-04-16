@@ -15,7 +15,8 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
-import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { EmptyStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
+import { Skeleton, SkeletonCard, SkeletonTable } from '../../../shared/ui/skeleton'
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
@@ -450,11 +451,21 @@ export function CeoDashboardPage() {
 
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
-      <LoadingStateBlock
-        eyebrow="CEO / Day 6"
-        title={t('ceo.dashboard.loading.title')}
-        description={t('ceo.dashboard.loading.description')}
-      />
+      <section className="space-y-8" aria-busy="true" aria-label={t('ceo.dashboard.loading.title')}>
+        <div className="flex flex-col gap-2.5 border-b border-[var(--border)] pb-6">
+          <Skeleton height="h-2.5" width="w-16" rounded="rounded-full" />
+          <Skeleton height="h-8" width="w-72" rounded="rounded-lg" />
+          <Skeleton height="h-3" width="w-48" rounded="rounded-full" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <SkeletonTable rows={6} cols={5} />
+        <SkeletonTable rows={4} cols={4} />
+      </section>
     )
   }
 

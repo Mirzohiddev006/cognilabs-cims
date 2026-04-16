@@ -16,6 +16,7 @@ import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
 import { ErrorStateBlock } from '../../../shared/ui/state-block'
+import { Skeleton, SkeletonCard, SkeletonTable } from '../../../shared/ui/skeleton'
 import { useAuth } from '../../auth/hooks/useAuth'
 import { CompensationPolicyPanel } from '../../faults/components/CompensationPolicyPanel'
 import {
@@ -355,11 +356,31 @@ export function MemberDashboardPage() {
 
   if (isDashboardPending && !detail) {
     return (
-      <ErrorStateBlock
-        eyebrow={lt('Member')}
-        title={lt('Dashboard loading')}
-        description={tr('Member dashboard API data is still loading.', 'Xodim paneli API ma\'lumotlari hali yuklanmoqda.', 'Данные API панели сотрудника все еще загружаются.')}
-      />
+      <section className="space-y-6" aria-busy="true" aria-label={lt('Dashboard loading')}>
+        {/* Glass header card skeleton */}
+        <Card variant="glass" noPadding className="overflow-hidden rounded-[30px] border-white/10">
+          <div className="px-6 py-6 sm:px-8 sm:py-7">
+            <div className="space-y-3">
+              <Skeleton height="h-2.5" width="w-28" rounded="rounded-full" />
+              <Skeleton height="h-9" width="w-56" rounded="rounded-lg" />
+              <Skeleton height="h-3" width="w-36" rounded="rounded-full" />
+              <div className="flex gap-2 pt-1">
+                <Skeleton height="h-6" width="w-20" rounded="rounded-full" />
+                <Skeleton height="h-6" width="w-24" rounded="rounded-full" />
+                <Skeleton height="h-6" width="w-28" rounded="rounded-full" />
+              </div>
+            </div>
+          </div>
+        </Card>
+        {/* Metric cards skeleton */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        {/* Detail table skeleton */}
+        <SkeletonTable rows={5} cols={4} />
+      </section>
     )
   }
 

@@ -25,7 +25,8 @@ import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
-import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { EmptyStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
+import { Skeleton, SkeletonCard, SkeletonTable } from '../../../shared/ui/skeleton'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 
@@ -677,11 +678,22 @@ export function CrmDashboardPage() {
 
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
-      <LoadingStateBlock
-        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
-        title={t('customers.loading.dashboard.title', 'CRM dashboard loading')}
-        description={t('customers.loading.dashboard.description', 'Retrieving customers and summary statistics.')}
-      />
+      <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6" aria-busy="true" aria-label={t('customers.loading.dashboard.title', 'CRM dashboard loading')}>
+        <div className="flex flex-col gap-2.5 border-b border-[var(--border)] pb-6">
+          <Skeleton height="h-2.5" width="w-24" rounded="rounded-full" />
+          <Skeleton height="h-8" width="w-80" rounded="rounded-lg" />
+          <Skeleton height="h-3" width="w-52" rounded="rounded-full" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <SkeletonTable rows={8} cols={5} />
+      </section>
     )
   }
 
