@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
@@ -13,15 +16,15 @@ import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { buildFormData } from '../lib/formdata'
 import { getPriorityConfig } from '../lib/format'
 
-type CardFormValues = {
-  title: string
-  description: string
-  priority: string
-  assignee_id: string
-  due_date: string
-  images: File[]
-  clear_existing_images: boolean
-}
+const cardSchema = z.object({
+  title: z.string().min(1, 'Card title is required'),
+  description: z.string().default(''),
+  priority: z.string().default(''),
+  assignee_id: z.string().default(''),
+  due_date: z.string().default(''),
+})
+
+type CardFormSchema = z.infer<typeof cardSchema>
 
 type CardFormModalProps = {
   open: boolean
@@ -32,16 +35,6 @@ type CardFormModalProps = {
   title: string
   submitLabel: string
   isSubmitting: boolean
-}
-
-const empty: CardFormValues = {
-  title: '',
-  description: '',
-  priority: '',
-  assignee_id: '',
-  due_date: '',
-  images: [],
-  clear_existing_images: false,
 }
 
 function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
@@ -61,9 +54,9 @@ export function CardFormModal({
 }: CardFormModalProps) {
   const { t } = useLocale()
   const priorityConfig = getPriorityConfig()
-  const [values, setValues] = useState<CardFormValues>(empty)
-  const [titleError, setTitleError] = useState('')
+  const [images, setImages] = useState<File[]>([])
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [clearExistingImages, setClearExistingImages] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const priorityOptions: SelectFieldOption[] = [
@@ -82,6 +75,17 @@ export function CardFormModal({
     })),
   ]
 
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<CardFormSchema>({
+    resolver: zodResolver(cardSchema),
+    defaultValues: { title: '', description: '', priority: '', assignee_id: '', due_date: '' },
+  })
+
   useEffect(() => {
     if (open) {
       if (initial) {
@@ -91,24 +95,24 @@ export function CardFormModal({
             ? initial.files
             : []
 
-        setValues({
+        reset({
           title: initial.title,
           description: initial.description ?? '',
           priority: initial.priority ?? '',
           assignee_id: initial.assignee_id ? String(initial.assignee_id) : '',
           due_date: initial.due_date ? initial.due_date.slice(0, 10) : '',
-          images: [],
-          clear_existing_images: false,
         })
+        setImages([])
         setImagePreviews(initialImages.map(getCardImageUrl))
+        setClearExistingImages(false)
       } else {
-        setValues(empty)
+        reset({ title: '', description: '', priority: '', assignee_id: '', due_date: '' })
+        setImages([])
         setImagePreviews([])
+        setClearExistingImages(false)
       }
-
-      setTitleError('')
     }
-  }, [open, initial])
+  }, [open, initial, reset])
 
   useEffect(() => {
     return () => {
@@ -120,14 +124,6 @@ export function CardFormModal({
     }
   }, [imagePreviews])
 
-  function set<K extends keyof CardFormValues>(key: K, value: CardFormValues[K]) {
-    setValues((prev) => ({ ...prev, [key]: value }))
-
-    if (key === 'title') {
-      setTitleError('')
-    }
-  }
-
   function handleImagesChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? [])
 
@@ -136,7 +132,7 @@ export function CardFormModal({
     }
 
     const urls = files.map((file) => URL.createObjectURL(file))
-    setValues((prev) => ({ ...prev, images: [...prev.images, ...files] }))
+    setImages((prev) => [...prev, ...files])
     setImagePreviews((prev) => [...prev, ...urls])
   }
 
@@ -150,7 +146,7 @@ export function CardFormModal({
     const newIndex = index - existingCount
 
     if (newIndex < 0) {
-      setValues((prev) => ({ ...prev, clear_existing_images: true }))
+      setClearExistingImages(true)
       setImagePreviews((prev) => prev.filter((_, itemIndex) => itemIndex !== index))
       return
     }
@@ -160,40 +156,33 @@ export function CardFormModal({
       URL.revokeObjectURL(url)
     }
 
-    setValues((prev) => ({ ...prev, images: prev.images.filter((_, itemIndex) => itemIndex !== newIndex) }))
+    setImages((prev) => prev.filter((_, itemIndex) => itemIndex !== newIndex))
     setImagePreviews((prev) => prev.filter((_, itemIndex) => itemIndex !== index))
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
-
-    if (!values.title.trim()) {
-      setTitleError(t('projects.card_title_required', 'Card title is required'))
-      return
-    }
-
+  async function onValid(data: CardFormSchema) {
     const fd = buildFormData({
-      title: values.title.trim(),
-      description: values.description.trim() || undefined,
-      priority: values.priority || undefined,
-      assignee_id: values.assignee_id ? Number(values.assignee_id) : undefined,
-      due_date: values.due_date || undefined,
+      title: data.title.trim(),
+      description: data.description.trim() || undefined,
+      priority: data.priority || undefined,
+      assignee_id: data.assignee_id ? Number(data.assignee_id) : undefined,
+      due_date: data.due_date || undefined,
     })
 
-    if (initial && values.clear_existing_images) {
+    if (initial && clearExistingImages) {
       fd.append('clear_existing_images', 'true')
     }
 
-    for (const image of values.images) {
+    for (const image of images) {
       fd.append('images', image)
     }
 
     await onSubmit(fd)
   }
 
-  const newFilesLabel = values.images.length === 1
-    ? t('projects.new_files_count', '{count} new file', { count: values.images.length })
-    : t('projects.new_files_count_plural', '{count} new files', { count: values.images.length })
+  const newFilesLabel = images.length === 1
+    ? t('projects.new_files_count', '{count} new file', { count: images.length })
+    : t('projects.new_files_count_plural', '{count} new files', { count: images.length })
 
   return (
     <Dialog
@@ -211,25 +200,27 @@ export function CardFormModal({
             variant="primary"
             size="md"
             loading={isSubmitting}
-            onClick={handleSubmit as unknown as React.MouseEventHandler}
+            onClick={() => void handleSubmit(onValid)()}
           >
             {submitLabel}
           </Button>
         </>
       )}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onValid)} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
             {t('projects.card_title', 'Title')} <span className="text-red-400">*</span>
           </label>
           <Input
-            value={values.title}
-            onChange={(event) => set('title', event.target.value)}
+            {...register('title')}
+            aria-invalid={errors.title ? true : undefined}
             placeholder={t('projects.card_title_placeholder', 'What needs to be done?')}
             autoFocus
           />
-          {titleError ? <p className="text-xs text-[var(--danger-text)]">{titleError}</p> : null}
+          {errors.title ? (
+            <p className="text-xs text-[var(--danger-text)]">{errors.title.message}</p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -237,8 +228,7 @@ export function CardFormModal({
             {t('projects.description', 'Description')}
           </label>
           <Textarea
-            value={values.description}
-            onChange={(event) => set('description', event.target.value)}
+            {...register('description')}
             placeholder={t('projects.card_description_placeholder', 'Add more details...')}
             rows={3}
           />
@@ -249,11 +239,17 @@ export function CardFormModal({
             <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
               {t('projects.priority', 'Priority')}
             </label>
-            <SelectField
-              value={values.priority}
-              options={priorityOptions}
-              onValueChange={(value) => set('priority', value)}
-              placeholder={t('projects.no_priority', 'No priority')}
+            <Controller
+              control={control}
+              name="priority"
+              render={({ field }) => (
+                <SelectField
+                  value={field.value}
+                  options={priorityOptions}
+                  onValueChange={field.onChange}
+                  placeholder={t('projects.no_priority', 'No priority')}
+                />
+              )}
             />
           </div>
 
@@ -261,11 +257,17 @@ export function CardFormModal({
             <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
               {t('projects.assignee', 'Assignee')}
             </label>
-            <SelectField
-              value={values.assignee_id}
-              options={memberOptions}
-              onValueChange={(value) => set('assignee_id', value)}
-              placeholder={t('projects.unassigned', 'Unassigned')}
+            <Controller
+              control={control}
+              name="assignee_id"
+              render={({ field }) => (
+                <SelectField
+                  value={field.value}
+                  options={memberOptions}
+                  onValueChange={field.onChange}
+                  placeholder={t('projects.unassigned', 'Unassigned')}
+                />
+              )}
             />
           </div>
         </div>
@@ -276,8 +278,7 @@ export function CardFormModal({
           </label>
           <Input
             type="date"
-            value={values.due_date}
-            onChange={(event) => set('due_date', event.target.value)}
+            {...register('due_date')}
             className="text-sm"
           />
         </div>
@@ -326,7 +327,7 @@ export function CardFormModal({
               {t('projects.add_images', 'Add images')}
             </Button>
 
-            {values.images.length > 0 ? (
+            {images.length > 0 ? (
               <span className="text-xs text-[var(--muted)]">{newFilesLabel}</span>
             ) : null}
           </div>

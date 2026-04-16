@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
 import { useLocale } from '../../app/hooks/useLocale'
@@ -21,6 +24,24 @@ import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/n
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
+const profileSchema = z
+  .object({
+    name: z.string().min(1, 'Ism majburiy'),
+    surname: z.string().min(1, 'Familiya majburiy'),
+    current_password: z.string().default(''),
+    new_password: z.string().default(''),
+  })
+  .refine(
+    (data) => !(data.current_password.trim() && !data.new_password.trim()),
+    { message: 'Yangi parol majburiy', path: ['new_password'] },
+  )
+  .refine(
+    (data) => !(!data.current_password.trim() && data.new_password.trim()),
+    { message: 'Joriy parol majburiy', path: ['current_password'] },
+  )
+
+type ProfileSchema = z.infer<typeof profileSchema>
+
 function getInitials(name?: string, surname?: string) {
   return `${name?.charAt(0) ?? ''}${surname?.charAt(0) ?? ''}`.toUpperCase() || 'CI'
 }
@@ -31,13 +52,6 @@ function humanizePermissionKey(value: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ')
-}
-
-type MemberProfileFormState = {
-  name: string
-  surname: string
-  current_password: string
-  new_password: string
 }
 
 export function AppSidebar() {
@@ -59,13 +73,11 @@ export function AppSidebar() {
   const isProjectsRoute = location.pathname === '/projects' || location.pathname.startsWith('/projects/') || location.pathname.startsWith('/boards/')
   const [isMemberDialogOpen, setIsMemberDialogOpen] = useState(false)
   const [isEditingMember, setIsEditingMember] = useState(false)
-  const [memberForm, setMemberForm] = useState<MemberProfileFormState>({
-    name: '',
-    surname: '',
-    current_password: '',
-    new_password: '',
-  })
   const [isSavingMember, setIsSavingMember] = useState(false)
+  const profileForm = useForm<ProfileSchema>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: '', surname: '', current_password: '', new_password: '' },
+  })
   const [isProjectsExpanded, setIsProjectsExpanded] = useState(isProjectsRoute)
   const shouldLoadProjects = hasProjectsAccess && Boolean(user) && (isProjectsExpanded || isProjectsRoute)
   const queryClient = useQueryClient()
@@ -142,7 +154,7 @@ export function AppSidebar() {
       return
     }
 
-    setMemberForm({
+    profileForm.reset({
       name: user.name ?? '',
       surname: user.surname ?? '',
       current_password: '',
@@ -161,6 +173,7 @@ export function AppSidebar() {
     setIsMemberDialogOpen(false)
     setIsEditingMember(false)
     setProfileImageFile(null)
+    profileForm.reset()
   }
 
   function handleSidebarToggle() {
@@ -182,40 +195,15 @@ export function AppSidebar() {
         top: '1rem',
       }
 
-  function updateMemberForm<K extends keyof MemberProfileFormState>(key: K, value: MemberProfileFormState[K]) {
-    setMemberForm((current) => ({
-      ...current,
-      [key]: value,
-    }))
-  }
-
-  async function handleSaveMemberProfile() {
+  async function handleSaveMemberProfile(data: ProfileSchema) {
     if (!user) {
       return
     }
 
-    const nextName = memberForm.name.trim()
-    const nextSurname = memberForm.surname.trim()
-    const currentPassword = memberForm.current_password.trim()
-    const newPassword = memberForm.new_password.trim()
-
-    if (!nextName || !nextSurname) {
-      showToast({
-        title: t('profile.update_failed'),
-        description: t('profile.fill_required', 'Name and surname are required.'),
-        tone: 'error',
-      })
-      return
-    }
-
-    if ((currentPassword && !newPassword) || (!currentPassword && newPassword)) {
-      showToast({
-        title: t('profile.update_failed'),
-        description: t('profile.password_pair_required', 'Current password and new password must both be filled to change the password.'),
-        tone: 'error',
-      })
-      return
-    }
+    const nextName = data.name.trim()
+    const nextSurname = data.surname.trim()
+    const currentPassword = data.current_password.trim()
+    const newPassword = data.new_password.trim()
 
     const hasNameChange = nextName !== (user.name ?? '') || nextSurname !== (user.surname ?? '')
     const hasPasswordChange = Boolean(currentPassword || newPassword)
@@ -241,12 +229,7 @@ export function AppSidebar() {
         image: profileImageFile,
       })
       await refreshUser()
-      setMemberForm({
-        name: nextName,
-        surname: nextSurname,
-        current_password: '',
-        new_password: '',
-      })
+      profileForm.reset({ name: nextName, surname: nextSurname, current_password: '', new_password: '' })
       setProfileImageFile(null)
       setIsEditingMember(false)
       showToast({ title: t('profile.updated'), tone: 'success' })
@@ -546,8 +529,11 @@ export function AppSidebar() {
               <Button variant="secondary" onClick={() => setIsEditingMember(false)} disabled={isSavingMember}>
                 {t('shell.cancel')}
               </Button>
-              <Button onClick={() => void handleSaveMemberProfile()} disabled={isSavingMember}>
-                {isSavingMember ? `${t('shell.save_changes')}...` : t('shell.save_changes')}
+              <Button
+                loading={isSavingMember}
+                onClick={() => void profileForm.handleSubmit(handleSaveMemberProfile)()}
+              >
+                {t('shell.save_changes')}
               </Button>
             </>
           ) : (
@@ -641,18 +627,24 @@ export function AppSidebar() {
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
                 <Input
-                  value={memberForm.name}
-                  onChange={(event) => updateMemberForm('name', event.target.value)}
+                  {...profileForm.register('name')}
+                  aria-invalid={profileForm.formState.errors.name ? true : undefined}
                   className="mt-2"
                 />
+                {profileForm.formState.errors.name ? (
+                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.name.message}</p>
+                ) : null}
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
                 <Input
-                  value={memberForm.surname}
-                  onChange={(event) => updateMemberForm('surname', event.target.value)}
+                  {...profileForm.register('surname')}
+                  aria-invalid={profileForm.formState.errors.surname ? true : undefined}
                   className="mt-2"
                 />
+                {profileForm.formState.errors.surname ? (
+                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.surname.message}</p>
+                ) : null}
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
@@ -660,11 +652,14 @@ export function AppSidebar() {
                 </p>
                 <Input
                   type="password"
-                  value={memberForm.current_password}
-                  onChange={(event) => updateMemberForm('current_password', event.target.value)}
+                  {...profileForm.register('current_password')}
+                  aria-invalid={profileForm.formState.errors.current_password ? true : undefined}
                   className="mt-2"
                   placeholder={t('profile.current_password_hint', 'Fill only if changing password')}
                 />
+                {profileForm.formState.errors.current_password ? (
+                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.current_password.message}</p>
+                ) : null}
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
@@ -672,11 +667,14 @@ export function AppSidebar() {
                 </p>
                 <Input
                   type="password"
-                  value={memberForm.new_password}
-                  onChange={(event) => updateMemberForm('new_password', event.target.value)}
+                  {...profileForm.register('new_password')}
+                  aria-invalid={profileForm.formState.errors.new_password ? true : undefined}
                   className="mt-2"
                   placeholder={t('profile.new_password_hint', 'Leave blank to keep current password')}
                 />
+                {profileForm.formState.errors.new_password ? (
+                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.new_password.message}</p>
+                ) : null}
               </div>
             </>
           ) : null}
