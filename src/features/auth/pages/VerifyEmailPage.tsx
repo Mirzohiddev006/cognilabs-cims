@@ -122,7 +122,6 @@ export function VerifyEmailPage() {
 
         <AuthField
           label={t('auth.email', 'Email')}
-          name="email"
           type="email"
           placeholder="user@example.com"
           error={errors.email?.message}
@@ -131,7 +130,6 @@ export function VerifyEmailPage() {
 
         <AuthField
           label={t('auth.verify.code_label', 'Verification code')}
-          name="code"
           placeholder={t('auth.reset.code_placeholder', 'Code from email')}
           error={errors.code?.message}
           className="min-h-12 text-center font-mono tracking-[0.35em] uppercase"

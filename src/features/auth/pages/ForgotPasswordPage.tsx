@@ -75,7 +75,6 @@ export function ForgotPasswordPage() {
 
         <AuthField
           label={t('auth.email', 'Email')}
-          name="email"
           type="email"
           autoComplete="email"
           placeholder="user@example.com"

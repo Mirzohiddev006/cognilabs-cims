@@ -16,14 +16,13 @@ import { MemberSelector } from './MemberSelector'
 
 const projectSchema = z.object({
   project_name: z.string().min(1, 'Project name is required'),
-  project_description: z.string().default(''),
+  project_description: z.string(),
   project_url: z
     .string()
     .refine((val) => val === '' || z.string().url().safeParse(val).success, {
       message: 'Invalid URL format',
-    })
-    .default(''),
-  member_ids: z.array(z.number()).default([]),
+    }),
+  member_ids: z.array(z.number()),
 })
 
 type ProjectFormSchema = z.infer<typeof projectSchema>

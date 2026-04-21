@@ -28,8 +28,8 @@ const profileSchema = z
   .object({
     name: z.string().min(1, 'Ism majburiy'),
     surname: z.string().min(1, 'Familiya majburiy'),
-    current_password: z.string().default(''),
-    new_password: z.string().default(''),
+    current_password: z.string(),
+    new_password: z.string(),
   })
   .refine(
     (data) => !(data.current_password.trim() && !data.new_password.trim()),

@@ -96,7 +96,6 @@ export function ResetPasswordPage() {
 
         <AuthField
           label={t('auth.email', 'Email')}
-          name="email"
           type="email"
           placeholder="user@example.com"
           error={errors.email?.message}
@@ -105,7 +104,6 @@ export function ResetPasswordPage() {
 
         <AuthField
           label={t('auth.reset.code', 'Reset code')}
-          name="code"
           placeholder={t('auth.reset.code_placeholder', 'Code from email')}
           error={errors.code?.message}
           {...register('code')}
@@ -114,7 +112,6 @@ export function ResetPasswordPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <PasswordField
             label={t('auth.reset.new_password', 'New password')}
-            name="new_password"
             autoComplete="new-password"
             placeholder={t('auth.reset.new_password_placeholder', 'New password')}
             error={errors.new_password?.message}
@@ -122,7 +119,6 @@ export function ResetPasswordPage() {
           />
           <PasswordField
             label={t('auth.reset.confirm_password', 'Confirm password')}
-            name="confirm_password"
             autoComplete="new-password"
             placeholder={t('auth.reset.confirm_password_placeholder', 'Confirm password')}
             error={errors.confirm_password?.message}

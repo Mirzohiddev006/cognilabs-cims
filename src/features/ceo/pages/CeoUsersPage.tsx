@@ -845,7 +845,7 @@ export function CeoUsersPage() {
     try {
       await ceoService.uploadUserProfileImage(profileUser.id, file)
       const refreshedDashboard = await dashboardQuery.refetch()
-      const updated = refreshedDashboard.users.find((u) => u.id === profileUser.id)
+      const updated = refreshedDashboard.data?.users.find((u) => u.id === profileUser.id)
       if (updated) setProfileUser(updated)
       showToast({ title: lt('Profile image updated'), tone: 'success' })
     } catch (error) {

@@ -18,10 +18,10 @@ import { getPriorityConfig } from '../lib/format'
 
 const cardSchema = z.object({
   title: z.string().min(1, 'Card title is required'),
-  description: z.string().default(''),
-  priority: z.string().default(''),
-  assignee_id: z.string().default(''),
-  due_date: z.string().default(''),
+  description: z.string(),
+  priority: z.string(),
+  assignee_id: z.string(),
+  due_date: z.string(),
 })
 
 type CardFormSchema = z.infer<typeof cardSchema>

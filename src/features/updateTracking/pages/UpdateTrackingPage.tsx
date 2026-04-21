@@ -151,12 +151,6 @@ type UpdateTrackingPageData = {
   }
 }
 
-const updateTrackingPageCache = new Map<string, UpdateTrackingPageData>()
-
-function getUpdateTrackingCacheKey(month: number, year: number) {
-  return `${year}-${month}`
-}
-
 async function loadUpdateTrackingPageData(month: number, year: number): Promise<UpdateTrackingPageData> {
   const [statsResult, calendarResult, trendsResult, recentResult] = await Promise.allSettled([
     updateTrackingService.myStats(),

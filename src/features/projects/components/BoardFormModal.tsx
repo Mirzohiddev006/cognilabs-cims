@@ -11,7 +11,7 @@ import type { BoardRecord } from '../../../shared/api/services/projects.service'
 
 const boardSchema = z.object({
   name: z.string().min(1, 'Board name is required'),
-  description: z.string().default(''),
+  description: z.string(),
 })
 
 type BoardFormSchema = z.infer<typeof boardSchema>

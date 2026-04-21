@@ -64,7 +64,6 @@ export function LoginPage() {
 
         <AuthField
           label={t('auth.email', 'Email')}
-          name="username"
           type="email"
           autoComplete="email"
           placeholder="user@example.com"
@@ -88,7 +87,6 @@ export function LoginPage() {
 
           <PasswordField
             label=""
-            name="password"
             autoComplete="current-password"
             placeholder={t('auth.password.enter', 'Enter your password')}
             error={errors.password?.message}

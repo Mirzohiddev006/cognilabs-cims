@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { managementService } from '../../../shared/api/services/management.service'
 import type {
   ManagementImageCategory,
@@ -274,7 +274,6 @@ function getImageCategoryLabel(category?: ManagementImageCategory | null) {
 export function CeoManagementPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
-  const queryClient = useQueryClient()
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -1764,7 +1763,7 @@ export function CeoManagementPage() {
               />
             </div>
 
-            {imageDetailQuery.isLoading && imageDetailQuery.data?.path !== imageDetailPath ? (
+            {imageDetailQuery.isFetching ? (
               <p className="text-sm text-(--muted)">{lt('Refreshing image detail...')}</p>
             ) : null}
 

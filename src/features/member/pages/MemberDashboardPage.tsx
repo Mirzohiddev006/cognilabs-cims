@@ -76,8 +76,6 @@ type MemberDashboardData = {
   statsError: string | null
 }
 
-const MEMBER_DASHBOARD_CACHE_PREFIX = 'cims:member-dashboard:'
-const memberDashboardCache = new Map<string, MemberDashboardData>()
 const memberDashboardSuccessTheme = {
   '--success': '#32A852',
   '--success-dim': 'rgba(50, 168, 82, 0.10)',
@@ -87,54 +85,6 @@ const memberDashboardSuccessTheme = {
   '--success-text': '#32A852',
   '--success-rgb': '50, 168, 82',
 } as CSSProperties
-
-function getMemberDashboardCacheKey(userId: number, year: number, month: number) {
-  return `${userId}:${year}:${month}`
-}
-
-function getMemberDashboardStorageKey(cacheKey: string) {
-  return `${MEMBER_DASHBOARD_CACHE_PREFIX}${cacheKey}`
-}
-
-function readMemberDashboardCache(cacheKey: string) {
-  const cached = memberDashboardCache.get(cacheKey)
-
-  if (cached) {
-    return cached
-  }
-
-  if (typeof window === 'undefined') {
-    return undefined
-  }
-
-  try {
-    const rawValue = window.sessionStorage.getItem(getMemberDashboardStorageKey(cacheKey))
-
-    if (!rawValue) {
-      return undefined
-    }
-
-    const parsed = JSON.parse(rawValue) as MemberDashboardData
-    memberDashboardCache.set(cacheKey, parsed)
-    return parsed
-  } catch {
-    return undefined
-  }
-}
-
-function writeMemberDashboardCache(cacheKey: string, data: MemberDashboardData) {
-  memberDashboardCache.set(cacheKey, data)
-
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    window.sessionStorage.setItem(getMemberDashboardStorageKey(cacheKey), JSON.stringify(data))
-  } catch {
-    // Ignore sessionStorage quota or serialization issues and keep in-memory cache.
-  }
-}
 
 async function loadMemberDashboardData(memberUser: CeoUserRecord, year: number, month: number): Promise<MemberDashboardData> {
   const [estimateResult, policyResult, mistakesResult, deliveryBonusesResult, calendarResult, statsResult] = await Promise.allSettled([

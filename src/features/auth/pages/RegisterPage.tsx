@@ -91,7 +91,6 @@ export function RegisterPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <AuthField
             label={t('auth.email', 'Email')}
-            name="email"
             type="email"
             autoComplete="email"
             placeholder="user@example.com"
@@ -100,7 +99,6 @@ export function RegisterPage() {
           />
           <AuthField
             label={t('auth.register.company_code', 'Company code')}
-            name="company_code"
             placeholder="oddiy"
             error={errors.company_code?.message}
             {...register('company_code')}
@@ -110,7 +108,6 @@ export function RegisterPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <AuthField
             label={t('auth.register.name', 'Name')}
-            name="name"
             autoComplete="given-name"
             placeholder="Ibrohim"
             error={errors.name?.message}
@@ -118,7 +115,6 @@ export function RegisterPage() {
           />
           <AuthField
             label={t('auth.register.surname', 'Surname')}
-            name="surname"
             autoComplete="family-name"
             placeholder="Ibrohimjonov"
             error={errors.surname?.message}
@@ -128,7 +124,6 @@ export function RegisterPage() {
 
         <PasswordField
           label={t('auth.password', 'Password')}
-          name="password"
           autoComplete="new-password"
           placeholder={t('auth.register.password_placeholder', 'Minimum 6 characters')}
           error={errors.password?.message}
@@ -138,14 +133,12 @@ export function RegisterPage() {
         <div className="grid gap-5 md:grid-cols-3">
           <AuthField
             label={t('auth.register.telegram_id', 'Telegram ID')}
-            name="telegram_id"
             placeholder={t('auth.register.telegram_placeholder', '@username or ID')}
             error={errors.telegram_id?.message}
             {...register('telegram_id')}
           />
           <AuthField
             label={t('auth.register.job_title', 'Job title')}
-            name="job_title"
             placeholder={t('auth.register.job_title_placeholder', 'Sales Manager')}
             error={errors.job_title?.message}
             {...register('job_title')}
