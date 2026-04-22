@@ -4,154 +4,102 @@ import { translateCurrentLiteral } from '../../shared/i18n/translations'
 
 const routeCopy = {
   '/auth/login': {
-    eyebrow: 'Cognilabs CIMS',
-    title: 'Secure access for your operations team.',
-    description:
-      'A focused login surface with animated depth, session-safe entry, and no extra register clutter in the header.',
-    badge: 'Live access portal',
+    title: 'Welcome to Cognilabs CIMS',
+    description: 'A unified platform for managing teams, projects, customers, and operations.',
   },
   '/auth/forgot-password': {
-    eyebrow: 'Recovery Flow',
-    title: 'Recover credentials without leaving the secure zone.',
-    description:
-      'Password recovery stays inside the same protected auth surface so users can reset access without distraction.',
-    badge: 'Reset support',
+    title: 'Forgot your password?',
+    description: "Enter your email address and we'll send you a link to reset your password.",
   },
   '/auth/reset-password': {
-    eyebrow: 'Recovery Flow',
-    title: 'Set a new password and get back into the workspace.',
-    description:
-      'Verification and password update are kept in one controlled flow with the same visual shell and security hints.',
-    badge: 'Password reset',
+    title: 'Set a new password',
+    description: "Choose a strong password and you'll be back in your workspace right away.",
   },
   '/auth/verify-email': {
-    eyebrow: 'Verification Flow',
-    title: 'Activate the account and move straight into the app.',
-    description:
-      'Email verification is presented in the same immersive auth environment, without tabs competing for attention.',
-    badge: 'Email check',
+    title: 'Verify your email',
+    description: 'Check your inbox and click the link to activate your account.',
   },
 } as const
 
-const previewStats = [
-  { label: 'Session control', value: 'Realtime token guard' },
-  { label: 'Permission model', value: 'Role-based access' },
-  { label: 'Recovery', value: 'Verify and reset ready' },
-  { label: 'Environment', value: 'Single workspace entry' },
+const features = [
+  { icon: '📋', label: 'Project management', description: 'Boards, columns, and cards' },
+  { icon: '👥', label: 'Team tracking', description: 'Attendance and performance' },
+  { icon: '📊', label: 'CRM dashboard', description: 'Customers and leads' },
+  { icon: '🔐', label: 'Role-based access', description: 'Granular permissions' },
 ]
 
 export function AuthLayout() {
-  const { locale } = useLocale()
+  useLocale()
   const location = useLocation()
   const copy = routeCopy[location.pathname as keyof typeof routeCopy] ?? routeCopy['/auth/login']
   const isLoginRoute = location.pathname === '/auth/login'
-  const routeAnimationKey = `${location.pathname}${location.search}`
-  const tr = (en: string, uz: string, ru: string) => {
-    if (locale === 'ru') return ru
-    if (locale === 'uz') return uz
-    return en
-  }
+  const routeKey = `${location.pathname}${location.search}`
   const tl = (value: string) => translateCurrentLiteral(value)
-  const badgeText = (() => {
-    switch (copy.badge) {
-      case 'Live access portal':
-        return tr('Live access portal', 'Jonli kirish portali', 'Портал прямого доступа')
-      case 'Reset support':
-        return tr('Reset support', 'Tiklash yordami', 'Поддержка восстановления')
-      case 'Password reset':
-        return tr('Password reset', 'Parolni tiklash', 'Сброс пароля')
-      default:
-        return tl(copy.badge)
-    }
-  })()
-  const panelEyebrow = isLoginRoute
-    ? tl('Direct access')
-    : tr('Support flow', 'Yordam oqimi', 'Сценарий поддержки')
-  const panelDescription = isLoginRoute
-    ? tr(
-        'Use your work credentials to continue into the platform.',
-        'Platformaga davom etish uchun ish akkauntingiz maʼlumotlaridan foydalaning.',
-        'Используйте рабочие учётные данные, чтобы продолжить вход в платформу.',
-      )
-    : tr(
-        'The extra header buttons are removed, but recovery and verification remain available here.',
-        'Headerdagi qo‘shimcha tugmalar olib tashlangan, lekin tiklash va tasdiqlash shu yerda mavjud.',
-        'Дополнительные кнопки в шапке убраны, но восстановление и подтверждение по-прежнему доступны здесь.',
-      )
 
   return (
     <div className="auth-portal">
-      <div className="auth-portal__glow auth-portal__glow--primary" />
-      <div className="auth-portal__glow auth-portal__glow--secondary" />
-
       <div className="auth-stage">
+        {/* Visual panel */}
         <section className="auth-visual-panel order-2 lg:order-1">
-          <div key={`visual-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--visual">
-            <div className="relative z-10 max-w-xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80">{tl(copy.eyebrow)}</p>
-              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-[var(--foreground)] md:text-5xl">{tl(copy.title)}</h1>
-              <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">{tl(copy.description)}</p>
+          <div key={`visual-${routeKey}`} className="auth-route-pane relative z-10 flex h-full flex-col justify-between gap-10">
+            {/* Brand */}
+            <div className="flex items-center gap-2">
+              <div className="grid h-7 w-7 place-items-center rounded-[var(--radius-md)] bg-[#37352f] text-white">
+                <span className="text-[11px] font-bold">CI</span>
+              </div>
+              <span className="text-[14px] font-semibold text-[#37352f]">Cognilabs CIMS</span>
             </div>
 
-            <div className="auth-preview-card">
-              <div className="auth-preview-card__grid" />
+            {/* Copy */}
+            <div>
+              <h1 className="text-[28px] font-bold leading-tight text-[#37352f]">
+                {tl(copy.title)}
+              </h1>
+              <p className="mt-3 text-[14px] leading-6 text-[#787774]">
+                {tl(copy.description)}
+              </p>
 
-              <div className="relative z-10 space-y-6">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/75">{badgeText}</p>
-                    <h2 className="mt-3 max-w-sm text-2xl font-semibold leading-tight text-[var(--foreground)] md:text-3xl">
-                      {tl('Permissions, sessions, and recovery stay inside one motion-driven surface.')}
-                    </h2>
-                  </div>
-                  <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                    {tl('Online')}
-                  </span>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {previewStats.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{tl(item.label)}</p>
-                      <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                        {item.value === 'Realtime token guard'
-                          ? tr('Realtime token guard', 'Realtime token himoyasi', 'Защита токена в реальном времени')
-                          : item.value === 'Role-based access'
-                            ? tr('Role-based access', 'Rolga asoslangan kirish', 'Доступ по ролям')
-                            : item.value === 'Verify and reset ready'
-                              ? tr('Verify and reset ready', 'Tasdiqlash va tiklash tayyor', 'Подтверждение и сброс готовы')
-                              : tr('Single workspace entry', 'Yagona workspace kirishi', 'Единая точка входа в рабочее пространство')}
-                      </p>
+              {/* Feature list */}
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {features.map((f) => (
+                  <div
+                    key={f.label}
+                    className="rounded-[var(--radius-lg)] border border-[rgba(55,53,47,0.10)] bg-[rgba(255,255,255,0.72)] px-4 py-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[16px]">{f.icon}</span>
+                      <p className="text-[13px] font-semibold text-[#37352f]">{tl(f.label)}</p>
                     </div>
-                  ))}
-                </div>
+                    <p className="mt-0.5 text-[12px] text-[#787774]">{tl(f.description)}</p>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Footer note */}
+            <p className="text-[12px] text-[#9b9a97]">
+              © {new Date().getFullYear()} Cognilabs. All rights reserved.
+            </p>
           </div>
         </section>
 
+        {/* Form panel */}
         <section className="auth-form-panel order-1 lg:order-2">
           <div className="auth-form-wrap">
-            <div key={`form-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--form">
-              <div className="mb-6 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
-                    {panelEyebrow}
-                  </p>
-                  <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--muted)]">
-                    {panelDescription}
-                  </p>
-                </div>
-
-                {!isLoginRoute ? (
+            <div key={`form-${routeKey}`} className="auth-route-pane">
+              {!isLoginRoute ? (
+                <div className="mb-6">
                   <Link
                     to="/auth/login"
-                    className="rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] transition hover:bg-[var(--accent-soft)]"
+                    className="inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)] transition hover:text-[var(--foreground)]"
                   >
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                      <path d="M10 12L6 8l4-4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                     {tl('Back to login')}
                   </Link>
-                ) : null}
-              </div>
+                </div>
+              ) : null}
 
               <Outlet />
             </div>

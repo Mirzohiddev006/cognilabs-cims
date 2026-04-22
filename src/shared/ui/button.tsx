@@ -23,47 +23,40 @@ type ButtonProps = SharedButtonProps & Omit<ButtonHTMLAttributes<HTMLButtonEleme
 
 const variants = {
   primary:
-    'btn-shimmer border border-white/10 bg-white text-black ' +
-    'shadow-[0_1px_2px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.15)] ' +
-    'hover:bg-zinc-100 hover:shadow-[0_4px_12px_rgba(255,255,255,0.10)] ' +
-    'active:bg-zinc-200',
+    'bg-[var(--foreground)] text-[var(--background)] border border-[var(--foreground)] ' +
+    'hover:bg-[var(--muted-strong)] hover:border-[var(--muted-strong)] ' +
+    'active:opacity-90',
 
   secondary:
-    'border border-(--border) bg-(--surface) text-(--foreground) ' +
-    'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ' +
-    'hover:border-(--border-hover) hover:bg-(--accent-soft) ' +
-    'hover:text-(--foreground) active:bg-(--accent-hover)',
+    'bg-[var(--background)] text-[var(--foreground)] border border-[var(--border-solid)] ' +
+    'hover:bg-[var(--accent-soft)] ' +
+    'active:bg-[var(--accent-hover)]',
 
   ghost:
-    'border border-transparent bg-transparent text-[var(--muted-strong)] ' +
-    'hover:border-[var(--border)] hover:bg-[var(--accent-soft)] ' +
-    'hover:text-[var(--foreground)]',
+    'bg-transparent text-[var(--muted)] border border-transparent ' +
+    'hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
 
   danger:
-    'btn-shimmer border border-[var(--danger-border)] ' +
-    'bg-[var(--danger-dim)] text-[var(--danger-text)] ' +
-    'shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] ' +
-    'hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-300',
+    'bg-[var(--danger-dim)] text-[var(--danger-text)] border border-[var(--danger-border)] ' +
+    'hover:bg-[var(--danger-dim)] hover:border-[var(--danger-text)]',
 
   success:
-    'btn-shimmer border border-[var(--success-border)] ' +
-    'bg-[var(--success-dim)] text-[var(--success-text)] ' +
-    'hover:bg-emerald-500/20 hover:text-emerald-300',
+    'bg-[var(--success-dim)] text-[var(--success-text)] border border-[var(--success-border)] ' +
+    'hover:bg-[var(--success-strong)]',
 }
 
 const sizes = {
-  sm: 'min-h-7 px-2.5 py-1 text-[11px] rounded-md gap-1.5',
-  md: 'min-h-8 px-3 py-1.5 text-xs rounded-lg gap-2',
-  lg: 'min-h-9 px-4 py-1.5 text-[13px] rounded-xl gap-2',
+  sm: 'min-h-[26px] px-2.5 py-0.5 text-[12px] rounded-[4px] gap-1.5',
+  md: 'min-h-[32px] px-3 py-1.5 text-[13px] rounded-[6px] gap-1.5',
+  lg: 'min-h-[36px] px-4 py-2 text-[14px] rounded-[6px] gap-2',
 }
 
 const baseClassName =
-  'inline-flex items-center justify-center font-medium tracking-[0.01em] ' +
-  'transition-[color,box-shadow,background-color,border-color,transform,opacity] ' +
-  'duration-150 active:translate-y-px ' +
+  'inline-flex items-center justify-center font-medium ' +
+  'transition-colors duration-100 ' +
   'disabled:pointer-events-none disabled:opacity-40 ' +
   'focus-visible:outline-none focus-visible:ring-2 ' +
-  'focus-visible:ring-white/15 focus-visible:ring-offset-2 ' +
+  'focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-1 ' +
   'focus-visible:ring-offset-[var(--background)]'
 
 function Spinner({ size }: { size: 'sm' | 'md' | 'lg' }) {
@@ -82,7 +75,7 @@ function Spinner({ size }: { size: 'sm' | 'md' | 'lg' }) {
         stroke="currentColor" strokeWidth="3"
       />
       <path
-        className="opacity-80"
+        className="opacity-75"
         fill="currentColor"
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
       />

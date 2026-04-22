@@ -16,7 +16,6 @@ import { getAccessibleNavigation } from '../../shared/lib/permissions'
 import { getErrorMessage } from '../../shared/lib/error'
 import { resolveMediaUrl } from '../../shared/lib/media-url'
 import { useToast } from '../../shared/toast/useToast'
-import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
 import { Dialog } from '../../shared/ui/dialog'
 import { Input } from '../../shared/ui/input'
@@ -61,7 +60,7 @@ export function AppSidebar() {
   const { theme } = useTheme()
   const { showToast } = useToast()
   const { user, refreshUser } = useAuth()
-  const isLight = theme === 'light'
+  const isDark = theme === 'dark'
   const isMobileViewport =
     typeof window !== 'undefined'
       ? window.matchMedia('(max-width: 960px)').matches
@@ -101,15 +100,12 @@ export function AppSidebar() {
     enabled: shouldLoadProjects,
   })
   const sidebarProjects = useMemo(
-    () => [...(projectsQuery.data?.projects ?? [])].sort((left, right) => left.project_name.localeCompare(right.project_name)),
+    () => [...(projectsQuery.data?.projects ?? [])].sort((a, b) => a.project_name.localeCompare(b.project_name)),
     [projectsQuery.data?.projects],
   )
   const resolvedUserProfileImage = resolveMediaUrl(user?.profile_image) ?? user?.profile_image ?? null
   const profilePreviewUrl = useMemo(() => {
-    if (!profileImageFile) {
-      return resolvedUserProfileImage
-    }
-
+    if (!profileImageFile) return resolvedUserProfileImage
     return URL.createObjectURL(profileImageFile)
   }, [profileImageFile, resolvedUserProfileImage])
 
@@ -118,42 +114,27 @@ export function AppSidebar() {
   }, [closeSidebar, location.pathname])
 
   useEffect(() => {
-    if (isProjectsRoute) {
-      setIsProjectsExpanded(true)
-    }
+    if (isProjectsRoute) setIsProjectsExpanded(true)
   }, [isProjectsRoute])
 
   useEffect(() => {
-    if (!hasProjectsAccess) {
-      return
-    }
-
+    if (!hasProjectsAccess) return
     function handleProjectsNavigationUpdated() {
       void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
     }
-
     window.addEventListener(PROJECTS_NAVIGATION_UPDATED_EVENT, handleProjectsNavigationUpdated)
-
     return () => {
       window.removeEventListener(PROJECTS_NAVIGATION_UPDATED_EVENT, handleProjectsNavigationUpdated)
     }
   }, [hasProjectsAccess])
 
   useEffect(() => {
-    if (!profileImageFile || !profilePreviewUrl?.startsWith('blob:')) {
-      return
-    }
-
-    return () => {
-      URL.revokeObjectURL(profilePreviewUrl)
-    }
+    if (!profileImageFile || !profilePreviewUrl?.startsWith('blob:')) return
+    return () => { URL.revokeObjectURL(profilePreviewUrl) }
   }, [profileImageFile, profilePreviewUrl])
 
   function openMemberDialog() {
-    if (!user) {
-      return
-    }
-
+    if (!user) return
     profileForm.reset({
       name: user.name ?? '',
       surname: user.surname ?? '',
@@ -165,10 +146,6 @@ export function AppSidebar() {
     setIsMemberDialogOpen(true)
   }
 
-  function toggleProjectsExpanded() {
-    setIsProjectsExpanded((current) => !current)
-  }
-
   function closeMemberDialog() {
     setIsMemberDialogOpen(false)
     setIsEditingMember(false)
@@ -177,346 +154,256 @@ export function AppSidebar() {
   }
 
   function handleSidebarToggle() {
-    if (isMobileViewport) {
-      toggleSidebar()
-      return
-    }
-
+    if (isMobileViewport) { toggleSidebar(); return }
     toggleSidebarCollapsed()
   }
 
   const sidebarToggleStyle = isMobileViewport
-    ? {
-        left: isSidebarOpen ? 'calc(min(88vw, 320px) - 3.65rem)' : '1rem',
-        top: '1rem',
-      }
-    : {
-        left: isSidebarCollapsed ? '1rem' : 'calc(var(--app-shell-sidebar-width, 272px) - 3.65rem)',
-        top: '1rem',
-      }
+    ? { left: isSidebarOpen ? 'calc(min(88vw, 280px) - 3.25rem)' : '0.75rem', top: '0.75rem' }
+    : { left: isSidebarCollapsed ? '0.75rem' : 'calc(var(--app-shell-sidebar-width, 240px) - 3.25rem)', top: '0.75rem' }
 
   async function handleSaveMemberProfile(data: ProfileSchema) {
-    if (!user) {
-      return
-    }
-
+    if (!user) return
     const nextName = data.name.trim()
     const nextSurname = data.surname.trim()
     const currentPassword = data.current_password.trim()
     const newPassword = data.new_password.trim()
-
     const hasNameChange = nextName !== (user.name ?? '') || nextSurname !== (user.surname ?? '')
     const hasPasswordChange = Boolean(currentPassword || newPassword)
     const hasImageChange = profileImageFile instanceof File
-
     if (!hasNameChange && !hasPasswordChange && !hasImageChange) {
-      showToast({
-        title: t('profile.no_changes_title', 'No profile changes'),
-        description: t('profile.no_changes_description', 'Update a field, password, or photo before saving.'),
-        tone: 'error',
-      })
+      showToast({ title: t('profile.no_changes_title', 'No changes'), description: t('profile.no_changes_description', 'Update a field before saving.'), tone: 'error' })
       return
     }
-
     setIsSavingMember(true)
-
     try {
-      await authService.updateProfile({
-        name: nextName,
-        surname: nextSurname,
-        current_password: currentPassword || undefined,
-        new_password: newPassword || undefined,
-        image: profileImageFile,
-      })
+      await authService.updateProfile({ name: nextName, surname: nextSurname, current_password: currentPassword || undefined, new_password: newPassword || undefined, image: profileImageFile })
       await refreshUser()
       profileForm.reset({ name: nextName, surname: nextSurname, current_password: '', new_password: '' })
       setProfileImageFile(null)
       setIsEditingMember(false)
       showToast({ title: t('profile.updated'), tone: 'success' })
     } catch (error) {
-      showToast({
-        title: t('profile.update_failed'),
-        description: getErrorMessage(error),
-        tone: 'error',
-      })
+      showToast({ title: t('profile.update_failed'), description: getErrorMessage(error), tone: 'error' })
     } finally {
       setIsSavingMember(false)
     }
   }
+
   return (
     <>
-      {/* Burger — faqat sidebar yopiq paytda ko'rinadi */}
+      {/* Mobile/collapse toggle */}
       <button
         type="button"
         onClick={handleSidebarToggle}
         aria-label={t('shell.toggle_navigation')}
         style={sidebarToggleStyle}
         className={cn(
-          'fixed z-50 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-[0_14px_32px_rgba(15,23,42,0.16)] backdrop-blur-xl transition-[left,top,background-color,border-color,box-shadow,transform,opacity] duration-300 hover:-translate-y-0.5 hover:bg-[var(--accent-soft)] hover:shadow-[0_18px_36px_rgba(15,23,42,0.20)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
-          isSidebarVisible
-            ? 'pointer-events-none opacity-0'
-            : 'bg-[var(--muted-surface)]',
+          'fixed z-50 inline-flex h-9 w-9 items-center justify-center rounded-[var(--radius-lg)] border border-[var(--border-solid)] bg-[var(--background)] text-[var(--muted)] shadow-[var(--shadow-md)] transition-[left,top,opacity] duration-200 hover:bg-[var(--background-alt)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]',
+          isSidebarVisible ? 'pointer-events-none opacity-0' : 'opacity-100',
         )}
       >
-        <span className="relative h-4 w-4">
-          <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-[6px] rounded-full bg-current" />
-          <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-1/2 rounded-full bg-current" />
-          <span className="absolute left-0 top-1/2 h-0.5 w-4 translate-y-[5px] rounded-full bg-current" />
-        </span>
+        <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+          <path d="M2.5 4h11M2.5 8h11M2.5 12h11" strokeLinecap="round" />
+        </svg>
       </button>
+
+      {/* Mobile overlay */}
       <button
         type="button"
         aria-label={t('shell.close_navigation_overlay')}
         onClick={closeSidebar}
         className={cn(
-          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] min-[961px]:hidden',
+          'shell-scrim fixed inset-0 z-30 bg-[rgba(55,53,47,0.30)] min-[961px]:hidden',
           isSidebarOpen ? 'shell-scrim--open pointer-events-auto' : 'shell-scrim--closed pointer-events-none',
         )}
       />
+
+      {/* Sidebar */}
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0 min-[961px]:transition-[width,padding,opacity,transform] min-[961px]:duration-300',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 flex w-[min(88vw,280px)] flex-col border-r border-[var(--shell-sidebar-border)] bg-[var(--shell-sidebar-bg)]',
+          'min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:overflow-hidden min-[961px]:transition-[width,opacity,transform] min-[961px]:duration-200',
           isSidebarOpen ? 'shell-sidebar--open' : 'shell-sidebar--closed',
           isSidebarCollapsed
-            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:!p-0 min-[961px]:opacity-0 min-[961px]:-translate-x-6'
+            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:opacity-0 min-[961px]:-translate-x-4'
             : 'min-[961px]:translate-x-0 min-[961px]:opacity-100',
         )}
       >
-        <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
-          <div className="border-b border-[var(--border)] px-2 pb-4">
-            {/* Cognilabs bloki — yopish tugmasi */}
-            <button
-              type="button"
-              onClick={handleSidebarToggle}
-              className="w-full rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] text-left transition-opacity duration-150 hover:opacity-80 focus-visible:outline-none"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-(--shell-label-color)">Cognilabs</p>
-              <div className="mt-3 flex w-full items-center gap-3 text-left">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
-                  <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
-                </div>
-                <div className="min-w-0 overflow-hidden">
-                  <h2 className="text-[14px] font-bold text-(--shell-text-primary) tracking-tight whitespace-nowrap">{env.appName}</h2>
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)] whitespace-nowrap">{t('shell.management_system')}</p>
-                </div>
-              </div>
-            </button>
+        {/* App name */}
+        <div className="flex items-center gap-2.5 border-b border-[var(--shell-sidebar-border)] px-4 py-3.5">
+          <div className="grid h-7 w-7 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--foreground)] text-[var(--background)]">
+            <span className="text-[10px] font-bold tracking-tight">CI</span>
           </div>
-
-          <div className="mt-5 flex items-center justify-between px-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">{t('shell.menu')}</p>
-            <Badge className="rounded-full border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 shadow-sm">
-              {sidebarNavigation.length} {t('shell.modules')}
-            </Badge>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-semibold text-[var(--shell-app-name-color)]">{env.appName}</p>
           </div>
+          {/* Close for mobile */}
+          <button
+            type="button"
+            onClick={handleSidebarToggle}
+            className="ml-auto inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--muted)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] min-[961px]:hidden"
+            aria-label={t('shell.close_navigation_overlay')}
+          >
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+              <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
 
-          <nav className="mt-3 flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
-            {sidebarNavigation.map((item) => {
-              const itemLabel = getNavigationLabel(item.to, item.label)
-              const itemGroup = getNavigationGroup(item.to, item.group)
+        {/* Nav */}
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 py-2">
+          {sidebarNavigation.map((item) => {
+            const itemLabel = getNavigationLabel(item.to, item.label)
+            const itemGroup = getNavigationGroup(item.to, item.group)
 
-              if (item.to === '/projects') {
-                return (
-                  <div key={item.to} className="space-y-1">
-                    <div className="relative">
-                      <NavLink
-                        to={item.to}
-                        aria-label={itemLabel}
-                        className={({ isActive }) =>
-                          cn(
-                            'group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 pr-12 text-sm transition-all duration-200',
-                            isActive || isProjectsRoute
-                              ? isLight
-                                ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
-                                : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
-                              : 'border-transparent bg-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
-                          )
-                        }
-                        onClick={() => setIsProjectsExpanded(true)}
-                      >
-                        <div className={cn(
-                          'grid place-items-center border text-(--muted-strong) transition-all duration-150',
-                          'h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
-                        )}>
-                          <NavGlyph name={getNavigationGlyphName(item.to)} />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
-                            {sidebarProjects.length > 0 ? (
-                              <Badge
-                                size="sm"
-                                variant={isProjectsRoute ? 'blue' : 'secondary'}
-                                className="rounded-full px-1.5 py-0 text-[9px] shadow-none"
-                              >
-                                {sidebarProjects.length}
-                              </Badge>
-                            ) : null}
-                          </div>
-                          <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
-                        </div>
-                      </NavLink>
-
-                      <button
-                        type="button"
-                        onClick={toggleProjectsExpanded}
-                        aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
-                        className={cn(
-                          'absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg border transition-colors',
-                          isProjectsRoute
-                            ? isLight
-                              ? 'border-blue-200 bg-blue-100/80 text-blue-700'
-                              : 'border-blue-500/30 bg-blue-600/15 text-blue-100'
-                            : 'border-transparent bg-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
-                        )}
-                      >
-                        <svg
-                          viewBox="0 0 16 16"
-                          className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        >
-                          <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {isProjectsExpanded ? (
-                      <div className="ml-4 space-y-1 border-l border-[var(--border)] pl-3">
-                        {projectsQuery.isLoading ? (
-                          <div className="space-y-1 py-1">
-                            {Array.from({ length: 4 }).map((_, index) => (
-                              <div
-                                key={index}
-                                className="h-8 animate-pulse rounded-lg bg-[var(--muted-surface)]"
-                              />
-                            ))}
-                          </div>
-                        ) : projectsQuery.isError ? (
-                          <button
-                            type="button"
-                            onClick={() => void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })}
-                            className="w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[11px] text-[var(--danger-text)] transition hover:bg-red-500/10"
-                          >
-                            {t('shell.failed_load_projects')} {t('shell.retry')}
-                          </button>
-                        ) : sidebarProjects.length === 0 ? (
-                          <p className="rounded-lg px-3 py-2 text-[11px] text-[var(--muted)]">
-                            {t('shell.no_projects')}
-                          </p>
-                        ) : (
-                          sidebarProjects.map((project) => {
-                            const isActiveProject = location.pathname === `/projects/${project.id}`
-
-                            return (
-                              <NavLink
-                                key={project.id}
-                                to={`/projects/${project.id}`}
-                                className={({ isActive }) =>
-                                  cn(
-                                    'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[12px] transition-all duration-150',
-                                    'rounded-xl',
-                                    isActive || isActiveProject
-                                      ? isLight
-                                        ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                        : 'border-blue-500/30 bg-blue-600/10 text-blue-100'
-                                      : 'border-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
-                                  )
-                                }
-                              >
-                                <span className="truncate font-medium">{project.project_name}</span>
-                                {project.boards_count > 0 ? (
-                                  <span className="shrink-0 text-[10px] text-[var(--muted)]">
-                                    {project.boards_count}
-                                  </span>
-                                ) : null}
-                              </NavLink>
-                            )
-                          })
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                )
-              }
-
+            if (item.to === '/projects') {
               return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  aria-label={itemLabel}
-                  className={({ isActive }) =>
-                    cn(
-                      'group relative flex items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200',
-                      isActive
-                        ? isLight
-                          ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
-                          : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
-                        : 'border-transparent bg-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)',
-                    )
-                  }
-                >
-                  <div className={cn(
-                    'grid place-items-center border text-(--muted-strong) transition-all duration-150',
-                    'h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105',
-                  )}>
-                    <NavGlyph name={getNavigationGlyphName(item.to)} />
+                <div key={item.to}>
+                  <div className="relative flex items-center">
+                    <NavLink
+                      to={item.to}
+                      aria-label={itemLabel}
+                      onClick={() => setIsProjectsExpanded(true)}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex flex-1 items-center gap-2.5 rounded-[var(--radius-md)] px-2 py-1.5 text-[13px] font-medium transition-colors duration-100',
+                          isActive || isProjectsRoute
+                            ? 'bg-[var(--shell-nav-active-bg)] text-[var(--shell-nav-active-text)]'
+                            : 'text-[var(--shell-nav-text)] hover:bg-[var(--shell-nav-hover-bg)] hover:text-[var(--shell-nav-active-text)]',
+                        )
+                      }
+                    >
+                      <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--caption)]">
+                        <NavGlyph name={getNavigationGlyphName(item.to)} />
+                      </span>
+                      <span className="truncate">{itemLabel}</span>
+                      {sidebarProjects.length > 0 ? (
+                        <span className="ml-auto shrink-0 rounded-full bg-[var(--border-solid)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--muted)]">
+                          {sidebarProjects.length}
+                        </span>
+                      ) : null}
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => setIsProjectsExpanded((c) => !c)}
+                      aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
+                      className="ml-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--caption)] hover:bg-[var(--shell-nav-hover-bg)] hover:text-[var(--foreground)]"
+                    >
+                      <svg
+                        viewBox="0 0 16 16"
+                        className={cn('h-3 w-3 transition-transform duration-150', isProjectsExpanded && 'rotate-180')}
+                        fill="none" stroke="currentColor" strokeWidth="1.6"
+                      >
+                        <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
-                    <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
-                  </div>
-                </NavLink>
+                  {isProjectsExpanded ? (
+                    <div className="ml-4 mt-0.5 border-l border-[var(--border-solid)] pl-3 pb-1">
+                      {projectsQuery.isLoading ? (
+                        <div className="space-y-0.5 py-1">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="h-7 animate-pulse rounded-[var(--radius-md)] bg-[var(--background-alt)]" />
+                          ))}
+                        </div>
+                      ) : projectsQuery.isError ? (
+                        <button
+                          type="button"
+                          onClick={() => void queryClient.invalidateQueries({ queryKey: projectKeys.lists() })}
+                          className="w-full rounded-[var(--radius-md)] px-2 py-1.5 text-left text-[12px] text-[var(--danger-text)] hover:bg-[var(--danger-dim)]"
+                        >
+                          {t('shell.failed_load_projects')} {t('shell.retry')}
+                        </button>
+                      ) : sidebarProjects.length === 0 ? (
+                        <p className="px-2 py-1.5 text-[12px] text-[var(--caption)]">{t('shell.no_projects')}</p>
+                      ) : (
+                        sidebarProjects.map((project) => (
+                          <NavLink
+                            key={project.id}
+                            to={`/projects/${project.id}`}
+                            className={({ isActive }) =>
+                              cn(
+                                'flex items-center justify-between gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-[12px] transition-colors duration-100',
+                                isActive
+                                  ? 'bg-[var(--shell-nav-active-bg)] font-medium text-[var(--shell-nav-active-text)]'
+                                  : 'text-[var(--shell-nav-text)] hover:bg-[var(--shell-nav-hover-bg)] hover:text-[var(--shell-nav-active-text)]',
+                              )
+                            }
+                          >
+                            <span className="truncate">{project.project_name}</span>
+                            {project.boards_count > 0 ? (
+                              <span className="shrink-0 text-[11px] text-[var(--caption)]">{project.boards_count}</span>
+                            ) : null}
+                          </NavLink>
+                        ))
+                      )}
+                    </div>
+                  ) : null}
+                </div>
               )
-            })}
-          </nav>
+            }
 
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                aria-label={`${itemLabel} — ${itemGroup}`}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-2.5 rounded-[var(--radius-md)] px-2 py-1.5 text-[13px] font-medium transition-colors duration-100',
+                    isActive
+                      ? 'bg-[var(--shell-nav-active-bg)] text-[var(--shell-nav-active-text)]'
+                      : 'text-[var(--shell-nav-text)] hover:bg-[var(--shell-nav-hover-bg)] hover:text-[var(--shell-nav-active-text)]',
+                  )
+                }
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-[var(--caption)]">
+                  <NavGlyph name={getNavigationGlyphName(item.to)} />
+                </span>
+                <span className="truncate">{itemLabel}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        {/* Profile */}
+        <div className="border-t border-[var(--shell-sidebar-border)] p-3">
           <button
             type="button"
             onClick={openMemberDialog}
             disabled={!user}
-            className="mt-5 w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
+            className="flex w-full items-center gap-2.5 rounded-[var(--radius-md)] px-2 py-2 text-left transition-colors hover:bg-[var(--shell-nav-hover-bg)] disabled:cursor-default disabled:opacity-70"
             aria-label={t('profile.member_details')}
           >
-            <div className="flex items-start gap-3">
-              {resolvedUserProfileImage ? (
-                <img
-                  src={resolvedUserProfileImage}
-                  alt={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                  className="h-12 w-12 shrink-0 rounded-full border border-blue-400/30 object-cover shadow-lg shadow-blue-900/30"
-                />
-              ) : (
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30">
-                  {getInitials(user?.name, user?.surname)}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p
-                  className="text-xs font-bold leading-4 text-(--shell-text-primary) wrap-anywhere"
-                  title={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                >
-                  {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                </p>
-                <p
-                  className="mt-1 truncate text-[10px] text-[var(--muted)]"
-                  title={user?.email ?? user?.role ?? t('shell.user')}
-                >
-                  {user?.email ?? user?.role ?? t('shell.user')}
-                </p>
-                {user?.job_title?.trim() ? (
-                  <p className={cn('mt-1 truncate text-[10px] font-medium', isLight ? 'text-blue-700/75' : 'text-blue-100/75')} title={user.job_title}>
-                    {user.job_title}
-                  </p>
-                ) : null}
+            {resolvedUserProfileImage ? (
+              <img
+                src={resolvedUserProfileImage}
+                alt={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
+                className="h-7 w-7 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className={cn(
+                'grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-semibold',
+                isDark ? 'bg-[#37352f] text-[#e6e3de]' : 'bg-[#37352f] text-white',
+              )}>
+                {getInitials(user?.name, user?.surname)}
               </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-medium text-[var(--shell-text-primary)]">
+                {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
+              </p>
+              <p className="truncate text-[11px] text-[var(--caption)]">
+                {user?.email ?? user?.role ?? t('shell.user')}
+              </p>
             </div>
           </button>
         </div>
       </aside>
 
+      {/* Profile dialog */}
       <Dialog
         open={isMemberDialogOpen}
         onClose={closeMemberDialog}
@@ -526,7 +413,7 @@ export function AppSidebar() {
         footer={
           isEditingMember ? (
             <>
-              <Button variant="secondary" onClick={() => setIsEditingMember(false)} disabled={isSavingMember}>
+              <Button variant="ghost" onClick={() => setIsEditingMember(false)} disabled={isSavingMember}>
                 {t('shell.cancel')}
               </Button>
               <Button
@@ -538,12 +425,8 @@ export function AppSidebar() {
             </>
           ) : (
             <>
-              <Button variant="secondary" onClick={closeMemberDialog}>
-                {t('shell.close')}
-              </Button>
-              <Button onClick={() => setIsEditingMember(true)}>
-                {t('shell.edit')}
-              </Button>
+              <Button variant="ghost" onClick={closeMemberDialog}>{t('shell.close')}</Button>
+              <Button variant="secondary" onClick={() => setIsEditingMember(true)}>{t('shell.edit')}</Button>
             </>
           )
         }
@@ -560,150 +443,115 @@ export function AppSidebar() {
           }}
         />
 
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
-          <div className="flex min-w-0 items-center gap-4">
-            {profilePreviewUrl ? (
-              <img
-                src={profilePreviewUrl}
-                alt={user ? `${user.name} ${user.surname}` : t('profile.member_details')}
-                className="h-20 w-20 shrink-0 rounded-full border border-[var(--border)] object-cover"
-              />
-            ) : (
-              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-xl font-bold text-white shadow-lg shadow-blue-900/30">
-                {getInitials(user?.name, user?.surname)}
-              </div>
-            )}
-
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
-              </p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                {profileImageFile ? profileImageFile.name : t('profile.photo_hint', 'Upload a new profile photo if needed.')}
-              </p>
+        {/* Avatar row */}
+        <div className="mb-4 flex items-center gap-4 rounded-[var(--radius-lg)] border border-[var(--border-solid)] bg-[var(--background-alt)] px-4 py-4">
+          {profilePreviewUrl ? (
+            <img
+              src={profilePreviewUrl}
+              alt={user ? `${user.name} ${user.surname}` : t('profile.member_details')}
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#37352f] text-base font-semibold text-white">
+              {getInitials(user?.name, user?.surname)}
             </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-semibold text-[var(--foreground)]">
+              {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
+            </p>
+            <p className="mt-0.5 text-[12px] text-[var(--muted)]">
+              {profileImageFile ? profileImageFile.name : t('profile.photo_hint', 'Upload a new profile photo if needed.')}
+            </p>
           </div>
-
           {isEditingMember ? (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => profileImageInputRef.current?.click()}
-              disabled={isSavingMember}
-            >
-              {resolvedUserProfileImage || profileImageFile
-                ? t('profile.change_photo', 'Change photo')
-                : t('profile.upload_photo', 'Upload photo')}
+            <Button variant="secondary" size="sm" onClick={() => profileImageInputRef.current?.click()} disabled={isSavingMember}>
+              {resolvedUserProfileImage || profileImageFile ? t('profile.change_photo', 'Change') : t('profile.upload_photo', 'Upload')}
             </Button>
           ) : null}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? t('shell.user')}</p>
-          </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
-          </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
-          </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
-            <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
-          </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
-            <div className="mt-2 flex items-center gap-2">
+        {/* Info grid */}
+        <div className="grid gap-3 md:grid-cols-2">
+          {[
+            { label: t('profile.role'), value: user?.role ?? t('shell.user') },
+            { label: t('profile.company_code'), value: user?.company_code ?? '—' },
+            { label: t('profile.job_title'), value: user?.job_title ?? '—' },
+            { label: t('profile.email'), value: user?.email ?? '—' },
+          ].map(({ label, value }) => (
+            <div key={label} className="rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background)] px-4 py-3">
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--caption)]">{label}</p>
+              <p className="mt-1.5 text-[14px] font-medium text-[var(--foreground)] break-all">{value}</p>
+            </div>
+          ))}
+          <div className="rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background)] px-4 py-3">
+            <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--caption)]">{t('profile.status')}</p>
+            <div className="mt-1.5 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}</p>
+              <p className="text-[14px] font-medium text-[var(--foreground)]">{user?.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}</p>
             </div>
           </div>
+
           {isEditingMember ? (
             <>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
-                <Input
-                  {...profileForm.register('name')}
-                  aria-invalid={profileForm.formState.errors.name ? true : undefined}
-                  className="mt-2"
-                />
-                {profileForm.formState.errors.name ? (
-                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.name.message}</p>
-                ) : null}
-              </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
-                <Input
-                  {...profileForm.register('surname')}
-                  aria-invalid={profileForm.formState.errors.surname ? true : undefined}
-                  className="mt-2"
-                />
-                {profileForm.formState.errors.surname ? (
-                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.surname.message}</p>
-                ) : null}
-              </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
-                  {t('profile.current_password', 'Current password')}
-                </p>
-                <Input
-                  type="password"
-                  {...profileForm.register('current_password')}
-                  aria-invalid={profileForm.formState.errors.current_password ? true : undefined}
-                  className="mt-2"
-                  placeholder={t('profile.current_password_hint', 'Fill only if changing password')}
-                />
-                {profileForm.formState.errors.current_password ? (
-                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.current_password.message}</p>
-                ) : null}
-              </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
-                  {t('profile.new_password', 'New password')}
-                </p>
-                <Input
-                  type="password"
-                  {...profileForm.register('new_password')}
-                  aria-invalid={profileForm.formState.errors.new_password ? true : undefined}
-                  className="mt-2"
-                  placeholder={t('profile.new_password_hint', 'Leave blank to keep current password')}
-                />
-                {profileForm.formState.errors.new_password ? (
-                  <p className="mt-1 text-[11px] text-rose-500">{profileForm.formState.errors.new_password.message}</p>
-                ) : null}
-              </div>
+              {(['name', 'surname'] as const).map((field) => (
+                <div key={field} className="rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background)] px-4 py-3">
+                  <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--caption)]">
+                    {field === 'name' ? t('profile.name') : t('profile.surname')}
+                  </p>
+                  <Input
+                    {...profileForm.register(field)}
+                    aria-invalid={profileForm.formState.errors[field] ? true : undefined}
+                  />
+                  {profileForm.formState.errors[field] ? (
+                    <p className="mt-1 text-[11px] text-[var(--danger-text)]">{profileForm.formState.errors[field]?.message}</p>
+                  ) : null}
+                </div>
+              ))}
+              {(['current_password', 'new_password'] as const).map((field) => (
+                <div key={field} className="rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background)] px-4 py-3">
+                  <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--caption)]">
+                    {field === 'current_password' ? t('profile.current_password', 'Current password') : t('profile.new_password', 'New password')}
+                  </p>
+                  <Input
+                    type="password"
+                    {...profileForm.register(field)}
+                    aria-invalid={profileForm.formState.errors[field] ? true : undefined}
+                    placeholder={field === 'current_password' ? t('profile.current_password_hint', 'Fill only if changing password') : t('profile.new_password_hint', 'Leave blank to keep current')}
+                  />
+                  {profileForm.formState.errors[field] ? (
+                    <p className="mt-1 text-[11px] text-[var(--danger-text)]">{profileForm.formState.errors[field]?.message}</p>
+                  ) : null}
+                </div>
+              ))}
             </>
           ) : null}
         </div>
 
-        <div className="mt-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+        {/* Permissions */}
+        <div className="mt-4 rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background-alt)] px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{activePermissions.length} {t('profile.enabled')}</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--caption)]">{t('profile.permissions')}</p>
+              <p className="mt-1 text-[14px] font-semibold text-[var(--foreground)]">{activePermissions.length} {t('profile.enabled')}</p>
             </div>
-            <Badge className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
+            <span className="rounded-[3px] border border-[var(--border-solid)] bg-[var(--background)] px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]">
               {env.appEnv}
-            </Badge>
+            </span>
           </div>
-
           {activePermissions.length > 0 ? (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {activePermissions.map((permission) => (
-                <Badge
+                <span
                   key={permission}
-                  className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.12em]', isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-100')}
+                  className="rounded-[3px] border border-[var(--border-solid)] bg-[var(--background)] px-2 py-0.5 text-[11px] font-medium text-[var(--muted)]"
                 >
                   {permission}
-                </Badge>
+                </span>
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-[var(--muted)]">{t('profile.no_active_permissions')}</p>
+            <p className="mt-3 text-[13px] text-[var(--muted)]">{t('profile.no_active_permissions')}</p>
           )}
         </div>
       </Dialog>

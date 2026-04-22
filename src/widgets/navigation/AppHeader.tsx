@@ -7,11 +7,8 @@ import { env } from '../../shared/config/env'
 import { navigationItems } from '../../shared/config/navigation'
 import { type AppLocale, localeLabels } from '../../shared/i18n/translations'
 import { useToast } from '../../shared/toast/useToast'
-import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
 import { cn } from '../../shared/lib/cn'
-import { NavGlyph } from './NavGlyph'
-import { getNavigationGlyphName } from './navGlyphMap'
 
 function SunIcon() {
   return (
@@ -30,122 +27,90 @@ function MoonIcon() {
   )
 }
 
-const headerMetaChipClassName =
-  'min-h-9 rounded-xl px-3 text-[11px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
-
 export function AppHeader() {
   const navigate = useNavigate()
   const location = useLocation()
   const { locale, setLocale, t } = useLocale()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
+  const { theme, toggleTheme } = useTheme()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const hideRouteContext = location.pathname.startsWith('/crm')
 
   const currentItem =
     [...navigationItems]
-      .sort((left, right) => right.to.length - left.to.length)
-      .find((item) =>
-        location.pathname === item.to || location.pathname.startsWith(`${item.to}/`),
-      ) ?? null
+      .sort((a, b) => b.to.length - a.to.length)
+      .find((item) => location.pathname === item.to || location.pathname.startsWith(`${item.to}/`)) ?? null
+
+  const routeLabel = currentItem ? t(`nav.${currentItem.to}.label`, currentItem.label) : env.appName
 
   async function handleLogout() {
     setIsSubmitting(true)
-
     try {
       await logout()
-      showToast({
-        title: t('shell.logged_out'),
-        description: t('shell.session_closed'),
-        tone: 'success',
-      })
-      startTransition(() =>
-        navigate('/auth/login', {
-          replace: true,
-          state: {
-            statusMessage: t('shell.session_closed'),
-          },
-        }),
-      )
+      showToast({ title: t('shell.logged_out'), description: t('shell.session_closed'), tone: 'success' })
+      startTransition(() => navigate('/auth/login', { replace: true, state: { statusMessage: t('shell.session_closed') } }))
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const { theme, toggleTheme } = useTheme()
-  const routeLabel = currentItem ? t(`nav.${currentItem.to}.label`, currentItem.label) : env.appName
-
   return (
-    <header className="relative z-10 border-b border-(--border) bg-(--shell-header-bg) px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <div className="min-w-0">
-            {!hideRouteContext ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="grid h-10 w-10 place-items-center rounded-xl border border-blue-500/30 bg-blue-600/10 text-blue-500 shadow-sm">
-                  <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-base font-bold text-(--foreground) tracking-tight">
-                    {routeLabel}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            {user ? (
-              <p className={cn('text-[11px] font-semibold text-(--muted)', !hideRouteContext && 'mt-1.5')}>
-                {user.name} {user.surname}
-                <span className="mx-1 opacity-30">|</span>
-                {user.job_title?.trim() || user.email}
-              </p>
-            ) : null}
-          </div>
+    <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-[var(--border-solid)] bg-[var(--shell-header-bg)] px-4 py-2.5 sm:px-6">
+      {/* Left: breadcrumb / route context */}
+      <div className="flex min-w-0 items-center gap-2">
+        <h1 className="truncate text-[14px] font-semibold text-[var(--foreground)]">{routeLabel}</h1>
+        {user ? (
+          <span className="hidden text-[var(--caption)] sm:inline">—</span>
+        ) : null}
+        {user ? (
+          <span className="hidden truncate text-[13px] text-[var(--muted)] sm:block">
+            {user.name} {user.surname}
+            {user.job_title?.trim() ? ` · ${user.job_title}` : ''}
+          </span>
+        ) : null}
+      </div>
+
+      {/* Right: controls */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        {/* Locale switcher */}
+        <div className="flex items-center rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background-alt)]">
+          {(Object.keys(localeLabels) as AppLocale[]).map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setLocale(value)}
+              aria-label={`${t('shell.language')}: ${localeLabels[value]}`}
+              className={cn(
+                'inline-flex min-h-[28px] min-w-[36px] items-center justify-center rounded-[var(--radius-md)] px-2 text-[12px] font-medium transition-colors duration-100',
+                locale === value
+                  ? 'bg-[var(--background)] text-[var(--foreground)] shadow-[var(--shadow-sm)]'
+                  : 'text-[var(--muted)] hover:text-[var(--foreground)]',
+              )}
+            >
+              {localeLabels[value]}
+            </button>
+          ))}
         </div>
 
-        <div className="flex w-full md:w-auto md:justify-end">
-          <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-(--border) bg-(--accent-soft) p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
-            {user?.job_title?.trim() ? (
-              <Badge className={cn(headerMetaChipClassName, 'border-(--border) bg-(--muted-surface) text-(--muted-strong)')}>
-                {user.job_title}
-              </Badge>
-            ) : null}
-            <div className="flex items-center rounded-xl border border-(--border) bg-(--muted-surface) p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-              {(Object.keys(localeLabels) as AppLocale[]).map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setLocale(value)}
-                  aria-label={`${t('shell.language')}: ${localeLabels[value]}`}
-                  className={cn(
-                    'inline-flex min-h-8 min-w-9 items-center justify-center rounded-lg px-2 text-[11px] font-semibold tracking-[0.08em] transition-colors',
-                    locale === value
-                      ? 'bg-white text-black shadow-[0_1px_2px_rgba(0,0,0,0.20)]'
-                      : 'text-(--muted) hover:bg-(--accent-soft) hover:text-(--foreground)',
-                  )}
-                >
-                  {localeLabels[value]}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              aria-label={theme === 'dark' ? t('shell.switch_to_light') : t('shell.switch_to_dark')}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-(--border) bg-(--muted-surface) text-(--muted) transition-colors hover:bg-(--accent-soft) hover:text-(--foreground)"
-            >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </button>
-            <Button
-              variant="secondary"
-              size="md"
-              className="min-h-10 rounded-xl border-(--border) bg-(--muted-surface) px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
-              disabled={isSubmitting}
-              onClick={() => void handleLogout()}
-            >
-              {isSubmitting ? t('shell.logging_out') : t('shell.logout')}
-            </Button>
-          </div>
-        </div>
+        {/* Theme toggle */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          aria-label={theme === 'dark' ? t('shell.switch_to_light') : t('shell.switch_to_dark')}
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--background-alt)] text-[var(--muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
+
+        {/* Logout */}
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={isSubmitting}
+          onClick={() => void handleLogout()}
+        >
+          {isSubmitting ? t('shell.logging_out') : t('shell.logout')}
+        </Button>
       </div>
     </header>
   )

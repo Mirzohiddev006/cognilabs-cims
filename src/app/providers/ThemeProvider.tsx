@@ -2,28 +2,20 @@ import { useLayoutEffect, useState, type PropsWithChildren } from 'react'
 import { ThemeContext, type Theme } from './ThemeContext'
 
 const THEME_STORAGE_KEY = 'cims-theme'
-const THEME_SWITCH_CLASS = 'theme-switching'
 
 function getInitialTheme(): Theme {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
     if (stored === 'light' || stored === 'dark') return stored
   } catch {}
-  return 'dark'
+  return 'light'
 }
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement
-
-  root.classList.add(THEME_SWITCH_CLASS)
-  root.classList.toggle('light', theme === 'light')
+  root.classList.toggle('dark', theme === 'dark')
+  root.classList.remove('light')
   root.style.colorScheme = theme
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      root.classList.remove(THEME_SWITCH_CLASS)
-    })
-  })
 }
 
 export function ThemeProvider({ children }: PropsWithChildren) {

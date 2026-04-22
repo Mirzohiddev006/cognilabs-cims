@@ -21,27 +21,24 @@ export function SectionTitle({
   const localizedDescription = description ? translateCurrentLiteral(description) : null
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('space-y-1', className)}>
       {localizedEyebrow ? (
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-1 w-1 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.7)]" />
-          <p className="ui-eyebrow text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--caption)]">
-            {localizedEyebrow}
-          </p>
-        </div>
+        <p className="text-[11px] font-medium uppercase tracking-[0.10em] text-[var(--caption)]">
+          {localizedEyebrow}
+        </p>
       ) : null}
 
       <h2
         className={cn(
-          'ui-section-title text-lg font-semibold leading-snug tracking-tight',
-          gradient ? 'text-gradient' : 'text-[var(--foreground)]',
+          'text-[15px] font-semibold text-[var(--foreground)]',
+          gradient && 'text-gradient',
         )}
       >
         {localizedTitle}
       </h2>
 
       {localizedDescription ? (
-        <p className="max-w-2xl text-[12px] leading-5 text-[var(--muted-strong)]">
+        <p className="max-w-2xl text-[13px] leading-5 text-[var(--muted)]">
           {localizedDescription}
         </p>
       ) : null}

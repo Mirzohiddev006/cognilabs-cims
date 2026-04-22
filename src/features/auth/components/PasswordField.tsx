@@ -20,13 +20,13 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
   const describedBy = errorId ?? hintId
 
   return (
-    <label className="grid gap-2" htmlFor={inputId}>
+    <label className="grid gap-1.5" htmlFor={inputId}>
       {label ? (
-        <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
+        <span className="text-[13px] font-medium text-[var(--foreground)]">{label}</span>
       ) : null}
-      <div className="relative group">
+      <div className="relative">
         {leadingIcon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
+          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--caption)]">
             {leadingIcon}
           </span>
         ) : null}
@@ -35,34 +35,24 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
           type={visible ? 'text' : 'password'}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cn(
-            'pr-14',
-            leadingIcon ? 'pl-10' : null,
-            error
-              ? 'border-rose-500/50 focus:border-rose-500/70 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(239,68,68,0.12)]'
-              : null,
-            className,
-          )}
+          className={cn('pr-10', leadingIcon ? 'pl-9' : null, className)}
           {...props}
         />
         <button
           type="button"
-          onClick={() => setVisible((current) => !current)}
+          onClick={() => setVisible((c) => !c)}
           aria-label={visible ? t('auth.password.hide', 'Hide password') : t('auth.password.show', 'Show password')}
           aria-pressed={visible}
-          className={cn(
-            'absolute right-3 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[var(--muted)] transition-all',
-            'hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
-          )}
+          className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[var(--radius-md)] text-[var(--caption)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
         >
           {visible ? (
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
               <circle cx="12" cy="12" r="2.75" />
-              <line x1="3" y1="3" x2="21" y2="21" strokeWidth="1.8" />
+              <line x1="3" y1="3" x2="21" y2="21" />
             </svg>
           ) : (
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4.5 w-4.5">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
               <circle cx="12" cy="12" r="2.75" />
             </svg>
@@ -70,12 +60,12 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
         </button>
       </div>
       {error ? (
-        <span id={errorId} role="alert" className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+        <span id={errorId} role="alert" className="text-[12px] text-[var(--danger-text)]">
           {error}
         </span>
       ) : null}
       {!error && hint ? (
-        <span id={hintId} className="text-[11px] font-medium text-[var(--muted)]">
+        <span id={hintId} className="text-[12px] text-[var(--muted)]">
           {hint}
         </span>
       ) : null}

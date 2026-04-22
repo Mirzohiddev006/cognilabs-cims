@@ -9,23 +9,12 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 }
 
 const variantClasses: Record<CardVariant, string> = {
-  default:
-    'card-base',
-
-  elevated:
-    'card-base card-elevated',
-
-  glass:
-    'card-glass-variant card-base backdrop-blur-xl bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
-
-  metric:
-    'card-base card-metric card-elevated',
-
-  glow:
-    'card-base card-glow shadow-[0_0_0_1px_rgba(59,130,246,0.15),0_4px_20px_rgba(0,0,0,0.28),0_0_32px_rgba(59,130,246,0.10)]',
-
-  inset:
-    'card-inset-variant rounded-xl border border-(--border) bg-(--card) shadow-[inset_0_1px_3px_rgba(0,0,0,0.12)]',
+  default:  'card-base',
+  elevated: 'card-base card-elevated',
+  glass:    'card-glass-variant card-base',
+  metric:   'card-base card-metric card-elevated',
+  glow:     'card-base card-glow',
+  inset:    'card-inset-variant rounded-[var(--radius-lg)] border border-[var(--border-solid)]',
 }
 
 export function Card({
@@ -46,7 +35,6 @@ export function Card({
   )
 }
 
-/* ─── Compound sub-components ─────────────────────────── */
 export function CardHeader({
   className,
   ...props
@@ -54,7 +42,7 @@ export function CardHeader({
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-4 border-b border-(--border) px-5 py-5',
+        'flex items-start justify-between gap-4 border-b border-[var(--border-solid)] px-5 py-4',
         className,
       )}
       {...props}
@@ -67,7 +55,7 @@ export function CardBody({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('px-5 py-5', className)} {...props} />
+    <div className={cn('px-5 py-4', className)} {...props} />
   )
 }
 
@@ -78,7 +66,7 @@ export function CardFooter({
   return (
     <div
       className={cn(
-        'border-t border-(--border) px-5 py-4',
+        'border-t border-[var(--border-solid)] px-5 py-3',
         className,
       )}
       {...props}

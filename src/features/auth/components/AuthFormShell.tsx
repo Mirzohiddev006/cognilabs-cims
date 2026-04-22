@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Card } from '../../../shared/ui/card'
 
 type FooterLink = {
   label: string
@@ -23,32 +22,28 @@ export function AuthFormShell({
   children,
 }: AuthFormShellProps) {
   return (
-    <Card className="auth-login-shell overflow-hidden border-[var(--border)] bg-[var(--card)] p-0 shadow-sm">
-      <div className="border-b border-[var(--border)] px-6 py-6 sm:px-7">
-        <div className="space-y-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">{eyebrow}</p>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] tracking-tight">{title}</h2>
-          <p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{description}</p>
-        </div>
+    <div>
+      <div className="mb-6">
+        <p className="text-[11px] font-medium uppercase tracking-[0.10em] text-[var(--caption)]">{eyebrow}</p>
+        <h2 className="mt-1.5 text-[22px] font-bold tracking-tight text-[var(--foreground)]">{title}</h2>
+        <p className="mt-1.5 text-[13px] leading-5 text-[var(--muted)]">{description}</p>
       </div>
 
-      <div className="px-6 py-6 sm:px-7">{children}</div>
+      {children}
 
       {footerLinks.length > 0 ? (
-        <div className="border-t border-[var(--border)] px-6 py-4 sm:px-7">
-          <div className="flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-3 border-t border-[var(--border-solid)] pt-4">
           {footerLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-xs font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
+              className="text-[13px] text-[var(--muted)] transition hover:text-[var(--foreground)]"
             >
               {link.label}
             </Link>
           ))}
-          </div>
         </div>
       ) : null}
-    </Card>
+    </div>
   )
 }

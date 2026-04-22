@@ -46,7 +46,6 @@ export function Dialog({
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
 
-  /* Body scroll lock + Escape key */
   useEffect(() => {
     if (!open) return
 
@@ -54,9 +53,7 @@ export function Dialog({
     document.body.style.overflow = 'hidden'
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onClose()
-      }
+      if (event.key === 'Escape') onClose()
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -67,7 +64,6 @@ export function Dialog({
     }
   }, [onClose, open])
 
-  /* Focus trap: capture focus on open, restore on close */
   useEffect(() => {
     if (!open || !dialogRef.current) return
 
@@ -108,68 +104,49 @@ export function Dialog({
     }
   }, [open])
 
-  if (!open) {
-    return null
-  }
+  if (!open) return null
 
   return createPortal(
     <div className="fixed inset-0 z-[80] grid place-items-center p-3 sm:p-6">
+      {/* Backdrop */}
       <button
         type="button"
         aria-label={translateCurrentLiteral('Close dialog')}
-        className={cn(
-          'dialog-backdrop absolute inset-0 backdrop-blur-md',
-          tone === 'danger'
-            ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.16),transparent_34%),rgba(0,0,0,0.76)]'
-            : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),rgba(0,0,0,0.72)]',
-        )}
+        className="dialog-backdrop absolute inset-0 backdrop-blur-[2px]"
         onClick={onClose}
         tabIndex={-1}
       />
+
+      {/* Panel */}
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn(
-          'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
-          tone === 'danger' && 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]',
+          'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden sm:max-h-[calc(100vh-3rem)]',
           sizeClasses[size],
         )}
       >
-        <div
-          className={cn(
-            'dialog-header-decor pointer-events-none absolute inset-x-0 top-0 h-28',
-            tone === 'danger'
-              ? 'bg-[radial-gradient(circle_at_top,rgba(239,68,68,0.18),transparent_72%)]'
-              : 'bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.16),transparent_72%)]',
-          )}
-        />
-
-        <div className="dialog-divider relative z-10 flex items-start justify-between gap-4 border-b px-6 py-5 sm:px-7">
-          <div className="max-w-2xl">
+        {/* Header */}
+        <div className="dialog-divider flex items-start justify-between gap-4 border-b px-6 py-5">
+          <div className="min-w-0 flex-1">
             {headerIcon ? (
-              <div className="mb-3">
-                {headerIcon}
-              </div>
+              <div className="mb-3 text-[var(--muted)]">{headerIcon}</div>
             ) : null}
-            <p className={cn(
-              'dialog-eyebrow ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.24em]',
-              tone === 'danger' ? 'text-red-300/80' : 'text-blue-300/70',
-            )}>
-              {translateCurrentLiteral(eyebrow ?? 'Workspace dialog')}
-            </p>
+            {eyebrow ? (
+              <p className="dialog-eyebrow mb-1 text-[11px] font-medium uppercase tracking-[0.12em]">
+                {translateCurrentLiteral(eyebrow)}
+              </p>
+            ) : null}
             <h2
               id={titleId}
-              className="ui-dialog-title mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]"
+              className="text-[15px] font-semibold text-[var(--foreground)]"
             >
               {translateCurrentLiteral(title)}
             </h2>
             {description ? (
-              <p className={cn(
-                'mt-2 text-xs leading-5',
-                tone === 'danger' ? 'text-zinc-300/80' : 'text-[var(--muted-strong)]',
-              )}>
+              <p className="mt-1.5 text-[13px] leading-5 text-[var(--muted)]">
                 {translateCurrentLiteral(description)}
               </p>
             ) : null}
@@ -178,27 +155,25 @@ export function Dialog({
             type="button"
             onClick={onClose}
             className={cn(
-              'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border bg-[var(--input-surface)] text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:text-[var(--foreground)]',
-              tone === 'danger'
-                ? 'border-red-500/15 hover:border-red-500/30 hover:bg-red-500/10'
-                : 'border-[var(--border)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
+              'inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[var(--radius-md)] text-[var(--muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+              tone === 'danger' && 'hover:bg-[var(--danger-dim)] hover:text-[var(--danger-text)]',
             )}
             aria-label={translateCurrentLiteral('Close dialog panel')}
           >
-            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
               <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
         {children ? (
-          <div className="relative z-10 overflow-y-auto px-6 py-6 sm:px-7">
+          <div className="overflow-y-auto px-6 py-5">
             {children}
           </div>
         ) : null}
 
         {footer ? (
-          <div className="dialog-divider relative z-10 flex flex-wrap justify-end gap-3 border-t px-6 py-5 sm:px-7">
+          <div className="dialog-divider flex flex-wrap justify-end gap-2 border-t px-6 py-4">
             {footer}
           </div>
         ) : null}

@@ -32,11 +32,11 @@ function normalizeOptionValue(value?: string | null) {
 
 function getMenuPosition(trigger: HTMLButtonElement, optionCount: number): MenuPosition {
   const rect = trigger.getBoundingClientRect()
-  const menuHeight = Math.min(optionCount, 6) * 40 + 12
+  const menuHeight = Math.min(optionCount, 6) * 36 + 16
   const openAbove = rect.bottom + menuHeight + 8 > window.innerHeight && rect.top - menuHeight - 8 >= 8
   const top = openAbove
     ? Math.max(8, rect.top - menuHeight - 8)
-    : Math.min(rect.bottom + 8, window.innerHeight - menuHeight - 8)
+    : Math.min(rect.bottom + 4, window.innerHeight - menuHeight - 8)
 
   return {
     top,
@@ -66,22 +66,15 @@ export function SelectField({
     )
 
   useEffect(() => {
-    if (!isOpen || !triggerRef.current) {
-      return
-    }
+    if (!isOpen || !triggerRef.current) return
 
     const updatePosition = () => {
-      if (!triggerRef.current) {
-        return
-      }
-
+      if (!triggerRef.current) return
       setPosition(getMenuPosition(triggerRef.current, options.length))
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-      }
+      if (event.key === 'Escape') setIsOpen(false)
     }
 
     updatePosition()
@@ -104,30 +97,25 @@ export function SelectField({
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        onClick={() => {
-          if (!disabled) {
-            setIsOpen((current) => !current)
-          }
-        }}
+        onClick={() => { if (!disabled) setIsOpen((c) => !c) }}
         className={cn(
-          'flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] sm:text-[15px]',
-          'shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none',
-          'transition-[border-color,box-shadow,background-color,transform] duration-150',
-          'hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
-          'focus-visible:border-[var(--border-focus)] focus-visible:bg-[var(--input-surface-hover)]',
-          'focus-visible:ring-0 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)]',
+          'flex min-h-[34px] w-full items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--input-surface)] px-3 py-1.5',
+          'text-[14px] text-[var(--foreground)] outline-none',
+          'transition-[border-color] duration-100',
+          'hover:border-[var(--border-hover)]',
+          'focus-visible:border-[var(--border-focus)] focus-visible:ring-1 focus-visible:ring-[var(--border-focus)]',
           'disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
       >
-        <span className={cn('truncate text-left', selectedOption ? 'text-[var(--foreground)]' : 'text-[var(--muted)]')}>
+        <span className={cn('truncate text-left', !selectedOption && 'text-[var(--caption)]')}>
           {selectedOption?.label ?? placeholder}
         </span>
         <svg
           viewBox="0 0 16 16"
           className={cn(
-            'h-4 w-4 shrink-0 fill-current text-[var(--muted)] transition-transform duration-200',
-            isOpen && 'rotate-180 text-[var(--foreground)]',
+            'h-3.5 w-3.5 shrink-0 fill-current text-[var(--caption)] transition-transform duration-150',
+            isOpen && 'rotate-180',
           )}
           aria-hidden="true"
         >
@@ -140,7 +128,7 @@ export function SelectField({
             <>
               <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
-                className="fixed z-[100] max-h-72 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                className="fixed z-[100] max-h-60 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border-solid)] bg-[var(--surface-elevated)] p-1 shadow-[var(--shadow-lg)]"
                 style={position}
                 role="listbox"
               >
@@ -161,25 +149,17 @@ export function SelectField({
                         onValueChange(option.value)
                       }}
                       className={cn(
-                        'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                        'flex w-full items-center justify-between gap-2 rounded-[var(--radius-md)] px-3 py-2 text-[13px] font-medium transition-colors',
                         isSelected
-                          ? 'border border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--foreground)]'
-                          : 'border border-transparent text-[var(--foreground)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                          ? 'bg-[var(--accent-soft)] text-[var(--foreground)]'
+                          : 'text-[var(--foreground)] hover:bg-[var(--accent-soft)]',
                       )}
                     >
-                      <span className="flex items-center gap-2 truncate">
-                        <span
-                          className={cn(
-                            'inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--muted)]/40',
-                            isSelected && 'bg-[var(--blue-text)] shadow-[0_0_8px_var(--blue-glow)]',
-                          )}
-                        />
-                        <span className="truncate">{option.label}</span>
-                      </span>
+                      <span className="truncate">{option.label}</span>
                       {isSelected ? (
                         <svg
                           viewBox="0 0 16 16"
-                          className="h-4 w-4 shrink-0 fill-current text-[var(--blue-text)]"
+                          className="h-3.5 w-3.5 shrink-0 fill-current text-[var(--foreground)]"
                           aria-hidden="true"
                         >
                           <path d="M6.6 11.2 3.4 8a.75.75 0 1 0-1.06 1.06l3.73 3.73a.75.75 0 0 0 1.06 0l6.53-6.53A.75.75 0 1 0 12.64 5.2L6.6 11.2Z" />

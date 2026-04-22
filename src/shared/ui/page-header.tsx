@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { translateCurrentLiteral } from '../i18n/translations'
 import { cn } from '../lib/cn'
-import { Card } from './card'
 
 type PageHeaderTone = 'neutral' | 'blue' | 'success' | 'warning' | 'danger' | 'violet'
 
@@ -23,11 +22,11 @@ type PageHeaderProps = {
 
 const metaToneClassNames: Record<PageHeaderTone, string> = {
   neutral: 'meta-neutral',
-  blue: 'meta-blue',
+  blue:    'meta-blue',
   success: 'meta-success',
   warning: 'meta-warning',
-  danger: 'meta-danger',
-  violet: 'meta-violet',
+  danger:  'meta-danger',
+  violet:  'meta-violet',
 }
 
 export function PageHeader({
@@ -39,68 +38,58 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <Card
-      variant="glass"
-      noPadding
-      className={cn('page-header-card page-enter overflow-hidden rounded-[28px]', className)}
-    >
-      <div className="relative overflow-hidden px-5 py-6 sm:px-7 sm:py-7">
-        <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
-        <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="page-header-decor pointer-events-none absolute -right-10 top-6 h-28 w-28 rounded-full bg-cyan-400/8 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col gap-6">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-            <div className="max-w-3xl">
-              {eyebrow ? (
-                <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
-                  {translateCurrentLiteral(eyebrow)}
-                </p>
-              ) : null}
-              <h1 className="page-header-title ui-display-heading text-2xl font-semibold tracking-tight sm:text-[2rem]">
-                {translateCurrentLiteral(title)}
-              </h1>
-              {description ? (
-                <p className="page-header-hint mt-3 max-w-2xl text-sm leading-6">
-                  {translateCurrentLiteral(description)}
-                </p>
-              ) : null}
-            </div>
-
-            {actions ? (
-              <div className="flex flex-wrap items-center gap-2 xl:max-w-105 xl:justify-end">
-                {actions}
-              </div>
-            ) : null}
-          </div>
-
-          {meta.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {meta.map((item) => (
-                <div
-                  key={`${item.label}-${item.value}`}
-                  className={cn(
-                    'rounded-[22px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm',
-                    metaToneClassNames[item.tone ?? 'neutral'],
-                  )}
-                >
-                  <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
-                    {translateCurrentLiteral(item.label)}
-                  </p>
-                  <p className="mt-2 text-base font-semibold tracking-tight text-current">
-                    {item.value}
-                  </p>
-                  {item.hint ? (
-                    <p className="page-header-hint mt-1.5 text-[11px] leading-5">
-                      {translateCurrentLiteral(item.hint)}
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
+    <div className={cn('page-enter', className)}>
+      {/* Title row */}
+      <div className="flex flex-col gap-4 pb-6 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
+          {eyebrow ? (
+            <p className="page-header-label mb-1 text-[11px] font-medium uppercase tracking-[0.10em] text-[var(--caption)]">
+              {translateCurrentLiteral(eyebrow)}
+            </p>
+          ) : null}
+          <h1 className="page-header-title text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-[28px]">
+            {translateCurrentLiteral(title)}
+          </h1>
+          {description ? (
+            <p className="page-header-hint mt-2 max-w-2xl text-[14px] leading-6 text-[var(--muted)]">
+              {translateCurrentLiteral(description)}
+            </p>
           ) : null}
         </div>
+
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {actions}
+          </div>
+        ) : null}
       </div>
-    </Card>
+
+      {/* Meta pills */}
+      {meta.length > 0 ? (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {meta.map((item) => (
+            <div
+              key={`${item.label}-${item.value}`}
+              className={cn(
+                'rounded-[var(--radius-lg)] border px-4 py-3',
+                metaToneClassNames[item.tone ?? 'neutral'],
+              )}
+            >
+              <p className="text-[11px] font-medium uppercase tracking-[0.10em] opacity-70">
+                {translateCurrentLiteral(item.label)}
+              </p>
+              <p className="mt-1.5 text-[15px] font-semibold">
+                {item.value}
+              </p>
+              {item.hint ? (
+                <p className="page-header-hint mt-1 text-[11px] leading-4 opacity-70">
+                  {translateCurrentLiteral(item.hint)}
+                </p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
   )
 }

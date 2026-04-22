@@ -16,38 +16,31 @@ export function AuthField({ label, error, hint, id, className, leadingIcon, ...p
   const describedBy = errorId ?? hintId
 
   return (
-    <label className="grid gap-2" htmlFor={inputId}>
+    <label className="grid gap-1.5" htmlFor={inputId}>
       {label ? (
-        <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span>
+        <span className="text-[13px] font-medium text-[var(--foreground)]">{label}</span>
       ) : null}
       <div className="relative">
         {leadingIcon ? (
-          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--muted)]">
+          <span className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-[var(--caption)]">
             {leadingIcon}
           </span>
         ) : null}
-
         <Input
           id={inputId}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={cn(
-            leadingIcon ? 'pl-10' : null,
-            error
-              ? 'border-rose-500/50 focus:border-rose-500/70 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(239,68,68,0.12)]'
-              : null,
-            className,
-          )}
+          className={cn(leadingIcon ? 'pl-9' : null, className)}
           {...props}
         />
       </div>
       {error ? (
-        <span id={errorId} role="alert" className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">
+        <span id={errorId} role="alert" className="text-[12px] text-[var(--danger-text)]">
           {error}
         </span>
       ) : null}
       {!error && hint ? (
-        <span id={hintId} className="text-[11px] font-medium text-[var(--muted)]">
+        <span id={hintId} className="text-[12px] text-[var(--muted)]">
           {hint}
         </span>
       ) : null}

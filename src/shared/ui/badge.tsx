@@ -25,48 +25,48 @@ type BadgeProps = PropsWithChildren<{
 
 const variants: Record<BadgeVariant, string> = {
   default:
-    'border-transparent bg-white/90 text-black',
+    'border-[var(--border-solid)] bg-[var(--tag-default-bg)] text-[var(--tag-default-text)]',
 
   secondary:
-    'border-[var(--border)] bg-[var(--muted-surface)] text-[var(--muted-strong)]',
+    'border-[var(--border-solid)] bg-[var(--background-alt)] text-[var(--muted-strong)]',
 
   outline:
-    'border-[var(--border)] bg-transparent text-[var(--muted-strong)]',
+    'border-[var(--border-solid)] bg-transparent text-[var(--muted)]',
 
   blue:
-    'border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)]',
+    'border-[var(--tag-blue-bg)] bg-[var(--tag-blue-bg)] text-[var(--tag-blue-text)]',
 
   success:
-    'border-[var(--success-border)] bg-[var(--success-dim)] text-[var(--success-text)]',
+    'border-[var(--tag-green-bg)] bg-[var(--tag-green-bg)] text-[var(--tag-green-text)]',
 
   warning:
-    'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)]',
+    'border-[var(--tag-yellow-bg)] bg-[var(--tag-yellow-bg)] text-[var(--tag-yellow-text)]',
 
   danger:
-    'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)]',
+    'border-[var(--tag-red-bg)] bg-[var(--tag-red-bg)] text-[var(--tag-red-text)]',
 
   violet:
-    'border-[var(--violet-border)] bg-[var(--violet-dim)] text-[var(--violet-text)]',
+    'border-[var(--tag-purple-bg)] bg-[var(--tag-purple-bg)] text-[var(--tag-purple-text)]',
 
   ghost:
     'border-transparent bg-transparent text-[var(--muted)]',
 }
 
 const sizes: Record<BadgeSize, string> = {
-  sm: 'px-1.5 py-0.5 text-[10px] rounded-md gap-1',
-  md: 'px-2 py-0.5 text-[11px] rounded-md gap-1.5',
+  sm: 'px-1.5 py-0.5 text-[11px] rounded-[3px] gap-1',
+  md: 'px-2 py-0.5 text-[12px] rounded-[3px] gap-1.5',
 }
 
 const dotColors: Record<BadgeVariant, string> = {
-  default:  'bg-black',
+  default:  'bg-[var(--muted)]',
   secondary:'bg-[var(--muted)]',
-  outline:  'bg-[var(--muted)]',
-  blue:     'bg-[var(--blue-text)] shadow-[0_0_5px_rgba(96,165,250,0.6)]',
-  success:  'bg-[var(--success-text)] shadow-[0_0_5px_rgba(74,222,128,0.6)]',
-  warning:  'bg-[var(--warning-text)] shadow-[0_0_5px_rgba(251,191,36,0.6)]',
-  danger:   'bg-[var(--danger-text)] shadow-[0_0_5px_rgba(248,113,113,0.6)]',
-  violet:   'bg-[var(--violet-text)] shadow-[0_0_5px_rgba(167,139,250,0.6)]',
-  ghost:    'bg-[var(--muted)]',
+  outline:  'bg-[var(--caption)]',
+  blue:     'bg-[var(--tag-blue-text)]',
+  success:  'bg-[var(--tag-green-text)]',
+  warning:  'bg-[var(--tag-yellow-text)]',
+  danger:   'bg-[var(--tag-red-text)]',
+  violet:   'bg-[var(--tag-purple-text)]',
+  ghost:    'bg-[var(--caption)]',
 }
 
 export function Badge({
@@ -103,7 +103,6 @@ export function Badge({
   )
 }
 
-/* ─── Preset semantic badges ──────────────────────────── */
 export function StatusBadge({
   status,
   className,

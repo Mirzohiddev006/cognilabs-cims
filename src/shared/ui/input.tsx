@@ -8,18 +8,16 @@ export function Input({ className, 'aria-invalid': ariaInvalid, ...props }: Inpu
     <input
       aria-invalid={ariaInvalid}
       className={cn(
-        'min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2',
-        'text-sm text-[var(--foreground)] sm:text-[15px]',
-        'placeholder:text-sm placeholder:text-[var(--caption)]',
-        'shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]',
+        'min-h-[34px] w-full rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--input-surface)] px-3 py-1.5',
+        'text-[14px] text-[var(--foreground)]',
+        'placeholder:text-[var(--caption)]',
         'outline-none',
-        'transition-[border-color,box-shadow,background-color] duration-150',
-        'hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
-        'focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)]',
-        'focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)]',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'transition-[border-color,box-shadow] duration-100',
+        'hover:border-[var(--border-hover)]',
+        'focus:border-[var(--border-focus)] focus:ring-1 focus:ring-[var(--border-focus)]',
+        'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--background-alt)]',
         ariaInvalid === true || ariaInvalid === 'true'
-          ? 'border-rose-500/50 focus:border-rose-500/70 focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(239,68,68,0.12)]'
+          ? 'border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]'
           : null,
         className,
       )}

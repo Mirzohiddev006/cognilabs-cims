@@ -7,16 +7,14 @@ export function Textarea({ className, ...props }: TextareaProps) {
   return (
     <textarea
       className={cn(
-        'min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2.5',
-        'text-xs leading-6 text-[var(--foreground)]',
+        'min-h-24 w-full rounded-[var(--radius-md)] border border-[var(--border-solid)] bg-[var(--input-surface)] px-3 py-2',
+        'text-[14px] leading-6 text-[var(--foreground)]',
         'placeholder:text-[var(--caption)]',
-        'shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]',
-        'outline-none',
-        'transition-[border-color,box-shadow,background-color] duration-150',
-        'hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]',
-        'focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)]',
-        'focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)]',
-        'disabled:cursor-not-allowed disabled:opacity-50',
+        'outline-none resize-y',
+        'transition-[border-color] duration-100',
+        'hover:border-[var(--border-hover)]',
+        'focus:border-[var(--border-focus)] focus:ring-1 focus:ring-[var(--border-focus)]',
+        'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--background-alt)]',
         className,
       )}
       {...props}
