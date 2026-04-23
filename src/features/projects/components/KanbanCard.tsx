@@ -6,6 +6,21 @@ import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
 import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 
+type CardColor = 'default' | 'gray' | 'brown' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | 'red'
+
+const cardColorMap: Record<CardColor, { bg: string; border: string }> = {
+  default: { bg: 'var(--surface-elevated)', border: 'var(--border)' },
+  gray: { bg: 'var(--tag-gray-bg)', border: 'var(--tag-gray-bg)' },
+  brown: { bg: 'var(--tag-brown-bg)', border: 'var(--tag-brown-bg)' },
+  orange: { bg: 'var(--tag-orange-bg)', border: 'var(--tag-orange-bg)' },
+  yellow: { bg: 'var(--tag-yellow-bg)', border: 'var(--tag-yellow-bg)' },
+  green: { bg: 'var(--tag-green-bg)', border: 'var(--tag-green-bg)' },
+  blue: { bg: 'var(--tag-blue-bg)', border: 'var(--tag-blue-bg)' },
+  purple: { bg: 'var(--tag-purple-bg)', border: 'var(--tag-purple-bg)' },
+  pink: { bg: 'var(--tag-pink-bg)', border: 'var(--tag-pink-bg)' },
+  red: { bg: 'var(--tag-red-bg)', border: 'var(--tag-red-bg)' },
+}
+
 type KanbanCardProps = {
   card: CardRecord
   onEdit: (card: CardRecord) => void
@@ -13,10 +28,12 @@ type KanbanCardProps = {
   onClick: (card: CardRecord) => void
   isOverlay?: boolean
   readOnly?: boolean
+  color?: CardColor
 }
 
-export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnly = false }: KanbanCardProps) {
+export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnly = false, color = 'default' }: KanbanCardProps) {
   const lt = translateCurrentLiteral
+  const colorConfig = cardColorMap[color]
   const {
     attributes,
     listeners,
@@ -63,19 +80,22 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...(!readOnly ? attributes : {})}
       {...(!readOnly ? listeners : {})}
       onClick={() => onClick(card)}
       className={cn(
         'group relative flex flex-col gap-2.5 rounded-lg p-3 cursor-pointer select-none',
-        /* card surface — same token the app uses for elevated surfaces */
-        'bg-[var(--surface-elevated)] border border-[var(--border)]',
-        'shadow-[0_1px_2px_rgba(0,0,0,0.20)]',
+        /* card surface — Notion-style colored cards */
         'transition-all duration-150',
         'hover:border-[var(--border-hover)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.30)] hover:-translate-y-px',
         isOverlay && 'rotate-2 shadow-[0_16px_40px_rgba(0,0,0,0.55)] opacity-95',
       )}
+      style={{
+        ...style,
+        backgroundColor: colorConfig.bg,
+        borderColor: colorConfig.border,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.20)',
+      }}
     >
       {/* Title — main body */}
       <p className="text-[13px] font-medium leading-[1.4] text-[var(--foreground)] line-clamp-3 pr-8">
