@@ -282,32 +282,20 @@ export function AppSidebar() {
         )}
       >
         <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
-          <div className="border-b border-[var(--border)] px-2 pb-4">
-            <div className="relative w-full rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-(--shell-label-color)">Cognilabs</p>
-                <button
-                  type="button"
-                  onClick={handleSidebarToggle}
-                  aria-label={t('shell.toggle_navigation')}
-                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--muted)] transition-colors hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                    <path d="M10 4L6 8l4 4" />
-                  </svg>
-                </button>
-              </div>
-              <div className="mt-3 flex w-full items-center gap-3 text-left">
-                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
-                  <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
-                </div>
-                <div className="min-w-0 flex-1 overflow-hidden">
-                  <h2 className="truncate text-[14px] font-bold text-(--shell-text-primary) tracking-tight">{env.appName}</h2>
-                  <p className="truncate text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('shell.management_system')}</p>
-                </div>
-              </div>
+          <button
+            type="button"
+            onClick={handleSidebarToggle}
+            aria-label={t('shell.toggle_navigation')}
+            className="flex w-full items-center gap-3 border-b border-[var(--border)] px-2 pb-4 text-left transition-colors hover:bg-[var(--accent-soft)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35"
+          >
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
+              <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
             </div>
-          </div>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <h2 className="truncate text-[14px] font-bold text-(--shell-text-primary) tracking-tight">{env.appName}</h2>
+              <p className="truncate text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('shell.management_system')}</p>
+            </div>
+          </button>
 
           <div className="mt-5 flex items-center justify-between px-2">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">{t('shell.menu')}</p>
