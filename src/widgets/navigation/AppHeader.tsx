@@ -1,5 +1,6 @@
-import { startTransition, useState } from 'react'
+import { startTransition, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useAppShell } from '../../app/hooks/useAppShell'
 import { useLocale } from '../../app/hooks/useLocale'
 import { useTheme } from '../../app/hooks/useTheme'
 import { useAuth } from '../../features/auth/hooks/useAuth'
@@ -39,8 +40,36 @@ export function AppHeader() {
   const { locale, setLocale, t } = useLocale()
   const { logout, user } = useAuth()
   const { showToast } = useToast()
+  const { isSidebarCollapsed, toggleSidebar, toggleSidebarCollapsed } = useAppShell()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    typeof window !== 'undefined' ? window.matchMedia('(max-width: 960px)').matches : false,
+  )
   const hideRouteContext = location.pathname.startsWith('/crm')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const mediaQuery = window.matchMedia('(max-width: 960px)')
+    const handleChange = (event: MediaQueryListEvent) => setIsMobileViewport(event.matches)
+
+    setIsMobileViewport(mediaQuery.matches)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  const shouldShowSidebarToggle = isMobileViewport || isSidebarCollapsed
+
+  function handleSidebarToggle() {
+    if (isMobileViewport) {
+      toggleSidebar()
+      return
+    }
+
+    toggleSidebarCollapsed()
+  }
 
   const currentItem =
     [...navigationItems]
@@ -79,6 +108,20 @@ export function AppHeader() {
     <header className="relative z-10 border-b border-(--border) bg-(--shell-header-bg) px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 items-start gap-3">
+          {shouldShowSidebarToggle ? (
+            <button
+              type="button"
+              onClick={handleSidebarToggle}
+              aria-label={t('shell.toggle_navigation')}
+              className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-(--border) bg-(--muted-surface) text-(--foreground) transition-colors hover:border-(--border-hover) hover:bg-(--accent-soft) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35"
+            >
+              <span className="relative h-4 w-4">
+                <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-[6px] rounded-full bg-current" />
+                <span className="absolute left-0 top-1/2 h-0.5 w-4 -translate-y-1/2 rounded-full bg-current" />
+                <span className="absolute left-0 top-1/2 h-0.5 w-4 translate-y-[5px] rounded-full bg-current" />
+              </span>
+            </button>
+          ) : null}
           <div className="min-w-0">
             {!hideRouteContext ? (
               <div className="flex flex-wrap items-center gap-2">
