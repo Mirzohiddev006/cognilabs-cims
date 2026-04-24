@@ -1,7 +1,7 @@
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
 import { Button } from '../../../shared/ui/button'
-import { SelectField } from '../../../shared/ui/select-field'
+import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import type { UserPayload } from '../../../shared/api/services/ceo.service'
 import { useTranslation } from 'react-i18next'
 
@@ -13,46 +13,32 @@ type UserFormModalProps = {
   open: boolean
   mode: 'create' | 'edit'
   values: UserFormValues
+  roleOptions: SelectFieldOption[]
+  isRolesLoading?: boolean
   onClose: () => void
   onChange: (field: keyof UserFormValues, value: string | boolean | number) => void
   onSubmit: () => void
   isSubmitting: boolean
 }
 
-const roleOptions = ['Member', 'SalesManager', 'Finance', 'CEO', 'Admin', 'Customer']
-
-function getRoleTranslationKey(role: string) {
-  switch (role) {
-    case 'Member':
-      return 'auth.role.member'
-    case 'Customer':
-      return 'auth.role.customer'
-    case 'SalesManager':
-      return 'auth.role.sales_manager'
-    case 'Finance':
-      return 'auth.role.finance'
-    case 'CEO':
-      return 'auth.role.ceo'
-    case 'Admin':
-      return 'auth.role.admin'
-    default:
-      return ''
-  }
-}
-
 export function UserFormModal({
   open,
   mode,
   values,
+  roleOptions,
+  isRolesLoading = false,
   onClose,
   onChange,
   onSubmit,
   isSubmitting,
 }: UserFormModalProps) {
   const { t } = useTranslation()
-  const availableRoleOptions = Array.from(
-    new Set([...roleOptions, values.role].filter((role): role is string => Boolean(role?.trim()))),
-  )
+  const currentRole = values.role?.trim() ?? ''
+  const currentRoleInList = roleOptions.some((option) => option.value === currentRole)
+  const availableRoleOptions: SelectFieldOption[] =
+    currentRole && !currentRoleInList
+      ? [...roleOptions, { value: currentRole, label: currentRole }]
+      : roleOptions
 
   return (
     <Modal
@@ -138,13 +124,9 @@ export function UserFormModal({
           <SelectField
             value={values.role}
             onValueChange={(value) => onChange('role', value)}
-            options={availableRoleOptions.map((role) => {
-              const translationKey = getRoleTranslationKey(role)
-              return {
-                value: role,
-                label: translationKey ? t(translationKey) : role,
-              }
-            })}
+            options={availableRoleOptions}
+            placeholder={isRolesLoading ? t('ceo.users.form.roles_loading', 'Loading roles...') : t('ceo.users.form.role_placeholder', 'Select a role')}
+            disabled={isRolesLoading && availableRoleOptions.length === 0}
             className="min-h-12 rounded-xl px-4"
           />
         </label>

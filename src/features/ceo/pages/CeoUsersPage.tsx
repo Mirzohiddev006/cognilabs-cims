@@ -9,6 +9,7 @@ import {
   type IncomingCeoMessageRecord,
   type UserPayload,
 } from '../../../shared/api/services/ceo.service'
+import { managementService } from '../../../shared/api/services/management.service'
 import type { PermissionMap } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
@@ -338,6 +339,15 @@ export function CeoUsersPage() {
   const permissionsOverviewQuery = useAsyncData(() => ceoService.permissionsOverview(), [])
   const sentMessagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const incomingMessagesQuery = useAsyncData(() => ceoService.listMyMessages(), [])
+  const rolesQuery = useAsyncData(() => managementService.listRoles(), [])
+
+  const roleOptions = useMemo(() => {
+    const activeRoles = (rolesQuery.data ?? []).filter((role) => role.is_active)
+    return activeRoles.map((role) => ({
+      value: role.name,
+      label: role.display_name || role.name,
+    }))
+  }, [rolesQuery.data])
 
   const [userModalMode, setUserModalMode] = useState<'create' | 'edit'>('create')
   const [selectedUser, setSelectedUser] = useState<CeoUserRecord | null>(null)
@@ -529,13 +539,18 @@ export function CeoUsersPage() {
       permissionsOverviewQuery.refetch(),
       sentMessagesQuery.refetch(),
       incomingMessagesQuery.refetch(),
+      rolesQuery.refetch(),
     ])
   }
 
   function openCreateUserModal() {
     setSelectedUser(null)
     setUserModalMode('create')
-    setUserFormValues(initialUserForm)
+    const defaultRoleValue =
+      roleOptions.find((option) => option.value === initialUserForm.role)?.value
+      ?? roleOptions[0]?.value
+      ?? initialUserForm.role
+    setUserFormValues({ ...initialUserForm, role: defaultRoleValue })
     setIsUserModalOpen(true)
   }
 
@@ -1104,6 +1119,8 @@ export function CeoUsersPage() {
         open={isUserModalOpen}
         mode={userModalMode}
         values={userFormValues}
+        roleOptions={roleOptions}
+        isRolesLoading={rolesQuery.isLoading && !rolesQuery.data}
         onClose={() => setIsUserModalOpen(false)}
         onChange={(field, value) =>
           setUserFormValues((current) => ({
