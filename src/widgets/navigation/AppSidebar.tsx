@@ -274,11 +274,11 @@ export function AppSidebar() {
       />
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0 min-[961px]:transition-[width,padding,opacity,transform] min-[961px]:duration-300',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0',
           isSidebarOpen ? 'shell-sidebar--open' : 'shell-sidebar--closed',
           isSidebarCollapsed
-            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:!p-0 min-[961px]:opacity-0 min-[961px]:-translate-x-6'
-            : 'min-[961px]:translate-x-0 min-[961px]:opacity-100',
+            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:!p-0 min-[961px]:opacity-0'
+            : 'min-[961px]:opacity-100',
         )}
       >
         <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">

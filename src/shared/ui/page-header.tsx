@@ -45,10 +45,6 @@ export function PageHeader({
       className={cn('page-header-card page-enter overflow-hidden rounded-[28px]', className)}
     >
       <div className="relative overflow-hidden px-5 py-6 sm:px-7 sm:py-7">
-        <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
-        <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="page-header-decor pointer-events-none absolute -right-10 top-6 h-28 w-28 rounded-full bg-cyan-400/8 blur-3xl" />
-
         <div className="relative z-10 flex flex-col gap-6">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
