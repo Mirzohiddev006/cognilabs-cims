@@ -34,7 +34,10 @@ export function UserFormModal({
 }: UserFormModalProps) {
   const { t } = useTranslation()
   const currentRole = values.role?.trim() ?? ''
-  const currentRoleInList = roleOptions.some((option) => option.value === currentRole)
+  const currentRoleNormalized = currentRole.toLowerCase()
+  const currentRoleInList = roleOptions.some(
+    (option) => option.value.toLowerCase() === currentRoleNormalized,
+  )
   const availableRoleOptions: SelectFieldOption[] =
     currentRole && !currentRoleInList
       ? [...roleOptions, { value: currentRole, label: currentRole }]

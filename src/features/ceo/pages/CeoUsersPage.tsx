@@ -285,7 +285,7 @@ function toUserFormValues(user?: CeoUserRecord | null): UserFormValues {
     telegram_id: user.telegram_id ?? '',
     default_salary: typeof user.default_salary === 'number' ? user.default_salary : 0,
     job_title: user.job_title ?? '',
-    role: normalizeUserRole(String(user.role ?? initialUserForm.role)),
+    role: String(user.role ?? initialUserForm.role).trim() || initialUserForm.role,
     is_active: Boolean(user.is_active),
   }
 }
