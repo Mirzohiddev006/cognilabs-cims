@@ -100,8 +100,8 @@ export function CompensationPolicyDrawer({
           className={cn(
             'sheet-enter flex h-full flex-col overflow-hidden border-l border-[var(--border)]',
             isLight
-              ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))] shadow-[0_20px_80px_rgba(15,23,42,0.16)]'
-              : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]',
+              ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))]'
+              : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))]',
           )}
         >
           <div
@@ -118,11 +118,7 @@ export function CompensationPolicyDrawer({
                 {title}
               </h2>
               <p className="mt-1 text-xs text-[var(--muted-strong)]">
-                {getMonthName(month)} {year} {tr(
-                  'policy values returned from the compensation API.',
-                  'kompensatsiya API dan qaytgan policy qiymatlari.',
-                  'значения политики, возвращённые из compensation API.',
-                )}
+                {getMonthName(month)} {year}
               </p>
             </div>
 
@@ -148,25 +144,15 @@ export function CompensationPolicyDrawer({
               className={cn(
                 'rounded-[24px] border border-[var(--border)] p-5',
                 isLight
-                  ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))] shadow-[0_8px_24px_rgba(148,163,184,0.10)]'
+                  ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]'
                   : 'bg-white/[0.03]',
               )}
             >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <p className="text-sm text-[var(--muted-strong)]">
-                    {tr('Policy inspector', "Policy ko'rinishi", 'Просмотр политики')}
-                  </p>
-                  <h3 className="mt-2 text-[1.8rem] font-semibold tracking-tight text-[var(--foreground)]">
+                  <h3 className="text-[1.8rem] font-semibold tracking-tight text-[var(--foreground)]">
                     {title}
                   </h3>
-                  <p className="mt-1 text-sm text-[var(--muted)]">
-                    {tr(
-                      'Review deduction caps, split ratios, and bonus triggers from one place.',
-                      'Ayirma limitlari, ulushlar va bonus triggerlarini bir joydan ko\'ring.',
-                      'Проверяйте лимиты удержаний, доли и бонусные триггеры в одном месте.',
-                    )}
-                  </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -187,7 +173,7 @@ export function CompensationPolicyDrawer({
               className={cn(
                 'mt-5 rounded-[28px] border-[var(--border)]',
                 isLight
-                  ? 'bg-white shadow-[0_10px_28px_rgba(148,163,184,0.12)]'
+                  ? 'bg-white'
                   : 'bg-white/[0.03]',
               )}
             />

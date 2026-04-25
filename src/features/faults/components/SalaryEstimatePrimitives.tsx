@@ -2,10 +2,10 @@ import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 
 const salaryEstimateSuccessTone = {
-  border: 'rgba(50, 168, 82, 0.26)',
-  background: 'rgba(50, 168, 82, 0.10)',
-  backgroundStrong: 'rgba(50, 168, 82, 0.13)',
-  text: '#32a852',
+  border: 'rgba(74, 222, 128, 0.26)',
+  background: 'rgba(74, 222, 128, 0.10)',
+  backgroundStrong: 'rgba(74, 222, 128, 0.13)',
+  text: 'var(--success-text)',
 }
 
 export function SummaryMetricCard({
@@ -32,7 +32,7 @@ export function SummaryMetricCard({
   return (
     <div
       className={cn(
-        'card-base min-h-[110px] rounded-[22px] px-6 py-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:shadow-none',
+        'card-base min-h-[110px] rounded-[22px] px-6 py-5',
         tone === 'success' ? 'bg-white dark:bg-[var(--card)]' : toneClassName[tone],
       )}
       style={tone === 'success' ? { borderColor: salaryEstimateSuccessTone.border } : undefined}
@@ -101,7 +101,7 @@ export function DetailStatTile({
       : {
           default: 'text-[var(--foreground)]',
           danger: 'text-[var(--danger-text)] dark:text-rose-400',
-          success: 'text-[var(--success-text)] dark:text-emerald-400',
+          success: 'text-[var(--success-text)]',
           blue: 'text-[var(--blue-text)]',
         } as const
 
@@ -122,7 +122,7 @@ export function DetailStatTile({
       : {
           default: 'text-[var(--muted-strong)]',
           danger: 'text-[var(--danger-text)] dark:text-rose-400',
-          success: 'text-[var(--success-text)] dark:text-emerald-400',
+          success: 'text-[var(--success-text)]',
           blue: 'text-[var(--blue-text)]',
       } as const
 
@@ -144,7 +144,7 @@ export function DetailStatTile({
   return (
     <div
       className={cn(
-        'rounded-[16px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] dark:shadow-none',
+        'rounded-[16px] border px-4 py-3',
         tone === 'success' ? '' : toneClassName[tone],
       )}
       style={tone === 'success' ? successStyle : undefined}

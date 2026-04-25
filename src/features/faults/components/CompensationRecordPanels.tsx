@@ -98,7 +98,7 @@ export function MistakeIncidentSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-rose-500/18 dark:bg-black/15 dark:shadow-none">
+          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 dark:border-rose-500/18 dark:bg-black/15">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -189,7 +189,7 @@ export function DeliveryBonusSection({
 
       <div className="mt-4 space-y-3">
         {items.length > 0 ? items.map((item) => (
-          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none">
+          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">

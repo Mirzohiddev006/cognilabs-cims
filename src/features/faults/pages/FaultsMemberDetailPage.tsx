@@ -906,10 +906,7 @@ export function FaultsMemberDetailPage({
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              {lt('Compensation flow')}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
+            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
               {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
             </h2>
           </div>
@@ -939,7 +936,7 @@ export function FaultsMemberDetailPage({
         <button
           type="button"
           onClick={() => setIsCompensationPolicyDrawerOpen(true)}
-          className="group mt-5 block w-full rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] transition hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-border)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] dark:border-white/8 dark:bg-black/15 dark:shadow-none dark:hover:border-[var(--blue-border)] dark:hover:bg-white/[0.04]"
+          className="group mt-5 block w-full rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left transition hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-border)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] dark:border-white/8 dark:bg-black/15 dark:hover:border-[var(--blue-border)] dark:hover:bg-white/[0.04]"
           aria-label={tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
         >
           <div className="flex items-start justify-between gap-4">
@@ -955,11 +952,6 @@ export function FaultsMemberDetailPage({
                   {formatAmount(detail.report.finalSalary)}
                 </span>
               </div>
-              <p className="mt-3 text-xs text-[var(--muted-strong)]">
-                {detail.report.qualifiesProductivityBonus
-                  ? tr('Productivity bonus qualified for this period.', 'Bu davr uchun mahsuldorlik bonusi tasdiqlandi.', 'Бонус за продуктивность подтверждён за этот период.')
-                  : tr('Productivity bonus did not qualify for this period.', 'Bu davr uchun mahsuldorlik bonusi tasdiqlanmadi.', 'Бонус за продуктивность не подтверждён за этот период.')}
-              </p>
             </div>
 
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] transition group-hover:translate-x-0.5 dark:bg-[var(--blue-dim)]">
@@ -975,25 +967,13 @@ export function FaultsMemberDetailPage({
               style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
             />
           </div>
-
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--blue-text)]">
-              {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'ОТКРЫТЬ ПОЛИТИКУ КОМПЕНСАЦИИ')}
-            </p>
-            <p className="text-xs text-[var(--muted)]">
-              {tr('Opens from the right panel', 'Ong paneldan ochiladi', 'Откроется в правой панели')}
-            </p>
-          </div>
         </button>
       </Card>
 
       <Card className="rounded-[24px] border-white/10 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
-              {tr('Monthly execution', 'Oylik bajarilish', 'Месячное выполнение')}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
+            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
               {lt('Salary context and update performance')}
             </h2>
           </div>
@@ -1061,7 +1041,7 @@ export function FaultsMemberDetailPage({
                 onJumpToToday={handleCalendarTodayJump}
               />
             ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80 dark:shadow-none">
+              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80">
                 {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}
@@ -1080,7 +1060,7 @@ export function FaultsMemberDetailPage({
                 onJumpToToday={handleCalendarTodayJump}
               />
             ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80 dark:shadow-none">
+              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80">
                 {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
               </div>
             ) : null}
@@ -1107,7 +1087,7 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-rose-500/18 dark:bg-black/15 dark:shadow-none">
+              <div key={item.id} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 dark:border-rose-500/18 dark:bg-black/15">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
@@ -1134,11 +1114,14 @@ export function FaultsMemberDetailPage({
           </div>
         </Card>
 
-        <Card className="relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-emerald-500/18 dark:bg-[var(--card)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#16a34a,rgba(22,163,74,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(209,250,229,0.94),rgba(52,211,153,0.44),transparent_78%)]" />
+        <Card className="relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-[var(--success-border)] dark:bg-[var(--card)]">
+          <div
+            className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
+            style={{ background: 'linear-gradient(90deg, var(--success-text), rgba(var(--success-rgb),0.72), transparent 78%)' }}
+          />
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#48A111]">
+              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--success-text)]">
                 {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
               </p>
               <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
@@ -1152,10 +1135,10 @@ export function FaultsMemberDetailPage({
 
           <div className="mt-4 space-y-3">
             {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-[var(--success-border)] bg-emerald-100/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] dark:border-emerald-500/18 dark:bg-black/15 dark:shadow-none">
+              <div key={item.id} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#48A111]">{item.title}</p>
+                    <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
                     {item.description ? (
                       <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
                         {item.description}
@@ -1165,13 +1148,13 @@ export function FaultsMemberDetailPage({
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-[#166534] dark:text-emerald-400">
+                  <p className="text-base font-semibold tracking-tight text-[var(--success-text)]">
                     {formatAmount(item.amount)}
                   </p>
                 </div>
               </div>
             )) : (
-              <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-emerald-100/75 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-emerald-500/18 dark:bg-black/10">
+              <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                 {lt('No bonus line-items were returned for this member in the selected month.')}
               </div>
             )}

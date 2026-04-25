@@ -105,8 +105,8 @@ export function SalaryEstimateDrawer({
           className={cn(
             'sheet-enter flex h-full flex-col border-l border-[var(--border)]',
             isLight
-              ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))] shadow-[0_20px_80px_rgba(15,23,42,0.16)]'
-              : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]',
+              ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))]'
+              : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))]',
           )}
         >
           <div
@@ -149,7 +149,7 @@ export function SalaryEstimateDrawer({
               className={cn(
                 'rounded-[24px] border border-[var(--border)] p-5',
                 isLight
-                  ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))] shadow-[0_8px_24px_rgba(148,163,184,0.10)]'
+                  ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]'
                   : 'bg-white/[0.03]',
               )}
             >
@@ -236,22 +236,22 @@ export function SalaryEstimateDrawer({
 
               <div
                 className={cn(
-                  'rounded-[22px] border px-5 py-4',
+                  'rounded-[22px] border px-5 py-4 border-[var(--success-border)]',
                   isLight
-                    ? 'border-emerald-500/18 bg-emerald-50'
-                    : 'border-[var(--success-border)] bg-[var(--success-dim)]',
+                    ? 'bg-[var(--success-soft)]'
+                    : 'bg-[var(--success-dim)]',
                 )}
               >
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className={cn(isLight ? 'text-emerald-600' : 'text-[var(--success-text)]')}>{lt('Productivity performance')}</span>
-                  <span className={cn('font-semibold', report.qualifiesProductivityBonus ? (isLight ? 'text-emerald-600' : 'text-[var(--success-text)]') : 'text-[var(--foreground)]')}>
+                  <span className="text-[var(--success-text)]">{lt('Productivity performance')}</span>
+                  <span className={cn('font-semibold', report.qualifiesProductivityBonus ? 'text-[var(--success-text)]' : 'text-[var(--foreground)]')}>
                     {Number.isFinite(report.productivityPercentage) ? formatPercent(report.productivityPercentage) : '-'}
                   </span>
                 </div>
-                <div className={cn('mt-3 h-2 rounded-full', isLight ? 'bg-emerald-100' : 'bg-white/7')}>
+                <div className={cn('mt-3 h-2 rounded-full', isLight ? 'bg-[var(--success-strong)]' : 'bg-white/7')}>
                   <div
-                    className="h-full rounded-full bg-emerald-500 transition-[width] duration-300"
-                    style={{ width: `${productivityProgress}%` }}
+                    className="h-full rounded-full transition-[width] duration-300"
+                    style={{ width: `${productivityProgress}%`, background: 'var(--success-text)' }}
                   />
                 </div>
                 <p className="mt-3 text-xs leading-6 text-[var(--muted)]">

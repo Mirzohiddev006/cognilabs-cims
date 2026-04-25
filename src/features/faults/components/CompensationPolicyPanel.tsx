@@ -164,7 +164,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <div
-              className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-rose-500/18 dark:bg-rose-950/15 dark:shadow-none"
+              className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 dark:border-rose-500/18 dark:bg-rose-950/15"
               style={deductionPanelStyle}
             >
               <div
@@ -191,7 +191,7 @@ export function CompensationPolicyPanel({
 
               <div className="mt-4 space-y-3">
                 {policy.deductionRates.map((rate) => (
-                  <div key={rate.severity} className="rounded-[16px] border border-[var(--danger-border)] bg-rose-50/88 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-rose-500/18 dark:bg-black/18 dark:shadow-none">
+                  <div key={rate.severity} className="rounded-[16px] border border-[var(--danger-border)] bg-rose-50/88 px-4 py-3 dark:border-rose-500/18 dark:bg-black/18">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.severity)}</p>
                       <div className="flex flex-wrap items-center gap-2">
@@ -205,7 +205,7 @@ export function CompensationPolicyPanel({
             </div>
 
             <div
-              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.76)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none"
+              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]"
               style={bonusPanelStyle}
             >
               <div
@@ -236,7 +236,7 @@ export function CompensationPolicyPanel({
 
               <div className="mt-4 space-y-3">
                 {policy.bonusRates.map((rate) => (
-                  <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)] dark:shadow-none">
+                  <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-3 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.label)}</p>
                       <Badge variant="success">{formatPercent(rate.percent)}</Badge>

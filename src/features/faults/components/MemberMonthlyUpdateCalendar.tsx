@@ -606,8 +606,8 @@ export function MemberMonthlyUpdateCalendarBoard({
             className={cn(
               'sheet-enter flex h-full flex-col overflow-hidden border-l border-[var(--border)] text-[var(--foreground)]',
               isLight
-                ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))] shadow-[0_20px_80px_rgba(15,23,42,0.16)]'
-                : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))] shadow-[0_20px_80px_rgba(0,0,0,0.46)]',
+                ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,1))]'
+                : 'bg-[linear-gradient(180deg,rgba(10,12,18,0.98),rgba(8,9,14,1))]',
             )}
           >
             <div
@@ -655,12 +655,12 @@ export function MemberMonthlyUpdateCalendarBoard({
             >
               <div
                 className={cn(
-                  'rounded-[24px] border p-5 shadow-[0_8px_24px_rgba(148,163,184,0.10)] dark:shadow-none',
+                  'rounded-[24px] border p-5',
                   getDayFocusClass(selectedDay),
                 )}
               >
                 <div className="flex items-start gap-4">
-                  <div className="grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border border-current/20 bg-white/65 text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] dark:bg-black/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                  <div className="grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border border-current/20 bg-white/65 text-[1.75rem] font-semibold tabular-nums dark:bg-black/10 dark:text-white">
                     {selectedDay.day}
                   </div>
 
@@ -685,7 +685,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       ) : null}
                     </div>
 
-                    <p className="mt-3 text-sm leading-6 text-[var(--foreground)] dark:text-white/88">
+                    <p className="mt-3 text-sm leading-6 text-[var(--foreground)] dark:text-white">
                       {getDaySummary(selectedDay)}
                     </p>
                   </div>
@@ -713,7 +713,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       selectedDay.isValid === false
                         ? 'text-amber-600 dark:text-amber-300'
                         : selectedDay.isValid === true
-                          ? 'text-emerald-600 dark:text-emerald-300'
+                          ? 'text-[var(--success-text)]'
                           : 'text-[var(--foreground)]',
                     )}
                   >
@@ -793,13 +793,6 @@ export function MemberMonthlyUpdateCalendarBoard({
                   <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
                     {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Календарь')}
                   </h3>
-                  <p className="mt-1.5 text-[13px] text-[var(--muted)]">
-                {tr(
-                  'Reference-driven monthly board with dense day cards, week rails, and one-click inspection.',
-                  'Referensga asoslangan oylik taxta: zich kun kartalari, hafta yolaklari va bir bosishda korish.',
-                  'Ежемесячная доска по референсу с плотными карточками дней, недельными линиями и проверкой в один клик.',
-                )}
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -817,15 +810,7 @@ export function MemberMonthlyUpdateCalendarBoard({
             <div className="cal-inner overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-3.5 sm:p-5">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(290px,330px)] lg:items-center">
                 <div className="min-w-0 max-w-2xl">
-                  <p
-                    className={cn(
-                      'text-[11px] font-extrabold uppercase tracking-[0.3em]',
-                      isLight ? 'text-emerald-700' : 'text-emerald-300/72',
-                    )}
-                  >
-                    {lt('Calendar System')}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h4
                       className={cn(
                         'text-[1.45rem] font-semibold tracking-tight sm:text-[1.65rem]',
@@ -841,13 +826,6 @@ export function MemberMonthlyUpdateCalendarBoard({
                       {monthProgressPct.toFixed(0)}{lt('% pace')}
                     </Badge>
                   </div>
-                  <p className="mt-2 text-[12px] leading-5 text-[var(--muted)]">
-                    {tr(
-                      'Dense monthly board for fast scanning, modeled after the reference calendar layout.',
-                      'Tez korib chiqish uchun zich oylik taxta, referens kalendar asosida tuzilgan.',
-                      'Плотная ежемесячная доска для быстрого просмотра, построенная по эталонному календарю.',
-                    )}
-                  </p>
                 </div>
 
                 <div className="flex justify-center lg:justify-self-center">
@@ -855,8 +833,8 @@ export function MemberMonthlyUpdateCalendarBoard({
                     className={cn(
                       'grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border p-1.5',
                       isLight
-                        ? 'border-emerald-200 bg-white shadow-[0_10px_24px_rgba(148,163,184,0.14)]'
-                        : 'border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+                        ? 'border-[var(--success-border)] bg-white'
+                        : 'border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/18',
                     )}
                   >
                     <Button
@@ -875,13 +853,12 @@ export function MemberMonthlyUpdateCalendarBoard({
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'inline-flex min-h-11 min-w-[144px] items-center justify-center rounded-[14px] border px-5 text-sm font-bold tracking-[0.01em] transition-none',
+                        'inline-flex min-h-11 min-w-[144px] items-center justify-center rounded-[14px] border px-5 text-sm font-bold tracking-[0.01em] transition-none text-[var(--success-text)]',
                         isLight
-                          ? 'border-emerald-300 bg-[linear-gradient(180deg,#f0fdf4,#dcfce7)] text-emerald-950 shadow-[0_8px_22px_rgba(34,197,94,0.18),inset_0_1px_0_rgba(255,255,255,0.92)]'
-                          : 'border-emerald-400/18 bg-emerald-400/10 text-emerald-50 shadow-none',
+                          ? 'border-[var(--success-border)] bg-[var(--success-soft)]'
+                          : 'border-[var(--success-border)] bg-[var(--success-dim)]',
                         canJumpToToday ? 'cursor-pointer' : 'cursor-default',
                       )}
-                      style={isLight ? { color: '#14532d' } : undefined}
                     >
                       {stableMonthPeriod}
                     </button>
@@ -899,22 +876,22 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </div>
                 </div>
 
-                <div className="hidden rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 lg:block dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
+                <div className="hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:block dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[var(--success-text)] dark:text-white">
                         {lt('Completion To Date')}
                       </p>
-                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
+                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white">
                         {completionSummaryText}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
+                      <p className="text-[11px] font-semibold tabular-nums text-[var(--success-text)] dark:text-white">
                         {counts.submitted}/{elapsedWorkingDays || 0}
                       </p>
-                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-[var(--success-text)]">
                         {monthProgressPct.toFixed(0)}%
                       </p>
                     </div>
@@ -942,22 +919,22 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </Badge>
                 </div>
 
-                <div className="rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-4 py-3 lg:hidden dark:border-emerald-400/14 dark:bg-emerald-400/[0.05]">
+                <div className="rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:hidden dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-emerald-700/70 dark:text-white/40">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[var(--success-text)] dark:text-white">
                         {lt('Completion To Date')}
                       </p>
-                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white/86">
+                      <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white">
                         {completionSummaryText}
                       </p>
                     </div>
 
                     <div className="shrink-0 text-right">
-                      <p className="text-[11px] font-semibold tabular-nums text-emerald-700/70 dark:text-white/72">
+                      <p className="text-[11px] font-semibold tabular-nums text-[var(--success-text)] dark:text-white">
                         {counts.submitted}/{elapsedWorkingDays || 0}
                       </p>
-                      <p className="mt-1 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-300">
+                      <p className="mt-1 text-lg font-semibold tabular-nums text-[var(--success-text)]">
                         {monthProgressPct.toFixed(0)}%
                       </p>
                     </div>
@@ -976,7 +953,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                   {weekdayLabels.map((label) => (
                     <div
                       key={label}
-                      className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                      className="cal-weekday-header rounded-full border px-3 py-3 text-center text-[10px] font-bold uppercase tracking-[0.26em]"
                     >
                       {lt(label)}
                     </div>
@@ -1017,9 +994,9 @@ export function MemberMonthlyUpdateCalendarBoard({
                               showTimePanel && 'min-h-[164px]',
                               getDaySurfaceClass(day),
                               isSelected
-                                ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
+                                ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)]'
                                 : 'hover:-translate-y-[1px] hover:border-white/14',
-                              isToday && !isSelected && 'border-sky-400 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] shadow-[inset_0_0_0_1px_rgba(96,165,250,0.92),0_0_0_3px_rgba(191,219,254,0.78),0_14px_30px_rgba(59,130,246,0.18)] dark:border-[var(--border)] dark:bg-transparent dark:shadow-[inset_0_0_0_1px_rgba(125,211,252,0.24)]',
+                              isToday && !isSelected && 'border-sky-400 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] dark:border-[var(--border)] dark:bg-transparent',
                             )}
                             title={`${isSelected ? `${tr('Selected', 'Tanlangan', 'Выбрано')}: ` : ''}${formatLongDate(day.date)}: ${getStatusLabel(day.status, day)}`}
                           >
@@ -1028,13 +1005,13 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                             <div className="relative flex items-start justify-between gap-3">
                               <div>
-                                <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-40', getDayTextClass(day))}>
+                                <p className={cn('text-[10px] font-bold uppercase tracking-[0.24em] opacity-60 dark:opacity-100', getDayTextClass(day))}>
                                   {getBoardWeekday(day)}
                                 </p>
                                 <p
                                   className={cn(
-                                    'mt-1.5 text-[1.5rem] font-semibold leading-none tabular-nums tracking-tight',
-                                    day.status === 'submitted' || day.status === 'missing' ? 'text-[var(--foreground)] dark:text-white' : 'text-[var(--foreground)]/82 dark:text-white/82',
+                                    'mt-1.5 text-[1.5rem] font-semibold leading-none tabular-nums tracking-tight dark:text-white',
+                                    day.status === 'submitted' || day.status === 'missing' ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]/82',
                                   )}
                                 >
                                   {day.day}
@@ -1043,13 +1020,13 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                               <div className="flex flex-col items-end gap-1.5">
                                 {entryCount > 0 ? (
-                                  <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 text-[9px] font-semibold tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72">
+                                  <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 text-[9px] font-semibold tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
                                     {entryCount}x
                                   </span>
                                 ) : null}
                                 {isToday ? (
-                                  <span className="grid h-6 w-6 place-items-center rounded-full border border-sky-400 bg-white shadow-[0_0_0_2px_rgba(219,234,254,0.95),0_10px_20px_rgba(59,130,246,0.16)] dark:border-sky-400/30 dark:bg-sky-500/10 dark:shadow-none">
-                                    <span className="h-2.5 w-2.5 rounded-full bg-sky-500 shadow-[0_0_0_5px_rgba(219,234,254,0.98),0_0_16px_rgba(59,130,246,0.42)] dark:h-2 dark:w-2 dark:bg-sky-300 dark:shadow-[0_0_12px_rgba(125,211,252,0.70)]" />
+                                  <span className="grid h-6 w-6 place-items-center rounded-full border border-sky-400 bg-white dark:border-sky-400/30 dark:bg-sky-500/10">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-sky-500 dark:h-2 dark:w-2 dark:bg-sky-300" />
                                   </span>
                                 ) : null}
                               </div>
@@ -1059,7 +1036,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                               <div className="relative mt-3 w-full max-w-[112px] self-center space-y-1.5 text-center">
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
+                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white">
                                       {tr('In', 'Kirish', 'Вход')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
@@ -1067,7 +1044,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     </p>
                                   </div>
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
+                                    <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white">
                                       <span>{tr('Out', 'Chiqish', 'Выход')}</span>
                                     </p>
                                     {isCheckoutMissing ? (
@@ -1085,7 +1062,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     )}
                                   </div>
                                 </div>
-                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white/76">
+                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white">
                                   {getWorkedDurationLabel(day)}
                                 </p>
                               </div>
@@ -1102,7 +1079,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', getDayDotClass(day))} />
                                 {getCalendarCellStatusLabel(day.status, day)}
                               </span>
-                              <p className={cn('mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white/76', showTimePanel && 'max-w-[112px] text-center')}>
+                              <p className={cn('mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white', showTimePanel && 'max-w-[112px] text-center')}>
                                 {getCalendarCellHint(day)}
                               </p>
                             </div>
@@ -1117,15 +1094,15 @@ export function MemberMonthlyUpdateCalendarBoard({
 
             <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-[var(--muted)]">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.55)]" />
+                <span className="h-2 w-2 rounded-full bg-violet-400" />
                 {tr('Selected', 'Tanlangan', 'Выбрано')}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_8px_rgba(125,211,252,0.55)]" />
+                <span className="h-2 w-2 rounded-full bg-sky-300" />
                 {tr('Today', 'Bugun', 'Сегодня')}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-sm border border-emerald-500/35 bg-emerald-500/25" />
+                <span className="h-2 w-2 rounded-sm border border-[var(--success-border)] bg-[var(--success-text)]" />
                 {tr('Updated', 'Yangilangan', 'Обновлено')}
               </span>
               <span className="inline-flex items-center gap-1.5">
