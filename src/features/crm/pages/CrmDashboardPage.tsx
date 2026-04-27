@@ -452,6 +452,7 @@ export function CrmDashboardPage() {
   const [dateStart, setDateStart] = useState('')
   const [dateEnd, setDateEnd] = useState('')
   const [pageSize, setPageSize] = useState('75')
+  const [selectedPeriod, setSelectedPeriod] = useState<'' | 'today' | '3d' | '7d' | '30d' | '90d'>('')
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
@@ -466,9 +467,37 @@ export function CrmDashboardPage() {
   const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
   const summaryQuery = useAsyncData(() => crmService.summaryStats(), [])
+  const statusSummaryQuery = useAsyncData(() => crmService.statusSummary(), [])
+  const periodReportPeriodKey = selectedPeriod === 'today' ? '1d' : selectedPeriod
+  const periodReportQuery = useAsyncData(
+    () => crmService.periodReport({
+      period: periodReportPeriodKey || undefined,
+      search: deferredSearch || undefined,
+      status_filter: statusFilter || undefined,
+    }),
+    [periodReportPeriodKey, deferredSearch, statusFilter],
+    { enabled: Boolean(periodReportPeriodKey) },
+  )
 
-  const customers = dashboardQuery.data?.customers ?? emptyCustomers
+  const periodCustomers = periodReportQuery.data?.customers
+  const customers = selectedPeriod && periodCustomers ? periodCustomers : (dashboardQuery.data?.customers ?? emptyCustomers)
   const statusOptions = statusesQuery.data ?? emptyStatuses
+
+  const periodSummaryBucket = useMemo(() => {
+    if (!selectedPeriod || !statusSummaryQuery.data) {
+      return null
+    }
+
+    const map = {
+      today: statusSummaryQuery.data.today,
+      '3d': statusSummaryQuery.data.last_3_days,
+      '7d': statusSummaryQuery.data.last_7_days,
+      '30d': statusSummaryQuery.data.last_30_days,
+      '90d': statusSummaryQuery.data.last_90_days,
+    } as const
+
+    return map[selectedPeriod] ?? null
+  }, [selectedPeriod, statusSummaryQuery.data])
 
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
   const statusFilterOptions = useMemo(
@@ -534,6 +563,8 @@ export function CrmDashboardPage() {
       dashboardQuery.refetch(),
       statusesQuery.refetch(),
       summaryQuery.refetch(),
+      statusSummaryQuery.refetch(),
+      ...(selectedPeriod ? [periodReportQuery.refetch()] : []),
     ])
   }
 
@@ -706,7 +737,25 @@ export function CrmDashboardPage() {
     )
   }
 
-  const stats = summaryQuery.data
+  const stats = periodSummaryBucket
+    ? {
+        total_customers: periodSummaryBucket.total_customers,
+        need_to_call: periodSummaryBucket.status_stats.need_to_call ?? 0,
+        contacted: periodSummaryBucket.status_stats.contacted ?? 0,
+        project_started: periodSummaryBucket.status_stats.project_started ?? 0,
+        continuing: periodSummaryBucket.status_stats.continuing ?? 0,
+        finished: periodSummaryBucket.status_stats.finished ?? 0,
+        rejected: periodSummaryBucket.status_stats.rejected ?? 0,
+      }
+    : summaryQuery.data
+  const periodOptions: Array<{ value: typeof selectedPeriod; label: string }> = [
+    { value: '', label: t('customers.period.all', 'All time') },
+    { value: 'today', label: t('customers.period.today', 'Today') },
+    { value: '3d', label: t('customers.period.last_3_days', 'Last 3 days') },
+    { value: '7d', label: t('customers.period.last_7_days', 'Last 7 days') },
+    { value: '30d', label: t('customers.period.last_30_days', 'Last 30 days') },
+    { value: '90d', label: t('customers.period.last_90_days', 'Last 90 days') },
+  ]
   const platformFilterOptions = [
     { value: '', label: t('customers.filters.all_platforms', 'All platforms') },
     ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
@@ -733,6 +782,35 @@ export function CrmDashboardPage() {
           </>
         }
       />
+
+      <div className="flex flex-wrap items-center gap-2">
+        {periodOptions.map((option) => {
+          const isActive = selectedPeriod === option.value
+          return (
+            <button
+              key={option.value || 'all'}
+              type="button"
+              onClick={() => setSelectedPeriod(option.value)}
+              className={cn(
+                'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+                isActive
+                  ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text)'
+                  : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
+              )}
+            >
+              {option.label}
+            </button>
+          )
+        })}
+        {selectedPeriod && periodReportQuery.data ? (
+          <Badge variant="blue" dot>
+            {t('customers.period.range', '{{from}} → {{to}}', {
+              from: periodReportQuery.data.from_date,
+              to: periodReportQuery.data.to_date,
+            })}
+          </Badge>
+        ) : null}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard

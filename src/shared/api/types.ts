@@ -170,6 +170,32 @@ export type CustomerStatsResponse = {
   status_percentages: Record<string, number>
 }
 
+export type CustomerStatusSummaryBucket = {
+  total_customers: number
+  status_stats: Record<string, number>
+  status_percentages: Record<string, number>
+}
+
+export type CustomerStatusSummaryResponse = {
+  generated_at: string
+  today: CustomerStatusSummaryBucket
+  last_3_days: CustomerStatusSummaryBucket
+  last_7_days: CustomerStatusSummaryBucket
+  last_30_days: CustomerStatusSummaryBucket
+  last_90_days: CustomerStatusSummaryBucket
+}
+
+export type CustomerPeriodReportResponse = {
+  period: string
+  from_date: string
+  to_date: string
+  total_customers: number
+  customers: CustomerSummary[]
+  status_stats: Record<string, number>
+  status_dict: Record<string, number>
+  status_percentages: Record<string, number>
+}
+
 export type SalesStatsResponse = {
   today: number
   yesterday: number

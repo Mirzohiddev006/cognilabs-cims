@@ -2,13 +2,23 @@ import { request } from '../http'
 import type {
   ConversionRateResponse,
   CreateResponse,
+  CustomerPeriodReportResponse,
   CustomerStatsResponse,
+  CustomerStatusSummaryResponse,
   CustomerSummary,
   DynamicStatusOption,
   SalesDashboardChartsResponse,
   SalesStatsResponse,
   SuccessResponse,
 } from '../types'
+
+export type CustomerPeriodReportParams = {
+  period?: string
+  search?: string
+  status_filter?: string
+  from_date?: string
+  to_date?: string
+}
 
 export type CrmDashboardResponse = {
   customers: CustomerSummary[]
@@ -164,19 +174,13 @@ export const crmService = {
   },
 
   statusSummary() {
-    return request<unknown>({
+    return request<CustomerStatusSummaryResponse>({
       path: '/crm/customers/stats/summary',
     })
   },
 
-  periodReport(params?: {
-    period?: string
-    search?: string
-    status_filter?: string
-    from_date?: string
-    to_date?: string
-  }) {
-    return request<unknown>({
+  periodReport(params?: CustomerPeriodReportParams) {
+    return request<CustomerPeriodReportResponse>({
       path: '/crm/customers/report/period',
       query: params,
     })
