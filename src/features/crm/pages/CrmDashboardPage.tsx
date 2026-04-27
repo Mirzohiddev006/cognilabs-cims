@@ -718,7 +718,6 @@ export function CrmDashboardPage() {
     { value: '75', label: t('common.per_page', '{{count}} per page', { count: 75 }) },
   ]
   const activeFilterCount = [search, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
-  const totalCustomerCount = dashboardQuery.data?.total_items ?? customers.length
 
   return (
     <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
