@@ -119,7 +119,6 @@ export function MetricCard({
 }: MetricCardProps) {
   const config = accentConfig[accent]
   const localizedLabel = translateCurrentLiteral(label)
-  const localizedCaption = caption ? translateCurrentLiteral(caption) : null
   const localizedDeltaLabel = deltaLabel ? translateCurrentLiteral(deltaLabel) : null
 
   const trendColor =
@@ -167,9 +166,7 @@ export function MetricCard({
               <span className="text-[var(--caption)] font-normal">{localizedDeltaLabel}</span>
             ) : null}
           </div>
-        ) : localizedCaption ? (
-          <p className="mt-2 text-[11px] text-[var(--muted)] leading-4">{localizedCaption}</p>
-          ) : null}
+        ) : null}
       </div>
 
       {children}

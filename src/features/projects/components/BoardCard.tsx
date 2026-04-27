@@ -44,9 +44,6 @@ export function BoardCard({ board, onEdit, onArchive, canManage = true }: BoardC
                 {board.name}
               </Link>
             )}
-            {board.description && (
-              <p className="mt-0.5 text-xs text-[var(--muted)] line-clamp-2">{board.description}</p>
-            )}
           </div>
         </div>
 

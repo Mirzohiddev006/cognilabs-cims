@@ -61,7 +61,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
 
       {/* Content */}
       <div className="flex flex-1 flex-col gap-3 p-4">
-        {/* Title + description */}
+        {/* Title */}
         <div>
           <Link
             to={`/projects/${project.id}`}
@@ -69,11 +69,6 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
           >
             {project.project_name}
           </Link>
-          {project.project_description && (
-            <p className="mt-1 text-[11px] leading-5 text-[var(--muted)] line-clamp-2">
-              {project.project_description}
-            </p>
-          )}
         </div>
 
         {/* URL badge */}

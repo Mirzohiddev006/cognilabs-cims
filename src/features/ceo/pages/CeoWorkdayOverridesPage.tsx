@@ -109,7 +109,7 @@ function createFormStateFromOverride(item: WorkdayOverrideRecord): OverrideFormS
 function SummaryCard({
   label,
   value,
-  hint,
+  hint: _hint,
   accent = 'default',
 }: {
   label: string
@@ -135,7 +135,6 @@ function SummaryCard({
     <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
       <p className={cn('text-[10px] font-bold uppercase tracking-[0.22em]', accentLabelClassName[accent])}>{label}</p>
       <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
-      {hint ? <p className="mt-2 text-xs text-[var(--muted-strong)]">{hint}</p> : null}
     </div>
   )
 }

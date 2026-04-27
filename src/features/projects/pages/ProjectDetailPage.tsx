@@ -373,11 +373,6 @@ export function ProjectDetailPage() {
                     <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
                       {project.project_name}
                     </h1>
-                    {project.project_description ? (
-                      <p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--muted)]">
-                        {project.project_description}
-                      </p>
-                    ) : null}
                     {project.project_url ? (
                       <a
                         href={project.project_url}

@@ -426,11 +426,6 @@ export function BoardWorkspace({
               {lt('Archived')}
             </Badge>
           ) : null}
-          {board.description ? (
-            <span className="hidden max-w-xs truncate text-xs text-[var(--muted)] sm:block">
-              {board.description}
-            </span>
-          ) : null}
         </div>
 
         <p className="text-[10px] text-[var(--muted)]">

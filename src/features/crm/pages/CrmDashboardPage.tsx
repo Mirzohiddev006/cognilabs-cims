@@ -403,12 +403,12 @@ function TableAudioControl({ src }: { src: string }) {
 function MetricCard({
   label,
   value,
-  description,
+  description: _description,
   tone = 'blue',
 }: {
   label: string
   value: string | number
-  description: string
+  description?: string
   tone?: 'blue' | 'success' | 'warning' | 'violet' | 'danger'
 }) {
   const toneClassNames = {
@@ -434,7 +434,6 @@ function MetricCard({
           {typeof value === 'number' ? formatCompactNumber(value) : value}
         </p>
       </div>
-      <p className="text-xs leading-5 text-[var(--muted-strong)]">{description}</p>
     </Card>
   )
 }

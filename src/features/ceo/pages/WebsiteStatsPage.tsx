@@ -140,7 +140,6 @@ export function WebsiteStatsPage() {
       .map((row, index) => ({
         id: `${getAnalyticsRowLabel(row)}-${index}`,
         title: getAnalyticsRowLabel(row),
-        subtitle: getAnalyticsRowSubLabel(row),
         views: getAnalyticsMetric(row.metrics, ['screenPageViews', 'views', 'pageViews']),
         users: getAnalyticsMetric(row.metrics, ['totalUsers', 'activeUsers', 'users']),
         sessions: getAnalyticsMetric(row.metrics, ['sessions']),
@@ -154,7 +153,6 @@ export function WebsiteStatsPage() {
       .map((row, index) => ({
         id: `${getAnalyticsRowLabel(row)}-${index}`,
         label: getAnalyticsRowLabel(row),
-        subtitle: getAnalyticsRowSubLabel(row),
         activeUsers: getAnalyticsMetric(row.metrics, ['activeUsers', 'users', 'totalUsers']),
         views: getAnalyticsMetric(row.metrics, ['screenPageViews', 'views', 'pageViews', 'eventCount']),
       }))
@@ -335,7 +333,6 @@ export function WebsiteStatsPage() {
                     render: (row) => (
                       <div className="max-w-[320px]">
                         <p className="truncate font-semibold text-(--foreground)">{row.title}</p>
-                        <p className="mt-1 truncate text-xs text-(--muted)">{row.subtitle}</p>
                       </div>
                     ),
                   },
@@ -406,7 +403,6 @@ export function WebsiteStatsPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-(--foreground)">{row.label}</p>
-                      <p className="mt-1 truncate text-xs text-(--muted)">{row.subtitle}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="warning" dot>

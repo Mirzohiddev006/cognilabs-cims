@@ -429,7 +429,6 @@ export function ProjectsListPage() {
                 >
                   <div>
                     <p className="text-sm font-semibold text-[var(--foreground)]">{lt('All members')}</p>
-                    <p className="mt-1 text-[12px] font-medium text-[var(--muted-strong)]">{lt('Show every project')}</p>
                   </div>
                   <Badge variant={selectedMemberId === null ? 'blue' : 'secondary'}>
                     {total}
@@ -466,9 +465,6 @@ export function ProjectsListPage() {
                           <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                             {member.name} {member.surname}
                           </p>
-                          <p className="truncate text-[12px] font-medium text-[var(--muted-strong)]">
-                            {member.job_title?.trim() || member.email}
-                          </p>
                         </div>
                       </div>
 
@@ -499,9 +495,6 @@ export function ProjectsListPage() {
                     <h2 className="mt-2 truncate text-xl font-semibold text-[var(--foreground)]">
                       {selectedMember.name} {selectedMember.surname}
                     </h2>
-                    <p className="mt-1 truncate text-sm text-[var(--muted)]">
-                      {selectedMember.job_title?.trim() || selectedMember.email}
-                    </p>
                   </div>
                 </div>
 
@@ -547,11 +540,6 @@ export function ProjectsListPage() {
                           >
                             {project.projectName}
                           </Link>
-                          {project.projectDescription ? (
-                            <p className="mt-1 text-sm text-[var(--muted)]">
-                              {project.projectDescription}
-                            </p>
-                          ) : null}
                         </div>
 
                         <div className="flex flex-wrap gap-2">
