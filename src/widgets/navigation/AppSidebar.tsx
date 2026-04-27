@@ -293,12 +293,12 @@ export function AppSidebar() {
             </div>
             <div className="min-w-0 flex-1 overflow-hidden">
               <h2 className="truncate text-[14px] font-bold text-(--shell-text-primary) tracking-tight">{env.appName}</h2>
-              <p className="truncate text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('shell.management_system')}</p>
+              <p className="ui-eyebrow truncate text-[var(--muted)]">{t('shell.management_system')}</p>
             </div>
           </button>
 
           <div className="mt-5 flex items-center justify-between px-2">
-            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">{t('shell.menu')}</p>
+            <p className="ui-eyebrow text-[var(--muted)]">{t('shell.menu')}</p>
             <Badge className="rounded-full border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 shadow-sm">
               {sidebarNavigation.length} {t('shell.modules')}
             </Badge>
@@ -337,18 +337,18 @@ export function AppSidebar() {
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
+                            <p className="ui-body truncate font-semibold">{itemLabel}</p>
                             {sidebarProjects.length > 0 ? (
                               <Badge
                                 size="sm"
                                 variant={isProjectsRoute ? 'blue' : 'secondary'}
-                                className="rounded-full px-1.5 py-0 text-[9px] shadow-none"
+                                className="rounded-full px-1.5 py-0 shadow-none"
                               >
                                 {sidebarProjects.length}
                               </Badge>
                             ) : null}
                           </div>
-                          <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
+                          <p className="ui-helper truncate uppercase tracking-[0.14em] text-[var(--muted)] opacity-70">{itemGroup}</p>
                         </div>
                       </NavLink>
 
@@ -392,12 +392,12 @@ export function AppSidebar() {
                           <button
                             type="button"
                             onClick={() => void projectsQuery.refetch()}
-                            className="w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[11px] text-[var(--danger-text)] transition hover:bg-red-500/10"
+                            className="ui-helper w-full rounded-lg border border-[var(--danger-border)] bg-[var(--danger-dim)] px-3 py-2 text-left text-[var(--danger-text)] transition hover:bg-red-500/10"
                           >
                             {t('shell.failed_load_projects')} {t('shell.retry')}
                           </button>
                         ) : sidebarProjects.length === 0 ? (
-                          <p className="rounded-lg px-3 py-2 text-[11px] text-[var(--muted)]">
+                          <p className="ui-helper rounded-lg px-3 py-2 text-[var(--muted)]">
                             {t('shell.no_projects')}
                           </p>
                         ) : (
@@ -410,7 +410,7 @@ export function AppSidebar() {
                                 to={`/projects/${project.id}`}
                                 className={({ isActive }) =>
                                   cn(
-                                    'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-[12px] transition-all duration-150',
+                                    'ui-helper flex items-center justify-between gap-2 rounded-lg border px-3 py-2 transition-all duration-150',
                                     'rounded-xl',
                                     isActive || isActiveProject
                                       ? isLight
@@ -422,7 +422,7 @@ export function AppSidebar() {
                               >
                                 <span className="truncate font-medium">{project.project_name}</span>
                                 {project.boards_count > 0 ? (
-                                  <span className="shrink-0 text-[10px] text-[var(--muted)]">
+                                  <span className="ui-helper shrink-0 text-[var(--muted)]">
                                     {project.boards_count}
                                   </span>
                                 ) : null}
@@ -460,8 +460,8 @@ export function AppSidebar() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold">{itemLabel}</p>
-                    <p className="truncate text-[9px] uppercase tracking-wider text-[var(--muted)] opacity-70">{itemGroup}</p>
+                    <p className="ui-body truncate font-semibold">{itemLabel}</p>
+                    <p className="ui-helper truncate uppercase tracking-[0.14em] text-[var(--muted)] opacity-70">{itemGroup}</p>
                   </div>
                 </NavLink>
               )
@@ -495,7 +495,7 @@ export function AppSidebar() {
                   {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
                 </p>
                 <p
-                  className="mt-1 truncate text-[10px] text-[var(--muted)]"
+                  className="ui-helper mt-1 truncate text-[var(--muted)]"
                   title={user?.email ?? user?.role ?? t('shell.user')}
                 >
                   {user?.email ?? user?.role ?? t('shell.user')}
@@ -564,7 +564,7 @@ export function AppSidebar() {
               <p className="text-sm font-semibold text-[var(--foreground)]">
                 {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
               </p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
+              <p className="ui-helper mt-1 text-[var(--muted)]">
                 {profileImageFile ? profileImageFile.name : t('profile.photo_hint', 'Upload a new profile photo if needed.')}
               </p>
             </div>
@@ -586,23 +586,23 @@ export function AppSidebar() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
+            <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? t('shell.user')}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
+            <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
+            <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
+            <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
           </div>
           <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-            <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
+            <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
               <p className="text-base font-semibold text-[var(--foreground)]">{user?.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}</p>
@@ -611,7 +611,7 @@ export function AppSidebar() {
           {isEditingMember ? (
             <>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
+                <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
                 <Input
                   value={memberForm.name}
                   onChange={(event) => updateMemberForm('name', event.target.value)}
@@ -619,7 +619,7 @@ export function AppSidebar() {
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
+                <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
                 <Input
                   value={memberForm.surname}
                   onChange={(event) => updateMemberForm('surname', event.target.value)}
@@ -627,7 +627,7 @@ export function AppSidebar() {
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
+                <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.current_password', 'Current password')}
                 </p>
                 <Input
@@ -639,7 +639,7 @@ export function AppSidebar() {
                 />
               </div>
               <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
-                <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
+                <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.new_password', 'New password')}
                 </p>
                 <Input
@@ -657,10 +657,10 @@ export function AppSidebar() {
         <div className="mt-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className={cn('text-[10px] font-semibold uppercase tracking-[0.22em]', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>
+              <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>
               <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{activePermissions.length} {t('profile.enabled')}</p>
             </div>
-            <Badge className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
+            <Badge className={cn('rounded-full px-2.5 py-1 uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
               {env.appEnv}
             </Badge>
           </div>
@@ -670,7 +670,7 @@ export function AppSidebar() {
               {activePermissions.map((permission) => (
                 <Badge
                   key={permission}
-                  className={cn('rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.12em]', isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-100')}
+                  className={cn('rounded-full px-2.5 py-1 uppercase tracking-[0.12em]', isLight ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-blue-500/20 bg-blue-600/10 text-blue-100')}
                 >
                   {permission}
                 </Badge>

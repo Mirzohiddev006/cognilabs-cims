@@ -44,7 +44,7 @@ export function DashboardRedirectPage() {
     <div className="grid min-h-[55vh] place-items-center">
       <Card className="max-w-xl p-10 text-center border-none bg-transparent">
         <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-500">{t('auth.redirect.eyebrow', 'Redirecting')}</p>
-        <h1 className="mt-6 text-3xl font-bold text-white tracking-tight">{t('auth.redirect.title', 'Accessing Dashboard')}</h1>
+        <h1 className="ui-page-title mt-6 text-white">{t('auth.redirect.title', 'Accessing Dashboard')}</h1>
         <p className="mt-6 text-sm font-medium leading-relaxed text-zinc-500">
           {t('auth.redirect.description', 'We are determining the best entry point for your account role. One moment...')}
         </p>

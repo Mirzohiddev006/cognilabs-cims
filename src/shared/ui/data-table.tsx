@@ -129,7 +129,7 @@ export function DataTable<T>({
                   style={getColumnStyle(col)}
                   className={cn(
                     headPadding,
-                    'ui-table-heading border-b border-[var(--border)] text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--caption)] whitespace-nowrap',
+                    'ui-table-heading border-b border-[var(--border)] text-[var(--caption)] whitespace-nowrap',
                     alignClassName[col.align ?? 'left'],
                   )}
                 >
@@ -159,7 +159,7 @@ export function DataTable<T>({
                       style={getColumnStyle(col)}
                       className={cn(
                         rowPadding,
-                        'text-sm font-medium text-[var(--foreground)] align-middle',
+                        'ui-table-cell font-medium text-[var(--foreground)] align-middle',
                         alignClassName[col.align ?? 'left'],
                         'group-hover:text-[var(--foreground)]',
                       )}
@@ -176,7 +176,7 @@ export function DataTable<T>({
 
       {totalPages > 1 ? (
         <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[var(--caption)] sm:text-[13px]">
+          <p className="ui-table-meta text-[var(--caption)]">
             {translateCurrent('common.results_range', '{{start}}-{{end}} of {{total}} results', {
               start: startIndex + 1,
               end: endIndex,

@@ -8,8 +8,8 @@ export function Textarea({ className, ...props }: TextareaProps) {
     <textarea
       className={cn(
         'min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2.5',
-        'text-xs leading-6 text-[var(--foreground)]',
-        'placeholder:text-[var(--caption)]',
+        'ui-body text-[var(--foreground)]',
+        'placeholder:text-[13px] placeholder:leading-[1.45] placeholder:text-[var(--caption)]',
         'shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)]',
         'outline-none',
         'transition-[border-color,box-shadow,background-color] duration-150',

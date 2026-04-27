@@ -1,7 +1,10 @@
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode, SyntheticEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
+import { Badge } from '../../../shared/ui/badge'
+import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
 import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
@@ -13,6 +16,35 @@ type KanbanCardProps = {
   onClick: (card: CardRecord) => void
   isOverlay?: boolean
   readOnly?: boolean
+}
+
+type MetaChipTone = 'neutral' | 'warning' | 'danger'
+
+function MetaChip({
+  icon,
+  tone = 'neutral',
+  children,
+  className,
+}: {
+  icon?: ReactNode
+  tone?: MetaChipTone
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex min-h-6 items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] font-medium leading-none',
+        tone === 'danger' && 'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)]',
+        tone === 'warning' && 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)]',
+        tone === 'neutral' && 'border-[var(--border)] bg-[var(--accent-soft)] text-[var(--muted-strong)]',
+        className,
+      )}
+    >
+      {icon ? <span className="shrink-0">{icon}</span> : null}
+      <span className="truncate">{children}</span>
+    </span>
+  )
 }
 
 export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnly = false }: KanbanCardProps) {
@@ -37,25 +69,35 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
 
   const priorityConfig = getPriorityConfig()
   const priority = card.priority ? priorityConfig[card.priority] : null
-  const overdue  = card.due_date ? isDueDateOverdue(card.due_date) : false
-  const soon     = card.due_date ? isDueDateSoon(card.due_date) : false
+  const overdue = card.due_date ? isDueDateOverdue(card.due_date) : false
+  const soon = card.due_date ? isDueDateSoon(card.due_date) : false
   const images = Array.isArray(card.images)
     ? card.images
     : Array.isArray(card.files)
       ? card.files
       : []
+  const assigneeName = card.assignee
+    ? [card.assignee.name, card.assignee.surname].filter(Boolean).join(' ').trim()
+    : ''
+  const dueTone: MetaChipTone = overdue ? 'danger' : soon ? 'warning' : 'neutral'
 
-  function stopCardAction(event: React.SyntheticEvent) {
+  function stopCardAction(event: SyntheticEvent) {
     event.stopPropagation()
   }
 
-  /* Drag ghost */
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onClick(card)
+    }
+  }
+
   if (isDragging && !isOverlay) {
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className="h-[64px] w-full rounded-lg border-2 border-dashed border-white/10 bg-white/4"
+        className="min-h-[112px] w-full rounded-xl border border-dashed border-[var(--border-hover)] bg-[var(--accent-soft)]/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
       />
     )
   }
@@ -67,115 +109,129 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
       {...(!readOnly ? attributes : {})}
       {...(!readOnly ? listeners : {})}
       onClick={() => onClick(card)}
+      onKeyDown={handleKeyDown}
+      tabIndex={readOnly ? 0 : attributes.tabIndex}
       className={cn(
-        'group relative flex flex-col gap-2.5 rounded-lg p-3 cursor-pointer select-none',
-        /* card surface — same token the app uses for elevated surfaces */
-        'bg-[var(--surface-elevated)] border border-[var(--border)]',
-        'shadow-[0_1px_2px_rgba(0,0,0,0.20)]',
-        'transition-all duration-150',
-        'hover:border-[var(--border-hover)] hover:shadow-[0_3px_10px_rgba(0,0,0,0.30)] hover:-translate-y-px',
-        isOverlay && 'rotate-2 shadow-[0_16px_40px_rgba(0,0,0,0.55)] opacity-95',
+        'group relative flex cursor-pointer select-none flex-col gap-3 overflow-hidden rounded-xl border p-3.5',
+        'bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] border-[var(--border)] text-[var(--foreground)]',
+        'shadow-[var(--shadow-sm)] transition-[transform,border-color,box-shadow,background-color,opacity] duration-150',
+        'hover:-translate-y-px hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-md)]',
+        'active:translate-y-0 active:scale-[0.995]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]',
+        isOverlay && 'rotate-[1.5deg] border-[var(--border-hover)] shadow-[var(--shadow-lg)] opacity-95',
       )}
     >
-      {/* Title — main body */}
-      <p className="text-[13px] font-medium leading-[1.4] text-[var(--foreground)] line-clamp-3 pr-8">
-        {card.title}
-      </p>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_72%)] opacity-70" />
 
-      {/* Footer: priority + due date left · assignee right */}
-      <div className="flex items-center justify-between gap-2 min-h-[20px]">
-        {/* Left chips */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {priority && (
-            <span
-              className="inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold leading-none"
-              style={{
-                background: `${priority.color}22`,
-                color: priority.color,
-              }}
+      <div className="relative z-10 flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          {priority ? (
+            <Badge
+              variant={priority.badgeVariant}
+              size="sm"
+              dot
+              className="max-w-full rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.01em]"
             >
               {priority.label}
-            </span>
-          )}
-
-          {card.due_date && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium leading-none',
-                overdue
-                  ? 'bg-red-500/15 text-red-400'
-                  : soon
-                    ? 'bg-amber-500/15 text-amber-400'
-                    : 'bg-white/6 text-white/40',
-              )}
-            >
-              {overdue && (
-                <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="currentColor" aria-hidden="true">
-                  <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Zm.75 3.25a.75.75 0 0 0-1.5 0V8a.75.75 0 0 0 .22.53l2 2a.75.75 0 1 0 1.06-1.06L8.75 7.94V5.25Z" />
-                </svg>
-              )}
-              {formatProjectDate(card.due_date)}
-            </span>
-          )}
-
-          {images.length > 0 && (
-            <span className="inline-flex items-center gap-0.5 rounded-md bg-white/6 px-1.5 py-0.5 text-[10px] text-white/35">
-              <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M3 10.5 8 5.5a3 3 0 0 1 4.24 4.24l-5 5A1.5 1.5 0 0 1 5.12 12.64l5-5a.5.5 0 0 0-.71-.71l-5 5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {images.length}
+            </Badge>
+          ) : (
+            <span className="inline-flex h-5 items-center rounded-md border border-transparent px-1.5 text-[10px] font-medium text-[var(--muted)]">
+              {lt('Task')}
             </span>
           )}
         </div>
 
-        {/* Assignee avatar */}
-        {card.assignee && (
-          <Avatar
-            name={card.assignee.name}
-            surname={card.assignee.surname}
-            imageUrl={card.assignee.profile_image}
-            size="xs"
-            title={`${card.assignee.name} ${card.assignee.surname}`}
-            className="shrink-0"
-          />
-        )}
+        {!readOnly ? (
+          <div
+            className="relative z-20 shrink-0 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            onClick={stopCardAction}
+            onPointerDown={stopCardAction}
+            onMouseDown={stopCardAction}
+          >
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]/92 p-0.5 shadow-[var(--shadow-sm)] backdrop-blur-md">
+              <ActionsMenu
+                label={lt('Card actions')}
+                items={[
+                  { label: lt('Edit card'), onSelect: () => onEdit(card) },
+                  { label: lt('Delete card'), onSelect: () => onDelete(card.id), tone: 'danger' },
+                ]}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      {/* Hover quick-action icons (top-right) */}
-      {!readOnly ? (
-        <div className="absolute right-2.5 top-2.5 z-10 flex items-center gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-          <button
-            type="button"
-            onPointerDown={stopCardAction}
-            onMouseDown={stopCardAction}
-            onClick={(event) => {
-              stopCardAction(event)
-              onEdit(card)
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-            aria-label={lt('Edit card')}
-          >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="m9.5 2.5 1 1L4 10H3v-1l6.5-6.5Z" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onPointerDown={stopCardAction}
-            onMouseDown={stopCardAction}
-            onClick={(event) => {
-              stopCardAction(event)
-              onDelete(card.id)
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/15 bg-red-500/10 text-red-400/75 shadow-[0_2px_8px_rgba(0,0,0,0.18)] transition hover:border-red-500/30 hover:bg-red-500/25 hover:text-red-300"
-            aria-label={lt('Delete card')}
-          >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M3 4h10M6 4V2h4v2M5 4v9h6V4" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
+      <div className="relative z-10 space-y-2">
+        <p className="text-[14px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--foreground)] line-clamp-3">
+          {card.title}
+        </p>
+
+        {card.description ? (
+          <p className="line-clamp-2 text-[12px] leading-5 text-[var(--muted)]">
+            {card.description}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="relative z-10 flex items-end justify-between gap-3 border-t border-[var(--border)]/80 pt-2.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          {card.due_date ? (
+            <MetaChip
+              tone={dueTone}
+              icon={(
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                  <path d="M4.5 2.75v2.5M11.5 2.75v2.5M3 5.25h10M4.75 8h2.5M4.75 10.75h5.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="3" y="3.75" width="10" height="9.25" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            >
+              {formatProjectDate(card.due_date)}
+            </MetaChip>
+          ) : null}
+
+          {images.length > 0 ? (
+            <MetaChip
+              icon={(
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                  <path d="M3 10.5 8 5.5a3 3 0 0 1 4.24 4.24l-5 5A1.5 1.5 0 0 1 5.12 12.64l5-5a.5.5 0 0 0-.71-.71l-5 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            >
+              {images.length}
+            </MetaChip>
+          ) : null}
         </div>
-      ) : null}
+
+        {card.assignee ? (
+          <div
+            className="inline-flex max-w-[46%] shrink-0 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+            title={assigneeName}
+          >
+            <Avatar
+              name={card.assignee.name}
+              surname={card.assignee.surname}
+              imageUrl={card.assignee.profile_image}
+              size="xs"
+              title={assigneeName}
+              className="shrink-0"
+            />
+            <span className="truncate text-[11px] font-medium text-[var(--muted-strong)]">
+              {assigneeName}
+            </span>
+          </div>
+        ) : (
+          <MetaChip
+            className="max-w-[46%] shrink-0 rounded-full px-2.5"
+            icon={(
+              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+                <path d="M8 8a2.25 2.25 0 1 0 0-4.5A2.25 2.25 0 0 0 8 8Zm-4.5 4.75a4.5 4.5 0 0 1 9 0" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          >
+            {lt('Unassigned')}
+          </MetaChip>
+        )}
+      </div>
     </div>
   )
 }

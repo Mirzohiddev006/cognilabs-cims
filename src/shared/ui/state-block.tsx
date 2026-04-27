@@ -67,7 +67,7 @@ function ErrorIllustration() {
 export function StateBlock({
   eyebrow,
   title,
-  description,
+  description: _description,
   actionLabel,
   onAction,
   tone = 'empty',
@@ -109,11 +109,6 @@ export function StateBlock({
         >
           {translateCurrentLiteral(title)}
         </h3>
-        {description ? (
-          <p className="mt-2 max-w-sm text-xs leading-5 text-[var(--muted)]">
-            {translateCurrentLiteral(description)}
-          </p>
-        ) : null}
       </div>
 
       {/* Children */}

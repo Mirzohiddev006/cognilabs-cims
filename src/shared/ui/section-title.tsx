@@ -24,7 +24,7 @@ export function SectionTitle({
       {localizedEyebrow ? (
         <div className="flex items-center gap-2">
           <span className="inline-block h-1 w-1 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.7)]" />
-          <p className="ui-eyebrow text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--caption)]">
+          <p className="ui-eyebrow text-[var(--caption)]">
             {localizedEyebrow}
           </p>
         </div>
@@ -32,7 +32,7 @@ export function SectionTitle({
 
       <h2
         className={cn(
-          'ui-section-title text-lg font-semibold leading-snug tracking-tight',
+          'ui-section-title',
           gradient ? 'text-gradient' : 'text-[var(--foreground)]',
         )}
       >

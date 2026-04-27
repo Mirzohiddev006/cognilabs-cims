@@ -242,6 +242,53 @@ function resolveMemberDisplayName(...sources: Array<unknown>) {
   return null
 }
 
+type SnapshotMetricCardProps = {
+  label: string
+  value: string
+  accent?: 'default' | 'danger' | 'blue'
+  secondaryValue?: string
+}
+
+function SnapshotMetricCard({
+  label,
+  value,
+  accent = 'default',
+  secondaryValue,
+}: SnapshotMetricCardProps) {
+  const topBorderClassName = {
+    default: 'border-t-white/12',
+    danger: 'border-t-red-500/90',
+    blue: 'border-t-sky-500/90',
+  } as const
+
+  const valueClassName = {
+    default: 'text-white',
+    danger: 'text-red-400',
+    blue: 'text-sky-400',
+  } as const
+
+  return (
+    <div
+      className={[
+        'min-h-[140px] rounded-[22px] border border-white/8 border-t-[3px] bg-[#20233a] px-5 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]',
+        topBorderClassName[accent],
+      ].join(' ')}
+    >
+      <p className="text-[11px] font-bold uppercase leading-4 tracking-[0.22em] text-[#8f96b2]">
+        {label}
+      </p>
+      <p className={['ui-metric-value mt-5 font-bold', valueClassName[accent]].join(' ')}>
+        {value}
+      </p>
+      {secondaryValue ? (
+        <p className="mt-2 text-[13px] font-medium leading-5 text-[#8f96b2] sm:text-[14px]">
+          {secondaryValue}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export function FaultsMemberDetailPage({
   memberIdOverride,
   mode = 'salary-detail',
@@ -782,7 +829,7 @@ export function FaultsMemberDetailPage({
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
                   {topHeaderEyebrow}
                 </p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
+                <h1 className="ui-page-title mt-2 text-[var(--foreground)]">
                   {detail.report.fullName}
                 </h1>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">
@@ -889,21 +936,40 @@ export function FaultsMemberDetailPage({
         </div>
       </Card>
 
-      <Card noPadding className="overflow-hidden rounded-[28px]">
+      <Card noPadding className="overflow-hidden rounded-[28px] border-white/8 bg-[#16182b]">
         <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
-          <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-6">
-            <CardMetric label={lt('Final salary')} value={formatAmount(detail.report.finalSalary)} />
-            <CardMetric label={lt('Estimated salary')} value={formatAmount(detail.report.estimatedSalary)} />
-            <CardMetric label={lt('Deduction')} value={formatAmount(detail.report.deductionAmount)} tone="danger" />
-            <CardMetric label={lt('Bonus amount')} value={formatAmount(detail.report.bonusAmount)} tone="blue" />
-            <CardMetric label={lt('Bonus %')} value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
-            <CardMetric
-              label={lt('Productivity')}
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <SnapshotMetricCard
+              label={tr('Final salary', 'Yakuniy maosh', 'Итоговая зарплата')}
+              value={formatAmount(detail.report.finalSalary)}
+            />
+            <SnapshotMetricCard
+              label={tr('Estimated salary', 'Taxminiy maosh', 'Оценочная зарплата')}
+              value={formatAmount(detail.report.estimatedSalary)}
+            />
+            <SnapshotMetricCard
+              label={tr('Difference', 'Ayirma', 'Разница')}
+              value={formatAmount(detail.report.deductionAmount)}
+              accent={(detail.report.deductionAmount ?? 0) !== 0 ? 'danger' : 'default'}
+            />
+            <SnapshotMetricCard
+              label={tr('Bonus amount', 'Bonus summasi', 'Сумма бонуса')}
+              value={formatAmount(detail.report.bonusAmount)}
+              accent="blue"
+            />
+            <SnapshotMetricCard
+              label={tr('Bonus %', 'Bonus %', 'Бонус %')}
+              value={formatPercent(detail.report.totalBonusPercent)}
+              accent="blue"
+            />
+            <SnapshotMetricCard
+              label={tr('Productivity', 'Mahsuldorlik', 'Продуктивность')}
               value={Number.isFinite(detail.report.productivityPercentage)
                 ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)}`
                 : '-'}
-              hint={Number.isFinite(detail.report.productivityPercentage) ? formatPercent(detail.report.productivityPercentage) : undefined}
-              tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
+              secondaryValue={Number.isFinite(detail.report.productivityPercentage)
+                ? formatPercent(detail.report.productivityPercentage)
+                : undefined}
             />
           </div>
         </CardSection>
@@ -1032,8 +1098,8 @@ export function FaultsMemberDetailPage({
         >
           {detail.penalties.length > 0 ? (
             <DataTable
-              compact
               zebra
+              className="rounded-none border-x-0 border-b-0"
               caption={tr('Deduction records table', 'Ayirma yozuvlari jadvali', 'Tablitsa zapisey uderzhaniy')}
               rows={detail.penalties}
               getRowKey={(row) => String(row.id)}
@@ -1085,8 +1151,8 @@ export function FaultsMemberDetailPage({
         >
           {detail.bonuses.length > 0 ? (
             <DataTable
-              compact
               zebra
+              className="rounded-none border-x-0 border-b-0"
               caption={tr('Bonus records table', 'Bonus yozuvlari jadvali', 'Tablitsa zapisey bonusov')}
               rows={detail.bonuses}
               getRowKey={(row) => String(row.id)}
@@ -1147,11 +1213,13 @@ export function FaultsMemberDetailPage({
       {detail.updateCalendar ? (
         <Card noPadding className="overflow-hidden rounded-[28px]">
           <CardSection bleed>
-            <MemberMonthlyUpdateCalendarBoard
-              calendar={detail.updateCalendar}
-              onMonthShift={handleCalendarMonthShift}
-              onJumpToToday={handleCalendarTodayJump}
-            />
+            <div className="px-4 py-4 sm:px-5 sm:py-5">
+              <MemberMonthlyUpdateCalendarBoard
+                calendar={detail.updateCalendar}
+                onMonthShift={handleCalendarMonthShift}
+                onJumpToToday={handleCalendarTodayJump}
+              />
+            </div>
           </CardSection>
         </Card>
       ) : detail.calendarError ? (

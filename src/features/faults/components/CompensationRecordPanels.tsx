@@ -91,8 +91,8 @@ export function MistakeIncidentSection({
     >
       {items.length > 0 ? (
         <DataTable
-          compact
           zebra
+          className="rounded-none border-x-0 border-b-0"
           caption={tr('Mistake incidents table', 'Xatolar jadvali', 'Tablitsa oshibok')}
           rows={items}
           getRowKey={(row) => `mistake-${row.id}`}
@@ -199,8 +199,8 @@ export function DeliveryBonusSection({
     >
       {items.length > 0 ? (
         <DataTable
-          compact
           zebra
+          className="rounded-none border-x-0 border-b-0"
           caption={tr('Delivery bonus table', 'Topshirish bonuslari jadvali', 'Tablitsa bonusov za sdachu')}
           rows={items}
           getRowKey={(row) => `delivery-bonus-${row.id}`}

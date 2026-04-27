@@ -10,7 +10,7 @@ import { Dialog } from '../ui/dialog'
 function DangerHeaderIcon() {
   return (
     <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-red-500/30 bg-[linear-gradient(180deg,rgba(127,29,29,0.92),rgba(69,10,10,0.96))] shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_16px_32px_rgba(127,29,29,0.28)]">
-      <span className="text-[24px] font-bold leading-none text-red-400">!</span>
+      <span className="ui-dialog-title font-bold leading-none text-red-400">!</span>
     </div>
   )
 }

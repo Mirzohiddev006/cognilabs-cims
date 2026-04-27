@@ -692,7 +692,7 @@ export function FaultsPage() {
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
                   {lt('CEO Salary Estimates')}
                 </p>
-                <h1 className="page-header-title mt-2 text-3xl font-semibold tracking-tight">
+                <h1 className="page-header-title ui-page-title mt-2">
                   {lt('Salary Estimates, Penalties and Bonuses')}
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm text-[var(--muted)]">

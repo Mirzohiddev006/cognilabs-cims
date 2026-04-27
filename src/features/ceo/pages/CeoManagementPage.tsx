@@ -129,7 +129,7 @@ const managementStaticCardHint = 'text-gray-500 dark:text-white/55'
 function SummaryCard({
   label,
   value,
-  hint,
+  hint: _hint,
 }: {
   label: string
   value: string | number
@@ -141,7 +141,6 @@ function SummaryCard({
       <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-[3px]', managementStaticCardTopLine)} />
       <p className={cn('text-[12px] font-extrabold uppercase tracking-[0.24em]', managementStaticCardTitle)}>{lt(label)}</p>
       <p className={cn('mt-2 text-[2rem] font-bold tracking-tight', managementStaticCardValue)}>{value}</p>
-      <p className={cn('mt-2 text-[13px] font-semibold leading-5', managementStaticCardHint)}>{lt(hint)}</p>
     </div>
   )
 }

@@ -106,14 +106,14 @@ export function CardSection({
   className,
   title,
   eyebrow,
-  description,
+  description: _description,
   headerAction,
   bleed = false,
   divider = true,
   children,
   ...props
 }: CardSectionProps) {
-  const hasHeader = Boolean(title || eyebrow || headerAction || description)
+  const hasHeader = Boolean(title || eyebrow || headerAction)
 
   return (
     <section
@@ -128,12 +128,12 @@ export function CardSection({
         <header className={cn('flex flex-wrap items-start justify-between gap-3', !bleed && 'mb-4')}>
           <div className="min-w-0">
             {eyebrow ? (
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+              <p className="ui-eyebrow text-(--muted)">
                 {eyebrow}
               </p>
             ) : null}
             {title ? (
-              <h3 className={cn('text-lg font-semibold tracking-tight text-(--foreground)', Boolean(eyebrow) && 'mt-1')}>
+              <h3 className={cn('ui-section-title text-(--foreground)', Boolean(eyebrow) && 'mt-1')}>
                 {title}
               </h3>
             ) : null}
@@ -187,13 +187,13 @@ export function CardMetric({ label, value, hint, tone = 'default', className }: 
         className,
       )}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-(--muted)">
+      <p className="ui-card-label text-(--muted)">
         {label}
       </p>
-      <p className={cn('mt-1.5 text-[1.1rem] font-semibold tracking-tight tabular-nums', cardMetricToneText[tone])}>
+      <p className={cn('mt-1.5 text-[1.125rem] font-semibold tracking-tight tabular-nums', cardMetricToneText[tone])}>
         {value}
       </p>
-      {hint ? <p className="mt-1 text-[11px] text-(--muted-strong)">{hint}</p> : null}
+      {hint ? <p className="ui-helper mt-1 text-(--muted-strong)">{hint}</p> : null}
     </div>
   )
 }

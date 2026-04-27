@@ -873,7 +873,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 <div className="hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:block dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[var(--success-text)] dark:text-white">
+                      <p className="ui-card-label text-[var(--success-text)] dark:text-white">
                         {lt('Completion To Date')}
                       </p>
                       <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white">
@@ -916,7 +916,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 <div className="rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:hidden dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[var(--success-text)] dark:text-white">
+                      <p className="ui-card-label text-[var(--success-text)] dark:text-white">
                         {lt('Completion To Date')}
                       </p>
                       <p className="mt-2 text-sm font-medium text-[var(--foreground)] dark:text-white">
@@ -1014,7 +1014,7 @@ export function MemberMonthlyUpdateCalendarBoard({
 
                               <div className="flex flex-col items-end gap-1.5">
                                 {entryCount > 0 ? (
-                                  <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 text-[9px] font-semibold tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
+                                  <span className="ui-card-label inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white">
                                     {entryCount}x
                                   </span>
                                 ) : null}
@@ -1030,7 +1030,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                               <div className="relative mt-3 w-full max-w-[112px] self-center space-y-1.5 text-center">
                                 <div className="grid grid-cols-2 gap-1.5">
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white">
+                                    <p className="ui-card-label text-[var(--muted)] dark:text-white">
                                       {tr('In', 'Kirish', 'Вход')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
@@ -1038,7 +1038,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     </p>
                                   </div>
                                   <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                    <p className="flex items-center justify-center gap-1 text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white">
+                                    <p className="ui-card-label flex items-center justify-center gap-1 text-[var(--muted)] dark:text-white">
                                       <span>{tr('Out', 'Chiqish', 'Выход')}</span>
                                     </p>
                                     {isCheckoutMissing ? (
@@ -1056,7 +1056,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                     )}
                                   </div>
                                 </div>
-                                <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white">
+                                <p className="ui-helper font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white">
                                   {getWorkedDurationLabel(day)}
                                 </p>
                               </div>
@@ -1065,7 +1065,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                             <div className={cn('relative mt-auto pt-2', showTimePanel && 'flex flex-col items-center text-center')}>
                               <span
                                 className={cn(
-                                  'inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 text-[9px] font-semibold uppercase tracking-[0.14em]',
+                                  'ui-card-label inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 tracking-[0.14em]',
                                   showTimePanel && 'justify-center',
                                   getDayPillClass(day),
                                 )}
@@ -1073,7 +1073,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                 <span className={cn('h-1.5 w-1.5 shrink-0 rounded-full', getDayDotClass(day))} />
                                 {getCalendarCellStatusLabel(day.status, day)}
                               </span>
-                              <p className={cn('mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white', showTimePanel && 'max-w-[112px] text-center')}>
+                              <p className={cn('ui-table-meta mt-1.5 text-[var(--muted-strong)] dark:text-white', showTimePanel && 'max-w-[112px] text-center')}>
                                 {getCalendarCellHint(day)}
                               </p>
                             </div>

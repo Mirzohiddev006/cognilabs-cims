@@ -433,7 +433,7 @@ export function MemberDashboardPage() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">{lt('Member Dashboard')}</p>
-                <h1 className="mt-2 text-3xl font-semibold tracking-tight text-[var(--foreground)]">
+                <h1 className="ui-page-title mt-2 text-[var(--foreground)]">
                   {detail.report.fullName}
                 </h1>
                 <p className="mt-2 text-sm text-[var(--muted-strong)]">

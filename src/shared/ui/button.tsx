@@ -52,13 +52,13 @@ const variants = {
 }
 
 const sizes = {
-  sm: 'min-h-7 px-2.5 py-1 text-[11px] rounded-md gap-1.5',
-  md: 'min-h-8 px-3 py-1.5 text-xs rounded-lg gap-2',
-  lg: 'min-h-9 px-4 py-1.5 text-[13px] rounded-xl gap-2',
+  sm: 'min-h-7 px-2.5 py-1 rounded-md gap-1.5',
+  md: 'min-h-8 px-3 py-1.5 rounded-lg gap-2',
+  lg: 'min-h-9 px-4 py-1.5 rounded-xl gap-2',
 }
 
 const baseClassName =
-  'inline-flex items-center justify-center font-medium tracking-[0.01em] ' +
+  'ui-button-text inline-flex items-center justify-center tracking-[0.01em] ' +
   'transition-[color,box-shadow,background-color,border-color,transform,opacity] ' +
   'duration-150 active:translate-y-px ' +
   'disabled:pointer-events-none disabled:opacity-40 ' +

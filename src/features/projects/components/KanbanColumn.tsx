@@ -91,7 +91,7 @@ export function KanbanColumn({
           <h3 className="truncate text-xs font-semibold text-white/90 tracking-wide">
             {column.name}
           </h3>
-          <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-white/50 leading-none">
+          <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[11px] font-bold text-white/50 leading-none">
             {column.cards.length}
           </span>
         </div>

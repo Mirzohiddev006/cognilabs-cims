@@ -152,7 +152,7 @@ export function MetricCard({
       </div>
 
       <div className="mt-2">
-        <p className="count-up text-[26px] leading-none font-semibold tracking-tight text-white">
+        <p className="count-up ui-metric-value text-white">
           {value}
         </p>
 

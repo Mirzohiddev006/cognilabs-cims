@@ -32,7 +32,7 @@ function MoonIcon() {
 }
 
 const headerMetaChipClassName =
-  'min-h-9 rounded-xl px-3 text-[11px] font-semibold tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
+  'ui-button-text min-h-9 rounded-xl px-3 tracking-[0.04em] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]'
 
 export function AppHeader() {
   const navigate = useNavigate()
@@ -129,14 +129,14 @@ export function AppHeader() {
                   <NavGlyph name={getNavigationGlyphName(currentItem?.to ?? location.pathname)} />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-base font-bold text-(--foreground) tracking-tight">
+                  <p className="ui-body truncate font-bold text-(--foreground) tracking-tight">
                     {routeLabel}
                   </p>
                 </div>
               </div>
             ) : null}
             {user ? (
-              <p className={cn('text-[11px] font-semibold text-(--muted)', !hideRouteContext && 'mt-1.5')}>
+              <p className={cn('ui-helper font-semibold text-(--muted)', !hideRouteContext && 'mt-1.5')}>
                 {user.name} {user.surname}
               </p>
             ) : null}
@@ -158,7 +158,7 @@ export function AppHeader() {
                   onClick={() => setLocale(value)}
                   aria-label={`${t('shell.language')}: ${localeLabels[value]}`}
                   className={cn(
-                    'inline-flex min-h-8 min-w-9 items-center justify-center rounded-lg px-2 text-[11px] font-semibold tracking-[0.08em] transition-colors',
+                    'ui-button-text inline-flex min-h-8 min-w-9 items-center justify-center rounded-lg px-2 tracking-[0.08em] transition-colors',
                     locale === value
                       ? 'bg-white text-black shadow-[0_1px_2px_rgba(0,0,0,0.20)]'
                       : 'text-(--muted) hover:bg-(--accent-soft) hover:text-(--foreground)',

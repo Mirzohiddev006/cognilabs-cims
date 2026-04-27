@@ -281,6 +281,105 @@ code, kbd, pre, .font-mono {
   letter-spacing: -0.03em;
 }
 
+.ui-page-title {
+  font-size: 1.75rem;
+  line-height: 1.08;
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
+}
+
+.ui-section-title {
+  font-size: 1.375rem;
+  line-height: 1.14;
+  font-weight: 600;
+  letter-spacing: var(--tracking-heading);
+}
+
+.ui-dialog-title {
+  font-size: 1.375rem;
+  line-height: 1.14;
+  font-weight: 600;
+  letter-spacing: var(--tracking-heading);
+}
+
+.ui-eyebrow {
+  font-size: 0.6875rem;
+  line-height: 1.15;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.ui-card-label {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.ui-input-label {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.ui-body {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.ui-body-muted {
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.ui-helper,
+.ui-table-meta {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.ui-table-heading {
+  font-size: 0.75rem;
+  line-height: 1.15;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.ui-table-cell {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.ui-metric-value {
+  font-size: 1.75rem;
+  line-height: 1.05;
+  font-weight: 600;
+}
+
+.ui-button-text {
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .ui-page-title {
+    font-size: 2rem;
+  }
+
+  .ui-section-title {
+    font-size: 1.5rem;
+  }
+
+  .ui-metric-value {
+    font-size: 2rem;
+  }
+}
+
 /* Autofill */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

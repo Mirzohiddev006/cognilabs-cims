@@ -1742,7 +1742,7 @@ export function UpdateTrackingPage() {
                       </div>
                       <div className="flex w-full items-center gap-3 rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-3 py-2 sm:min-w-[250px] dark:border-white/8 dark:bg-white/[0.04]">
                         <div className="min-w-0 flex-1">
-                          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-700/70 dark:text-white/36">
+                          <p className="ui-card-label text-emerald-700/70 dark:text-white/36">
                             {tr('Completion To Date', 'Shu kungacha bajarilish', 'Vypolnenie na segodnyashniy den')}
                           </p>
                           <p className="mt-1 text-[11px] text-[var(--muted-strong)] dark:text-white/72">
@@ -1829,7 +1829,7 @@ export function UpdateTrackingPage() {
 
                                     <div className="flex flex-col items-end gap-1.5">
                                       {entryCount > 0 ? (
-                                        <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 text-[9px] font-semibold tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72">
+                                        <span className="ui-card-label inline-flex min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-white/80 px-2 py-0.75 tabular-nums text-[var(--muted-strong)] dark:border-white/10 dark:bg-white/[0.06] dark:text-white/72">
                                           {entryCount}x
                                         </span>
                                       ) : null}
@@ -1845,7 +1845,7 @@ export function UpdateTrackingPage() {
                                     <div className="relative mt-2.5 space-y-1.5">
                                       <div className="grid grid-cols-2 gap-1.5">
                                         <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                          <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
+                                          <p className="ui-card-label text-[var(--muted)] dark:text-white/44">
                                             {tr('In', 'Kirish', 'Vkhod')}
                                           </p>
                                           <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
@@ -1853,7 +1853,7 @@ export function UpdateTrackingPage() {
                                           </p>
                                         </div>
                                         <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
-                                          <p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)] dark:text-white/44">
+                                          <p className="ui-card-label text-[var(--muted)] dark:text-white/44">
                                             {tr('Out', 'Chiqish', 'Vykhod')}
                                           </p>
                                           <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
@@ -1861,7 +1861,7 @@ export function UpdateTrackingPage() {
                                           </p>
                                         </div>
                                       </div>
-                                      <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white/76">
+                                      <p className="ui-helper font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white/76">
                                         {getCalendarWorkedDurationLabel(day)}
                                       </p>
                                     </div>
@@ -1869,13 +1869,13 @@ export function UpdateTrackingPage() {
 
                                   <div className="relative mt-auto">
                                     <span className={cn(
-                                      'inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 text-[9px] font-semibold uppercase tracking-[0.14em]',
+                                      'ui-card-label inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.75 tracking-[0.14em]',
                                       getCalendarDayPillClass(day),
                                     )}>
                                       <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', getCalendarDayDotClass(day))} />
                                       {getCalendarCellStatusLabel(day.status, day)}
                                     </span>
-                                    <p className="mt-1.5 text-[8px] leading-3 text-[var(--muted-strong)] dark:text-white/76">
+                                    <p className="ui-table-meta mt-1.5 text-[var(--muted-strong)] dark:text-white/76">
                                       {getCalendarCellHint(day)}
                                     </p>
                                   </div>

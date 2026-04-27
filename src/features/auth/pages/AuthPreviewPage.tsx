@@ -27,16 +27,12 @@ export function AuthPreviewPage() {
         <h2 className="mt-3 max-w-lg text-2xl font-semibold text-[var(--foreground)]">
           {t('ceo.auth_preview.title')}
         </h2>
-        <p className="mt-3 max-w-xl text-sm text-[var(--muted-strong)]">
-          {t('ceo.auth_preview.description')}
-        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         {authFlows.map((item) => (
           <Card key={item.title} className="h-full p-5">
             <p className="text-sm font-medium uppercase tracking-[0.22em] text-[var(--accent)]">{item.title}</p>
-            <p className="mt-4 text-sm leading-6 text-[var(--muted-strong)]">{item.description}</p>
           </Card>
         ))}
       </div>

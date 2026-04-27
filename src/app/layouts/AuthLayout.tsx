@@ -79,6 +79,8 @@ export function AuthLayout() {
         'Дополнительные кнопки в шапке убраны, но восстановление и подтверждение по-прежнему доступны здесь.',
       )
 
+  void panelDescription
+
   return (
     <div className="auth-portal">
       <div className="auth-portal__glow auth-portal__glow--primary" />
@@ -88,9 +90,8 @@ export function AuthLayout() {
         <section className="auth-visual-panel order-2 lg:order-1">
           <div key={`visual-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--visual">
             <div className="relative z-10 max-w-xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-cyan-300/80">{tl(copy.eyebrow)}</p>
-              <h1 className="mt-5 max-w-xl text-4xl font-semibold leading-tight text-[var(--foreground)] md:text-5xl">{tl(copy.title)}</h1>
-              <p className="mt-5 max-w-lg text-base leading-7 text-[var(--muted)]">{tl(copy.description)}</p>
+              <p className="ui-eyebrow text-cyan-300/80">{tl(copy.eyebrow)}</p>
+              <h1 className="ui-page-title mt-5 max-w-xl text-[var(--foreground)]">{tl(copy.title)}</h1>
             </div>
 
             <div className="auth-preview-card">
@@ -99,12 +100,12 @@ export function AuthLayout() {
               <div className="relative z-10 space-y-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-300/75">{badgeText}</p>
-                    <h2 className="mt-3 max-w-sm text-2xl font-semibold leading-tight text-[var(--foreground)] md:text-3xl">
+                    <p className="ui-eyebrow text-cyan-300/75">{badgeText}</p>
+                    <h2 className="ui-section-title mt-3 max-w-sm text-[var(--foreground)]">
                       {tl('Permissions, sessions, and recovery stay inside one motion-driven surface.')}
                     </h2>
                   </div>
-                  <span className="rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
+                  <span className="ui-card-label rounded-full border border-cyan-300/25 bg-cyan-300/10 px-4 py-1.5 text-cyan-200">
                     {tl('Online')}
                   </span>
                 </div>
@@ -112,8 +113,8 @@ export function AuthLayout() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   {previewStats.map((item) => (
                     <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">{tl(item.label)}</p>
-                      <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+                      <p className="ui-card-label text-[var(--muted)]">{tl(item.label)}</p>
+                      <p className="ui-body mt-2 font-semibold text-[var(--foreground)]">
                         {item.value === 'Realtime token guard'
                           ? tr('Realtime token guard', 'Realtime token himoyasi', 'Защита токена в реальном времени')
                           : item.value === 'Role-based access'
@@ -135,18 +136,15 @@ export function AuthLayout() {
             <div key={`form-${routeAnimationKey}`} className="auth-route-pane auth-route-pane--form">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-400">
+                  <p className="ui-eyebrow text-slate-400">
                     {panelEyebrow}
-                  </p>
-                  <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--muted)]">
-                    {panelDescription}
                   </p>
                 </div>
 
                 {!isLoginRoute ? (
                   <Link
                     to="/auth/login"
-                    className="rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] transition hover:bg-[var(--accent-soft)]"
+                    className="ui-button-text rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-2 text-[var(--foreground)] transition hover:bg-[var(--accent-soft)]"
                   >
                     {tl('Back to login')}
                   </Link>

@@ -53,8 +53,8 @@ const variants: Record<BadgeVariant, string> = {
 }
 
 const sizes: Record<BadgeSize, string> = {
-  sm: 'px-1.5 py-0.5 text-[10px] rounded-md gap-1',
-  md: 'px-2 py-0.5 text-[11px] rounded-md gap-1.5',
+  sm: 'px-1.5 py-0.5 text-[11px] rounded-md gap-1 leading-none',
+  md: 'px-2 py-0.5 text-[12px] rounded-md gap-1.5 leading-none',
 }
 
 const dotColors: Record<BadgeVariant, string> = {

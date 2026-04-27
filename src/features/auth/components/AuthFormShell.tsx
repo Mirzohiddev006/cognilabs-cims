@@ -18,7 +18,7 @@ type AuthFormShellProps = {
 export function AuthFormShell({
   eyebrow,
   title,
-  description,
+  description: _description,
   footerLinks = [],
   children,
 }: AuthFormShellProps) {
@@ -26,9 +26,8 @@ export function AuthFormShell({
     <Card className="auth-login-shell overflow-hidden border-[var(--border)] bg-[var(--card)] p-0 shadow-sm">
       <div className="border-b border-[var(--border)] px-6 py-6 sm:px-7">
         <div className="space-y-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">{eyebrow}</p>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] tracking-tight">{title}</h2>
-          <p className="max-w-xl text-xs leading-5 text-[var(--muted)]">{description}</p>
+          <p className="ui-eyebrow text-[var(--muted)]">{eyebrow}</p>
+          <h2 className="ui-dialog-title text-[var(--foreground)]">{title}</h2>
         </div>
       </div>
 
@@ -41,7 +40,7 @@ export function AuthFormShell({
             <Link
               key={link.to}
               to={link.to}
-              className="text-xs font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
+              className="ui-helper font-medium text-[var(--muted)] transition hover:text-[var(--foreground)]"
             >
               {link.label}
             </Link>

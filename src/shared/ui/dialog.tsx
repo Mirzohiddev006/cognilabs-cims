@@ -97,17 +97,17 @@ export function Dialog({
               </div>
             ) : null}
             <p className={cn(
-              'dialog-eyebrow ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.24em]',
+              'dialog-eyebrow ui-eyebrow',
               tone === 'danger' ? 'text-red-300/80' : 'text-blue-300/70',
             )}>
               {translateCurrentLiteral(eyebrow ?? 'Workspace dialog')}
             </p>
-            <h2 className="ui-dialog-title mt-2 text-lg font-semibold tracking-tight text-[var(--foreground)]">
+            <h2 className="ui-dialog-title mt-2 text-[var(--foreground)]">
               {translateCurrentLiteral(title)}
             </h2>
             {description ? (
               <p className={cn(
-                'mt-2 text-xs leading-5',
+                'ui-helper mt-2',
                 tone === 'danger' ? 'text-zinc-300/80' : 'text-[var(--muted-strong)]',
               )}>
                 {translateCurrentLiteral(description)}

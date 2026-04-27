@@ -33,7 +33,7 @@ const metaToneClassNames: Record<PageHeaderTone, string> = {
 export function PageHeader({
   title,
   eyebrow,
-  description,
+  description: _description,
   meta = [],
   actions,
   className,
@@ -49,18 +49,13 @@ export function PageHeader({
           <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               {eyebrow ? (
-                <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
+                <p className="page-header-label ui-eyebrow">
                   {translateCurrentLiteral(eyebrow)}
                 </p>
               ) : null}
-              <h1 className="page-header-title ui-display-heading text-2xl font-semibold tracking-tight sm:text-[2rem]">
+              <h1 className="page-header-title ui-display-heading ui-page-title">
                 {translateCurrentLiteral(title)}
               </h1>
-              {description ? (
-                <p className="page-header-hint mt-3 max-w-2xl text-sm leading-6">
-                  {translateCurrentLiteral(description)}
-                </p>
-              ) : null}
             </div>
 
             {actions ? (
@@ -80,17 +75,12 @@ export function PageHeader({
                     metaToneClassNames[item.tone ?? 'neutral'],
                   )}
                 >
-                  <p className="page-header-label ui-eyebrow text-[10px] font-semibold uppercase tracking-[0.22em]">
+                  <p className="page-header-label ui-eyebrow">
                     {translateCurrentLiteral(item.label)}
                   </p>
-                  <p className="mt-2 text-base font-semibold tracking-tight text-current">
+                  <p className="ui-body mt-2 font-semibold tracking-tight text-current">
                     {item.value}
                   </p>
-                  {item.hint ? (
-                    <p className="page-header-hint mt-1.5 text-[11px] leading-5">
-                      {translateCurrentLiteral(item.hint)}
-                    </p>
-                  ) : null}
                 </div>
               ))}
             </div>

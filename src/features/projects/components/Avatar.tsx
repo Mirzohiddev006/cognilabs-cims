@@ -16,7 +16,7 @@ type AvatarProps = {
 }
 
 const sizeClasses: Record<AvatarSize, string> = {
-  xs: 'h-5 w-5 text-[9px]',
+  xs: 'h-5 w-5 text-[11px]',
   sm: 'h-7 w-7 text-[11px]',
   md: 'h-9 w-9 text-xs',
   lg: 'h-12 w-12 text-sm',
