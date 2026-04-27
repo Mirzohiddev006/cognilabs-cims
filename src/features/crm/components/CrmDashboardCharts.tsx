@@ -113,29 +113,24 @@ function getPeakPoint(points: SalesDashboardTrendPoint[]) {
 function MiniStat({
   label,
   value,
-  hint,
 }: {
   label: string
   value: string
-  hint: string
 }) {
   return (
-    <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 shadow-[0_8px_24px_rgba(148,163,184,0.08)] dark:shadow-none">
+    <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-xl font-bold tracking-tight text-[var(--foreground)]">{value}</p>
-      <p className="mt-1 text-xs text-[var(--muted-strong)]">{hint}</p>
     </div>
   )
 }
 
 function TrendChartCard({
   title,
-  description,
   payload,
   accent,
 }: {
   title: string
-  description: string
   payload?: SalesDashboardChartsResponse
   accent: AccentTone
 }) {
@@ -190,7 +185,6 @@ function TrendChartCard({
               ? `${formatCompactNumber(payload.summary.total_period_leads)} ${t('crm.charts.units.leads')}`
               : t('crm.charts.states.no_dataset')}
           </h3>
-          <p className="mt-1 text-sm text-[var(--muted-strong)]">{description}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -283,17 +277,14 @@ function TrendChartCard({
             <MiniStat
               label={t('crm.charts.metric.today')}
               value={formatCompactNumber(payload.summary.today)}
-              hint={t('crm.charts.metric.today_hint')}
             />
             <MiniStat
               label={t('crm.charts.metric.average_daily')}
               value={averagePerDay.toFixed(1)}
-              hint={t('crm.charts.metric.average_daily_hint')}
             />
             <MiniStat
               label={t('crm.charts.metric.peak_day')}
               value={peakPoint ? formatCompactNumber(peakPoint.count) : '0'}
-              hint={peakPoint ? formatTickLabel(peakPoint.date, totalPoints) : t('crm.charts.states.no_peak')}
             />
           </div>
         </>
@@ -329,9 +320,6 @@ export function CrmDashboardCharts({
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('crm.charts.header.eyebrow')}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">{t('crm.charts.header.title')}</h2>
-          <p className="mt-1 text-sm text-[var(--muted-strong)]">
-            {t('crm.charts.header.description')}
-          </p>
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -353,22 +341,18 @@ export function CrmDashboardCharts({
           <MiniStat
             label={t('crm.charts.metric.total_30d')}
             value={formatCompactNumber(summary.total_period_leads)}
-            hint={t('crm.charts.metric.total_30d_hint')}
           />
           <MiniStat
             label={t('crm.charts.metric.this_week')}
             value={formatCompactNumber(summary.this_week)}
-            hint={t('crm.charts.metric.this_week_hint')}
           />
           <MiniStat
             label={t('crm.charts.metric.started')}
             value={formatCompactNumber(summary.project_started)}
-            hint={t('crm.charts.metric.started_hint')}
           />
           <MiniStat
             label={t('crm.charts.metric.conversion')}
             value={formatPercent(summary.conversion_rate_percent)}
-            hint={t('crm.charts.metric.conversion_hint')}
           />
         </div>
       ) : null}
@@ -382,13 +366,11 @@ export function CrmDashboardCharts({
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <TrendChartCard
               title={t('crm.charts.card.weekly_title')}
-              description={t('crm.charts.card.weekly_description')}
               payload={weekly}
               accent="blue"
             />
             <TrendChartCard
               title={t('crm.charts.card.monthly_title')}
-              description={t('crm.charts.card.monthly_description')}
               payload={monthly}
               accent="violet"
             />

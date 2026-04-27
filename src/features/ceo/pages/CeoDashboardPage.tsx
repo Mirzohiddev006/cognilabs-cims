@@ -507,7 +507,6 @@ export function CeoDashboardPage() {
               <EmptyStateBlock
                 eyebrow={t('ceo.dashboard.recurring.eyebrow')}
                 title={t('ceo.dashboard.recurring.empty_title')}
-                description={t('ceo.dashboard.recurring.empty_description')}
               />
             }
             columns={[
@@ -587,7 +586,6 @@ export function CeoDashboardPage() {
             <SectionTitle
               eyebrow={t('ceo.dashboard.messages.eyebrow')}
               title={t('ceo.dashboard.messages.title')}
-              description={t('ceo.dashboard.messages.description')}
             />
             <Badge variant="violet" dot>
               {t('ceo.dashboard.messages.entries', { count: messages.length })}
@@ -603,7 +601,6 @@ export function CeoDashboardPage() {
                 <EmptyStateBlock
                   eyebrow={t('ceo.dashboard.messages.eyebrow')}
                   title={t('ceo.dashboard.messages.empty_title')}
-                  description={t('ceo.dashboard.messages.empty_description')}
                 />
               }
               columns={[
@@ -657,7 +654,6 @@ export function CeoDashboardPage() {
             <SectionTitle
               eyebrow={t('ceo.dashboard.payments.eyebrow')}
               title={t('ceo.dashboard.payments.title')}
-              description={t('ceo.dashboard.payments.description')}
             />
             <div className="flex flex-wrap gap-2">
               <Badge variant="success" dot>
@@ -678,7 +674,6 @@ export function CeoDashboardPage() {
                 <EmptyStateBlock
                   eyebrow={t('ceo.dashboard.payments.eyebrow')}
                   title={t('ceo.dashboard.payments.empty_title')}
-                  description={t('ceo.dashboard.payments.empty_description')}
                 />
               }
               columns={[
