@@ -786,14 +786,11 @@ export function MemberMonthlyUpdateCalendarBoard({
   return (
     <>
       <div className={cn('w-full', className)}>
-        <div className="cal-inner overflow-hidden rounded-[28px] border">
-        <div className="border-b border-(--border) px-4 py-4 sm:px-5">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                <div>
-                  <h3 className="text-[1.55rem] font-semibold tracking-tight text-white">
-                    {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Календарь')}
-                  </h3>
-            </div>
+        <div className="overflow-hidden">
+          <div className="flex flex-col gap-3 pb-4 lg:flex-row lg:items-start lg:justify-between">
+            <h3 className="text-[1.55rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">
+              {stableMonthPeriod} {tr('Calendar', 'Kalendar', 'Календарь')}
+            </h3>
 
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="success" dot>{counts.submitted} {tr('Submitted', 'Topshirildi', 'Обновлено')}</Badge>
@@ -803,11 +800,8 @@ export function MemberMonthlyUpdateCalendarBoard({
               {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} {tr('Upcoming', 'Yaqinlashmoqda', 'Скоро')}</Badge> : null}
             </div>
           </div>
-        </div>
 
-        <div className="px-4 py-4 sm:px-5">
-          <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
-            <div className="cal-inner overflow-hidden rounded-[28px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-3.5 sm:p-5">
+          <div>
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(290px,330px)] lg:items-center">
                 <div className="min-w-0 max-w-2xl">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1116,8 +1110,6 @@ export function MemberMonthlyUpdateCalendarBoard({
             </div>
           </div>
         </div>
-      </div>
-      </div>
       {selectedDayDrawer}
     </>
   )

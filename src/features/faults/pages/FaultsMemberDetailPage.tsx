@@ -14,7 +14,7 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { Card, CardMetric, CardSection } from '../../../shared/ui/card'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
@@ -27,7 +27,7 @@ import {
   MistakeIncidentSection,
 } from '../components/CompensationRecordPanels'
 import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpdateCalendar'
-import { DetailStatTile, RefreshIcon } from '../components/SalaryEstimatePrimitives'
+import { RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
   buildEmployeeSalaryDetail,
   buildEmployeeReports,
@@ -771,7 +771,7 @@ export function FaultsMemberDetailPage({
         </div>
       ) : null}
 
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--blue-border)]">
+      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px] border-[var(--blue-border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_38%),radial-gradient(circle_at_right,rgba(34,211,238,0.12),transparent_26%)]" />
 
@@ -888,281 +888,218 @@ export function FaultsMemberDetailPage({
         </div>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-        <DetailStatTile label={lt('Final salary')} value={formatAmount(detail.report.finalSalary)} />
-        <DetailStatTile label={lt('Estimated salary')} value={formatAmount(detail.report.estimatedSalary)} />
-        <DetailStatTile label={lt('Deduction')} value={formatAmount(detail.report.deductionAmount)} tone="danger" />
-        <DetailStatTile label={lt('Bonus amount')} value={formatAmount(detail.report.bonusAmount)} tone="blue" />
-        <DetailStatTile label={lt('Bonus %')} value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
-        <DetailStatTile
-          label={lt('Productivity')}
-          value={Number.isFinite(detail.report.productivityPercentage)
-            ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)} / ${formatPercent(detail.report.productivityPercentage)}`
-            : '-'}
-          tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
-        />
-      </div>
-
-      <Card className="rounded-[24px] border-white/10 p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              {tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
-            </h2>
+      <Card noPadding className="overflow-hidden rounded-[28px]">
+        <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
+          <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-6">
+            <CardMetric label={lt('Final salary')} value={formatAmount(detail.report.finalSalary)} />
+            <CardMetric label={lt('Estimated salary')} value={formatAmount(detail.report.estimatedSalary)} />
+            <CardMetric label={lt('Deduction')} value={formatAmount(detail.report.deductionAmount)} tone="danger" />
+            <CardMetric label={lt('Bonus amount')} value={formatAmount(detail.report.bonusAmount)} tone="blue" />
+            <CardMetric label={lt('Bonus %')} value={formatPercent(detail.report.totalBonusPercent)} tone="blue" />
+            <CardMetric
+              label={lt('Productivity')}
+              value={Number.isFinite(detail.report.productivityPercentage)
+                ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)}`
+                : '-'}
+              hint={Number.isFinite(detail.report.productivityPercentage) ? formatPercent(detail.report.productivityPercentage) : undefined}
+              tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
+            />
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'} className="text-[#FF0000]">
-            {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
-            </Badge>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--blue-text)] hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] hover:text-[var(--blue-text)] dark:bg-white/[0.03]"
-              onClick={() => setIsCompensationPolicyDrawerOpen(true)}
-            >
-              {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
-            </Button>
-          </div>
-        </div>
+        </CardSection>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <DetailStatTile label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
-          <DetailStatTile label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
-          <DetailStatTile label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
-          <DetailStatTile label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Бонусы за сдачу')} value={formatCount(detail.report.deliveryBonusCount)} tone="blue" />
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setIsCompensationPolicyDrawerOpen(true)}
-          className="group mt-5 block w-full rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 text-left transition hover:border-[var(--blue-border)] hover:bg-[var(--blue-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-border)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] dark:border-white/8 dark:bg-black/15 dark:hover:border-[var(--blue-border)] dark:hover:bg-white/[0.04]"
-          aria-label={tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
+        <CardSection
+          title={tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
+          headerAction={
+            <>
+              <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
+                {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
+              </Badge>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="rounded-full text-[var(--blue-text)] hover:text-[var(--blue-text)]"
+                onClick={() => setIsCompensationPolicyDrawerOpen(true)}
+              >
+                {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
+              </Button>
+            </>
+          }
         >
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3 text-sm">
-                <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
-                <span className="text-[var(--muted)]">-</span>
-                <span className="font-semibold text-rose-500 dark:text-rose-400">{formatAmount(detail.report.deductionAmount)}</span>
-                <span className="text-[var(--muted)]">+</span>
-                <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
-                <span className="text-[var(--muted)]">=</span>
-                <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
-                  {formatAmount(detail.report.finalSalary)}
-                </span>
-              </div>
-            </div>
+          <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
+            <CardMetric label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
+            <CardMetric label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')} value={formatAmount(detail.report.afterPenalty)} />
+            <CardMetric label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
+            <CardMetric label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Бонусы за сдачу')} value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
+          </div>
 
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] border border-[var(--blue-border)] bg-[var(--blue-soft)] text-[var(--blue-text)] transition group-hover:translate-x-0.5 dark:bg-[var(--blue-dim)]">
-              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                <path d="M6 3.5 10.5 8 6 12.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+            <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
+            <span className="text-[var(--muted)]">−</span>
+            <span className="font-semibold text-[var(--danger-text)]">{formatAmount(detail.report.deductionAmount)}</span>
+            <span className="text-[var(--muted)]">+</span>
+            <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
+            <span className="text-[var(--muted)]">=</span>
+            <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
+              {formatAmount(detail.report.finalSalary)}
             </span>
           </div>
 
-          <div className="mt-4 h-2 rounded-full bg-[var(--surface-elevated)] dark:bg-white/8">
+          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--muted-surface)]">
             <div
-              className="h-full rounded-full bg-rose-500 transition-[width] duration-300"
+              className="h-full rounded-full bg-[var(--danger-text)] transition-[width] duration-300"
               style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
             />
           </div>
-        </button>
-      </Card>
+        </CardSection>
 
-      <Card className="rounded-[24px] border-white/10 p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight text-[var(--foreground)]">
-              {lt('Salary context and update performance')}
-            </h2>
-          </div>
-          <Badge
-            variant={updatesSummary ? 'blue' : 'outline'}
-          >
-            {updatesSummary
-              ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
-              : tr('No update stats', "Update statistikasi yo'q", 'Нет статистики обновлений')}
-          </Badge>
-        </div>
+        <CardSection
+          title={lt('Salary context and update performance')}
+          headerAction={
+            <Badge variant={updatesSummary ? 'blue' : 'outline'}>
+              {updatesSummary
+                ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
+                : tr('No update stats', "Update statistikasi yo'q", 'Нет статистики обновлений')}
+            </Badge>
+          }
+        >
+          {updatesSummary ? (
+            <>
+              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
+                <CardMetric label={lt('Logged updates')} value={formatCount(updatesSummary.submittedCount)} tone="success" />
+                <CardMetric label={lt('Missing days')} value={formatCount(updatesSummary.missingCount)} tone="danger" />
+                <CardMetric label={lt('Total updates')} value={formatCount(updatesSummary.totalUpdates)} />
+                <CardMetric label={lt('Update percentage')} value={formatPercent(updatesCompletion)} tone="blue" />
+              </div>
 
-        {updatesSummary ? (
-          <>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <DetailStatTile label={lt('Logged updates')} value={formatCount(updatesSummary.submittedCount)} />
-              <DetailStatTile label={lt('Missing days')} value={formatCount(updatesSummary.missingCount)} tone="danger" />
-              <DetailStatTile label={lt('Total updates')} value={formatCount(updatesSummary.totalUpdates)} />
-              <DetailStatTile
-                label={lt('Update percentage')}
-                value={formatPercent(updatesCompletion)}
-                tone={updatesSummary ? 'blue' : 'default'}
-              />
-            </div>
+              <dl className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-3">
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Last update', 'Oxirgi yangilanish', 'Последнее обновление')}</dt>
+                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                    {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Next payment date', "Keyingi to'lov sanasi", 'Дата следующей выплаты')}</dt>
+                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                    {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Salary in update', 'Yangilanishdagi maosh', 'Зарплата в обновлении')}</dt>
+                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
+                    {typeof updatesSummary!.salaryAmount === 'number'
+                      ? formatAmount(updatesSummary!.salaryAmount)
+                      : tr('Not returned', 'Qaytmadi', 'Не вернулось')}
+                  </dd>
+                </div>
+              </dl>
 
-            <div className="mt-4 grid gap-3 xl:grid-cols-3">
-              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Last update', 'Oxirgi yangilanish', 'Последнее обновление')}</p>
-                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
-                </p>
-              </div>
-              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Next payment date', "Keyingi to'lov sanasi", 'Дата следующей выплаты')}</p>
-                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
-                </p>
-              </div>
-              <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs text-[var(--muted-strong)]">{tr('Salary amount in update record', 'Yangilanish yozuvidagi maosh summasi', 'Сумма зарплаты в записи обновления')}</p>
-                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
-                  {typeof updatesSummary!.salaryAmount === 'number'
-                    ? formatAmount(updatesSummary!.salaryAmount)
-                    : tr('Not returned', 'Qaytmadi', 'Не вернулось')}
-                </p>
-              </div>
-            </div>
-
-            {updatesSummary!.note ? (
-              <div className="mt-4 rounded-[18px] border border-[var(--border)] bg-white px-4 py-4 dark:border-white/8 dark:bg-black/15">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                  {lt('Manager note')}
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
-                  {updatesSummary!.note}
-                </p>
-              </div>
-            ) : null}
-
-            {detail.updateCalendar ? (
-              <MemberMonthlyUpdateCalendarBoard
-                calendar={detail.updateCalendar}
-                className="mt-5"
-                onMonthShift={handleCalendarMonthShift}
-                onJumpToToday={handleCalendarTodayJump}
-              />
-            ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80">
-                {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <>
-            <div className="mt-4 rounded-[18px] border border-dashed border-[var(--border)] bg-white px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-white/10 dark:bg-black/10">
+              {updatesSummary!.note ? (
+                <div className="mt-5 border-l-2 border-[var(--blue-border)] pl-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                    {lt('Manager note')}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
+                    {updatesSummary!.note}
+                  </p>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p className="text-sm text-[var(--muted-strong)]">
               {lt('No monthly update statistics were returned for this member.')}
-            </div>
+            </p>
+          )}
+        </CardSection>
 
-            {detail.updateCalendar ? (
-              <MemberMonthlyUpdateCalendarBoard
-                calendar={detail.updateCalendar}
-                className="mt-5"
-                onMonthShift={handleCalendarMonthShift}
-                onJumpToToday={handleCalendarTodayJump}
-              />
-            ) : detail.calendarError ? (
-              <div className="mt-4 rounded-[18px] border border-dashed border-amber-300 bg-amber-50/85 px-4 py-5 text-sm font-medium text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/8 dark:text-amber-100/80">
-                {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
-              </div>
-            ) : null}
-          </>
-        )}
-      </Card>
+        {detail.updateCalendar ? (
+          <CardSection bleed>
+            <MemberMonthlyUpdateCalendarBoard
+              calendar={detail.updateCalendar}
+              onMonthShift={handleCalendarMonthShift}
+              onJumpToToday={handleCalendarTodayJump}
+            />
+          </CardSection>
+        ) : detail.calendarError ? (
+          <CardSection>
+            <p className="text-sm text-amber-600 dark:text-amber-300">
+              {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
+            </p>
+          </CardSection>
+        ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card className="relative overflow-hidden rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#dc2626,rgba(220,38,38,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.94),rgba(251,113,133,0.44),transparent_78%)]" />
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#FF0000]">
-                {tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}
-              </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                {tr('Deduction records for this month', 'Bu oy uchun ayirma yozuvlari', 'Записи удержаний за этот месяц')}
-              </h2>
-            </div>
+        <CardSection
+          title={tr('Deduction records for this month', 'Bu oy uchun ayirma yozuvlari', 'Записи удержаний за этот месяц')}
+          headerAction={
             <Badge variant={detail.penalties.length > 0 ? 'danger' : 'outline'}>
               {detail.penalties.length} {lt('entries')}
             </Badge>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 dark:border-rose-500/18 dark:bg-black/15">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+          }
+        >
+          {detail.penalties.length > 0 ? (
+            <ul className="divide-y divide-[var(--border)]">
+              {detail.penalties.map((item) => (
+                <li key={item.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                     {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
-                        {item.description}
-                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">{item.description}</p>
                     ) : null}
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       {item.percentage ? <Badge variant="outline">{formatPercent(item.percentage)}</Badge> : null}
                       {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
                     </div>
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-[#b91c1c] dark:text-rose-400">
+                  <p className="shrink-0 text-base font-semibold tracking-tight text-[var(--danger-text)]">
                     {formatAmount(item.amount)}
                   </p>
-                </div>
-              </div>
-            )) : (
-              <div className="rounded-[18px] border border-dashed border-[var(--danger-border)] bg-rose-100/75 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-rose-500/18 dark:bg-black/10">
-                {tr('No deduction line-items were returned for this member in the selected month.', 'Tanlangan oy uchun bu xodim bo‘yicha ayirma yozuvlari qaytmadi.', 'За выбранный месяц для этого сотрудника не вернулись записи удержаний.')}
-              </div>
-            )}
-          </div>
-        </Card>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--muted-strong)]">
+              {tr('No deduction line-items were returned for this member in the selected month.', 'Tanlangan oy uchun bu xodim bo‘yicha ayirma yozuvlari qaytmadi.', 'За выбранный месяц для этого сотрудника не вернулись записи удержаний.')}
+            </p>
+          )}
+        </CardSection>
 
-        <Card className="relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-[var(--success-border)] dark:bg-[var(--card)]">
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
-            style={{ background: 'linear-gradient(90deg, var(--success-text), rgba(var(--success-rgb),0.72), transparent 78%)' }}
-          />
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--success-text)]">
-                {tr('Bonus ledger', 'Bonuslar reyestri', 'Reestr bonusov')}
-              </p>
-              <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                {tr('Bonuses for this month', 'Bu oy uchun bonuslar', 'Бонусы за этот месяц')}
-              </h2>
-            </div>
+        <CardSection
+          title={tr('Bonuses for this month', 'Bu oy uchun bonuslar', 'Бонусы за этот месяц')}
+          headerAction={
             <Badge variant={detail.bonuses.length > 0 ? 'success' : 'outline'}>
               {detail.bonuses.length} {lt('entries')}
             </Badge>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-              <div key={item.id} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+          }
+        >
+          {detail.bonuses.length > 0 ? (
+            <ul className="divide-y divide-[var(--border)]">
+              {detail.bonuses.map((item) => (
+                <li key={item.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
                     {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">
-                        {item.description}
-                      </p>
+                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">{item.description}</p>
                     ) : null}
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
-                    </div>
+                    {item.createdAt ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge>
+                      </div>
+                    ) : null}
                   </div>
-                  <p className="text-base font-semibold tracking-tight text-[var(--success-text)]">
+                  <p className="shrink-0 text-base font-semibold tracking-tight text-[var(--success-text)]">
                     {formatAmount(item.amount)}
                   </p>
-                </div>
-              </div>
-            )) : (
-              <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
-                {lt('No bonus line-items were returned for this member in the selected month.')}
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-[var(--muted-strong)]">
+              {lt('No bonus line-items were returned for this member in the selected month.')}
+            </p>
+          )}
+        </CardSection>
 
-      <div className="grid gap-4 xl:grid-cols-2">
         <MistakeIncidentSection
           items={detail.mistakes}
           editable={showCompensationActions}
@@ -1177,7 +1114,7 @@ export function FaultsMemberDetailPage({
           onEdit={showCompensationActions ? (item) => openDeliveryBonusDialog(item) : undefined}
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
         />
-      </div>
+      </Card>
 
       {isCompensationPolicyDrawerOpen ? (
         <Suspense fallback={<AsyncContentLoader variant="dialog" />}>

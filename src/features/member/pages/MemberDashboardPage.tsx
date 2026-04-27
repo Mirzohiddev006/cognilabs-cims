@@ -659,10 +659,10 @@ export function MemberDashboardPage() {
 
       <CompensationPolicyPanel policy={detail.compensationPolicy} />
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <Card noPadding className="overflow-hidden rounded-[28px]">
         <MistakeIncidentSection items={detail.mistakes} />
         <DeliveryBonusSection items={detail.deliveryBonuses} />
-      </div>
+      </Card>
 
     </section>
   )

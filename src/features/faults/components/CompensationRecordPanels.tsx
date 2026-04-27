@@ -3,11 +3,10 @@ import type {
   MemberMistakeRecord,
 } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { cn } from '../../../shared/lib/cn'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { CardSection } from '../../../shared/ui/card'
 import { formatDetailDate } from '../lib/salaryEstimates'
 
 const lt = translateCurrentLiteral
@@ -73,34 +72,27 @@ export function MistakeIncidentSection({
   className,
 }: MistakeIncidentSectionProps) {
   return (
-    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--danger-border)] bg-white p-6 dark:border-rose-500/18 dark:bg-[var(--card)]', className)}>
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,#dc2626,rgba(220,38,38,0.72),transparent_78%)] dark:bg-[linear-gradient(90deg,rgba(254,205,211,0.94),rgba(251,113,133,0.44),transparent_78%)]" />
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[#FF0000]">
-            {tr('Mistake incidents', 'Xato holatlari', 'Sluchai oshibok')}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            {tr('Recorded compensation mistakes', 'Qayd etilgan kompensatsiya xatolari', 'Zafiksirovannye oshibki kompensatsii')}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
+    <CardSection
+      className={className}
+      title={tr('Recorded compensation mistakes', 'Qayd etilgan kompensatsiya xatolari', 'Zafiksirovannye oshibki kompensatsii')}
+      headerAction={
+        <>
           <Badge variant={items.length > 0 ? 'danger' : 'outline'}>
             {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-[#b91c1c] hover:text-[#991b1b] dark:text-rose-100/88 dark:hover:text-white">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-[var(--danger-text)]">
               {tr('Add mistake', 'Xato qoshish', 'Dobavit oshibku')}
             </Button>
           ) : null}
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {items.length > 0 ? items.map((item) => (
-          <div key={`mistake-${item.id}`} className="rounded-[18px] border border-[var(--danger-border)] bg-rose-100/90 px-4 py-4 dark:border-rose-500/18 dark:bg-black/15">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
+        </>
+      }
+    >
+      {items.length > 0 ? (
+        <ul className="divide-y divide-[var(--border)]">
+          {items.map((item) => (
+            <li key={`mistake-${item.id}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
                   <Badge variant="outline">{item.category}</Badge>
@@ -111,7 +103,7 @@ export function MistakeIncidentSection({
                     {item.description}
                   </p>
                 ) : null}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{formatDetailDate(item.incident_date ?? item.created_at)}</Badge>
                   <Badge variant="outline">{renderProjectLabel(item.project_name, item.project_id)}</Badge>
                   <Badge variant="outline">{renderReviewerLabel(item.reviewer_name, item.reviewer_id)}</Badge>
@@ -121,7 +113,7 @@ export function MistakeIncidentSection({
               </div>
 
               {editable && onEdit && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()}>
+                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
                   <ActionsMenu
                     label={`${lt('Open mistake actions for')} ${item.title}`}
                     items={[
@@ -131,15 +123,15 @@ export function MistakeIncidentSection({
                   />
                 </div>
               ) : null}
-            </div>
-          </div>
-        )) : (
-          <div className="rounded-[18px] border border-dashed border-[var(--danger-border)] bg-rose-100/75 px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-rose-500/18 dark:bg-black/10">
-            {tr('No mistake incidents were returned for the selected month.', 'Tanlangan oy uchun xato holatlari qaytmadi.', 'Za vybrannyi mesyats zapisi ob oshibkakh ne vernulis.')}
-          </div>
-        )}
-      </div>
-    </Card>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-[var(--muted-strong)]">
+          {tr('No mistake incidents were returned for the selected month.', 'Tanlangan oy uchun xato holatlari qaytmadi.', 'Za vybrannyi mesyats zapisi ob oshibkakh ne vernulis.')}
+        </p>
+      )}
+    </CardSection>
   )
 }
 
@@ -161,39 +153,29 @@ export function DeliveryBonusSection({
   className,
 }: DeliveryBonusSectionProps) {
   return (
-    <Card className={cn('relative overflow-hidden rounded-[24px] border border-[var(--success-border)] bg-white p-6 dark:border-[var(--success-border)] dark:bg-[var(--card)]', className)}>
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[3px]"
-        style={{ background: 'linear-gradient(90deg, var(--success-text), rgba(var(--success-rgb),0.72), transparent 78%)' }}
-      />
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[12px] font-extrabold uppercase tracking-[0.24em] text-[var(--success-text)]">
-            {tr('Delivery bonuses', 'Topshirish bonuslari', 'Bonusy za sdachu')}
-          </p>
-          <h2 className="mt-2 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-            {tr('Recorded delivery bonus events', 'Qayd etilgan topshirish bonuslari', 'Zafiksirovannye sobytiya bonusov za sdachu')}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
+    <CardSection
+      className={className}
+      title={tr('Recorded delivery bonus events', 'Qayd etilgan topshirish bonuslari', 'Zafiksirovannye sobytiya bonusov za sdachu')}
+      headerAction={
+        <>
           <Badge variant={items.length > 0 ? 'success' : 'outline'}>
             {items.length} {lt('entries')}
           </Badge>
           {editable && onAdd ? (
-            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl font-semibold text-[var(--success-text)] transition-opacity hover:opacity-80">
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl font-semibold text-[var(--success-text)]">
               {tr('Add delivery bonus', 'Topshirish bonusini qoshish', 'Dobavit bonus za sdachu')}
             </Button>
           ) : null}
-        </div>
-      </div>
-
-      <div className="mt-4 space-y-3">
-        {items.length > 0 ? items.map((item) => (
-          <div key={`delivery-bonus-${item.id}`} className="rounded-[18px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
+        </>
+      }
+    >
+      {items.length > 0 ? (
+        <ul className="divide-y divide-[var(--border)]">
+          {items.map((item) => (
+            <li key={`delivery-bonus-${item.id}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
+                  <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
                   <Badge variant="success">{item.bonus_type}</Badge>
                 </div>
                 {item.description ? (
@@ -201,14 +183,14 @@ export function DeliveryBonusSection({
                     {item.description}
                   </p>
                 ) : null}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge variant="outline">{formatDetailDate(item.award_date ?? item.created_at)}</Badge>
                   <Badge variant="outline">{renderProjectLabel(item.project_name, item.project_id)}</Badge>
                 </div>
               </div>
 
               {editable && onEdit && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()}>
+                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
                   <ActionsMenu
                     label={`${lt('Open delivery bonus actions for')} ${item.title}`}
                     items={[
@@ -218,14 +200,14 @@ export function DeliveryBonusSection({
                   />
                 </div>
               ) : null}
-            </div>
-          </div>
-        )) : (
-          <div className="rounded-[18px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
-            {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
-          </div>
-        )}
-      </div>
-    </Card>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-[var(--muted-strong)]">
+          {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
+        </p>
+      )}
+    </CardSection>
   )
 }
