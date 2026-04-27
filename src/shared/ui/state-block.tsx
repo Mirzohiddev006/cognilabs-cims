@@ -5,7 +5,7 @@ import { Button } from './button'
 type StateBlockProps = {
   eyebrow: string
   title: string
-  description: string
+  description?: string
   actionLabel?: string
   onAction?: () => void
   tone?: 'loading' | 'empty' | 'error'
@@ -109,9 +109,11 @@ export function StateBlock({
         >
           {translateCurrentLiteral(title)}
         </h3>
-        <p className="mt-2 max-w-sm text-xs leading-5 text-[var(--muted)]">
-          {translateCurrentLiteral(description)}
-        </p>
+        {description ? (
+          <p className="mt-2 max-w-sm text-xs leading-5 text-[var(--muted)]">
+            {translateCurrentLiteral(description)}
+          </p>
+        ) : null}
       </div>
 
       {/* Children */}
