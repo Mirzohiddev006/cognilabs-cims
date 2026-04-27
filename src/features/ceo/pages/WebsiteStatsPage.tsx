@@ -94,14 +94,6 @@ function getAnalyticsRowLabel(row: WebsiteAnalyticsRow) {
   )
 }
 
-function getAnalyticsRowSubLabel(row: WebsiteAnalyticsRow) {
-  return (
-    getAnalyticsDimension(row.dimensions, ['pagePath', 'pagePathPlusQueryString', 'hostName', 'date'])
-    || Object.values(row.dimensions).slice(1).find(Boolean)
-    || '-'
-  )
-}
-
 function getWebsiteStatsErrorMessage(error: unknown, fallback: string) {
   const message = getApiErrorMessage(error, fallback)
 
@@ -254,28 +246,24 @@ export function WebsiteStatsPage() {
           <MetricCard
             label={t('ceo.website.metric.page_views')}
             value={formatCompactNumber(pageViewsMetric)}
-            caption={`${analyticsWindow.startDate} to ${analyticsWindow.endDate}`}
             accent="blue"
             sparkBars={[1, Math.max(pageViewsMetric * 0.35, 1), Math.max(pageViewsMetric * 0.58, 1), Math.max(pageViewsMetric * 0.82, 1), Math.max(pageViewsMetric, 1)]}
           />
           <MetricCard
             label={t('ceo.website.metric.users')}
             value={formatCompactNumber(totalUsersMetric)}
-            caption={t('ceo.website.metric.users_caption')}
             accent="success"
             sparkBars={[1, Math.max(totalUsersMetric * 0.32, 1), Math.max(totalUsersMetric * 0.54, 1), Math.max(totalUsersMetric * 0.78, 1), Math.max(totalUsersMetric, 1)]}
           />
           <MetricCard
             label={t('ceo.website.metric.sessions')}
             value={formatCompactNumber(sessionsMetric)}
-            caption={t('ceo.website.metric.sessions_caption')}
             accent="violet"
             sparkBars={[1, Math.max(sessionsMetric * 0.3, 1), Math.max(sessionsMetric * 0.56, 1), Math.max(sessionsMetric * 0.8, 1), Math.max(sessionsMetric, 1)]}
           />
           <MetricCard
             label={t('ceo.website.metric.realtime_active')}
             value={formatCompactNumber(realtimeActiveUsersMetric)}
-            caption={t('ceo.website.metric.realtime_caption')}
             accent="warning"
             sparkBars={[1, Math.max(realtimeActiveUsersMetric * 0.4, 1), Math.max(realtimeActiveUsersMetric * 0.7, 1), Math.max(realtimeActiveUsersMetric, 1)]}
           />

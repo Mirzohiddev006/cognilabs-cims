@@ -7,7 +7,6 @@ type TrendDirection = 'up' | 'down' | 'flat'
 type MetricCardProps = {
   label: string
   value: string | number
-  caption?: string
   delta?: string        // e.g. "+12%" or "3 today"
   deltaLabel?: string   // e.g. "vs last week"
   trend?: TrendDirection
@@ -108,7 +107,6 @@ function SparkBars({ values, accentBar }: { values: number[]; accentBar: string 
 export function MetricCard({
   label,
   value,
-  caption,
   delta,
   deltaLabel,
   trend = 'flat',
