@@ -516,7 +516,6 @@ export function CeoDashboardPage() {
                 render: (row) => (
                   <div className="max-w-[320px]">
                     <p className="font-semibold text-(--foreground)">{row.title}</p>
-                    <p className="text-xs text-(--muted)">{row.note?.trim() || t('ceo.dashboard.recurring.no_note')}</p>
                   </div>
                 ),
               },
@@ -607,13 +606,12 @@ export function CeoDashboardPage() {
                 {
                   key: 'receiver',
                   header: t('ceo.dashboard.table.receiver'),
-                  render: (row) => (
-                    <div>
-                      <p className="font-semibold text-(--foreground)">{row.receiver_name}</p>
-                      <p className="text-xs text-(--muted)">{row.receiver_email}</p>
-                    </div>
-                  ),
-                },
+                render: (row) => (
+                  <div>
+                    <p className="font-semibold text-(--foreground)">{row.receiver_name}</p>
+                  </div>
+                ),
+              },
                 {
                   key: 'subject',
                   header: t('ceo.dashboard.table.subject'),
@@ -774,7 +772,6 @@ export function CeoDashboardPage() {
                 render: (row) => (
                   <div className="max-w-[320px]">
                     <p className="font-semibold text-(--foreground)">{row.title}</p>
-                    <p className="text-xs text-(--muted)">{row.note?.trim() || 'No note'}</p>
                   </div>
                 ),
               },

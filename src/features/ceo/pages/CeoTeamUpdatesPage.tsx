@@ -2006,9 +2006,6 @@ export function CeoTeamUpdatesPage() {
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
                 {lt('Team Monthly Updates')}
               </h1>
-              <p className="mt-1.5 text-[13px] text-(--muted)">
-                {lt('Monitor employee update activity by month.')}
-              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -2376,11 +2373,6 @@ export function CeoTeamUpdatesPage() {
                         <EmployeeAvatar name={emp.user_name} imageUrl={emp.profile_image} />
                         <div>
                           <span className="text-sm font-semibold text-[var(--foreground)]">{emp.user_name}</span>
-                          {typeof emp.estimated_salary === 'number' && emp.estimated_salary > 0 ? (
-                            <p className="mt-1 text-xs text-(--muted)">
-                              {translateCurrentLiteral('Est. salary')}: {formatCurrency(emp.estimated_salary)}
-                            </p>
-                          ) : null}
                         </div>
                       </div>
                     </td>

@@ -677,9 +677,6 @@ export function ProjectDetailPage() {
               <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
                 {tr('Project Lists', 'Loyiha royxatlari', 'Spiski proekta')}
               </h2>
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                {tr('Open the project and work with its lists directly here without an extra board layer.', 'Qoshimcha board qatlamsiz loyihani ochib, royxatlari bilan shu yerda ishlang.', 'Otkroite proekt i rabotaite s ego spiskami pryamo zdes bez dopolnitelnogo sloya board.')}
-              </p>
             </div>
             {canManageProjects ? (
               <Button

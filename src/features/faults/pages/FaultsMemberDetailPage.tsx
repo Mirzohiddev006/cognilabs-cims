@@ -15,6 +15,7 @@ import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card, CardMetric, CardSection } from '../../../shared/ui/card'
+import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { SelectField } from '../../../shared/ui/select-field'
@@ -753,8 +754,73 @@ export function FaultsMemberDetailPage({
       ? updatesSummary!.updatePercentage
       : updatesSummary?.completionPercentage
 
+  const salaryBuildRows = [
+    {
+      metric: lt('Base salary'),
+      value: formatAmount(detail.report.baseSalary),
+      note: tr('Starting amount before deductions and bonuses', 'Ayirma va bonuslardan oldingi boshlangich summa', 'Startovaya summa do uderzhaniy i bonusov'),
+    },
+    {
+      metric: tr('Deduction impact', "Ayirma ta'siri", 'Vliyanie uderzhaniya'),
+      value: formatAmount(detail.report.deductionAmount),
+      note: `${formatPercent(detail.report.penaltyPercentage)} ${tr('across recorded deductions', 'qayd etilgan ayirmalar boyicha', 'po zafiksirovannym uderzhaniyam')}`,
+    },
+    {
+      metric: lt('Bonus amount'),
+      value: formatAmount(detail.report.bonusAmount),
+      note: `${formatCount(detail.report.deliveryBonusCount)} ${tr('delivery bonus entries', 'ta topshirish bonusi yozuvi', 'zapisey bonusov za sdachu')}`,
+    },
+    {
+      metric: tr('After deduction', 'Ayirmadan keyin', 'Posle uderzhaniya'),
+      value: formatAmount(detail.report.afterPenalty),
+      note: `${formatCount(detail.report.mistakesCount)} ${tr('mistake entries', 'ta xato yozuvi', 'zapisey ob oshibkakh')}`,
+    },
+    {
+      metric: lt('Final salary'),
+      value: formatAmount(detail.report.finalSalary),
+      note: tr('Final monthly payout after all adjustments', 'Barcha tuzatishlardan keyingi yakuniy oylik tolov', 'Itogovaya ezhemesyachnaya vyplata posle vsekh korrektirovok'),
+    },
+  ]
+
+  const salaryContextRows = updatesSummary
+    ? [
+        {
+          metric: lt('Logged updates'),
+          value: formatCount(updatesSummary.submittedCount),
+          note: tr('Submitted workdays in this month', 'Shu oy topshirilgan ish kunlari', 'Sdannye rabochie dni v etom mesyatse'),
+        },
+        {
+          metric: lt('Missing days'),
+          value: formatCount(updatesSummary.missingCount),
+          note: tr('Working days without update submission', 'Update topshirilmagan ish kunlari', 'Rabochie dni bez sdachi obnovleniya'),
+        },
+        {
+          metric: lt('Total updates'),
+          value: formatCount(updatesSummary.totalUpdates),
+          note: tr('All update entries returned for the month', 'Oy boyicha qaytgan barcha update yozuvlari', 'Vse zapisi obnovleniy za mesyats'),
+        },
+        {
+          metric: lt('Update percentage'),
+          value: formatPercent(updatesCompletion),
+          note: `${tr('Last update', 'Oxirgi yangilanish', 'Poslednee obnovlenie')}: ${updatesSummary.lastUpdateDate ? formatDetailDate(updatesSummary.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano')}`,
+        },
+        {
+          metric: tr('Next payment date', "Keyingi to'lov sanasi", 'Data sleduyushchey vyplaty'),
+          value: updatesSummary.nextPaymentDate ? formatDetailDate(updatesSummary.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Ne ukazano'),
+          note: tr('Reported by monthly update statistics', "Oylik update statistikasi orqali qaytgan", 'Vernulos iz ezhemesyachnoy statistiki obnovleniy'),
+        },
+        {
+          metric: tr('Salary in update', 'Yangilanishdagi maosh', 'Zarplata v obnovlenii'),
+          value: typeof updatesSummary.salaryAmount === 'number'
+            ? formatAmount(updatesSummary.salaryAmount)
+            : tr('Not returned', 'Qaytmadi', 'Ne vernulos'),
+          note: updatesSummary.note?.trim() || tr('No manager note', "Manager izohi yo'q", 'Kommentariya menedzhera net'),
+        },
+      ]
+    : []
+
   return (
-    <section className="space-y-6 page-enter">
+    <section className="page-enter space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
       {!isMemberUpdatesMode ? (
         <div className="flex items-center">
           <Button
@@ -907,7 +973,8 @@ export function FaultsMemberDetailPage({
           </div>
         </CardSection>
 
-        <CardSection
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <CardSection
           title={tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
           headerAction={
             <>
@@ -951,9 +1018,11 @@ export function FaultsMemberDetailPage({
               style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
             />
           </div>
-        </CardSection>
+              </CardSection>
+            </Card>
 
-        <CardSection
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <CardSection
           title={lt('Salary context and update performance')}
           headerAction={
             <Badge variant={updatesSummary ? 'blue' : 'outline'}>
@@ -1013,23 +1082,11 @@ export function FaultsMemberDetailPage({
           )}
         </CardSection>
 
-        {detail.updateCalendar ? (
-          <CardSection bleed>
-            <MemberMonthlyUpdateCalendarBoard
-              calendar={detail.updateCalendar}
-              onMonthShift={handleCalendarMonthShift}
-              onJumpToToday={handleCalendarTodayJump}
-            />
-          </CardSection>
-        ) : detail.calendarError ? (
-          <CardSection>
-            <p className="text-sm text-amber-600 dark:text-amber-300">
-              {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
-            </p>
-          </CardSection>
-        ) : null}
+        <CardSection bleed>
+          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6 xl:grid-cols-2">
 
-        <CardSection
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <CardSection
           title={tr('Deduction records for this month', 'Bu oy uchun ayirma yozuvlari', 'Записи удержаний за этот месяц')}
           headerAction={
             <Badge variant={detail.penalties.length > 0 ? 'danger' : 'outline'}>
@@ -1038,33 +1095,51 @@ export function FaultsMemberDetailPage({
           }
         >
           {detail.penalties.length > 0 ? (
-            <ul className="divide-y divide-[var(--border)]">
-              {detail.penalties.map((item) => (
-                <li key={item.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
-                    {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">{item.description}</p>
-                    ) : null}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      {item.percentage ? <Badge variant="outline">{formatPercent(item.percentage)}</Badge> : null}
-                      {item.createdAt ? <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge> : null}
-                    </div>
-                  </div>
-                  <p className="shrink-0 text-base font-semibold tracking-tight text-[var(--danger-text)]">
-                    {formatAmount(item.amount)}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <DataTable
+              compact
+              zebra
+              caption={tr('Deduction records table', 'Ayirma yozuvlari jadvali', 'Tablitsa zapisey uderzhaniy')}
+              rows={detail.penalties}
+              getRowKey={(row) => String(row.id)}
+              columns={[
+                {
+                  key: 'title',
+                  header: tr('Title', 'Nomi', 'Nazvanie'),
+                  render: (row) => <span className="font-semibold text-[var(--foreground)]">{row.title}</span>,
+                },
+                {
+                  key: 'description',
+                  header: tr('Description', 'Tavsif', 'Opisanie'),
+                  render: (row) => <span className="text-[var(--muted-strong)]">{row.description || '-'}</span>,
+                },
+                {
+                  key: 'percentage',
+                  header: tr('Percent', 'Foiz', 'Protsent'),
+                  render: (row) => row.percentage ? formatPercent(row.percentage) : '-',
+                },
+                {
+                  key: 'date',
+                  header: tr('Date', 'Sana', 'Data'),
+                  render: (row) => row.createdAt ? formatDetailDate(row.createdAt) : '-',
+                },
+                {
+                  key: 'amount',
+                  header: tr('Amount', 'Summa', 'Summa'),
+                  align: 'right',
+                  render: (row) => <span className="font-semibold text-[var(--danger-text)]">{formatAmount(row.amount)}</span>,
+                },
+              ]}
+            />
           ) : (
             <p className="text-sm text-[var(--muted-strong)]">
               {tr('No deduction line-items were returned for this member in the selected month.', 'Tanlangan oy uchun bu xodim bo‘yicha ayirma yozuvlari qaytmadi.', 'За выбранный месяц для этого сотрудника не вернулись записи удержаний.')}
             </p>
           )}
-        </CardSection>
+              </CardSection>
+            </Card>
 
-        <CardSection
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <CardSection
           title={tr('Bonuses for this month', 'Bu oy uchun bonuslar', 'Бонусы за этот месяц')}
           headerAction={
             <Badge variant={detail.bonuses.length > 0 ? 'success' : 'outline'}>
@@ -1073,48 +1148,85 @@ export function FaultsMemberDetailPage({
           }
         >
           {detail.bonuses.length > 0 ? (
-            <ul className="divide-y divide-[var(--border)]">
-              {detail.bonuses.map((item) => (
-                <li key={item.id} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
-                    {item.description ? (
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted-strong)]">{item.description}</p>
-                    ) : null}
-                    {item.createdAt ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">{formatDetailDate(item.createdAt)}</Badge>
-                      </div>
-                    ) : null}
-                  </div>
-                  <p className="shrink-0 text-base font-semibold tracking-tight text-[var(--success-text)]">
-                    {formatAmount(item.amount)}
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <DataTable
+              compact
+              zebra
+              caption={tr('Bonus records table', 'Bonus yozuvlari jadvali', 'Tablitsa zapisey bonusov')}
+              rows={detail.bonuses}
+              getRowKey={(row) => String(row.id)}
+              columns={[
+                {
+                  key: 'title',
+                  header: tr('Title', 'Nomi', 'Nazvanie'),
+                  render: (row) => <span className="font-semibold text-[var(--success-text)]">{row.title}</span>,
+                },
+                {
+                  key: 'description',
+                  header: tr('Description', 'Tavsif', 'Opisanie'),
+                  render: (row) => <span className="text-[var(--muted-strong)]">{row.description || '-'}</span>,
+                },
+                {
+                  key: 'date',
+                  header: tr('Date', 'Sana', 'Data'),
+                  render: (row) => row.createdAt ? formatDetailDate(row.createdAt) : '-',
+                },
+                {
+                  key: 'amount',
+                  header: tr('Amount', 'Summa', 'Summa'),
+                  align: 'right',
+                  render: (row) => <span className="font-semibold text-[var(--success-text)]">{formatAmount(row.amount)}</span>,
+                },
+              ]}
+            />
           ) : (
             <p className="text-sm text-[var(--muted-strong)]">
               {lt('No bonus line-items were returned for this member in the selected month.')}
             </p>
           )}
-        </CardSection>
+              </CardSection>
+            </Card>
 
-        <MistakeIncidentSection
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <MistakeIncidentSection
           items={detail.mistakes}
           editable={showCompensationActions}
           onAdd={showCompensationActions ? () => openMistakeDialog() : undefined}
           onEdit={showCompensationActions ? (item) => openMistakeDialog(item) : undefined}
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'mistake', record: item }) : undefined}
-        />
-        <DeliveryBonusSection
+              />
+            </Card>
+            <Card noPadding className="overflow-hidden rounded-[24px]">
+              <DeliveryBonusSection
           items={detail.deliveryBonuses}
           editable={showCompensationActions}
           onAdd={showCompensationActions ? () => openDeliveryBonusDialog() : undefined}
           onEdit={showCompensationActions ? (item) => openDeliveryBonusDialog(item) : undefined}
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
-        />
+              />
+            </Card>
+          </div>
+        </CardSection>
       </Card>
+
+      {detail.updateCalendar ? (
+        <Card noPadding className="overflow-hidden rounded-[28px]">
+          <CardSection bleed>
+            <MemberMonthlyUpdateCalendarBoard
+              calendar={detail.updateCalendar}
+              onMonthShift={handleCalendarMonthShift}
+              onJumpToToday={handleCalendarTodayJump}
+            />
+          </CardSection>
+        </Card>
+      ) : detail.calendarError ? (
+        <Card noPadding className="overflow-hidden rounded-[28px]">
+          <CardSection>
+            <p className="text-sm text-amber-600 dark:text-amber-300">
+              {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
+            </p>
+          </CardSection>
+        </Card>
+      ) : null}
 
       {isCompensationPolicyDrawerOpen ? (
         <Suspense fallback={<AsyncContentLoader variant="dialog" />}>

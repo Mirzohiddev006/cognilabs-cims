@@ -137,11 +137,6 @@ export function CardSection({
                 {title}
               </h3>
             ) : null}
-            {description ? (
-              <p className={cn('text-sm text-(--muted-strong)', Boolean(title || eyebrow) && 'mt-1')}>
-                {description}
-              </p>
-            ) : null}
           </div>
           {headerAction ? <div className="flex flex-wrap items-center gap-2">{headerAction}</div> : null}
         </header>

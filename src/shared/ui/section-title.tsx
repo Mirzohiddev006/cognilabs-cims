@@ -12,13 +12,12 @@ type SectionTitleProps = {
 export function SectionTitle({
   eyebrow,
   title,
-  description,
+  description: _description,
   gradient = false,
   className,
 }: SectionTitleProps) {
   const localizedEyebrow = eyebrow ? translateCurrentLiteral(eyebrow) : null
   const localizedTitle = translateCurrentLiteral(title)
-  const localizedDescription = description ? translateCurrentLiteral(description) : null
 
   return (
     <div className={cn('space-y-1.5', className)}>
@@ -39,12 +38,6 @@ export function SectionTitle({
       >
         {localizedTitle}
       </h2>
-
-      {localizedDescription ? (
-        <p className="max-w-2xl text-[12px] leading-5 text-[var(--muted-strong)]">
-          {localizedDescription}
-        </p>
-      ) : null}
     </div>
   )
 }

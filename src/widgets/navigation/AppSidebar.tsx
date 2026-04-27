@@ -500,11 +500,6 @@ export function AppSidebar() {
                 >
                   {user?.email ?? user?.role ?? t('shell.user')}
                 </p>
-                {user?.job_title?.trim() ? (
-                  <p className={cn('mt-1 truncate text-[10px] font-medium', isLight ? 'text-blue-700/75' : 'text-blue-100/75')} title={user.job_title}>
-                    {user.job_title}
-                  </p>
-                ) : null}
               </div>
             </div>
           </button>

@@ -138,8 +138,6 @@ export function AppHeader() {
             {user ? (
               <p className={cn('text-[11px] font-semibold text-(--muted)', !hideRouteContext && 'mt-1.5')}>
                 {user.name} {user.surname}
-                <span className="mx-1 opacity-30">|</span>
-                {user.job_title?.trim() || user.email}
               </p>
             ) : null}
           </div>

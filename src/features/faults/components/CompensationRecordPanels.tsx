@@ -7,6 +7,7 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { CardSection } from '../../../shared/ui/card'
+import { DataTable } from '../../../shared/ui/data-table'
 import { formatDetailDate } from '../lib/salaryEstimates'
 
 const lt = translateCurrentLiteral
@@ -89,43 +90,70 @@ export function MistakeIncidentSection({
       }
     >
       {items.length > 0 ? (
-        <ul className="divide-y divide-[var(--border)]">
-          {items.map((item) => (
-            <li key={`mistake-${item.id}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{item.title}</p>
-                  <Badge variant="outline">{item.category}</Badge>
-                  <Badge variant="danger">{item.severity}</Badge>
+        <DataTable
+          compact
+          zebra
+          caption={tr('Mistake incidents table', 'Xatolar jadvali', 'Tablitsa oshibok')}
+          rows={items}
+          getRowKey={(row) => `mistake-${row.id}`}
+          columns={[
+            {
+              key: 'title',
+              header: tr('Title', 'Nomi', 'Nazvanie'),
+              render: (row) => <span className="font-semibold text-[var(--foreground)]">{row.title}</span>,
+            },
+            {
+              key: 'category',
+              header: tr('Category', 'Kategoriya', 'Kategoriya'),
+              render: (row) => row.category,
+            },
+            {
+              key: 'severity',
+              header: tr('Severity', 'Daraja', 'Stepen'),
+              render: (row) => <span className="font-semibold text-[var(--danger-text)]">{row.severity}</span>,
+            },
+            {
+              key: 'date',
+              header: tr('Date', 'Sana', 'Data'),
+              render: (row) => formatDetailDate(row.incident_date ?? row.created_at),
+            },
+            {
+              key: 'project',
+              header: tr('Project', 'Loyiha', 'Proekt'),
+              render: (row) => renderProjectLabel(row.project_name, row.project_id),
+            },
+            {
+              key: 'reviewer',
+              header: tr('Reviewer', "Ko'rib chiquvchi", 'Proveryayushchiy'),
+              render: (row) => renderReviewerLabel(row.reviewer_name, row.reviewer_id),
+            },
+            {
+              key: 'flags',
+              header: tr('Flags', 'Belgilar', 'Flagi'),
+              render: (row) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {row.reached_client ? <Badge variant="danger">{lt('Reached client')}</Badge> : <Badge variant="outline">{lt('Internal only')}</Badge>}
+                  {row.unclear_task ? <Badge variant="warning">{lt('Unclear task')}</Badge> : null}
                 </div>
-                {item.description ? (
-                  <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
-                    {item.description}
-                  </p>
-                ) : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{formatDetailDate(item.incident_date ?? item.created_at)}</Badge>
-                  <Badge variant="outline">{renderProjectLabel(item.project_name, item.project_id)}</Badge>
-                  <Badge variant="outline">{renderReviewerLabel(item.reviewer_name, item.reviewer_id)}</Badge>
-                  {item.reached_client ? <Badge variant="danger">{lt('Reached client')}</Badge> : <Badge variant="outline">{lt('Internal only')}</Badge>}
-                  {item.unclear_task ? <Badge variant="warning">{lt('Unclear task')}</Badge> : null}
-                </div>
-              </div>
-
-              {editable && onEdit && onDelete ? (
+              ),
+            },
+            {
+              key: 'actions',
+              header: tr('Actions', 'Amallar', 'Deystviya'),
+              render: (row) => editable && onEdit && onDelete ? (
                 <div onClick={(event) => event.stopPropagation()} className="shrink-0">
                   <ActionsMenu
-                    label={`${lt('Open mistake actions for')} ${item.title}`}
+                    label={`${lt('Open mistake actions for')} ${row.title}`}
                     items={[
-                      { label: lt('Edit mistake'), onSelect: () => onEdit(item) },
-                      { label: lt('Delete mistake'), onSelect: () => onDelete(item), tone: 'danger' },
+                      { label: lt('Edit mistake'), onSelect: () => onEdit(row) },
+                      { label: lt('Delete mistake'), onSelect: () => onDelete(row), tone: 'danger' },
                     ]}
                   />
                 </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+              ) : '-',
+            },
+          ]}
+        />
       ) : (
         <p className="text-sm text-[var(--muted-strong)]">
           {tr('No mistake incidents were returned for the selected month.', 'Tanlangan oy uchun xato holatlari qaytmadi.', 'Za vybrannyi mesyats zapisi ob oshibkakh ne vernulis.')}
@@ -170,39 +198,55 @@ export function DeliveryBonusSection({
       }
     >
       {items.length > 0 ? (
-        <ul className="divide-y divide-[var(--border)]">
-          {items.map((item) => (
-            <li key={`delivery-bonus-${item.id}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
-                  <Badge variant="success">{item.bonus_type}</Badge>
-                </div>
-                {item.description ? (
-                  <p className="mt-2 text-xs leading-5 text-[var(--muted-strong)]">
-                    {item.description}
-                  </p>
-                ) : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{formatDetailDate(item.award_date ?? item.created_at)}</Badge>
-                  <Badge variant="outline">{renderProjectLabel(item.project_name, item.project_id)}</Badge>
-                </div>
-              </div>
-
-              {editable && onEdit && onDelete ? (
+        <DataTable
+          compact
+          zebra
+          caption={tr('Delivery bonus table', 'Topshirish bonuslari jadvali', 'Tablitsa bonusov za sdachu')}
+          rows={items}
+          getRowKey={(row) => `delivery-bonus-${row.id}`}
+          columns={[
+            {
+              key: 'title',
+              header: tr('Title', 'Nomi', 'Nazvanie'),
+              render: (row) => <span className="font-semibold text-[var(--success-text)]">{row.title}</span>,
+            },
+            {
+              key: 'type',
+              header: tr('Type', 'Turi', 'Tip'),
+              render: (row) => row.bonus_type,
+            },
+            {
+              key: 'date',
+              header: tr('Date', 'Sana', 'Data'),
+              render: (row) => formatDetailDate(row.award_date ?? row.created_at),
+            },
+            {
+              key: 'project',
+              header: tr('Project', 'Loyiha', 'Proekt'),
+              render: (row) => renderProjectLabel(row.project_name, row.project_id),
+            },
+            {
+              key: 'description',
+              header: tr('Description', 'Tavsif', 'Opisanie'),
+              render: (row) => row.description || '-',
+            },
+            {
+              key: 'actions',
+              header: tr('Actions', 'Amallar', 'Deystviya'),
+              render: (row) => editable && onEdit && onDelete ? (
                 <div onClick={(event) => event.stopPropagation()} className="shrink-0">
                   <ActionsMenu
-                    label={`${lt('Open delivery bonus actions for')} ${item.title}`}
+                    label={`${lt('Open delivery bonus actions for')} ${row.title}`}
                     items={[
-                      { label: lt('Edit delivery bonus'), onSelect: () => onEdit(item) },
-                      { label: lt('Delete delivery bonus'), onSelect: () => onDelete(item), tone: 'danger' },
+                      { label: lt('Edit delivery bonus'), onSelect: () => onEdit(row) },
+                      { label: lt('Delete delivery bonus'), onSelect: () => onDelete(row), tone: 'danger' },
                     ]}
                   />
                 </div>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+              ) : '-',
+            },
+          ]}
+        />
       ) : (
         <p className="text-sm text-[var(--muted-strong)]">
           {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}

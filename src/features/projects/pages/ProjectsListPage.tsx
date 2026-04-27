@@ -388,9 +388,6 @@ export function ProjectsListPage() {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Members')}</p>
                 <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">{tr('Project members overview', 'Loyiha azolari korinishi', 'Obzor uchastnikov proekta')}</h2>
-                <p className="mt-1 text-sm text-[var(--muted)]">
-                  {tr('Click a member to see the projects they are part of and the tasks assigned to them.', 'Azoni bosing va u qatnashayotgan loyihalar hamda unga biriktirilgan vazifalarni koring.', 'Nazhmi na uchastnika, chtoby uvidet proekty, v kotorykh on uchastvuet, i ego zadachi.')}
-                </p>
               </div>
 
               {selectedMemberId !== null ? (

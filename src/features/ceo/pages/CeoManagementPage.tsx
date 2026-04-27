@@ -1058,7 +1058,6 @@ export function CeoManagementPage() {
             )}
           >
             <p className={cn('text-sm font-bold', activeTab === tab.key ? managementStaticCardValue : managementStaticCardTitle)}>{lt(tab.label)}</p>
-            <p className={cn('mt-2 text-[13px] leading-5 font-semibold', managementStaticCardHint)}>{lt(tab.description)}</p>
           </button>
         ))}
       </div>

@@ -789,12 +789,6 @@ export function CrmDashboardPage() {
         >
           <div>
             <h2 className="text-lg font-semibold text-white">{t('customers.section.list.title', 'Customers')}</h2>
-            <p className="mt-0.5 text-[13px] text-(--muted)">
-              {t('customers.section.list.description', 'Manage your customers ({{visible}} of {{total}} records)', {
-                visible: formatCompactNumber(displayedCustomers.length),
-                total: formatCompactNumber(totalCustomerCount),
-              })}
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="blue" dot>
@@ -915,8 +909,6 @@ export function CrmDashboardPage() {
                 minWidth: '280px',
                 render: (row) => {
                   const displayName = getCustomerDisplayName(row)
-                  const secondaryLine = formatUsernameHandle(row.username) ?? row.phone_number ?? row.phone ?? t('common.none', 'None')
-
                   return (
                     <div className="min-w-0">
                       <button
@@ -929,7 +921,6 @@ export function CrmDashboardPage() {
                       >
                         {displayName}
                       </button>
-                      <span className="block truncate text-[13px] text-(--muted)">{secondaryLine}</span>
                     </div>
                   )
                 },
