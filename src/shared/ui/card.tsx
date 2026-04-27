@@ -133,12 +133,12 @@ export function CardSection({
               </p>
             ) : null}
             {title ? (
-              <h3 className={cn('text-lg font-semibold tracking-tight text-(--foreground)', eyebrow && 'mt-1')}>
+              <h3 className={cn('text-lg font-semibold tracking-tight text-(--foreground)', Boolean(eyebrow) && 'mt-1')}>
                 {title}
               </h3>
             ) : null}
             {description ? (
-              <p className={cn('text-sm text-(--muted-strong)', (title || eyebrow) && 'mt-1')}>
+              <p className={cn('text-sm text-(--muted-strong)', Boolean(title || eyebrow) && 'mt-1')}>
                 {description}
               </p>
             ) : null}
