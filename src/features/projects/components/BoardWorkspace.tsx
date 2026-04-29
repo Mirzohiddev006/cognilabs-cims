@@ -545,7 +545,6 @@ export function BoardWorkspace({
             title={lt('Create card')}
             submitLabel={lt('Create card')}
             isSubmitting={isCardSubmitting}
-            showPriority={false}
           />
 
           <CardFormModal
@@ -557,7 +556,6 @@ export function BoardWorkspace({
             title={lt('Edit card')}
             submitLabel={lt('Save changes')}
             isSubmitting={isCardSubmitting}
-            showPriority={false}
           />
         </>
       ) : null}
