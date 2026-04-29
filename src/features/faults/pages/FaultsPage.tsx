@@ -772,9 +772,9 @@ export function FaultsPage() {
         <DetailStatTile label={tr('Final salary total', 'Jami yakuniy maosh', 'Итоговая сумма зарплаты')} value={formatAmount(apiSummary.totalFinalSalary ?? apiSummary.totalSalaryAmount ?? 0)} tone="success" />
       </div>
 
-      <Card className="rounded-[24px] border-white/10 p-6">
+      <Card className="rounded-[24px] border-[var(--border)] p-6">
         <div className="mb-5 flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-white">{lt('All Members')}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">{lt('All Members')}</h2>
           <p className="text-sm text-[var(--muted-strong)]">
             {tr('Detailed salary-estimate breakdown for the selected period.', 'Tanlangan davr uchun batafsil maosh hisobi.', 'Подробная разбивка оценки зарплаты за выбранный период.')}
           </p>
@@ -810,7 +810,7 @@ export function FaultsPage() {
                       title={row.fullName}
                     />
                     <span className="min-w-0">
-                      <p className="truncate font-semibold text-white transition-colors hover:text-blue-300">{row.fullName}</p>
+                      <p className="truncate font-semibold text-[var(--foreground)] transition-colors hover:text-[var(--blue-text)]">{row.fullName}</p>
                       <p className="truncate text-xs text-[var(--muted)]">{row.label}</p>
                     </span>
                   </button>

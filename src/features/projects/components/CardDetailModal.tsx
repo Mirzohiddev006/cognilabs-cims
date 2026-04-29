@@ -5,7 +5,7 @@ import { Button } from '../../../shared/ui/button'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
 import { Avatar } from './Avatar'
-import { formatProjectDate, getPriorityConfig, getSnoozePresets, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { cn } from '../../../shared/lib/cn'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
@@ -23,46 +23,6 @@ type CardDetailModalProps = {
 function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
   const value = image.url ?? image.url_path ?? ''
   return resolveMediaUrl(value) ?? value
-}
-
-function SnoozeMenu({ disabled }: { disabled?: boolean }) {
-  const presets = getSnoozePresets()
-  const lt = translateCurrentLiteral
-  return (
-    <div className="flex flex-col gap-1">
-      <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
-        {lt('Snooze until')}
-      </p>
-      {presets.map((p) => (
-        <button
-          key={p.label}
-          disabled={disabled}
-          title="Coming soon — backend not yet connected"
-          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <circle cx="8" cy="8" r="6" />
-            <path d="M8 5v3l2 2" strokeLinecap="round" />
-          </svg>
-          {p.label}
-        </button>
-      ))}
-      <button
-        disabled={disabled}
-        title="Coming soon — backend not yet connected"
-        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <rect x="2" y="2" width="12" height="12" rx="2" />
-          <path d="M5 8h6M8 5v6" strokeLinecap="round" />
-        </svg>
-        {lt('Pick a date')}
-      </button>
-      <Badge variant="secondary" size="sm" className="self-start mt-1">
-        {lt('Coming soon')}
-      </Badge>
-    </div>
-  )
 }
 
 export function CardDetailModal({
@@ -337,10 +297,6 @@ export function CardDetailModal({
                 </div>
               </div>
 
-              {/* Snooze */}
-              <div className="border-t border-[var(--border)] pt-4">
-                <SnoozeMenu disabled />
-              </div>
             </div>
           </div>
         </div>

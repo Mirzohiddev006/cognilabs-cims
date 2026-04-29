@@ -208,8 +208,13 @@ export function ProjectDetailPage() {
       return
     }
 
-    if (expandedMemberId !== null && !projectMembers.some((member) => member.id === expandedMemberId)) {
-      setExpandedMemberId(null)
+    if (expandedMemberId === null) {
+      setExpandedMemberId(projectMembers[0].id)
+      return
+    }
+
+    if (!projectMembers.some((member) => member.id === expandedMemberId)) {
+      setExpandedMemberId(projectMembers[0].id)
     }
   }, [expandedMemberId, projectMembers])
 
@@ -233,8 +238,8 @@ export function ProjectDetailPage() {
     }, { replace: true })
   }
 
-  function toggleMember(memberId: number) {
-    setExpandedMemberId((current) => (current === memberId ? null : memberId))
+  function selectMember(memberId: number) {
+    setExpandedMemberId(memberId)
   }
 
   async function handleUpdateProject(fd: FormData) {
@@ -446,7 +451,7 @@ export function ProjectDetailPage() {
                             <button
                               key={member.id}
                               type="button"
-                              onClick={() => toggleMember(member.id)}
+                              onClick={() => selectMember(member.id)}
                               className={
                                 isExpanded
                                   ? 'rounded-full ring-2 ring-blue-400/60 ring-offset-2 ring-offset-[var(--surface-elevated)] transition'
@@ -479,194 +484,119 @@ export function ProjectDetailPage() {
           </div>
         </Card>
 
-        {projectMembers.length > 0 ? (
+        {projectMembers.length > 0 && expandedMember ? (
           <Card variant="glass" className="rounded-[28px]">
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                  {tr('Assigned Members', 'Biriktirilgan azolar', 'Naznachennye uchastniki')}
-                </h2>
-                <p className="text-sm text-[var(--muted)]">
-                  {tr('Click a member to open the tasks assigned to them inside this project.', 'Azoni bosing va shu loyiha ichidagi unga biriktirilgan vazifalarni oching.', 'Nazhmi na uchastnika, chtoby otkryt ego zadachi vnutri etogo proekta.')}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                {projectMembers.map((member) => {
-                  const isExpanded = member.id === expandedMemberId
-
-                  return (
-                    <button
-                      key={member.id}
-                      type="button"
-                      onClick={() => toggleMember(member.id)}
-                      className="group flex w-[88px] flex-col items-center gap-2 text-center"
-                      aria-expanded={isExpanded}
-                      aria-controls={isExpanded ? `project-member-panel-${member.id}` : undefined}
-                    >
-                      <div
-                        className={
-                          isExpanded
-                            ? 'rounded-full border border-blue-400/45 bg-blue-500/10 p-1 shadow-[0_12px_30px_rgba(37,99,235,0.18)] transition'
-                            : 'rounded-full border border-[var(--border)] bg-[var(--surface)] p-1 transition group-hover:border-[var(--border-hover)] group-hover:bg-[var(--accent-soft)]'
-                        }
-                      >
-                        <Avatar
-                          name={member.name}
-                          surname={member.surname}
-                          imageUrl={member.profile_image}
-                          size="lg"
-                        />
-                      </div>
-                      <span className="line-clamp-2 text-[11px] font-medium leading-4 text-[var(--foreground)]">
-                        {member.name} {member.surname}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {expandedMember ? (
-                <div
-                  id={`project-member-panel-${expandedMember.id}`}
-                  className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)]"
-                >
-                  <button
-                    type="button"
-                    onClick={() => toggleMember(expandedMember.id)}
-                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-[var(--accent-soft)]"
-                    aria-expanded
-                  >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Avatar
-                        name={expandedMember.name}
-                        surname={expandedMember.surname}
-                        imageUrl={expandedMember.profile_image}
-                        size="md"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                          {expandedMember.name} {expandedMember.surname}
-                        </p>
-                        <p className="truncate text-[11px] text-[var(--muted)]">
-                          {expandedMember.job_title?.trim() || lt('Project member')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Badge
-                        variant={!isExpandedMemberTasksLoading && expandedMemberTasks.length > 0 ? 'blue' : 'secondary'}
-                      >
-                        {isExpandedMemberTasksLoading ? lt('Loading...') : `${expandedMemberTasks.length} ${lt('tasks')}`}
-                      </Badge>
-                      <svg
-                        viewBox="0 0 16 16"
-                        className="h-4 w-4 shrink-0 text-[var(--muted)] transition-transform duration-200 rotate-180"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                      >
-                        <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  <div className="border-t border-[var(--border)] px-5 py-5">
-                    {isExpandedMemberTasksLoading ? (
-                      <div className="grid gap-3 md:grid-cols-2">
-                        {Array.from({ length: 4 }).map((_, index) => (
-                          <div
-                            key={index}
-                            className="h-24 animate-pulse rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)]"
-                          />
-                        ))}
-                      </div>
-                    ) : expandedMemberTasksQuery.isError ? (
-                      <StateBlock
-                        tone="error"
-                        eyebrow={lt('Error')}
-                        title={lt('Failed to load member tasks')}
-                        description={lt('There was an error loading this member tasks.')}
-                        actionLabel={lt('Retry')}
-                        onAction={() => expandedMemberTasksQuery.refetch()}
-                      />
-                    ) : expandedMemberTasks.length === 0 ? (
-                      <StateBlock
-                        tone="empty"
-                        eyebrow={lt('No tasks')}
-                        title={lt('No tasks assigned in this project')}
-                        description={lt('No tasks are currently assigned to this member inside this project.')}
-                      />
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{expandedMemberBoardsCount} {lt('boards')}</Badge>
-                          <Badge variant={expandedMemberTasksDueSoon > 0 ? 'warning' : 'secondary'}>
-                            {expandedMemberTasksDueSoon} {lt('due soon')}
-                          </Badge>
-                          <Badge variant="blue">
-                            {expandedMemberActiveItemsCount} {lt('active items')}
-                          </Badge>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-2">
-                          {expandedMemberTasks.map((task) => {
-                            const priorityConfig = task.priority ? priorityConfigMap[task.priority] : null
-                            const dueVariant = task.due_date
-                              ? isDueDateOverdue(task.due_date)
-                                ? 'danger'
-                                : isDueDateSoon(task.due_date)
-                                  ? 'warning'
-                                  : 'secondary'
-                              : 'ghost'
-
-                            return (
-                              <Link
-                                key={task.id}
-                                to={`/projects/${project.id}?board=${task.board_id}`}
-                                className="rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-4 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
-                              >
-                                <div className="flex flex-col gap-3">
-                                  <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                                        {task.title}
-                                      </p>
-                                      <p className="mt-1 text-[11px] text-[var(--muted)]">
-                                        {task.board_name} - {task.column_name}
-                                      </p>
-                                    </div>
-
-                                    {priorityConfig ? (
-                                      <Badge variant={priorityConfig.badgeVariant}>
-                                        {priorityConfig.label}
-                                      </Badge>
-                                    ) : null}
-                                  </div>
-
-                                  <div className="flex flex-wrap gap-2">
-                                    <Badge variant="secondary">
-                                      {lt('Board')}: {task.board_name}
-                                    </Badge>
-                                    <Badge variant={dueVariant}>
-                                      {task.due_date ? `${lt('Due')} ${formatProjectDate(task.due_date)}` : lt('No due date')}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </Link>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
+            <div
+              id={`project-member-panel-${expandedMember.id}`}
+              className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)]"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar
+                    name={expandedMember.name}
+                    surname={expandedMember.surname}
+                    imageUrl={expandedMember.profile_image}
+                    size="md"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                      {expandedMember.name} {expandedMember.surname}
+                    </p>
+                    <p className="truncate text-[11px] text-[var(--muted)]">
+                      {expandedMember.job_title?.trim() || lt('Project member')}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <div className="rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--surface)] px-5 py-6 text-sm text-[var(--muted)]">
-                  {tr('Pick one of the members above to open their tasks inside this project here.', 'Yuqoridagi azolardan birini tanlang va uning shu loyiha ichidagi vazifalarini shu yerda oching.', 'Vyberite odnogo iz uchastnikov vyshe, chtoby otkryt ego zadachi v etom proekte zdes.')}
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={!isExpandedMemberTasksLoading && expandedMemberTasks.length > 0 ? 'blue' : 'secondary'}>
+                    {isExpandedMemberTasksLoading ? lt('Loading...') : `${expandedMemberTasks.length} ${lt('tasks')}`}
+                  </Badge>
+                  <Badge variant="secondary">{expandedMemberBoardsCount} {lt('boards')}</Badge>
+                  <Badge variant={expandedMemberTasksDueSoon > 0 ? 'warning' : 'secondary'}>
+                    {expandedMemberTasksDueSoon} {lt('due soon')}
+                  </Badge>
+                  <Badge variant="blue">{expandedMemberActiveItemsCount} {lt('active items')}</Badge>
                 </div>
-              )}
+              </div>
+
+              <div className="border-t border-[var(--border)] px-5 py-5">
+                {isExpandedMemberTasksLoading ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="h-24 animate-pulse rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)]"
+                      />
+                    ))}
+                  </div>
+                ) : expandedMemberTasksQuery.isError ? (
+                  <StateBlock
+                    tone="error"
+                    eyebrow={lt('Error')}
+                    title={lt('Failed to load member tasks')}
+                    description={lt('There was an error loading this member tasks.')}
+                    actionLabel={lt('Retry')}
+                    onAction={() => expandedMemberTasksQuery.refetch()}
+                  />
+                ) : expandedMemberTasks.length === 0 ? (
+                  <StateBlock
+                    tone="empty"
+                    eyebrow={lt('No tasks')}
+                    title={lt('No tasks assigned in this project')}
+                    description={lt('No tasks are currently assigned to this member inside this project.')}
+                  />
+                ) : (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {expandedMemberTasks.map((task) => {
+                      const priorityConfig = task.priority ? priorityConfigMap[task.priority] : null
+                      const dueVariant = task.due_date
+                        ? isDueDateOverdue(task.due_date)
+                          ? 'danger'
+                          : isDueDateSoon(task.due_date)
+                            ? 'warning'
+                            : 'secondary'
+                        : 'ghost'
+
+                      return (
+                        <Link
+                          key={task.id}
+                          to={`/projects/${project.id}?board=${task.board_id}`}
+                          className="rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-4 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
+                        >
+                          <div className="flex flex-col gap-3">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                                  {task.title}
+                                </p>
+                                <p className="mt-1 text-[11px] text-[var(--muted)]">
+                                  {task.board_name} - {task.column_name}
+                                </p>
+                              </div>
+
+                              {priorityConfig ? (
+                                <Badge variant={priorityConfig.badgeVariant}>
+                                  {priorityConfig.label}
+                                </Badge>
+                              ) : null}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="secondary">
+                                {lt('Board')}: {task.board_name}
+                              </Badge>
+                              <Badge variant={dueVariant}>
+                                {task.due_date ? `${lt('Due')} ${formatProjectDate(task.due_date)}` : lt('No due date')}
+                              </Badge>
+                            </div>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
         ) : null}

@@ -32,6 +32,7 @@ type CardFormModalProps = {
   title: string
   submitLabel: string
   isSubmitting: boolean
+  showPriority?: boolean
 }
 
 const empty: CardFormValues = {
@@ -58,6 +59,7 @@ export function CardFormModal({
   title,
   submitLabel,
   isSubmitting,
+  showPriority = true,
 }: CardFormModalProps) {
   const { t } = useLocale()
   const priorityConfig = getPriorityConfig()
@@ -71,7 +73,6 @@ export function CardFormModal({
     { value: 'low', label: priorityConfig.low.label },
     { value: 'medium', label: priorityConfig.medium.label },
     { value: 'high', label: priorityConfig.high.label },
-    { value: 'urgent', label: priorityConfig.urgent.label },
   ]
 
   const memberOptions: SelectFieldOption[] = [
@@ -94,7 +95,7 @@ export function CardFormModal({
         setValues({
           title: initial.title,
           description: initial.description ?? '',
-          priority: initial.priority ?? '',
+          priority: initial.priority === 'urgent' ? 'high' : (initial.priority ?? ''),
           assignee_id: initial.assignee_id ? String(initial.assignee_id) : '',
           due_date: initial.due_date ? initial.due_date.slice(0, 10) : '',
           images: [],
@@ -175,7 +176,7 @@ export function CardFormModal({
     const fd = buildFormData({
       title: values.title.trim(),
       description: values.description.trim() || undefined,
-      priority: values.priority || undefined,
+      priority: showPriority ? (values.priority || undefined) : undefined,
       assignee_id: values.assignee_id ? Number(values.assignee_id) : undefined,
       due_date: values.due_date || undefined,
     })
@@ -244,18 +245,20 @@ export function CardFormModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
-              {t('projects.priority', 'Priority')}
-            </label>
-            <SelectField
-              value={values.priority}
-              options={priorityOptions}
-              onValueChange={(value) => set('priority', value)}
-              placeholder={t('projects.no_priority', 'No priority')}
-            />
-          </div>
+        <div className={`grid gap-3 ${showPriority ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {showPriority ? (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+                {t('projects.priority', 'Priority')}
+              </label>
+              <SelectField
+                value={values.priority}
+                options={priorityOptions}
+                onValueChange={(value) => set('priority', value)}
+                placeholder={t('projects.no_priority', 'No priority')}
+              />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">

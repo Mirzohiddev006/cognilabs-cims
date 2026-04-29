@@ -114,9 +114,18 @@ export function KanbanColumn({
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-2 py-0.5">
             {column.cards.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-white/10 px-3 py-5 text-center">
-                <p className="text-[10px] text-white/30">{lt('No cards')}</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => onAddCard(column.id)}
+                className="flex min-h-[84px] w-full items-center justify-center rounded-xl border border-dashed border-white/12 bg-white/[0.03] px-3 py-5 text-center transition hover:border-white/25 hover:bg-white/[0.06]"
+              >
+                <span className="inline-flex items-center gap-2 text-xs font-medium text-white/55">
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                  </svg>
+                  {lt('Add a card')}
+                </span>
+              </button>
             ) : (
               column.cards.map((card) => (
                 <KanbanCard
@@ -139,7 +148,7 @@ export function KanbanColumn({
           <button
             type="button"
             onClick={() => onAddCard(column.id)}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-white/40 transition hover:bg-white/8 hover:text-white/80"
+            className="flex w-full items-center gap-2 rounded-xl border border-transparent bg-white/[0.04] px-3 py-2.5 text-xs font-medium text-white/55 transition hover:border-white/12 hover:bg-white/[0.08] hover:text-white/90"
           >
             <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M8 3v10M3 8h10" strokeLinecap="round" />

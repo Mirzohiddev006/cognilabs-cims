@@ -21,6 +21,22 @@ export type CardImage = {
 
 export type CardPriority = 'low' | 'medium' | 'high' | 'urgent'
 
+function normalizeCardPriority(priority?: string | null): CardPriority | null {
+  if (!priority) {
+    return null
+  }
+
+  if (priority === 'urgent') {
+    return 'high'
+  }
+
+  if (priority === 'low' || priority === 'medium' || priority === 'high') {
+    return priority
+  }
+
+  return null
+}
+
 // ─── Project types ────────────────────────────────────────────────────────────
 
 export type ProjectRecord = {
@@ -260,7 +276,7 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     title: card.title ?? '',
     description: card.description ?? null,
     order: card.order ?? 0,
-    priority: card.priority ?? null,
+    priority: normalizeCardPriority(card.priority),
     assignee: card.assignee ? normalizeUserSummary(card.assignee) : null,
     assignee_id: card.assignee_id ?? null,
     due_date: card.due_date ?? null,

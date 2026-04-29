@@ -289,6 +289,34 @@ function SnapshotMetricCard({
   )
 }
 
+type DetailMatrixRowProps = {
+  label: string
+  value: string
+  tone?: 'default' | 'danger' | 'success' | 'blue'
+}
+
+function DetailMatrixRow({
+  label,
+  value,
+  tone = 'default',
+}: DetailMatrixRowProps) {
+  const valueClassName = {
+    default: 'text-[var(--foreground)]',
+    danger: 'text-[var(--danger-text)]',
+    success: 'text-[var(--success-text)]',
+    blue: 'text-[var(--blue-text)]',
+  } as const
+
+  return (
+    <div className="grid gap-2 border-t border-[var(--border)] px-4 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <p className="text-sm font-medium text-[var(--muted-strong)]">{label}</p>
+      <p className={['text-sm font-semibold tabular-nums md:text-right', valueClassName[tone]].join(' ')}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
 export function FaultsMemberDetailPage({
   memberIdOverride,
   mode = 'salary-detail',
@@ -976,6 +1004,112 @@ export function FaultsMemberDetailPage({
 
             <Card noPadding className="overflow-hidden rounded-[24px]">
               <CardSection
+                title={tr('Salary details matrix', 'Maosh tafsilotlari jadvali', 'Таблица деталей зарплаты')}
+                headerAction={
+                  <>
+                    <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
+                      {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'РІР»РёСЏРЅРёРµ СѓРґРµСЂР¶Р°РЅРёСЏ')}
+                    </Badge>
+                    <Badge variant={updatesSummary ? 'blue' : 'outline'}>
+                      {updatesSummary
+                        ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
+                        : tr('No update stats', "Update statistikasi yo'q", 'РќРµС‚ СЃС‚Р°С‚РёСЃС‚РёРєРё РѕР±РЅРѕРІР»РµРЅРёР№')}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-full text-[var(--blue-text)] hover:text-[var(--blue-text)]"
+                      onClick={() => setIsCompensationPolicyDrawerOpen(true)}
+                    >
+                      {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'РћС‚РєСЂС‹С‚СЊ РїРѕР»РёС‚РёРєСѓ РєРѕРјРїРµРЅСЃР°С†РёРё')}
+                    </Button>
+                  </>
+                }
+              >
+                <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-5 sm:p-6">
+                  <div className="rounded-[18px] border border-[var(--border)] bg-[var(--card)] px-4 py-4">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                      <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
+                      <span className="text-[var(--muted)]">-</span>
+                      <span className="font-semibold text-[var(--danger-text)]">{formatAmount(detail.report.deductionAmount)}</span>
+                      <span className="text-[var(--muted)]">+</span>
+                      <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
+                      <span className="text-[var(--muted)]">=</span>
+                      <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
+                        {formatAmount(detail.report.finalSalary)}
+                      </span>
+                    </div>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--muted-surface)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--danger-text)] transition-[width] duration-300"
+                        style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-5 overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--card)]">
+                    <div className="grid gap-2 border-b border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">{tr('Section', "Bo'lim", 'Раздел')}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">{tr('Metric', "Ko'rsatkich", 'Показатель')}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)] md:text-right">{tr('Value', 'Qiymat', 'Значение')}</p>
+                    </div>
+
+                    <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
+                      <div className="border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)] md:border-b-0 md:border-r">
+                        {tr('Salary build', 'Maosh tarkibi', 'Состав зарплаты')}
+                      </div>
+                      <div>
+                        <DetailMatrixRow label={tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')} value={formatAmount(detail.report.finalSalary)} tone="blue" />
+                        <DetailMatrixRow label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
+                        <DetailMatrixRow label={tr('After deduction', 'Ayirmadan keyin', 'РџРѕСЃР»Рµ СѓРґРµСЂР¶Р°РЅРёСЏ')} value={formatAmount(detail.report.afterPenalty)} />
+                        <DetailMatrixRow label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
+                        <DetailMatrixRow label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Р‘РѕРЅСѓСЃС‹ Р·Р° СЃРґР°С‡Сѓ')} value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
+                      <div className="border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)] md:border-b-0 md:border-r">
+                        {tr('Update context', 'Update konteksti', 'Контекст обновлений')}
+                      </div>
+                      <div>
+                        <DetailMatrixRow label={lt('Logged updates')} value={updatesSummary ? formatCount(updatesSummary.submittedCount) : '-'} tone="success" />
+                        <DetailMatrixRow label={lt('Missing days')} value={updatesSummary ? formatCount(updatesSummary.missingCount) : '-'} tone="danger" />
+                        <DetailMatrixRow label={lt('Total updates')} value={updatesSummary ? formatCount(updatesSummary.totalUpdates) : '-'} />
+                        <DetailMatrixRow label={lt('Update percentage')} value={updatesSummary ? formatPercent(updatesCompletion) : '-'} tone="blue" />
+                        <DetailMatrixRow
+                          label={tr('Last update', 'Oxirgi yangilanish', 'РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ')}
+                          value={updatesSummary?.lastUpdateDate ? formatDetailDate(updatesSummary.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'РќРµ СѓРєР°Р·Р°РЅРѕ')}
+                        />
+                        <DetailMatrixRow
+                          label={tr('Next payment date', "Keyingi to'lov sanasi", 'Р”Р°С‚Р° СЃР»РµРґСѓСЋС‰РµР№ РІС‹РїР»Р°С‚С‹')}
+                          value={updatesSummary?.nextPaymentDate ? formatDetailDate(updatesSummary.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'РќРµ СѓРєР°Р·Р°РЅРѕ')}
+                        />
+                        <DetailMatrixRow
+                          label={tr('Salary in update', 'Yangilanishdagi maosh', 'Р—Р°СЂРїР»Р°С‚Р° РІ РѕР±РЅРѕРІР»РµРЅРёРё')}
+                          value={typeof updatesSummary?.salaryAmount === 'number'
+                            ? formatAmount(updatesSummary.salaryAmount)
+                            : tr('Not returned', 'Qaytmadi', 'РќРµ РІРµСЂРЅСѓР»РѕСЃСЊ')}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {updatesSummary?.note ? (
+                    <div className="mt-4 border-l-2 border-[var(--blue-border)] pl-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                        {lt('Manager note')}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
+                        {updatesSummary.note}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              </CardSection>
+
+              <div className="hidden">
+              <CardSection
           title={tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')}
           headerAction={
             <>
@@ -1020,9 +1154,10 @@ export function FaultsMemberDetailPage({
             />
           </div>
               </CardSection>
+              </div>
             </Card>
 
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="hidden overflow-hidden rounded-[24px]">
               <CardSection
           title={lt('Salary context and update performance')}
           headerAction={
@@ -1085,7 +1220,7 @@ export function FaultsMemberDetailPage({
             </Card>
 
         <CardSection bleed>
-          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6 xl:grid-cols-2">
+          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6">
 
             <Card noPadding className="overflow-hidden rounded-[24px]">
               <CardSection

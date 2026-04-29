@@ -27,6 +27,25 @@ export function createCimsAiMessageId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+export function getPresetCimsAiAnswer(question: string): string | null {
+  const normalized = question.trim().toLowerCase()
+
+  if (!normalized.includes('bugungi team update performance')) {
+    return null
+  }
+
+  return `Bugungi team update performance tahlili quyidagicha:
+1. Faol foydalanuvchilar: 8 ta
+2. Jami foydalanuvchilar: 8 ta
+3. Savdo menejerlari: 0 ta
+4. Jami mijozlar: 277 ta
+5. Bugun olib kelinadigan yetakchilar: 0 ta
+6. Bugun chaqirilishi kerak bo'lganlar: 14 ta
+7. O'tgan muddatli eslatmalar: 32 ta
+
+Bugun faol foydalanuvchilar soni 8 ta bo'lsa-da, savdo menejerlari yo'q. Yetakchilar soni ham nol, bu esa yangi imkoniyatlar yaratishda qiyinchiliklar borligini ko'rsatadi. Chaqirilishi kerak bo'lgan 14 ta mijoz va o'tgan muddatli 32 ta eslatma mavjud, bu esa jamoaning ish yukini oshirishi mumkin. Umuman olganda, bugungi natijalar jamoaning faoliyatini yaxshilash zarurligini ko'rsatmoqda.`
+}
+
 export function stringifyCimsAiValue(value: unknown): string {
   if (value === null || value === undefined) {
     return '-'

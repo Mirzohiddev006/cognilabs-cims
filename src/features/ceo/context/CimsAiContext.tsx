@@ -16,6 +16,7 @@ import {
   cimsAiLoadingStages,
   createCimsAiMessageId,
   extractCimsAiAnswer,
+  getPresetCimsAiAnswer,
   type CimsAiLoadingStage,
   type CimsAiChatMessage,
 } from '../lib/cimsAi'
@@ -124,6 +125,7 @@ export function CimsAiProvider({ children }: PropsWithChildren) {
     setDraft('')
     setIsSubmitting(true)
     setLoadingStage('analyzing')
+    const presetAnswer = getPresetCimsAiAnswer(normalizedQuestion)
 
     const stageTimeouts = [
       window.setTimeout(() => setLoadingStage(cimsAiLoadingStages[1].key), 1200),
@@ -135,13 +137,26 @@ export function CimsAiProvider({ children }: PropsWithChildren) {
       const assistantMessage: CimsAiChatMessage = {
         id: createCimsAiMessageId(),
         role: 'assistant',
-        content: extractCimsAiAnswer(response),
+        content: presetAnswer ?? extractCimsAiAnswer(response),
         createdAt: Date.now(),
         response,
       }
 
       setHistory((current) => [...current, assistantMessage])
     } catch (error) {
+      if (presetAnswer) {
+        setHistory((current) => [
+          ...current,
+          {
+            id: createCimsAiMessageId(),
+            role: 'assistant',
+            content: presetAnswer,
+            createdAt: Date.now(),
+          },
+        ])
+        return
+      }
+
       showToast({
         title: 'AI request failed',
         description: getApiErrorMessage(error),

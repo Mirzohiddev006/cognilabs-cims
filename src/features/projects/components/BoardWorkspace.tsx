@@ -6,6 +6,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -20,7 +21,6 @@ import { CardDetailModal } from './CardDetailModal'
 import { CardFormModal } from './CardFormModal'
 import { ColumnFormModal } from './ColumnFormModal'
 import { KanbanBoard } from './KanbanBoard'
-import { formatProjectDate } from '../lib/format'
 
 type BoardWorkspaceMode = 'embedded' | 'fullscreen'
 type AddCardState = { columnId: number } | null
@@ -286,8 +286,8 @@ export function BoardWorkspace({
       showToast({ title: lt('Card created'), tone: 'success' })
       setAddCardState(null)
       await boardQuery.refetch()
-    } catch {
-      showToast({ title: lt('Failed to create card'), tone: 'error' })
+    } catch (error) {
+      showToast({ title: lt('Failed to create card'), description: getApiErrorMessage(error), tone: 'error' })
     } finally {
       setIsCardSubmitting(false)
     }
@@ -429,7 +429,7 @@ export function BoardWorkspace({
         </div>
 
         <p className="text-[10px] text-[var(--muted)]">
-          {boardStats.columnCount} {lt('columns')} · {boardStats.cardCount} {lt('cards')} · {lt('Updated')} {formatProjectDate(board.updated_at)}
+          {`${boardStats.columnCount} ${lt('columns')} · ${boardStats.cardCount} ${lt('cards')}`}
         </p>
       </div>
 
@@ -545,6 +545,7 @@ export function BoardWorkspace({
             title={lt('Create card')}
             submitLabel={lt('Create card')}
             isSubmitting={isCardSubmitting}
+            showPriority={false}
           />
 
           <CardFormModal
@@ -556,6 +557,7 @@ export function BoardWorkspace({
             title={lt('Edit card')}
             submitLabel={lt('Save changes')}
             isSubmitting={isCardSubmitting}
+            showPriority={false}
           />
         </>
       ) : null}
