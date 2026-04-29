@@ -1,21 +1,67 @@
 import { Suspense, lazy, type ReactElement } from 'react'
-import { Navigate, createBrowserRouter } from 'react-router-dom'
+import { Navigate, createBrowserRouter, useRouteError } from 'react-router-dom'
 import { AuthLayout } from './layouts/AuthLayout'
 import { RootLayout } from './layouts/RootLayout'
 import { GuestRoute } from '../features/auth/components/GuestRoute'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
 import { RouterAuthBoundary } from './providers/RouterAuthBoundary'
 import { AsyncContentLoader } from '../shared/ui/async-content-loader'
+import { StateBlock } from '../shared/ui/state-block'
+
+const CHUNK_RELOAD_KEY = 'cims:chunk-reload'
+
+function isDynamicImportError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+
+  return (
+    message.includes('failed to fetch dynamically imported module')
+    || message.includes('importing a module script failed')
+    || message.includes('chunk')
+  )
+}
+
+function tryRecoverFromChunkError() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  const currentPath = `${window.location.pathname}${window.location.search}`
+  const lastAttempt = window.sessionStorage.getItem(CHUNK_RELOAD_KEY)
+
+  if (lastAttempt === currentPath) {
+    return false
+  }
+
+  window.sessionStorage.setItem(CHUNK_RELOAD_KEY, currentPath)
+  window.location.reload()
+  return true
+}
 
 function lazyPage<T extends string>(
   loader: () => Promise<Record<T, () => ReactElement | null>>,
   exportName: T,
 ) {
   return lazy(async () => {
-    const module = await loader()
+    try {
+      const module = await loader()
 
-    return {
-      default: module[exportName],
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+      }
+
+      return {
+        default: module[exportName],
+      }
+    } catch (error) {
+      if (isDynamicImportError(error) && tryRecoverFromChunkError()) {
+        return new Promise<never>(() => {})
+      }
+
+      throw error
     }
   })
 }
@@ -25,6 +71,34 @@ function withPageLoader(element: ReactElement, variant: 'page' | 'panel' = 'page
     <Suspense fallback={<AsyncContentLoader variant={variant} />}>
       {element}
     </Suspense>
+  )
+}
+
+function RouteErrorBoundary() {
+  const error = useRouteError()
+  const isChunkError = isDynamicImportError(error)
+  const message = error instanceof Error ? error.message : 'Unexpected application error'
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center p-6">
+      <div className="w-full max-w-2xl">
+        <StateBlock
+          tone="error"
+          eyebrow={isChunkError ? 'App update' : 'Application error'}
+          title={isChunkError ? 'The app was updated. Please reload this page.' : 'Something went wrong'}
+          description={isChunkError
+            ? 'A new frontend build was deployed and this page is still pointing to an old JS chunk.'
+            : message}
+          actionLabel="Reload page"
+          onAction={() => {
+            if (typeof window !== 'undefined') {
+              window.sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+              window.location.reload()
+            }
+          }}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -113,6 +187,7 @@ const BoardDetailPage = lazyPage(
 export const router = createBrowserRouter([
   {
     element: <RouterAuthBoundary />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         element: <ProtectedRoute />,
@@ -120,6 +195,7 @@ export const router = createBrowserRouter([
           {
             path: '/',
             element: <RootLayout />,
+            errorElement: <RouteErrorBoundary />,
             children: [
               {
                 index: true,
@@ -298,6 +374,7 @@ export const router = createBrowserRouter([
       {
         path: '/auth',
         element: <GuestRoute />,
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             element: <AuthLayout />,
