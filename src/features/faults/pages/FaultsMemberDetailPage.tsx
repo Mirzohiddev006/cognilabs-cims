@@ -242,77 +242,61 @@ function resolveMemberDisplayName(...sources: Array<unknown>) {
   return null
 }
 
-type SnapshotMetricCardProps = {
+type SnapshotCardProps = {
   label: string
   value: string
-  accent?: 'default' | 'danger' | 'blue'
+  accent?: 'default' | 'danger' | 'blue' | 'success' | 'warning'
   secondaryValue?: string
+  icon?: ReactNode
 }
 
-function SnapshotMetricCard({
+function SnapshotCard({
   label,
   value,
   accent = 'default',
   secondaryValue,
-}: SnapshotMetricCardProps) {
-  const topBorderClassName = {
-    default: 'border-t-white/12',
-    danger: 'border-t-red-500/90',
-    blue: 'border-t-sky-500/90',
+  icon,
+}: SnapshotCardProps) {
+  const accentClasses = {
+    default: 'border-white/8 bg-white/[0.02]',
+    danger: 'border-red-500/20 bg-red-500/[0.02]',
+    blue: 'border-sky-500/20 bg-sky-500/[0.02]',
+    success: 'border-emerald-500/20 bg-emerald-500/[0.02]',
+    warning: 'border-amber-500/20 bg-amber-500/[0.02]',
   } as const
 
-  const valueClassName = {
-    default: 'text-white',
-    danger: 'text-red-400',
-    blue: 'text-sky-400',
+  const iconWrapperClasses = {
+    default: 'border-white/10 bg-white/5 text-(--muted-strong)',
+    danger: 'border-red-500/20 bg-red-500/10 text-red-400',
+    blue: 'border-sky-500/20 bg-sky-500/10 text-sky-400',
+    success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+    warning: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
   } as const
 
   return (
-    <div
-      className={[
-        'min-h-[140px] rounded-[22px] border border-white/8 border-t-[3px] bg-[#20233a] px-5 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]',
-        topBorderClassName[accent],
-      ].join(' ')}
-    >
-      <p className="text-[11px] font-bold uppercase leading-4 tracking-[0.22em] text-[#8f96b2]">
-        {label}
-      </p>
-      <p className={['ui-metric-value mt-5 font-bold', valueClassName[accent]].join(' ')}>
-        {value}
-      </p>
-      {secondaryValue ? (
-        <p className="mt-2 text-[13px] font-medium leading-5 text-[#8f96b2] sm:text-[14px]">
-          {secondaryValue}
+    <div className={cn('relative flex flex-col gap-4 rounded-[24px] border p-5 shadow-sm transition-all hover:shadow-md', accentClasses[accent])}>
+      <div className="flex items-start justify-between">
+        <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', iconWrapperClasses[accent])}>
+          {icon || (
+            <svg viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+          )}
+        </div>
+        {secondaryValue ? (
+          <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] font-bold tabular-nums text-(--muted-strong)">
+            {secondaryValue}
+          </span>
+        ) : null}
+      </div>
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">
+          {label}
         </p>
-      ) : null}
-    </div>
-  )
-}
-
-type DetailMatrixRowProps = {
-  label: string
-  value: string
-  tone?: 'default' | 'danger' | 'success' | 'blue'
-}
-
-function DetailMatrixRow({
-  label,
-  value,
-  tone = 'default',
-}: DetailMatrixRowProps) {
-  const valueClassName = {
-    default: 'text-[var(--foreground)]',
-    danger: 'text-[var(--danger-text)]',
-    success: 'text-[var(--success-text)]',
-    blue: 'text-[var(--blue-text)]',
-  } as const
-
-  return (
-    <div className="grid gap-2 border-t border-[var(--border)] px-4 py-3 first:border-t-0 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-      <p className="text-sm font-medium text-[var(--muted-strong)]">{label}</p>
-      <p className={['text-sm font-semibold tabular-nums md:text-right', valueClassName[tone]].join(' ')}>
-        {value}
-      </p>
+        <p className={cn('mt-2 text-xl font-bold tabular-nums tracking-tight', accent === 'default' ? 'text-[var(--foreground)]' : '')}>
+          {value}
+        </p>
+      </div>
     </div>
   )
 }
@@ -966,31 +950,37 @@ export function FaultsMemberDetailPage({
 
       <Card noPadding className="overflow-hidden rounded-[28px] border-white/8 bg-[#16182b]">
         <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            <SnapshotMetricCard
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <SnapshotCard
               label={tr('Final salary', 'Yakuniy maosh', 'Итоговая зарплата')}
               value={formatAmount(detail.report.finalSalary)}
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>}
             />
-            <SnapshotMetricCard
+            <SnapshotCard
               label={tr('Estimated salary', 'Taxminiy maosh', 'Оценочная зарплата')}
               value={formatAmount(detail.report.estimatedSalary)}
+              accent="warning"
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="8" x2="16" y1="10" y2="10"/><line x1="8" x2="8" y1="14" y2="18"/><line x1="12" x2="12" y1="14" y2="18"/><line x1="16" x2="16" y1="14" y2="18"/></svg>}
             />
-            <SnapshotMetricCard
+            <SnapshotCard
               label={tr('Difference', 'Ayirma', 'Разница')}
               value={formatAmount(detail.report.deductionAmount)}
               accent={(detail.report.deductionAmount ?? 0) !== 0 ? 'danger' : 'default'}
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5M3 13l18 5"/></svg>}
             />
-            <SnapshotMetricCard
+            <SnapshotCard
               label={tr('Bonus amount', 'Bonus summasi', 'Сумма бонуса')}
               value={formatAmount(detail.report.bonusAmount)}
               accent="blue"
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 15 2 2 4-4"/><rect width="20" height="14" x="2" y="6" rx="2"/><path d="M12 10V6"/><path d="M12 21v-2"/></svg>}
             />
-            <SnapshotMetricCard
+            <SnapshotCard
               label={tr('Bonus %', 'Bonus %', 'Бонус %')}
               value={formatPercent(detail.report.totalBonusPercent)}
               accent="blue"
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21 21 3"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="7" r="3"/></svg>}
             />
-            <SnapshotMetricCard
+            <SnapshotCard
               label={tr('Productivity', 'Mahsuldorlik', 'Продуктивность')}
               value={Number.isFinite(detail.report.productivityPercentage)
                 ? `${formatCount(detail.report.updateDays)}/${formatCount(detail.report.workingDays)}`
@@ -998,22 +988,24 @@ export function FaultsMemberDetailPage({
               secondaryValue={Number.isFinite(detail.report.productivityPercentage)
                 ? formatPercent(detail.report.productivityPercentage)
                 : undefined}
+              accent="success"
+              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>}
             />
           </div>
         </CardSection>
 
             <Card noPadding className="overflow-hidden rounded-[24px]">
               <CardSection
-                title={tr('Salary details matrix', 'Maosh tafsilotlari jadvali', 'Таблица деталей зарплаты')}
+                title={tr('Salary details breakdown', 'Maosh tafsilotlari taqsimoti', 'Распределение деталей зарплаты')}
                 headerAction={
                   <>
                     <Badge variant={(detail.report.penaltyPercentage ?? 0) > 0 ? 'danger' : 'outline'}>
-                      {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'РІР»РёСЏРЅРёРµ СѓРґРµСЂР¶Р°РЅРёСЏ')}
+                      {formatPercent(detail.report.penaltyPercentage)} {tr('deduction impact', 'ayirma ta\'siri', 'влияние удержания')}
                     </Badge>
                     <Badge variant={updatesSummary ? 'blue' : 'outline'}>
                       {updatesSummary
                         ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
-                        : tr('No update stats', "Update statistikasi yo'q", 'РќРµС‚ СЃС‚Р°С‚РёСЃС‚РёРєРё РѕР±РЅРѕРІР»РµРЅРёР№')}
+                        : tr('No update stats', "Update statistikasi yo'q", 'Нет статистики обновлений')}
                     </Badge>
                     <Button
                       type="button"
@@ -1022,85 +1014,118 @@ export function FaultsMemberDetailPage({
                       className="rounded-full text-[var(--blue-text)] hover:text-[var(--blue-text)]"
                       onClick={() => setIsCompensationPolicyDrawerOpen(true)}
                     >
-                      {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'РћС‚РєСЂС‹С‚СЊ РїРѕР»РёС‚РёРєСѓ РєРѕРјРїРµРЅСЃР°С†РёРё')}
+                      {tr('Open compensation policy', 'Kompensatsiya siyosatini ochish', 'Открыть политику компенсации')}
                     </Button>
                   </>
                 }
               >
-                <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-5 sm:p-6">
-                  <div className="rounded-[18px] border border-[var(--border)] bg-[var(--card)] px-4 py-4">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-                      <span className="text-[var(--foreground)]">{formatAmount(detail.report.baseSalary)}</span>
-                      <span className="text-[var(--muted)]">-</span>
-                      <span className="font-semibold text-[var(--danger-text)]">{formatAmount(detail.report.deductionAmount)}</span>
-                      <span className="text-[var(--muted)]">+</span>
-                      <span className="font-semibold text-[var(--blue-text)]">{formatAmount(detail.report.bonusAmount)}</span>
-                      <span className="text-[var(--muted)]">=</span>
-                      <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
-                        {formatAmount(detail.report.finalSalary)}
-                      </span>
-                    </div>
-                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--muted-surface)]">
-                      <div
-                        className="h-full rounded-full bg-[var(--danger-text)] transition-[width] duration-300"
-                        style={{ width: `${Math.min(100, Math.max(0, Number.isFinite(detail.report.penaltyPercentage) ? detail.report.penaltyPercentage : 0))}%` }}
+                <div className="space-y-8">
+                  {/* Salary Composition Group */}
+                  <div>
+                    <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-(--muted)">
+                      {tr('Salary Composition', 'Maosh tarkibi', 'Состав зарплаты')}
+                    </h4>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                      <SnapshotCard
+                        label={lt('Base salary')}
+                        value={formatAmount(detail.report.baseSalary)}
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={tr('After deduction', 'Ayirmadan keyin', 'После удержания')}
+                        value={formatAmount(detail.report.afterPenalty)}
+                        accent="warning"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11h18M3 15h18"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={lt('Mistakes')}
+                        value={formatCount(detail.report.mistakesCount)}
+                        accent="danger"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Бонусы за сдачу')}
+                        value={formatCount(detail.report.deliveryBonusCount)}
+                        accent="success"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={tr('Calculated final', 'Hisoblangan yakuniy', 'Рассчитанная итоговая')}
+                        value={formatAmount(detail.report.finalSalary)}
+                        accent="blue"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
                       />
                     </div>
                   </div>
 
-                  <div className="mt-5 overflow-hidden rounded-[18px] border border-[var(--border)] bg-[var(--card)]">
-                    <div className="grid gap-2 border-b border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 md:grid-cols-[180px_minmax(0,1fr)_auto] md:items-center">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">{tr('Section', "Bo'lim", 'Раздел')}</p>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)]">{tr('Metric', "Ko'rsatkich", 'Показатель')}</p>
-                      <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--muted)] md:text-right">{tr('Value', 'Qiymat', 'Значение')}</p>
+                  {/* Update Performance Group */}
+                  <div>
+                    <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-(--muted)">
+                      {tr('Update Performance', 'Update ko\'rsatkichlari', 'Показатели обновлений')}
+                    </h4>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <SnapshotCard
+                        label={lt('Logged updates')}
+                        value={updatesSummary ? formatCount(updatesSummary.submittedCount) : '-'}
+                        accent="success"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={lt('Missing days')}
+                        value={updatesSummary ? formatCount(updatesSummary.missingCount) : '-'}
+                        accent="danger"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={lt('Update percentage')}
+                        value={updatesSummary ? formatPercent(updatesCompletion) : '-'}
+                        accent="blue"
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21 21 3"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="7" r="3"/></svg>}
+                      />
+                      <SnapshotCard
+                        label={tr('Salary in update', 'Yangilanishdagi maosh', 'Зарплата в обновлении')}
+                        value={typeof updatesSummary?.salaryAmount === 'number' ? formatAmount(updatesSummary.salaryAmount) : '-'}
+                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/></svg>}
+                      />
                     </div>
-
-                    <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
-                      <div className="border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)] md:border-b-0 md:border-r">
-                        {tr('Salary build', 'Maosh tarkibi', 'Состав зарплаты')}
+                    
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div className="flex items-center gap-3 rounded-[20px] border border-white/5 bg-white/[0.02] px-4 py-3">
+                        <div className="text-(--muted)">
+                          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-(--muted)">{tr('Last update', 'Oxirgi yangilanish', 'Последнее обновление')}</p>
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                            {updatesSummary?.lastUpdateDate ? formatDetailDate(updatesSummary.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <DetailMatrixRow label={tr('How the final salary is built', 'Yakuniy maosh qanday shakllanadi', 'Как формируется итоговая зарплата')} value={formatAmount(detail.report.finalSalary)} tone="blue" />
-                        <DetailMatrixRow label={lt('Base salary')} value={formatAmount(detail.report.baseSalary)} />
-                        <DetailMatrixRow label={tr('After deduction', 'Ayirmadan keyin', 'РџРѕСЃР»Рµ СѓРґРµСЂР¶Р°РЅРёСЏ')} value={formatAmount(detail.report.afterPenalty)} />
-                        <DetailMatrixRow label={lt('Mistakes')} value={formatCount(detail.report.mistakesCount)} tone="danger" />
-                        <DetailMatrixRow label={tr('Delivery bonuses', 'Topshirish bonuslari', 'Р‘РѕРЅСѓСЃС‹ Р·Р° СЃРґР°С‡Сѓ')} value={formatCount(detail.report.deliveryBonusCount)} tone="success" />
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-[180px_minmax(0,1fr)]">
-                      <div className="border-b border-[var(--border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)] md:border-b-0 md:border-r">
-                        {tr('Update context', 'Update konteksti', 'Контекст обновлений')}
-                      </div>
-                      <div>
-                        <DetailMatrixRow label={lt('Logged updates')} value={updatesSummary ? formatCount(updatesSummary.submittedCount) : '-'} tone="success" />
-                        <DetailMatrixRow label={lt('Missing days')} value={updatesSummary ? formatCount(updatesSummary.missingCount) : '-'} tone="danger" />
-                        <DetailMatrixRow label={lt('Total updates')} value={updatesSummary ? formatCount(updatesSummary.totalUpdates) : '-'} />
-                        <DetailMatrixRow label={lt('Update percentage')} value={updatesSummary ? formatPercent(updatesCompletion) : '-'} tone="blue" />
-                        <DetailMatrixRow
-                          label={tr('Last update', 'Oxirgi yangilanish', 'РџРѕСЃР»РµРґРЅРµРµ РѕР±РЅРѕРІР»РµРЅРёРµ')}
-                          value={updatesSummary?.lastUpdateDate ? formatDetailDate(updatesSummary.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'РќРµ СѓРєР°Р·Р°РЅРѕ')}
-                        />
-                        <DetailMatrixRow
-                          label={tr('Next payment date', "Keyingi to'lov sanasi", 'Р”Р°С‚Р° СЃР»РµРґСѓСЋС‰РµР№ РІС‹РїР»Р°С‚С‹')}
-                          value={updatesSummary?.nextPaymentDate ? formatDetailDate(updatesSummary.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'РќРµ СѓРєР°Р·Р°РЅРѕ')}
-                        />
-                        <DetailMatrixRow
-                          label={tr('Salary in update', 'Yangilanishdagi maosh', 'Р—Р°СЂРїР»Р°С‚Р° РІ РѕР±РЅРѕРІР»РµРЅРёРё')}
-                          value={typeof updatesSummary?.salaryAmount === 'number'
-                            ? formatAmount(updatesSummary.salaryAmount)
-                            : tr('Not returned', 'Qaytmadi', 'РќРµ РІРµСЂРЅСѓР»РѕСЃСЊ')}
-                        />
+                      <div className="flex items-center gap-3 rounded-[20px] border border-white/5 bg-white/[0.02] px-4 py-3">
+                        <div className="text-(--muted)">
+                          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-(--muted)">{tr('Next payment date', "Keyingi to'lov sanasi", 'Дата следующей выплаты')}</p>
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                            {updatesSummary?.nextPaymentDate ? formatDetailDate(updatesSummary.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {updatesSummary?.note ? (
-                    <div className="mt-4 border-l-2 border-[var(--blue-border)] pl-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                        {lt('Manager note')}
-                      </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
+                    <div className="rounded-[24px] bg-[var(--blue-surface)]/5 px-6 py-5 border border-[var(--blue-border)]/20">
+                      <div className="flex items-center gap-2 mb-3">
+                         <div className="text-[var(--blue-text)]">
+                           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                         </div>
+                         <h5 className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--blue-text)]">
+                           {lt('Manager note')}
+                         </h5>
+                      </div>
+                      <p className="text-sm leading-6 text-[var(--foreground)]">
                         {updatesSummary.note}
                       </p>
                     </div>
@@ -1155,68 +1180,6 @@ export function FaultsMemberDetailPage({
           </div>
               </CardSection>
               </div>
-            </Card>
-
-            <Card noPadding className="hidden overflow-hidden rounded-[24px]">
-              <CardSection
-          title={lt('Salary context and update performance')}
-          headerAction={
-            <Badge variant={updatesSummary ? 'blue' : 'outline'}>
-              {updatesSummary
-                ? `${formatPercent(updatesSummary.completionPercentage)} ${lt('completion')}`
-                : tr('No update stats', "Update statistikasi yo'q", 'Нет статистики обновлений')}
-            </Badge>
-          }
-        >
-          {updatesSummary ? (
-            <>
-              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
-                <CardMetric label={lt('Logged updates')} value={formatCount(updatesSummary.submittedCount)} tone="success" />
-                <CardMetric label={lt('Missing days')} value={formatCount(updatesSummary.missingCount)} tone="danger" />
-                <CardMetric label={lt('Total updates')} value={formatCount(updatesSummary.totalUpdates)} />
-                <CardMetric label={lt('Update percentage')} value={formatPercent(updatesCompletion)} tone="blue" />
-              </div>
-
-              <dl className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Last update', 'Oxirgi yangilanish', 'Последнее обновление')}</dt>
-                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-                    {updatesSummary!.lastUpdateDate ? formatDetailDate(updatesSummary!.lastUpdateDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Next payment date', "Keyingi to'lov sanasi", 'Дата следующей выплаты')}</dt>
-                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-                    {updatesSummary!.nextPaymentDate ? formatDetailDate(updatesSummary!.nextPaymentDate) : tr('Not provided', 'Kiritilmagan', 'Не указано')}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-xs uppercase tracking-[0.16em] text-[var(--muted)]">{tr('Salary in update', 'Yangilanishdagi maosh', 'Зарплата в обновлении')}</dt>
-                  <dd className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-                    {typeof updatesSummary!.salaryAmount === 'number'
-                      ? formatAmount(updatesSummary!.salaryAmount)
-                      : tr('Not returned', 'Qaytmadi', 'Не вернулось')}
-                  </dd>
-                </div>
-              </dl>
-
-              {updatesSummary!.note ? (
-                <div className="mt-5 border-l-2 border-[var(--blue-border)] pl-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
-                    {lt('Manager note')}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[var(--foreground)]">
-                    {updatesSummary!.note}
-                  </p>
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <p className="text-sm text-[var(--muted-strong)]">
-              {lt('No monthly update statistics were returned for this member.')}
-            </p>
-          )}
-        </CardSection>
             </Card>
 
         <CardSection bleed>
