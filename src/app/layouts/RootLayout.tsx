@@ -28,8 +28,8 @@ function RootLayoutFrame() {
         }}
       >
         <AppHeader />
-        <main className="app-shell-main relative z-10 flex-1 flex flex-col min-h-0 px-4 pb-6 pt-4 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-[1600px] flex-1 flex flex-col min-h-0">
+        <main className="app-shell-main relative z-10 flex-1 px-4 pb-6 pt-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1600px]">
             <Outlet />
           </div>
         </main>
@@ -43,6 +43,10 @@ export function RootLayout() {
   return (
     <AppShellProvider>
       <RootLayoutFrame />
+    </AppShellProvider>
+  )
+}
+e />
     </AppShellProvider>
   )
 }

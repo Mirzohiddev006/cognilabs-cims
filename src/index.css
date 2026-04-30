@@ -1473,5 +1473,3 @@ html.light .horizontal-scrollbar-visible:hover::-webkit-scrollbar-thumb {
   .auth-route-pane, .stagger-children > *, .page-enter,
   .skeleton::after, .btn-shimmer::after { animation: none; }
 }
-tn-shimmer::after { animation: none; }
-}
