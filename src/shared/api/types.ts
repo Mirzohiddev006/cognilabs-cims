@@ -114,6 +114,8 @@ export type CustomerSummary = {
   audio_url?: string | null
   recall_time?: string | null
   conversation_language?: string | null
+  chat_url?: string | null
+  crm_customer_id?: number | null
   created_at: string
 }
 

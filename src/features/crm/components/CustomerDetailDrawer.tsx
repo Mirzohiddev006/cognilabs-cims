@@ -269,11 +269,13 @@ export function CustomerDetailDrawer({
   customerId,
   initialCustomer,
   onClose,
+  onOpenChat,
 }: {
   open: boolean
   customerId?: number | null
   initialCustomer?: CustomerSummary | null
   onClose: () => void
+  onOpenChat?: (conversationId: number) => void
 }) {
   const { t } = useTranslation()
   const detailQuery = useAsyncData(
@@ -325,8 +327,8 @@ export function CustomerDetailDrawer({
 
       <div className="absolute inset-y-0 right-0 w-full md:w-[min(50vw,760px)]">
         <div className="sheet-enter flex h-full flex-col border-l border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_20px_80px_rgba(0,0,0,0.46)]">
-          <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-5 py-4 sm:px-6">
-            <div className="min-w-0">
+          <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4 sm:px-6">
+            <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
                 {t('customers.detail.drawer_eyebrow', 'CRM drawer')}
               </p>
@@ -335,16 +337,35 @@ export function CustomerDetailDrawer({
               </h2>
             </div>
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
-              aria-label={t('customers.detail.close', 'Close detail drawer')}
-            >
-              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {customer?.chat_url && onOpenChat ? (() => {
+                const match = customer.chat_url?.match(/conversation_id=(\d+)/)
+                const convId = match ? Number(match[1]) : null
+                return convId ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenChat(convId)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--blue-border)] bg-[var(--blue-dim)] px-3 py-2 text-xs font-semibold text-[var(--blue-text)] transition hover:bg-[var(--blue-soft)]"
+                  >
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {t('customers.detail.view_chat', "Suhbatni ko'rish")}
+                  </button>
+                ) : null
+              })() : null}
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
+                aria-label={t('customers.detail.close', 'Close detail drawer')}
+              >
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path d="M4 4l8 8M12 4 4 12" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6">

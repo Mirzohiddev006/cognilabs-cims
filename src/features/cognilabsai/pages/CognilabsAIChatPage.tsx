@@ -85,8 +85,8 @@ function ChannelBadge({ channel, chatMode }: { channel: string; chatMode: string
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border',
         isInstagram
-          ? 'border-pink-400/30 bg-pink-500/10 text-pink-400'
-          : 'border-blue-400/30 bg-blue-500/10 text-blue-400',
+          ? 'border-pink-500/30 bg-pink-500/10 text-pink-600'
+          : 'border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
       )}
     >
       {isInstagram ? (
@@ -106,8 +106,8 @@ function ChannelBadge({ channel, chatMode }: { channel: string; chatMode: string
 function PauseReasonBadge({ reason }: { reason: string | null }) {
   if (!reason) return null
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-yellow-400/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-400">
-      <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" />
+    <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-600">
+      <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
       {reason}
     </span>
   )
@@ -130,15 +130,15 @@ function ConversationListItem({
       className={cn(
         'w-full rounded-xl border px-3 py-3 text-left transition-all duration-150',
         isActive
-          ? 'border-blue-500/30 bg-blue-600/10'
-          : 'border-transparent hover:border-[var(--border)] hover:bg-[var(--accent-soft)]',
+          ? 'border-(--blue-border) bg-(--blue-dim)'
+          : 'border-transparent hover:border-(--border) hover:bg-(--accent-soft)',
       )}
     >
       <div className="flex items-start gap-3">
         <AvatarOrInitials avatarUrl={conv.client_avatar_url} name={name} size="md" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p className={cn('truncate text-sm font-semibold', isActive ? 'text-blue-300' : 'text-[var(--foreground)]')}>
+            <p className={cn('truncate text-sm font-semibold', isActive ? 'text-(--blue-text)' : 'text-(--foreground)')}>
               {name}
             </p>
             {conv.last_message_at ? (
@@ -186,19 +186,19 @@ function MessageBubble({ msg }: { msg: MessageItem }) {
         className={cn(
           'max-w-[72%] rounded-2xl px-4 py-2.5 text-sm shadow-sm',
           isClient
-            ? 'rounded-tl-sm border border-[var(--border)] bg-[var(--surface-elevated)]'
+            ? 'rounded-tl-sm border border-(--border) bg-(--surface-elevated) text-(--foreground)'
             : isAi
-              ? 'rounded-tr-sm border border-purple-500/20 bg-purple-600/10 text-purple-100'
-              : 'rounded-tr-sm border border-blue-500/20 bg-blue-600/10 text-blue-100',
+              ? 'rounded-tr-sm border border-(--violet-border) bg-(--violet-dim) text-(--violet-text)'
+              : 'rounded-tr-sm border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
         )}
       >
         {(isAi || msg.sender_type === 'operator') && (
-          <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wider', isAi ? 'text-purple-400' : 'text-blue-400')}>
+          <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wider', isAi ? 'text-(--violet-text)' : 'text-(--blue-text)')}>
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
-        <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
-        <p className={cn('mt-1 text-[10px]', isClient ? 'text-[var(--muted)]' : 'text-current opacity-60')}>
+        <p className="whitespace-pre-wrap wrap-break-word leading-relaxed">{msg.text}</p>
+        <p className="mt-1 text-[10px] text-(--muted)">
           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
@@ -295,8 +295,8 @@ function TelegramSearchModal({
                 className={cn(
                   'w-full flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all',
                   selectedPeer?.peer === item.peer
-                    ? 'border-blue-500/30 bg-blue-600/10'
-                    : 'border-transparent hover:border-[var(--border)] hover:bg-[var(--accent-soft)]',
+                    ? 'border-(--blue-border) bg-(--blue-dim)'
+                    : 'border-transparent hover:border-(--border) hover:bg-(--accent-soft)',
                 )}
               >
                 <AvatarOrInitials avatarUrl={item.avatar_url} name={item.full_name || item.username || item.peer} size="sm" />
@@ -305,7 +305,7 @@ function TelegramSearchModal({
                   {item.username ? <p className="truncate text-xs text-[var(--muted)]">@{item.username}</p> : null}
                 </div>
                 {item.existing_conversation_id ? (
-                  <span className="ml-auto shrink-0 text-xs text-blue-400 font-medium">Open</span>
+                  <span className="ml-auto shrink-0 text-xs font-medium text-(--blue-text)">Open</span>
                 ) : null}
               </button>
             ))}
@@ -594,8 +594,8 @@ export function CognilabsAIChatPage() {
                 className={cn(
                   'rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all',
                   activeTab === tab
-                    ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20'
-                    : 'text-[var(--muted)] hover:bg-[var(--accent-soft)] border border-transparent',
+                    ? 'border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)'
+                    : 'border border-transparent text-(--muted) hover:bg-(--accent-soft)',
                 )}
               >
                 {tab}

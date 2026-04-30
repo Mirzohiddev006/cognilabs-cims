@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
@@ -27,6 +28,11 @@ import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-f
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
+import {
+  cognilabsaiService,
+  type ConversationItem,
+  type MessageItem,
+} from '../../../shared/api/services/cognilabsai.service'
 
 const emptyCustomers: CustomerSummary[] = []
 const emptyStatuses: DynamicStatusOption[] = []
@@ -439,6 +445,190 @@ function MetricCard({
 }
 
 
+function CrmMessageBubble({ msg }: { msg: MessageItem }) {
+  const isClient = msg.sender_type === 'client'
+  const isAi = msg.sender_type === 'ai'
+  const isSystem = msg.sender_type === 'system'
+
+  if (isSystem) {
+    return (
+      <div className="flex justify-center">
+        <span className="rounded-full border border-(--border) bg-(--muted-surface) px-3 py-1 text-xs text-(--muted)">
+          {msg.text}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className={cn('flex gap-2', isClient ? 'justify-start' : 'justify-end')}>
+      <div
+        className={cn(
+          'max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm',
+          isClient
+            ? 'rounded-tl-sm border border-(--border) bg-(--surface-elevated) text-(--foreground)'
+            : isAi
+              ? 'rounded-tr-sm border border-(--violet-border) bg-(--violet-dim) text-(--violet-text)'
+              : 'rounded-tr-sm border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
+        )}
+      >
+        {(isAi || msg.sender_type === 'operator') && (
+          <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wider', isAi ? 'text-(--violet-text)' : 'text-(--blue-text)')}>
+            {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
+          </p>
+        )}
+        <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
+        <p className="mt-1 text-[10px] text-(--muted)">
+          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function CrmChatPanel({
+  conversationId,
+  onClose,
+}: {
+  conversationId: number
+  onClose: () => void
+}) {
+  const { showToast } = useToast()
+  const [messages, setMessages] = useState<MessageItem[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [messageText, setMessageText] = useState('')
+  const [isSending, setIsSending] = useState(false)
+  const [conversation, setConversation] = useState<ConversationItem | null>(null)
+  const [mounted, setMounted] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  useEffect(() => {
+    setIsLoading(true)
+    Promise.all([
+      cognilabsaiService.listMessages(conversationId),
+      cognilabsaiService.listConversations(),
+    ])
+      .then(([msgs, convs]) => {
+        setMessages(msgs)
+        const conv = convs.find((c) => c.id === conversationId)
+        if (conv) setConversation(conv)
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false))
+  }, [conversationId])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  async function handleSend() {
+    if (!messageText.trim() || isSending) return
+    const text = messageText.trim()
+    setMessageText('')
+    setIsSending(true)
+    const optimistic: MessageItem = {
+      id: Date.now(),
+      conversation_id: conversationId,
+      channel: conversation?.channel ?? '',
+      sender_type: 'operator',
+      operator_user_id: null,
+      operator_name_snapshot: null,
+      client_external_id: null,
+      instagram_message_id: null,
+      telegram_message_id: null,
+      text,
+      created_at: new Date().toISOString(),
+    }
+    setMessages((prev) => [...prev, optimistic])
+    try {
+      await cognilabsaiService.sendMessage(conversationId, text)
+    } catch (err) {
+      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id))
+      setMessageText(text)
+      showToast({ title: 'Failed to send', description: getApiErrorMessage(err), tone: 'error' })
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const clientName = conversation
+    ? conversation.client_full_name || conversation.client_username || `#${conversation.id}`
+    : `Conversation #${conversationId}`
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex overflow-hidden">
+      <div
+        className="flex-1 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
+        style={{ opacity: mounted ? 1 : 0 }}
+        onClick={onClose}
+      />
+      <div
+        className="flex h-full w-full max-w-md flex-col border-l border-(--border) bg-(--surface-elevated) shadow-2xl transition-transform duration-300 ease-out"
+        style={{ transform: mounted ? 'translateX(0)' : 'translateX(100%)' }}
+      >
+        <div className="flex shrink-0 items-center gap-3 border-b border-(--border) px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-(--foreground)">{clientName}</p>
+            {conversation ? (
+              <p className="text-xs capitalize text-(--muted)">{conversation.channel}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-(--muted) transition hover:bg-(--accent-soft)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+              <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          {isLoading ? (
+            <LoadingStateBlock eyebrow="Chat" title="Loading messages..." />
+          ) : messages.length === 0 ? (
+            <EmptyStateBlock eyebrow="Chat" title="No messages" description="No messages in this conversation yet." />
+          ) : (
+            messages.map((msg) => <CrmMessageBubble key={msg.id} msg={msg} />)
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        <div className="shrink-0 border-t border-(--border) px-4 py-3">
+          <div className="flex items-end gap-2">
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  void handleSend()
+                }
+              }}
+              placeholder="Type a message... (Enter to send)"
+              rows={1}
+              className="max-h-32 flex-1 resize-none overflow-y-auto rounded-xl border border-(--border) bg-(--surface) px-3 py-2.5 text-sm text-(--foreground) focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              style={{ fieldSizing: 'content' } as React.CSSProperties}
+            />
+            <Button onClick={() => void handleSend()} disabled={isSending || !messageText.trim()}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 export function CrmDashboardPage() {
   const { t } = useTranslation()
   const { isSidebarCollapsed } = useAppShell()
@@ -461,6 +651,7 @@ export function CrmDashboardPage() {
   const [audioFile, setAudioFile] = useState<File | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
+  const [chatConversationId, setChatConversationId] = useState<number | null>(null)
 
   const pageSizeValue = Number(pageSize) || 75
 
@@ -1085,7 +1276,15 @@ export function CrmDashboardPage() {
         customerId={detailCustomer?.id ?? null}
         initialCustomer={detailCustomer}
         onClose={() => setDetailCustomer(null)}
+        onOpenChat={(id) => setChatConversationId(id)}
       />
+
+      {chatConversationId !== null ? (
+        <CrmChatPanel
+          conversationId={chatConversationId}
+          onClose={() => setChatConversationId(null)}
+        />
+      ) : null}
 
       <CustomerFormModal
         open={isFormOpen}
