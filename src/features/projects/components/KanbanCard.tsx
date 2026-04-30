@@ -112,7 +112,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
       onKeyDown={handleKeyDown}
       tabIndex={readOnly ? 0 : attributes.tabIndex}
       className={cn(
-        'group relative flex cursor-pointer select-none flex-col gap-3 overflow-hidden rounded-xl border p-3.5',
+        'group relative flex cursor-pointer select-none flex-col gap-2.5 overflow-hidden rounded-lg border p-2.5',
         'bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] border-[var(--border)] text-[var(--foreground)]',
         'shadow-[var(--shadow-sm)] transition-[transform,border-color,box-shadow,background-color,opacity] duration-150',
         'hover:-translate-y-px hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-md)]',
@@ -121,21 +121,21 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
         isOverlay && 'rotate-[1.5deg] border-[var(--border-hover)] shadow-[var(--shadow-lg)] opacity-95',
       )}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-14 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_72%)] opacity-70" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.06),transparent_72%)] opacity-70" />
 
-      <div className="relative z-10 flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+      <div className="relative z-10 flex items-start justify-between gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1">
           {priority ? (
             <Badge
               variant={priority.badgeVariant}
               size="sm"
               dot
-              className="max-w-full rounded-md px-2 py-1 text-[10px] font-semibold tracking-[0.01em]"
+              className="max-w-full rounded px-1.5 py-0.5 text-[9px] font-bold tracking-[0.01em]"
             >
               {priority.label}
             </Badge>
           ) : (
-            <span className="inline-flex h-5 items-center rounded-md border border-transparent px-1.5 text-[10px] font-medium text-[var(--muted)]">
+            <span className="inline-flex h-4 items-center rounded border border-transparent px-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--muted)]">
               {lt('Task')}
             </span>
           )}
@@ -148,7 +148,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
             onPointerDown={stopCardAction}
             onMouseDown={stopCardAction}
           >
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]/92 p-0.5 shadow-[var(--shadow-sm)] backdrop-blur-md">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)]/92 p-0.5 shadow-[var(--shadow-sm)] backdrop-blur-md">
               <ActionsMenu
                 label={lt('Card actions')}
                 items={[
@@ -161,27 +161,27 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
         ) : null}
       </div>
 
-      <div className="relative z-10 space-y-2">
-        <p className="text-[14px] font-semibold leading-[1.45] tracking-[-0.01em] text-[var(--foreground)] line-clamp-3">
+      <div className="relative z-10 space-y-1.5">
+        <p className="text-[13px] font-semibold leading-tight tracking-tight text-[var(--foreground)] line-clamp-2">
           {card.title}
         </p>
 
         {card.description ? (
-          <p className="line-clamp-2 text-[12px] leading-5 text-[var(--muted)]">
+          <p className="line-clamp-2 text-[11px] leading-relaxed text-[var(--muted)]">
             {card.description}
           </p>
         ) : null}
       </div>
 
-      <div className="relative z-10 flex items-end justify-between gap-3 border-t border-[var(--border)]/80 pt-2.5">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+      <div className="relative z-10 flex items-end justify-between gap-2 border-t border-[var(--border)]/50 pt-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
           {card.due_date ? (
             <MetaChip
               tone={dueTone}
+              className="h-5 px-1.5 text-[9px]"
               icon={(
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                  <path d="M4.5 2.75v2.5M11.5 2.75v2.5M3 5.25h10M4.75 8h2.5M4.75 10.75h5.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="3" y="3.75" width="10" height="9.25" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
                 </svg>
               )}
             >
@@ -191,9 +191,10 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
 
           {images.length > 0 ? (
             <MetaChip
+              className="h-5 px-1.5 text-[9px]"
               icon={(
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                  <path d="M3 10.5 8 5.5a3 3 0 0 1 4.24 4.24l-5 5A1.5 1.5 0 0 1 5.12 12.64l5-5a.5.5 0 0 0-.71-.71l-5 5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                   <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
               )}
             >
@@ -204,7 +205,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
 
         {card.assignee ? (
           <div
-            className="inline-flex max-w-[46%] shrink-0 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1.5 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+            className="inline-flex max-w-[50%] shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1 py-0.5 shadow-sm"
             title={assigneeName}
           >
             <Avatar
@@ -213,24 +214,13 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
               imageUrl={card.assignee.profile_image}
               size="xs"
               title={assigneeName}
-              className="shrink-0"
+              className="h-4 w-4 shrink-0"
             />
-            <span className="truncate text-[11px] font-medium text-[var(--muted-strong)]">
+            <span className="truncate text-[9px] font-bold uppercase tracking-tighter text-[var(--muted-strong)]">
               {assigneeName}
             </span>
           </div>
-        ) : (
-          <MetaChip
-            className="max-w-[46%] shrink-0 rounded-full px-2.5"
-            icon={(
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-                <path d="M8 8a2.25 2.25 0 1 0 0-4.5A2.25 2.25 0 0 0 8 8Zm-4.5 4.75a4.5 4.5 0 0 1 9 0" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          >
-            {lt('Unassigned')}
-          </MetaChip>
-        )}
+        ) : null}
       </div>
     </div>
   )

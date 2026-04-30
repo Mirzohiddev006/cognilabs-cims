@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -495,10 +494,9 @@ export function BoardWorkspace({
   return (
     <>
       {isEmbedded ? (
-        <Card variant="glass" noPadding className="overflow-hidden rounded-[28px]">
-          {header}
+        <div className="h-full flex flex-col">
           {content}
-        </Card>
+        </div>
       ) : (
         <div className="flex flex-col md:-mx-6 lg:-mx-8" style={{ height: 'calc(100dvh - 88px)' }}>
           {header}

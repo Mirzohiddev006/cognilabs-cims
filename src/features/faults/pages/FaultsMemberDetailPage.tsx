@@ -259,19 +259,19 @@ function SnapshotCard({
   icon,
 }: SnapshotCardProps) {
   const accentClasses = {
-    default: 'border-white/8 bg-white/[0.02]',
-    danger: 'border-red-500/20 bg-red-500/[0.02]',
-    blue: 'border-sky-500/20 bg-sky-500/[0.02]',
-    success: 'border-emerald-500/20 bg-emerald-500/[0.02]',
-    warning: 'border-amber-500/20 bg-amber-500/[0.02]',
+    default: 'border-[var(--border)] bg-[var(--accent-soft)]',
+    danger: 'border-[var(--danger-border)] bg-[var(--danger-dim)]',
+    blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)]',
+    success: 'border-[var(--success-border)] bg-[var(--success-dim)]',
+    warning: 'border-[var(--warning-border)] bg-[var(--warning-dim)]',
   } as const
 
   const iconWrapperClasses = {
-    default: 'border-white/10 bg-white/5 text-(--muted-strong)',
-    danger: 'border-red-500/20 bg-red-500/10 text-red-400',
-    blue: 'border-sky-500/20 bg-sky-500/10 text-sky-400',
-    success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
-    warning: 'border-amber-500/20 bg-amber-500/10 text-amber-400',
+    default: 'border-[var(--border)] bg-[var(--accent-soft)] text-[var(--muted-strong)]',
+    danger: 'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)]',
+    blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)]',
+    success: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[var(--success-text)]',
+    warning: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)]',
   } as const
 
   return (
@@ -285,16 +285,16 @@ function SnapshotCard({
           )}
         </div>
         {secondaryValue ? (
-          <span className="rounded-full bg-white/5 px-2 py-0.5 text-[11px] font-bold tabular-nums text-(--muted-strong)">
+          <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[var(--muted-strong)]">
             {secondaryValue}
           </span>
         ) : null}
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">
+        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
           {label}
         </p>
-        <p className={cn('mt-2 text-xl font-bold tabular-nums tracking-tight', accent === 'default' ? 'text-[var(--foreground)]' : '')}>
+        <p className={cn('mt-2 text-xl font-bold tabular-nums tracking-tight text-[var(--foreground)]')}>
           {value}
         </p>
       </div>
@@ -949,7 +949,7 @@ export function FaultsMemberDetailPage({
         </div>
       </Card>
 
-      <Card noPadding className="overflow-hidden rounded-[28px] border-white/8 bg-[#16182b]">
+      <Card noPadding className="overflow-hidden rounded-[28px] border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]">
         <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <SnapshotCard

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ColumnRecord, CardRecord } from '../../../shared/api/services/projects.service'
@@ -31,6 +31,14 @@ export function KanbanColumn({
   readOnly = false,
 }: KanbanColumnProps) {
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+    if (value !== key) return value
+    if (locale.startsWith('ru')) return ruFallback
+    if (locale.startsWith('en')) return key
+    return uzFallback
+  }
   const cardIds = useMemo(() => column.cards.map((c) => `card-${c.id}`), [column.cards])
 
   const {
@@ -56,18 +64,18 @@ export function KanbanColumn({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex h-full w-[272px] shrink-0 flex-col rounded-xl',
-        'bg-[rgba(255,255,255,0.06)] backdrop-blur-sm',
-        'border border-white/[0.08]',
-        'shadow-[0_2px_12px_rgba(0,0,0,0.25)]',
+        'flex max-h-full w-[264px] shrink-0 flex-col rounded-2xl',
+        'bg-[var(--accent-soft)]/40 backdrop-blur-md',
+        'border border-[var(--border)]',
+        'shadow-sm',
         isDragging && !isOverlay && 'opacity-30 scale-[0.98]',
-        isOverlay && 'rotate-[1.5deg] opacity-95 shadow-[0_20px_48px_rgba(0,0,0,0.5)]',
+        isOverlay && 'rotate-[1deg] opacity-95 shadow-[var(--shadow-xl)]',
       )}
     >
       {/* Color accent bar */}
       {column.color && (
         <div
-          className="h-0.5 w-full rounded-t-xl"
+          className="h-1 w-full rounded-t-2xl opacity-80"
           style={{ background: column.color }}
         />
       )}
@@ -75,23 +83,17 @@ export function KanbanColumn({
       {/* Column header — drag handle */}
       <div
         className={cn(
-          'flex items-center justify-between gap-2 px-3 py-2.5',
+          'flex items-center justify-between gap-2 px-4 py-3',
           readOnly ? 'select-none' : 'cursor-grab active:cursor-grabbing select-none',
         )}
         {...(!readOnly ? attributes : {})}
         {...(!readOnly ? listeners : {})}
       >
-        <div className="flex items-center gap-2 min-w-0">
-          {column.color && (
-            <span
-              className="h-2 w-2 shrink-0 rounded-full"
-              style={{ background: column.color }}
-            />
-          )}
-          <h3 className="truncate text-xs font-semibold text-white/90 tracking-wide">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <h3 className="truncate text-[13px] font-bold text-[var(--foreground)] tracking-tight">
             {column.name}
           </h3>
-          <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[11px] font-bold text-white/50 leading-none">
+          <span className="shrink-0 rounded-md bg-[var(--accent-soft)] border border-[var(--border)] px-1.5 py-0.5 text-[10px] font-black text-[var(--muted-strong)] leading-none">
             {column.cards.length}
           </span>
         </div>
@@ -110,50 +112,35 @@ export function KanbanColumn({
       </div>
 
       {/* Cards scroll area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 custom-scrollbar-visible">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-2 py-0.5">
-            {column.cards.length === 0 ? (
-              <button
-                type="button"
-                onClick={() => onAddCard(column.id)}
-                className="flex min-h-[84px] w-full items-center justify-center rounded-xl border border-dashed border-white/12 bg-white/[0.03] px-3 py-5 text-center transition hover:border-white/25 hover:bg-white/[0.06]"
-              >
-                <span className="inline-flex items-center gap-2 text-xs font-medium text-white/55">
-                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                  </svg>
-                  {lt('Add a card')}
-                </span>
-              </button>
-            ) : (
-              column.cards.map((card) => (
-                <KanbanCard
-                  key={card.id}
-                  card={card}
-                  onEdit={onEditCard}
-                  onDelete={onDeleteCard}
-                  onClick={onClickCard}
-                  readOnly={readOnly}
-                />
-              ))
-            )}
+          <div className="flex flex-col gap-2.5 py-0.5">
+            {column.cards.map((card) => (
+              <KanbanCard
+                key={card.id}
+                card={card}
+                onEdit={onEditCard}
+                onDelete={onDeleteCard}
+                onClick={onClickCard}
+                readOnly={readOnly}
+              />
+            ))}
           </div>
         </SortableContext>
       </div>
 
-      {/* Add card button */}
+      {/* Add card button — Renamed to Task qo'shish */}
       {!readOnly ? (
-        <div className="px-2 pb-2 pt-1">
+        <div className="px-2 pb-3 pt-1">
           <button
             type="button"
             onClick={() => onAddCard(column.id)}
-            className="flex w-full items-center gap-2 rounded-xl border border-transparent bg-white/[0.04] px-3 py-2.5 text-xs font-medium text-white/55 transition hover:border-white/12 hover:bg-white/[0.08] hover:text-white/90"
+            className="flex w-full items-center gap-2 rounded-xl border border-transparent bg-transparent px-3 py-2 text-[12px] font-bold text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
-            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
-            {lt('Add a card')}
+            {tr('Task qo\'shish', 'Task qo\'shish', 'Добавить задачу')}
           </button>
         </div>
       ) : null}

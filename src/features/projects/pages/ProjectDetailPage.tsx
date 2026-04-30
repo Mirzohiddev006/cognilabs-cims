@@ -21,8 +21,9 @@ import { Avatar } from '../components/Avatar'
 import { BoardFormModal } from '../components/BoardFormModal'
 import { BoardWorkspace } from '../components/BoardWorkspace'
 import { ProjectFormModal } from '../components/ProjectFormModal'
-import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { formatProjectDate } from '../lib/format'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
+import { cn } from '../../../shared/lib/cn'
 
 function parseBoardId(rawValue: string | null) {
   if (!rawValue) {
@@ -63,7 +64,6 @@ export function ProjectDetailPage() {
 
   const id = Number(projectId)
   const canManageProjects = Boolean(user)
-  const isDark = theme === 'dark'
 
   const projectQuery = useAsyncData(
     async () => {
@@ -90,7 +90,6 @@ export function ProjectDetailPage() {
   const selectedBoardId = parseBoardId(searchParams.get('board'))
   const selectedBoardParam = searchParams.get('board')
   const activeBoards = project?.boards.filter((board) => !board.is_archived) ?? []
-  const archivedBoards = project?.boards.filter((board) => board.is_archived) ?? []
   const allBoards = project?.boards ?? []
   const selectedBoard =
     allBoards.find((board) => board.id === selectedBoardId) ??
@@ -158,23 +157,7 @@ export function ProjectDetailPage() {
       })
   }, [expandedMemberId, expandedMemberTasksQuery.data, id])
 
-  const expandedMemberBoardsCount = useMemo(
-    () => new Set(expandedMemberTasks.map((task) => task.board_id)).size,
-    [expandedMemberTasks],
-  )
   const isExpandedMemberTasksLoading = expandedMemberId !== null && expandedMemberTasksQuery.isLoading
-
-  const expandedMemberTasksDueSoon = useMemo(
-    () =>
-      expandedMemberTasks.filter(
-        (task) => task.due_date && isDueDateSoon(task.due_date) && !isDueDateOverdue(task.due_date),
-      ).length,
-    [expandedMemberTasks],
-  )
-  const expandedMemberActiveItemsCount = useMemo(
-    () => expandedMemberTasks.filter((task) => task.column_name.trim().length > 0).length,
-    [expandedMemberTasks],
-  )
 
   useEffect(() => {
     if (!project) {
@@ -207,15 +190,6 @@ export function ProjectDetailPage() {
       }
       return
     }
-
-    if (expandedMemberId === null) {
-      setExpandedMemberId(projectMembers[0].id)
-      return
-    }
-
-    if (!projectMembers.some((member) => member.id === expandedMemberId)) {
-      setExpandedMemberId(projectMembers[0].id)
-    }
   }, [expandedMemberId, projectMembers])
 
   function selectBoard(boardIdToSelect: number | null) {
@@ -239,7 +213,7 @@ export function ProjectDetailPage() {
   }
 
   function selectMember(memberId: number) {
-    setExpandedMemberId(memberId)
+    setExpandedMemberId((prev) => prev === memberId ? null : memberId)
   }
 
   async function handleUpdateProject(fd: FormData) {
@@ -337,375 +311,248 @@ export function ProjectDetailPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6 page-enter">
-        <Link
-          to="/projects"
-          className="inline-flex w-fit items-center gap-1.5 text-xs text-[var(--muted)] transition-colors hover:text-[var(--foreground)]"
-        >
-          <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M10 4L6 8l4 4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {lt('All projects')}
-        </Link>
+      <div className="relative flex flex-col gap-8 page-enter h-full">
+        {/* Background Project Header (Jira Style) */}
+        <div className="relative shrink-0 overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-8 shadow-sm">
+          <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
+          <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/5 blur-3xl" />
 
-        <Card variant="glass" noPadding className="overflow-hidden rounded-[28px]">
-          <div className="relative overflow-hidden">
-            <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
-            <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/8 blur-3xl" />
-
-            <div className="relative z-10 flex flex-col gap-5 px-7 py-7">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 items-start gap-4">
-                  {projectImage ? (
-                    <img
-                      src={projectImage}
-                      alt={project.project_name}
-                      className="h-16 w-16 shrink-0 rounded-2xl border border-[var(--border)] object-cover shadow-lg"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] text-2xl font-bold"
-                      style={{
-                        background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
-                        color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
-                      }}
-                    >
-                      {project.project_name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-
-                  <div className="min-w-0">
-                    <h1 className="text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
-                      {project.project_name}
-                    </h1>
-                    {project.project_url ? (
-                      <a
-                        href={project.project_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-1.5 inline-flex items-center gap-1 text-xs text-blue-400 transition-colors hover:text-blue-300"
-                      >
-                        <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.8">
-                          <path d="M5 8h6M8 5l3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        {project.project_url.replace(/^https?:\/\//, '')}
-                      </a>
-                    ) : null}
-                  </div>
-                </div>
-
-                {canManageProjects ? (
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => setIsEditProjectOpen(true)}>
-                      {lt('Edit')}
-                    </Button>
-                    <Button variant="danger" size="sm" onClick={handleDeleteProject}>
-                      {lt('Delete')}
-                    </Button>
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-4 border-t border-[var(--border)] pt-4">
-                <div className="flex items-center gap-2">
-                  <Avatar
-                    name={project.created_by.name}
-                    surname={project.created_by.surname}
-                    imageUrl={project.created_by.profile_image}
-                    size="sm"
-                  />
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Created by')}</p>
-                    <p className="text-xs font-medium text-[var(--foreground)]">
-                      {project.created_by.name} {project.created_by.surname}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="h-8 w-px bg-[var(--border)]" />
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Created')}</p>
-                  <p className="text-xs font-medium text-[var(--foreground)]">
-                    {formatProjectDate(project.created_at)}
-                  </p>
-                </div>
-
-                <div className="h-8 w-px bg-[var(--border)]" />
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Boards')}</p>
-                  <p className="text-xs font-medium text-[var(--foreground)]">{project.boards_count}</p>
-                </div>
-
-                {projectMembers.length > 0 ? (
-                  <>
-                    <div className="h-8 w-px bg-[var(--border)]" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[var(--muted)]">{lt('Members')}</p>
-                      <div className="mt-1 flex items-center gap-2">
-                        {projectMembers.slice(0, 6).map((member) => {
-                          const isExpanded = member.id === expandedMemberId
-
-                          return (
-                            <button
-                              key={member.id}
-                              type="button"
-                              onClick={() => selectMember(member.id)}
-                              className={
-                                isExpanded
-                                  ? 'rounded-full ring-2 ring-blue-400/60 ring-offset-2 ring-offset-[var(--surface-elevated)] transition'
-                                  : 'rounded-full ring-2 ring-[var(--surface-elevated)] transition hover:ring-[var(--border-hover)]'
-                              }
-                                title={`${member.name} ${member.surname}`}
-                              aria-label={`${lt('Show')} ${member.name} ${member.surname} ${lt('tasks')}`}
-                              aria-expanded={isExpanded}
-                            >
-                              <Avatar
-                                name={member.name}
-                                surname={member.surname}
-                                imageUrl={member.profile_image}
-                                size="sm"
-                              />
-                            </button>
-                          )
-                        })}
-                        {projectMembers.length > 6 ? (
-                          <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] px-2 text-[10px] font-semibold text-[var(--muted)]">
-                            +{projectMembers.length - 6}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {projectMembers.length > 0 && expandedMember ? (
-          <Card variant="glass" className="rounded-[28px]">
-            <div
-              id={`project-member-panel-${expandedMember.id}`}
-              className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)]"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar
-                    name={expandedMember.name}
-                    surname={expandedMember.surname}
-                    imageUrl={expandedMember.profile_image}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                      {expandedMember.name} {expandedMember.surname}
-                    </p>
-                    <p className="truncate text-[11px] text-[var(--muted)]">
-                      {expandedMember.job_title?.trim() || lt('Project member')}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={!isExpandedMemberTasksLoading && expandedMemberTasks.length > 0 ? 'blue' : 'secondary'}>
-                    {isExpandedMemberTasksLoading ? lt('Loading...') : `${expandedMemberTasks.length} ${lt('tasks')}`}
-                  </Badge>
-                  <Badge variant="secondary">{expandedMemberBoardsCount} {lt('boards')}</Badge>
-                  <Badge variant={expandedMemberTasksDueSoon > 0 ? 'warning' : 'secondary'}>
-                    {expandedMemberTasksDueSoon} {lt('due soon')}
-                  </Badge>
-                  <Badge variant="blue">{expandedMemberActiveItemsCount} {lt('active items')}</Badge>
-                </div>
-              </div>
-
-              <div className="border-t border-[var(--border)] px-5 py-5">
-                {isExpandedMemberTasksLoading ? (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        key={index}
-                        className="h-24 animate-pulse rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)]"
-                      />
-                    ))}
-                  </div>
-                ) : expandedMemberTasksQuery.isError ? (
-                  <StateBlock
-                    tone="error"
-                    eyebrow={lt('Error')}
-                    title={lt('Failed to load member tasks')}
-                    description={lt('There was an error loading this member tasks.')}
-                    actionLabel={lt('Retry')}
-                    onAction={() => expandedMemberTasksQuery.refetch()}
-                  />
-                ) : expandedMemberTasks.length === 0 ? (
-                  <StateBlock
-                    tone="empty"
-                    eyebrow={lt('No tasks')}
-                    title={lt('No tasks assigned in this project')}
-                    description={lt('No tasks are currently assigned to this member inside this project.')}
+          <div className="relative z-10 flex flex-col gap-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-start gap-5">
+                {projectImage ? (
+                  <img
+                    src={projectImage}
+                    alt={project.project_name}
+                    className="h-14 w-14 shrink-0 rounded-2xl border border-[var(--border)] object-cover shadow-md"
                   />
                 ) : (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {expandedMemberTasks.map((task) => {
-                      const priorityConfig = task.priority ? priorityConfigMap[task.priority] : null
-                      const dueVariant = task.due_date
-                        ? isDueDateOverdue(task.due_date)
-                          ? 'danger'
-                          : isDueDateSoon(task.due_date)
-                            ? 'warning'
-                            : 'secondary'
-                        : 'ghost'
-
-                      return (
-                        <Link
-                          key={task.id}
-                          to={`/projects/${project.id}?board=${task.board_id}`}
-                          className="rounded-[20px] border border-[var(--border)] bg-[var(--muted-surface)] px-4 py-4 transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
-                        >
-                          <div className="flex flex-col gap-3">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                                  {task.title}
-                                </p>
-                                <p className="mt-1 text-[11px] text-[var(--muted)]">
-                                  {task.board_name} - {task.column_name}
-                                </p>
-                              </div>
-
-                              {priorityConfig ? (
-                                <Badge variant={priorityConfig.badgeVariant}>
-                                  {priorityConfig.label}
-                                </Badge>
-                              ) : null}
-                            </div>
-
-                            <div className="flex flex-wrap gap-2">
-                              <Badge variant="secondary">
-                                {lt('Board')}: {task.board_name}
-                              </Badge>
-                              <Badge variant={dueVariant}>
-                                {task.due_date ? `${lt('Due')} ${formatProjectDate(task.due_date)}` : lt('No due date')}
-                              </Badge>
-                            </div>
-                          </div>
-                        </Link>
-                      )
-                    })}
+                  <div
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] text-xl font-black"
+                    style={{
+                      background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
+                      color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
+                    }}
+                  >
+                    {project.project_name.charAt(0).toUpperCase()}
                   </div>
                 )}
-              </div>
-            </div>
-          </Card>
-        ) : null}
 
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">
-                {tr('Project Lists', 'Loyiha royxatlari', 'Spiski proekta')}
-              </h2>
-            </div>
-            {canManageProjects ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setIsCreateBoardOpen(true)}
-                leftIcon={(
-                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                  </svg>
-                )}
-              >
-                {tr('New board', 'Yangi board', 'Novyi board')}
-              </Button>
-            ) : null}
-          </div>
-
-          {project.boards.length === 0 ? (
-            <StateBlock
-              tone="empty"
-              eyebrow={lt('No boards')}
-              title={lt('No boards yet')}
-              description={
-                canManageProjects
-                  ? lt('Create a board to start organizing your work with columns and cards.')
-                  : lt('This project does not have any visible boards yet.')
-              }
-              actionLabel={canManageProjects ? lt('Create board') : undefined}
-              onAction={canManageProjects ? () => setIsCreateBoardOpen(true) : undefined}
-            />
-          ) : (
-            <>
-              <div className="flex flex-col gap-3">
-                {activeBoards.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {activeBoards.map((board) => {
-                      const isSelected = selectedBoard?.id === board.id
-
-                      return (
-                        <button
-                          key={board.id}
-                          type="button"
-                          onClick={() => selectBoard(board.id)}
-                          className={
-                            isSelected
-                              ? isDark
-                                ? 'rounded-full border border-blue-500/45 bg-[linear-gradient(180deg,rgba(17,24,39,0.96),rgba(15,23,42,0.98))] px-4 py-2 text-sm font-semibold text-blue-100 ring-1 ring-blue-400/20 shadow-[0_8px_24px_rgba(37,99,235,0.18)] transition'
-                                : 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 shadow-[0_10px_24px_rgba(37,99,235,0.14)] transition'
-                              : 'rounded-full border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)] hover:text-[var(--foreground)] dark:bg-[var(--surface-elevated)]'
-                          }
-                        >
-                          {board.name}
-                        </button>
-                      )
-                    })}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1.5">
+                     <Link to="/projects" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+                        {lt('Projects')}
+                     </Link>
+                     <span className="text-[var(--border)] text-[10px]">/</span>
+                     <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">{lt('Board')}</span>
                   </div>
-                ) : null}
-
-                {archivedBoards.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">
-                      Archived
-                      
-                    </span>
-                    {archivedBoards.map((board) => {
-                      const isSelected = selectedBoard?.id === board.id
-
-                      return (
-                        <button
-                          key={board.id}
-                          type="button"
-                          onClick={() => selectBoard(board.id)}
-                          className={
-                            isSelected
-                              ? isDark
-                                ? 'rounded-full border border-blue-500/40 bg-[linear-gradient(180deg,rgba(17,24,39,0.94),rgba(20,24,36,0.98))] px-4 py-2 text-sm font-semibold text-blue-100 ring-1 ring-blue-400/18 transition'
-                                : 'rounded-full border border-blue-300 bg-[linear-gradient(180deg,rgba(239,246,255,0.98),rgba(219,234,254,0.92))] px-4 py-2 text-sm font-semibold text-blue-900 transition'
-                              : 'rounded-full border border-[var(--border)] bg-transparent px-4 py-2 text-sm font-medium text-[var(--muted-strong)] transition hover:border-[var(--blue-border)] hover:text-[var(--foreground)]'
-                          }
-                        >
-                          {board.name}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ) : null}
+                  <h1 className="text-2xl font-black tracking-tight text-[var(--foreground)] sm:text-3xl">
+                    {project.project_name}
+                  </h1>
+                </div>
               </div>
 
-              {selectedBoard ? (
-                <BoardWorkspace
-                  boardId={selectedBoard.id}
-                  projectId={project.id}
-                  mode="embedded"
-                  onBoardsChanged={() => projectQuery.refetch()}
-                />
+              {canManageProjects ? (
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button variant="ghost" size="sm" className="rounded-xl bg-[var(--accent-soft)]" onClick={() => setIsEditProjectOpen(true)}>
+                    {lt('Edit')}
+                  </Button>
+                  <Button variant="danger" size="sm" className="rounded-xl bg-red-500/10 text-red-400 border-transparent" onClick={handleDeleteProject}>
+                    {lt('Delete')}
+                  </Button>
+                </div>
               ) : null}
-            </>
-          )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  name={project.created_by.name}
+                  surname={project.created_by.surname}
+                  imageUrl={project.created_by.profile_image}
+                  size="sm"
+                  className="ring-2 ring-[var(--border)]"
+                />
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Lead')}</p>
+                  <p className="text-xs font-bold text-[var(--foreground)]">
+                    {project.created_by.name} {project.created_by.surname}
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-6 w-px bg-[var(--border)] opacity-60" />
+
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Timeline')}</p>
+                <p className="text-xs font-bold text-[var(--foreground)]">
+                  {formatProjectDate(project.created_at)}
+                </p>
+              </div>
+
+              <div className="h-6 w-px bg-[var(--border)] opacity-60" />
+
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Stats')}</p>
+                <p className="text-xs font-bold text-[var(--foreground)]">
+                  {project.boards_count} {lt('boards')}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Boards Content Overlay Container */}
+        <div className="relative z-20 flex-1 -mt-4 bg-[var(--background)] rounded-t-[40px] px-2 pt-2">
+           <Card noPadding className="h-full flex flex-col overflow-hidden rounded-[32px] border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
+              {/* Board Header & Filters Area */}
+              <div className="flex flex-wrap items-center justify-between gap-6 border-b border-[var(--border)] bg-[var(--accent-soft)]/20 px-8 py-5">
+                 <div className="flex items-center gap-6">
+                    {/* Board Tabs */}
+                    <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/10 dark:bg-white/5 border border-[var(--border)]">
+                      {activeBoards.map((board) => {
+                        const isSelected = selectedBoard?.id === board.id
+                        return (
+                          <button
+                            key={board.id}
+                            type="button"
+                            onClick={() => selectBoard(board.id)}
+                            className={cn(
+                               "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                               isSelected 
+                                 ? "bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-md border border-[var(--border)] scale-105"
+                                 : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/5"
+                            )}
+                          >
+                            {board.name}
+                          </button>
+                        )
+                      })}
+                      {canManageProjects && (
+                         <button
+                            type="button"
+                            onClick={() => setIsCreateBoardOpen(true)}
+                            className="w-9 h-9 flex items-center justify-center rounded-xl text-[var(--muted)] hover:bg-white/5 transition-colors"
+                            title={lt('Add board')}
+                         >
+                            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                               <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                            </svg>
+                         </button>
+                      )}
+                    </div>
+
+                    <div className="h-8 w-px bg-[var(--border)]" />
+
+                    {/* Members Selector (Moved from project info) */}
+                    <div className="flex items-center gap-3">
+                       <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Members')}:</p>
+                       <div className="flex items-center -space-x-2">
+                          {projectMembers.map((member) => {
+                            const isExpanded = member.id === expandedMemberId
+                            return (
+                              <button
+                                key={member.id}
+                                type="button"
+                                onClick={() => selectMember(member.id)}
+                                className={cn(
+                                  'relative transition-transform hover:scale-110 hover:z-10',
+                                  isExpanded ? 'scale-110 z-10' : 'z-0'
+                                )}
+                              >
+                                <Avatar
+                                  name={member.name}
+                                  surname={member.surname}
+                                  imageUrl={member.profile_image}
+                                  size="sm"
+                                  className={cn(
+                                     "ring-2 ring-[var(--surface)] transition-all",
+                                     isExpanded ? "ring-blue-500 shadow-glow-blue" : "ring-[var(--border)]"
+                                  )}
+                                />
+                              </button>
+                            )
+                          })}
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Right Actions */}
+                 <div className="flex items-center gap-3">
+                    {canManageProjects && (
+                       <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 rounded-xl font-black uppercase tracking-widest bg-[var(--accent-soft)]"
+                          onClick={() => setIsCreateBoardOpen(true)}
+                       >
+                         {tr('New list', 'Yangi list', 'Novyi spisok')}
+                       </Button>
+                    )}
+                 </div>
+              </div>
+
+              {/* Scrollable Board Workspace */}
+              <div className="flex-1 overflow-hidden">
+                 {selectedBoard ? (
+                    <BoardWorkspace
+                      boardId={selectedBoard.id}
+                      projectId={project.id}
+                      mode="embedded"
+                      onBoardsChanged={() => projectQuery.refetch()}
+                    />
+                 ) : (
+                    <div className="flex h-full items-center justify-center p-12">
+                       <StateBlock
+                         tone="empty"
+                         eyebrow={lt('No boards')}
+                         title={lt('Select or create a board')}
+                         description={lt('Choose a board from the list above to start managing tasks.')}
+                       />
+                    </div>
+                 )}
+              </div>
+           </Card>
+        </div>
+
+        {/* Member Tasks Panel (Overlay when member is selected) */}
+        {expandedMember && expandedMemberId !== null && (
+           <div className="fixed bottom-8 right-8 z-[60] w-[420px] max-w-[calc(100vw-4rem)]">
+              <Card variant="glass" className="rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden">
+                 <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                       <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="md" />
+                       <div>
+                          <p className="text-sm font-black text-[var(--foreground)]">{expandedMember.name} {expandedMember.surname}</p>
+                          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{expandedMember.job_title || lt('Member')}</p>
+                       </div>
+                    </div>
+                    <button onClick={() => setExpandedMemberId(null)} className="h-8 w-8 rounded-full flex items-center justify-center bg-black/10 hover:bg-black/20 text-[var(--muted-strong)]">
+                       <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
+                    </button>
+                 </div>
+                 <div className="max-h-[400px] overflow-y-auto p-4 custom-scrollbar-visible space-y-3 bg-[var(--surface-elevated)]">
+                    {isExpandedMemberTasksLoading ? (
+                       <div className="space-y-3">
+                          {[1,2,3].map(i => <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/5 border border-white/5" />)}
+                       </div>
+                    ) : expandedMemberTasks.length === 0 ? (
+                       <p className="text-center py-8 text-xs font-bold text-[var(--muted)]">{lt('No active tasks')}</p>
+                    ) : (
+                       expandedMemberTasks.map(task => (
+                          <Link key={task.id} to={`/projects/${project.id}?board=${task.board_id}`} className="block p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--accent-soft)] transition-all">
+                             <p className="text-sm font-bold text-[var(--foreground)] mb-1">{task.title}</p>
+                             <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-[var(--muted-strong)]">{task.board_name}</span>
+                                <Badge variant="blue" size="sm" className="text-[9px]">{task.column_name}</Badge>
+                             </div>
+                          </Link>
+                       ))
+                    )}
+                 </div>
+              </Card>
+           </div>
+        )}
       </div>
 
       {canManageProjects ? (
