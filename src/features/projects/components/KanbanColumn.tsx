@@ -64,7 +64,7 @@ export function KanbanColumn({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex max-h-full w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-2xl',
+        'flex h-full w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-2xl overflow-hidden',
         'bg-[var(--accent-soft)]/40 backdrop-blur-md',
         'border border-[var(--border)]',
         'shadow-sm',
@@ -75,7 +75,7 @@ export function KanbanColumn({
       {/* Color accent bar */}
       {column.color && (
         <div
-          className="h-1 w-full rounded-t-2xl opacity-80"
+          className="h-1.5 w-full shrink-0 opacity-90"
           style={{ background: column.color }}
         />
       )}
@@ -112,7 +112,7 @@ export function KanbanColumn({
       </div>
 
       {/* Cards scroll area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pb-2 custom-scrollbar-visible">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 pb-2 custom-scrollbar-visible">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           <div className="flex flex-col gap-2.5 py-0.5">
             {column.cards.map((card) => (

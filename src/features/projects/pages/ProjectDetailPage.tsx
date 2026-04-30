@@ -257,6 +257,31 @@ export function ProjectDetailPage() {
     }
   }
 
+  async function handleDeleteBoard(boardId: number, boardName: string) {
+    if (!canManageProjects) return
+
+    const ok = await confirm({
+      title: lt('Delete board?'),
+      description: `"${boardName}" ${lt('will be permanently deleted.')}`,
+      tone: 'danger',
+    })
+
+    if (!ok) return
+
+    try {
+      if (selectedBoard?.id === boardId) {
+        const otherBoard = activeBoards.find((b) => b.id !== boardId)
+        selectBoard(otherBoard?.id ?? null)
+      }
+      await projectsService.deleteBoard(boardId)
+      showToast({ title: lt('Board deleted'), tone: 'success' })
+      await projectQuery.refetch()
+      notifyProjectsNavigationChanged()
+    } catch {
+      showToast({ title: lt('Failed to delete board'), tone: 'error' })
+    }
+  }
+
   async function handleCreateBoard(values: { name: string; description?: string }) {
     if (!canManageProjects || !project) {
       return
@@ -413,19 +438,38 @@ export function ProjectDetailPage() {
                          {activeBoards.map((board) => {
                            const isSelected = selectedBoard?.id === board.id
                            return (
-                             <button
-                               key={board.id}
-                               type="button"
-                               onClick={() => selectBoard(board.id)}
-                               className={cn(
-                                  "whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shrink-0",
-                                  isSelected 
-                                    ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
-                                    : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
+                             <div key={board.id} className="group relative flex shrink-0 items-center">
+                               <button
+                                 type="button"
+                                 onClick={() => selectBoard(board.id)}
+                                 className={cn(
+                                   "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all",
+                                   canManageProjects ? "pr-7" : "pr-4 sm:pr-5",
+                                   isSelected
+                                     ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
+                                     : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
+                                 )}
+                               >
+                                 {board.name}
+                               </button>
+                               {canManageProjects && (
+                                 <button
+                                   type="button"
+                                   onClick={(e) => { e.stopPropagation(); void handleDeleteBoard(board.id, board.name) }}
+                                   className={cn(
+                                     "absolute right-1.5 flex h-4 w-4 items-center justify-center rounded transition-all",
+                                     isSelected
+                                       ? "text-white/70 hover:text-white hover:bg-white/20"
+                                       : "opacity-0 group-hover:opacity-100 text-[var(--muted)] hover:text-red-400 hover:bg-red-400/10"
+                                   )}
+                                   title={lt('Delete board')}
+                                 >
+                                   <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                     <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/>
+                                   </svg>
+                                 </button>
                                )}
-                             >
-                               {board.name}
-                             </button>
+                             </div>
                            )
                          })}
                          {canManageProjects && (
@@ -535,7 +579,7 @@ export function ProjectDetailPage() {
               </div>
 
               {/* Scrollable Board Workspace */}
-              <div className="flex-1 min-h-0">
+              <div className="flex flex-col flex-1 min-h-0">
                  {selectedBoard ? (
                     <BoardWorkspace
                       boardId={selectedBoard.id}

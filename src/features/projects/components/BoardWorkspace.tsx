@@ -474,7 +474,7 @@ export function BoardWorkspace({
     </div>
   ) : (
     <div
-      className={isEmbedded ? 'flex-1 overflow-hidden' : 'overflow-hidden'}
+      className={isEmbedded ? 'flex-1 min-h-0 overflow-hidden' : 'overflow-hidden'}
       style={!isEmbedded ? { height: 'calc(100vh - 162px)' } : undefined}
     >
       <KanbanBoard
