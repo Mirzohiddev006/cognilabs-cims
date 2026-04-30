@@ -567,50 +567,74 @@ export function ProjectDetailPage() {
               />
               
               {/* Center Modal */}
-              <Card variant="glass" className="relative z-10 w-full max-w-lg rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
-                 <div className="flex items-center justify-between p-6 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
-                    <div className="flex items-center gap-4">
-                       <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="md" />
+              <Card variant="glass" className="relative z-10 w-full max-w-5xl rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
+                 <div className="flex items-center justify-between p-6 sm:p-8 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
+                    <div className="flex items-center gap-5">
+                       <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="lg" className="ring-4 ring-blue-500/20" />
                        <div>
-                          <p className="text-base font-black text-[var(--foreground)]">{expandedMember.name} {expandedMember.surname}</p>
-                          <p className="text-xs font-bold text-blue-400 uppercase tracking-widest">{expandedMember.job_title || lt('Member')}</p>
+                          <p className="text-xl font-black text-[var(--foreground)] tracking-tight">{expandedMember.name} {expandedMember.surname}</p>
+                          <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mt-1">{expandedMember.job_title || lt('Member')}</p>
                        </div>
                     </div>
-                    <button onClick={() => setExpandedMemberId(null)} className="h-10 w-10 rounded-xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
-                       <svg viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
+                    <button onClick={() => setExpandedMemberId(null)} className="h-12 w-12 rounded-2xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
+                       <svg viewBox="0 0 16 16" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
                     </button>
                  </div>
-                 <div className="max-h-[60vh] overflow-y-auto p-6 custom-scrollbar-visible space-y-4 bg-[var(--surface-elevated)]">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] mb-2">{lt('Active Tasks in this Project')}</h4>
+                 
+                 <div className="max-h-[70vh] overflow-y-auto p-6 sm:p-10 custom-scrollbar-visible bg-[var(--surface-elevated)]">
+                    <div className="flex items-center justify-between mb-8">
+                       <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">{lt('Active Tasks Assignment')}</h4>
+                       <Badge variant="blue" className="px-3 py-1 rounded-full font-black">{expandedMemberTasks.length} {lt('Items')}</Badge>
+                    </div>
+
                     {isExpandedMemberTasksLoading ? (
-                       <div className="space-y-4">
-                          {[1,2,3].map(i => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/5 border border-white/5" />)}
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {[1,2,3,4].map(i => <div key={i} className="h-32 animate-pulse rounded-3xl bg-white/5 border border-white/5" />)}
                        </div>
                     ) : expandedMemberTasks.length === 0 ? (
-                       <div className="flex flex-col items-center justify-center py-12 opacity-30">
-                          <svg viewBox="0 0 24 24" className="h-12 w-12 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22c5.523 0 9-4.477 9-10S17.523 2 12 2 3 6.477 3 12s3.477 10 9 10z"/><path d="M12 8v4M12 16h.01" strokeWidth="2" strokeLinecap="round"/></svg>
-                          <p className="text-sm font-bold text-[var(--muted)]">{lt('No active tasks')}</p>
+                       <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                          <svg viewBox="0 0 24 24" className="h-16 w-16 mb-6" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M12 22c5.523 0 9-4.477 9-10S17.523 2 12 2 3 6.477 3 12s3.477 10 9 10z"/><path d="M12 8v4M12 16h.01" strokeWidth="2" strokeLinecap="round"/></svg>
+                          <p className="text-base font-black tracking-widest text-[var(--muted)] uppercase">{lt('No active tasks')}</p>
                        </div>
                     ) : (
-                       expandedMemberTasks.map(task => (
-                          <Link 
-                             key={task.id} 
-                             to={`/projects/${project.id}?board=${task.board_id}`} 
-                             onClick={() => setExpandedMemberId(null)}
-                             className="group block p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--blue-border)] hover:bg-[var(--accent-soft)] transition-all transform hover:-translate-y-1"
-                          >
-                             <div className="flex justify-between items-start mb-3">
-                                <p className="text-base font-black text-[var(--foreground)] group-hover:text-blue-400 transition-colors">{task.title}</p>
-                             </div>
-                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                   <span className="text-[11px] font-bold text-[var(--muted-strong)] uppercase tracking-wider">{task.board_name}</span>
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {expandedMemberTasks.map(task => (
+                             <Link 
+                                key={task.id} 
+                                to={`/projects/${project.id}?board=${task.board_id}`} 
+                                onClick={() => setExpandedMemberId(null)}
+                                className="group flex flex-col justify-between p-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] hover:border-blue-500/50 hover:bg-[var(--accent-soft)] transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1"
+                             >
+                                <div className="mb-5">
+                                   <div className="flex items-center gap-2 mb-2 opacity-60">
+                                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{task.board_name}</span>
+                                      <span className="text-[var(--border)]">•</span>
+                                      <span className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">{task.column_name}</span>
+                                   </div>
+                                   <p className="text-[17px] font-black leading-snug text-[var(--foreground)] group-hover:text-blue-400 transition-colors line-clamp-2">
+                                      {task.title}
+                                   </p>
                                 </div>
-                                <Badge variant="blue" size="sm" className="text-[10px] font-black px-2 py-0.5 rounded-lg">{task.column_name}</Badge>
-                             </div>
-                          </Link>
-                       ))
+                                <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]/50">
+                                   <div className="flex items-center gap-2">
+                                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_var(--blue-glow)]" />
+                                      <span className="text-[10px] font-black text-[var(--muted-strong)] uppercase tracking-tighter">{lt('Priority High')}</span>
+                                   </div>
+                                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--muted)]">
+                                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                      {formatProjectDate(task.updated_at)}
+                                   </div>
+                                </div>
+                             </Link>
+                          ))}
+                       </div>
                     )}
+                 </div>
+                 
+                 <div className="p-6 border-t border-[var(--border)] bg-[var(--accent-soft)]/10 flex justify-end">
+                    <Button variant="ghost" className="rounded-xl font-black uppercase tracking-widest text-[var(--muted-strong)]" onClick={() => setExpandedMemberId(null)}>
+                       {lt('Close Dashboard')}
+                    </Button>
                  </div>
               </Card>
            </div>
