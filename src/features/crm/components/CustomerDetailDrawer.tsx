@@ -345,7 +345,7 @@ export function CustomerDetailDrawer({
                   <button
                     type="button"
                     onClick={() => onOpenChat(convId)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--blue-border)] bg-[var(--blue-dim)] px-3 py-2 text-xs font-semibold text-[var(--blue-text)] transition hover:bg-[var(--blue-soft)]"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#3390ec]/30 bg-[#3390ec]/10 px-3 py-2 text-xs font-semibold text-[#3390ec] transition hover:bg-[#3390ec]/20"
                   >
                     <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />

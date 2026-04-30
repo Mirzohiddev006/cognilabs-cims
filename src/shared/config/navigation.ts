@@ -119,7 +119,7 @@ export const navigationItems: readonly NavigationItem[] = [
     description: 'CEO assistant chat with backend metadata and prompt shortcuts.',
     group: 'CEO',
     permissionKey: 'ceo',
-    sidebar: true,
+    sidebar: false,
     defaultRedirect: false,
   },
   {
@@ -137,7 +137,7 @@ export const navigationItems: readonly NavigationItem[] = [
     description: 'Official social pages and operational bot links in one branded hub.',
     group: 'Workspace',
     permissionKey: undefined,
-    sidebar: true,
+    sidebar: false,
     defaultRedirect: false,
   },
   {

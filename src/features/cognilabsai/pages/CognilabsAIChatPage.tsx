@@ -11,14 +11,8 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
-import { PageHeader } from '../../../shared/ui/page-header'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
-import {
-  LoadingStateBlock,
-  ErrorStateBlock,
-  EmptyStateBlock,
-} from '../../../shared/ui/state-block'
 import {
   cognilabsaiService,
   type ConversationItem,
@@ -83,10 +77,10 @@ function ChannelBadge({ channel, chatMode }: { channel: string; chatMode: string
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide border',
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide border transition-colors',
         isInstagram
-          ? 'border-pink-500/30 bg-pink-500/10 text-pink-600'
-          : 'border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
+          ? 'border-pink-500/30 bg-pink-500/10 text-pink-500'
+          : 'border-[#3390ec]/30 bg-[#3390ec]/10 text-[#3390ec]',
       )}
     >
       {isInstagram ? (
@@ -106,8 +100,8 @@ function ChannelBadge({ channel, chatMode }: { channel: string; chatMode: string
 function PauseReasonBadge({ reason }: { reason: string | null }) {
   if (!reason) return null
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-[10px] font-medium text-yellow-600">
-      <span className="h-1.5 w-1.5 rounded-full bg-yellow-500" />
+    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500 uppercase tracking-tight">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
       {reason}
     </span>
   )
@@ -123,57 +117,84 @@ function ConversationListItem({
   onSelect: () => void
 }) {
   const name = getClientName(conv)
+  const isOnline = conv.last_message_at && (Date.now() - new Date(conv.last_message_at).getTime() < 1000 * 60 * 5)
+  
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full rounded-xl border px-3 py-3 text-left transition-all duration-150',
+        'group w-full rounded-xl px-3 py-2.5 text-left transition-all duration-150 relative overflow-hidden',
         isActive
-          ? 'border-(--blue-border) bg-(--blue-dim)'
-          : 'border-transparent hover:border-(--border) hover:bg-(--accent-soft)',
+          ? 'bg-[#3390ec] text-white shadow-md'
+          : 'hover:bg-[var(--accent-soft)]',
       )}
     >
-      <div className="flex items-start gap-3">
-        <AvatarOrInitials avatarUrl={conv.client_avatar_url} name={name} size="md" />
+      <div className="flex items-center gap-3 relative z-10">
+        <div className="relative shrink-0">
+          <AvatarOrInitials avatarUrl={conv.client_avatar_url} name={name} size="md" />
+          {isOnline && (
+            <div className={cn(
+              "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm",
+              isActive ? "border-[#3390ec]" : "border-[var(--background)]"
+            )} />
+          )}
+        </div>
+        
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p className={cn('truncate text-sm font-semibold', isActive ? 'text-(--blue-text)' : 'text-(--foreground)')}>
+            <p className={cn(
+              'truncate text-[15px] font-bold leading-tight',
+              isActive ? 'text-white' : 'text-[var(--foreground)]'
+            )}>
               {name}
             </p>
             {conv.last_message_at ? (
-              <span className="shrink-0 text-[10px] text-[var(--muted)]">
+              <span className={cn(
+                'shrink-0 text-[11px] font-medium',
+                isActive ? 'text-white/80' : 'text-[var(--muted)]'
+              )}>
                 {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             ) : null}
           </div>
-          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-            <ChannelBadge channel={conv.channel} chatMode={conv.chat_mode} />
-            {conv.pause_reason ? <PauseReasonBadge reason={conv.pause_reason} /> : null}
-            {conv.last_operator_name ? (
-              <span className="text-[10px] text-[var(--muted)] truncate">
-                {conv.last_operator_name}
-              </span>
-            ) : null}
+          
+          <div className="mt-0.5 flex items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              {conv.last_message_preview ? (
+                <p className={cn(
+                  'truncate text-[13.5px] leading-snug',
+                  isActive ? 'text-white/90' : 'text-[var(--muted-strong)]'
+                )}>
+                  {conv.last_message_preview}
+                </p>
+              ) : (
+                <p className={cn(
+                  'italic text-[12px]',
+                  isActive ? 'text-white/60' : 'text-[var(--muted)]'
+                )}>No messages yet</p>
+              )}
+            </div>
+            
+            <div className="shrink-0 flex items-center gap-1.5">
+              {!isActive && <ChannelBadge channel={conv.channel} chatMode={conv.chat_mode} />}
+            </div>
           </div>
-          {conv.last_message_preview ? (
-            <p className="mt-1 truncate text-xs text-[var(--muted)]">{conv.last_message_preview}</p>
-          ) : null}
         </div>
       </div>
     </button>
   )
 }
 
-function MessageBubble({ msg }: { msg: MessageItem }) {
+function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean }) {
   const isClient = msg.sender_type === 'client'
   const isAi = msg.sender_type === 'ai'
   const isSystem = msg.sender_type === 'system'
 
   if (isSystem) {
     return (
-      <div className="flex justify-center">
-        <span className="rounded-full border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-1 text-xs text-[var(--muted)]">
+      <div className="flex justify-center my-3">
+        <span className="rounded-full bg-black/20 backdrop-blur-md px-4 py-1 text-[11px] font-bold text-white shadow-sm border border-white/10 uppercase tracking-widest ring-1 ring-black/5">
           {msg.text}
         </span>
       </div>
@@ -181,27 +202,70 @@ function MessageBubble({ msg }: { msg: MessageItem }) {
   }
 
   return (
-    <div className={cn('flex gap-2', isClient ? 'justify-start' : 'justify-end')}>
+    <div className={cn(
+      'flex w-full group relative mb-0.5 animate-page-enter', 
+      isClient ? 'justify-start' : 'justify-end'
+    )}>
       <div
         className={cn(
-          'max-w-[72%] rounded-2xl px-4 py-2.5 text-sm shadow-sm',
+          'relative max-w-[85%] sm:max-w-[72%] px-3.5 py-2 text-[14.5px] shadow-[0_1px_1.5px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.99]',
           isClient
-            ? 'rounded-tl-sm border border-(--border) bg-(--surface-elevated) text-(--foreground)'
+            ? 'rounded-[18px] rounded-tl-sm border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--foreground)]'
             : isAi
-              ? 'rounded-tr-sm border border-(--violet-border) bg-(--violet-dim) text-(--violet-text)'
-              : 'rounded-tr-sm border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
+              ? 'rounded-[18px] rounded-tr-sm border border-violet-500/20 bg-violet-500/10 text-violet-100'
+              : 'rounded-[18px] rounded-tr-sm bg-[#effdde] dark:bg-[#2b5278] text-slate-900 dark:text-white border border-transparent shadow-sm',
+          !showTail && (isClient ? 'rounded-tl-[18px]' : 'rounded-tr-[18px]')
         )}
       >
         {(isAi || msg.sender_type === 'operator') && (
-          <p className={cn('mb-1 text-[10px] font-semibold uppercase tracking-wider', isAi ? 'text-(--violet-text)' : 'text-(--blue-text)')}>
+          <p className={cn(
+            'mb-0.5 text-[11px] font-bold uppercase tracking-wider', 
+            isAi ? 'text-violet-400' : 'text-blue-600 dark:text-[#64b5f6]'
+          )}>
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
-        <p className="whitespace-pre-wrap wrap-break-word leading-relaxed">{msg.text}</p>
-        <p className="mt-1 text-[10px] text-(--muted)">
-          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        
+        <p className="whitespace-pre-wrap break-words leading-[1.45] selection:bg-blue-500/30">
+          {msg.text}
         </p>
+        
+        <div className="mt-1 flex items-center justify-end gap-1.5 opacity-60">
+          <span className="text-[10px] font-bold uppercase tracking-tight">
+            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+          {!isClient && (
+            <svg viewBox="0 0 24 24" className={cn("h-3.5 w-3.5 fill-current", isAi ? "text-violet-400" : "text-[#40a7e3]")}>
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z" />
+            </svg>
+          )}
+        </div>
+        
+        {showTail && (
+          <div className={cn(
+            'absolute top-0 w-3 h-3 overflow-hidden',
+            isClient ? '-left-2' : '-right-2'
+          )}>
+            <div className={cn(
+              'absolute w-3 h-3 rotate-45',
+              isClient 
+                ? '-top-1.5 left-1.5 bg-[var(--surface-elevated)] border-l border-t border-[var(--border)]' 
+                : '-top-1.5 -left-1.5 bg-[#effdde] dark:bg-[#2b5278]'
+            )} />
+          </div>
+        )}
       </div>
+    </div>
+  )
+}
+
+
+function DateSeparator({ date }: { date: string }) {
+  return (
+    <div className="flex justify-center my-6 sticky top-2 z-20">
+      <span className="rounded-full bg-black/30 backdrop-blur-lg px-4 py-1.5 text-[11px] font-bold text-white shadow-lg border border-white/10 uppercase tracking-widest ring-1 ring-black/10">
+        {date}
+      </span>
     </div>
   )
 }
@@ -262,73 +326,105 @@ function TelegramSearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold">New Telegram Chat</h3>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 hover:bg-[var(--accent-soft)] text-[var(--muted)]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-[28px] border border-[var(--border)] bg-[var(--surface-elevated)] p-6 shadow-2xl animate-page-enter">
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-xl font-bold tracking-tight">New Telegram Chat</h3>
+          <button type="button" onClick={onClose} className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[var(--accent-soft)] text-[var(--muted)] transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
               <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
             </svg>
           </button>
         </div>
 
-        <Input
-          placeholder="Username, @username, t.me/link, or ID..."
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value)
-            setSelectedPeer(null)
-          }}
-          autoFocus
-        />
+        <div className="relative group">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-3 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-[var(--muted)] group-focus-within:text-[var(--blue-text)] transition-colors">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+          <Input
+            placeholder="Username, @username, or link..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setSelectedPeer(null)
+            }}
+            className="h-12 pl-10 pr-4 bg-[var(--background)] border-[var(--border)] focus:border-[var(--blue-border)] rounded-2xl transition-all text-base"
+            autoFocus
+          />
+        </div>
 
         {isSearching ? (
-          <p className="mt-3 text-sm text-[var(--muted)]">Searching...</p>
+          <div className="mt-6 flex flex-col items-center justify-center py-8">
+             <div className="h-8 w-8 border-3 border-[var(--blue-text)]/30 border-t-[var(--blue-text)] rounded-full animate-spin" />
+             <p className="mt-3 text-sm font-medium text-[var(--muted)]">Searching Telegram...</p>
+          </div>
         ) : results.length > 0 ? (
-          <div className="mt-3 max-h-52 space-y-1 overflow-y-auto">
+          <div className="mt-4 max-h-[320px] space-y-1 overflow-y-auto custom-scrollbar-visible pr-1">
             {results.map((item) => (
               <button
                 key={item.peer}
                 type="button"
                 onClick={() => setSelectedPeer(item)}
                 className={cn(
-                  'w-full flex items-center gap-3 rounded-xl border px-3 py-2 text-left transition-all',
+                  'w-full flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.98]',
                   selectedPeer?.peer === item.peer
-                    ? 'border-(--blue-border) bg-(--blue-dim)'
-                    : 'border-transparent hover:border-(--border) hover:bg-(--accent-soft)',
+                    ? 'border-[var(--blue-border)] bg-[var(--blue-dim)]'
+                    : 'border-transparent hover:bg-[var(--accent-soft)]',
                 )}
               >
-                <AvatarOrInitials avatarUrl={item.avatar_url} name={item.full_name || item.username || item.peer} size="sm" />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{item.full_name || item.username || item.peer}</p>
-                  {item.username ? <p className="truncate text-xs text-[var(--muted)]">@{item.username}</p> : null}
+                <AvatarOrInitials avatarUrl={item.avatar_url} name={item.full_name || item.username || item.peer} size="md" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[15px] font-bold">{item.full_name || item.username || item.peer}</p>
+                  {item.username ? <p className="truncate text-xs font-medium text-[var(--blue-text)]">@{item.username}</p> : null}
                 </div>
                 {item.existing_conversation_id ? (
-                  <span className="ml-auto shrink-0 text-xs font-medium text-(--blue-text)">Open</span>
-                ) : null}
+                  <span className="shrink-0 rounded-full bg-[var(--blue-text)] px-3 py-1 text-[10px] font-bold text-white uppercase tracking-wider">Open</span>
+                ) : (
+                  <span className="shrink-0 text-[var(--muted)]">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+                      <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                )}
               </button>
             ))}
           </div>
         ) : query.trim() && !isSearching ? (
-          <p className="mt-3 text-sm text-[var(--muted)]">No results found.</p>
+          <div className="mt-6 flex flex-col items-center justify-center py-8 text-center">
+             <div className="h-12 w-12 rounded-full bg-[var(--accent-soft)] flex items-center justify-center mb-3">
+               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6 text-[var(--muted)]">
+                 <circle cx="11" cy="11" r="8" />
+                 <path d="m21 21-4.3-4.3" />
+               </svg>
+             </div>
+             <p className="text-sm font-bold">No results found</p>
+             <p className="text-xs text-[var(--muted)] mt-1">Try a different username or ID</p>
+          </div>
         ) : null}
 
         {selectedPeer && !selectedPeer.existing_conversation_id ? (
-          <div className="mt-4">
-            <p className="mb-2 text-xs text-[var(--muted)]">First message to {selectedPeer.full_name || selectedPeer.username}:</p>
+          <div className="mt-6 animate-page-enter">
+            <p className="mb-2 text-xs font-bold text-[var(--muted)] uppercase tracking-widest">First message to {selectedPeer.full_name || selectedPeer.username}:</p>
             <textarea
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               rows={3}
               placeholder="Type your first message..."
-              className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+              className="w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-[14.5px] focus:outline-none focus:ring-2 focus:ring-[var(--blue-text)]/30 transition-all placeholder:text-[var(--muted)]/60"
             />
           </div>
         ) : null}
 
-        <div className="mt-4 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose} disabled={isSending}>Cancel</Button>
+        <div className="mt-8 flex gap-3">
+          <Button 
+            variant="secondary" 
+            onClick={onClose} 
+            disabled={isSending}
+            className="flex-1 h-12 rounded-2xl font-bold"
+          >
+            Cancel
+          </Button>
           {selectedPeer ? (
             <Button
               onClick={() => {
@@ -339,8 +435,9 @@ function TelegramSearchModal({
                 }
               }}
               disabled={isSending || (!selectedPeer.existing_conversation_id && !messageText.trim())}
+              className="flex-[2] h-12 rounded-2xl font-bold bg-[var(--blue-text)] text-white shadow-lg shadow-[var(--blue-glow)]"
             >
-              {selectedPeer.existing_conversation_id ? 'Open Chat' : isSending ? 'Sending...' : 'Start Chat'}
+              {selectedPeer.existing_conversation_id ? 'Open Conversation' : isSending ? 'Starting...' : 'Start Chatting'}
             </Button>
           ) : null}
         </div>
@@ -558,86 +655,94 @@ export function CognilabsAIChatPage() {
   const aiPaused = selectedConversation?.pause_reason === 'operator'
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <PageHeader
-        title="CognilabsAI Chat"
-        description="Instagram & Telegram conversations"
-        actions={
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => setShowNewTelegramModal(true)}
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-1.5 h-4 w-4">
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-            </svg>
-            New Telegram Chat
-          </Button>
-        }
-      />
-
+    <div className="flex h-full min-h-0 flex-col bg-[#0e1621] text-white">
       <div className="flex min-h-0 flex-1 gap-0 overflow-hidden">
         {/* Left panel – conversation list */}
         <div
           className={cn(
-            'flex w-full flex-col border-r border-[var(--border)] md:w-80 lg:w-96',
+            'flex w-full flex-col border-r border-zinc-800 md:w-80 lg:w-[380px] bg-[#17212b]',
             showChat && isMobile ? 'hidden' : 'flex',
           )}
         >
+          {/* Header/Search */}
+          <div className="shrink-0 px-4 py-3 space-y-3">
+            <div className="flex items-center justify-between">
+               <h1 className="text-xl font-bold tracking-tight">Chats</h1>
+               <button
+                 onClick={() => setShowNewTelegramModal(true)}
+                 className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-zinc-700/50 text-[#3390ec] transition-colors"
+               >
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5.5 w-5.5">
+                   <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+                 </svg>
+               </button>
+            </div>
+            <div className="relative group">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-[#3390ec] transition-colors">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-10 pl-10 pr-4 text-sm bg-[#242f3d] border-transparent focus:border-[#3390ec] rounded-[20px] transition-all text-white placeholder:text-zinc-500"
+              />
+            </div>
+          </div>
+
           {/* Channel tabs */}
-          <div className="flex shrink-0 gap-1 border-b border-[var(--border)] px-3 py-2">
+          <div className="flex shrink-0 gap-1 px-4 pb-2 border-b border-zinc-800/50">
             {(['all', 'instagram', 'telegram'] as ChannelTab[]).map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={cn(
-                  'rounded-lg px-3 py-1.5 text-xs font-semibold capitalize transition-all',
+                  'flex-1 rounded-lg px-2 py-1.5 text-[12px] font-bold capitalize transition-all relative',
                   activeTab === tab
-                    ? 'border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)'
-                    : 'border border-transparent text-(--muted) hover:bg-(--accent-soft)',
+                    ? 'text-[#3390ec]'
+                    : 'text-zinc-400 hover:text-zinc-200',
                 )}
               >
                 {tab}
+                {activeTab === tab && (
+                  <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-[#3390ec] rounded-full" />
+                )}
               </button>
             ))}
           </div>
 
-          {/* Search */}
-          <div className="shrink-0 border-b border-[var(--border)] px-3 py-2">
-            <Input
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-8 text-sm"
-            />
-          </div>
-
           {/* List */}
-          <div className="flex-1 overflow-y-auto p-2">
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5 custom-scrollbar-visible">
             {conversationsQuery.isLoading ? (
-              <LoadingStateBlock eyebrow="Loading" title="Fetching conversations..." />
-            ) : conversationsQuery.isError ? (
-              <ErrorStateBlock
-                eyebrow="Error"
-                title="Failed to load"
-                description={getApiErrorMessage(conversationsQuery.error)}
-                actionLabel="Retry"
-                onAction={() => void conversationsQuery.refetch()}
-              />
-            ) : filteredConversations.length === 0 ? (
-              <EmptyStateBlock eyebrow="Empty" title="No conversations" description="No matching conversations found." />
-            ) : (
-              <div className="space-y-0.5">
-                {filteredConversations.map((conv) => (
-                  <ConversationListItem
-                    key={conv.id}
-                    conv={conv}
-                    isActive={conv.id === selectedConversationId}
-                    onSelect={() => handleSelectConversation(conv.id)}
-                  />
-                ))}
+              <div className="p-4 space-y-4">
+                 {[1,2,3,4,5].map(i => (
+                   <div key={i} className="flex gap-3 animate-pulse">
+                     <div className="h-12 w-12 rounded-full bg-zinc-800" />
+                     <div className="flex-1 space-y-2 py-1">
+                       <div className="h-3 w-1/3 bg-zinc-800 rounded" />
+                       <div className="h-3 w-3/4 bg-zinc-800 rounded" />
+                     </div>
+                   </div>
+                 ))}
               </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-12 w-12 mb-2 opacity-20">
+                   <path d="M8 12h8m-8 4h6m2 5H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z" />
+                 </svg>
+                 <p className="text-sm font-medium">No conversations</p>
+              </div>
+            ) : (
+              filteredConversations.map((conv) => (
+                <ConversationListItem
+                  key={conv.id}
+                  conv={conv}
+                  isActive={selectedConversationId === conv.id}
+                  onSelect={() => handleSelectConversation(conv.id)}
+                />
+              ))
             )}
           </div>
         </div>
@@ -645,106 +750,173 @@ export function CognilabsAIChatPage() {
         {/* Right panel – chat */}
         <div
           className={cn(
-            'flex min-h-0 flex-1 flex-col',
+            'flex min-h-0 flex-1 flex-col bg-[#0e1621]',
             !showChat && isMobile ? 'hidden' : 'flex',
           )}
         >
           {!selectedConversation ? (
-            <div className="flex flex-1 items-center justify-center text-[var(--muted)]">
-              <div className="text-center">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-4 h-12 w-12 text-[var(--muted)]">
-                  <path d="M8 12h32v24H8z" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M16 20h16M16 26h10" strokeLinecap="round" />
-                </svg>
-                <p className="text-sm font-medium">Select a conversation</p>
-                <p className="mt-1 text-xs">Choose from the list to start chatting</p>
-              </div>
+            <div className="flex flex-1 items-center justify-center relative">
+               {/* Telegram Background Pattern */}
+               <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-repeat bg-[length:400px_400px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='360' height='360' viewBox='0 0 360 360' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l20 20M30 10l-20 20' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='10' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Crect x='200' y='50' width='30' height='20' rx='5' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Cpath d='M300 200l20-10-10 20z' stroke='%23fff' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }} />
+               <div className="text-center relative z-10 px-6 py-4 rounded-full bg-black/20 backdrop-blur-md border border-white/5">
+                 <p className="text-sm font-medium text-zinc-400">Select a chat to start messaging</p>
+               </div>
             </div>
           ) : (
             <>
               {/* Chat header */}
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
-                {isMobile ? (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedConversationId(null)}
-                    className="mr-1 rounded-lg p-1.5 hover:bg-[var(--accent-soft)] text-[var(--muted)]"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                      <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                ) : null}
-                <AvatarOrInitials avatarUrl={selectedConversation.client_avatar_url} name={getClientName(selectedConversation)} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{getClientName(selectedConversation)}</p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <ChannelBadge channel={selectedConversation.channel} chatMode={selectedConversation.chat_mode} />
-                    {selectedConversation.pause_reason ? <PauseReasonBadge reason={selectedConversation.pause_reason} /> : null}
+              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-zinc-800/50 px-4 py-2 bg-[#17212b]/95 backdrop-blur-md z-30">
+                <div className="flex items-center gap-3 min-w-0">
+                  {isMobile ? (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedConversationId(null)}
+                      className="mr-1 rounded-full p-2 hover:bg-zinc-800 text-zinc-400"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5 w-5">
+                        <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  ) : null}
+                  <div className="relative shrink-0">
+                    <AvatarOrInitials avatarUrl={selectedConversation.client_avatar_url} name={getClientName(selectedConversation)} size="sm" />
+                    <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#17212b] bg-green-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[15.5px] font-bold leading-tight">{getClientName(selectedConversation)}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[12px] text-[#3390ec] font-medium">online</p>
+                      {selectedConversation.pause_reason && (
+                        <>
+                          <span className="h-1 w-1 rounded-full bg-zinc-600" />
+                          <PauseReasonBadge reason={selectedConversation.pause_reason} />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {supportsAi ? (
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
+                  {supportsAi && (
                     <Button
                       size="sm"
-                      variant="secondary"
-                      onClick={() => handleRetryAi()}
-                      title="Retry AI"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
-                        <path d="M1 4v6h6" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M3.51 15a9 9 0 1 0 .49-4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={aiPaused ? 'secondary' : 'secondary'}
+                      variant="ghost"
                       onClick={() => handleToggleAi(aiPaused ? 'resume' : 'pause')}
                       disabled={isTogglingAi}
+                      className={cn(
+                        "h-9 px-3 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors", 
+                        aiPaused ? "text-green-400 hover:bg-green-400/10" : "text-amber-400 hover:bg-amber-400/10"
+                      )}
                     >
                       {aiPaused ? 'Resume AI' : 'Pause AI'}
                     </Button>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-                {isLoadingMessages ? (
-                  <LoadingStateBlock eyebrow="Loading" title="Fetching messages..." />
-                ) : messages.length === 0 ? (
-                  <EmptyStateBlock eyebrow="Empty" title="No messages" description="Start the conversation." />
-                ) : (
-                  messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
-                )}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Composer */}
-              <div className="shrink-0 border-t border-[var(--border)] px-4 py-3">
-                <div className="flex items-end gap-2">
-                  <textarea
-                    ref={textareaRef}
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        void handleSend()
-                      }
-                    }}
-                    placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
-                    rows={1}
-                    className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 max-h-32 overflow-y-auto"
-                    style={{ fieldSizing: 'content' } as React.CSSProperties}
-                  />
-                  <Button onClick={() => void handleSend()} disabled={isSending || !messageText.trim()}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                      <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
+                  )}
+                  <Button variant="ghost" size="sm" className="h-10 w-10 rounded-full p-0 text-zinc-400 hover:bg-zinc-800">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6">
+                      <circle cx="12" cy="12" r="1" />
+                      <circle cx="12" cy="5" r="1" />
+                      <circle cx="12" cy="19" r="1" />
                     </svg>
                   </Button>
                 </div>
+              </div>
+
+              {/* Messages */}
+              <div className="relative flex-1 overflow-hidden">
+                 {/* Telegram Background Pattern */}
+                 <div className="absolute inset-0 opacity-[0.04] pointer-events-none z-0 bg-repeat bg-[length:400px_400px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='360' height='360' viewBox='0 0 360 360' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l20 20M30 10l-20 20' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='10' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Crect x='200' y='50' width='30' height='20' rx='5' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Cpath d='M300 200l20-10-10 20z' stroke='%23fff' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }} />
+
+                 <div className="h-full overflow-y-auto px-4 py-4 custom-scrollbar-visible relative z-10 flex flex-col scroll-smooth">
+                  <div className="flex-1" />
+                  {isLoadingMessages ? (
+                    <div className="py-20 flex flex-col items-center justify-center">
+                       <div className="h-8 w-8 border-3 border-[#3390ec]/30 border-t-[#3390ec] rounded-full animate-spin" />
+                       <p className="mt-4 text-sm font-medium text-zinc-400">Loading messages...</p>
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="py-20 flex flex-col items-center justify-center text-center">
+                       <div className="h-16 w-16 rounded-full bg-zinc-800/50 flex items-center justify-center mb-4">
+                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-zinc-500">
+                           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                         </svg>
+                       </div>
+                       <p className="text-base font-bold text-zinc-300">No messages yet</p>
+                       <p className="text-sm text-zinc-500 mt-1">Send a message to start the conversation</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      {messages.reduce((acc: React.ReactNode[], msg, idx) => {
+                        const prevMsg = messages[idx - 1]
+                        const msgDate = new Date(msg.created_at).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' })
+                        const prevMsgDate = prevMsg ? new Date(prevMsg.created_at).toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' }) : null
+                        
+                        if (msgDate !== prevMsgDate) {
+                          acc.push(<DateSeparator key={`date-${msg.created_at}`} date={msgDate} />)
+                        }
+                        
+                        const showTail = !prevMsg || prevMsg.sender_type !== msg.sender_type || (msgDate !== prevMsgDate)
+                        
+                        acc.push(<MessageBubble key={msg.id} msg={msg} showTail={showTail} />)
+                        return acc
+                      }, [])}
+                    </div>
+                  )}
+                  <div ref={messagesEndRef} className="h-2" />
+                </div>
+              </div>
+
+              {/* Composer */}
+              <div className="shrink-0 bg-[#17212b] px-4 py-3 border-t border-zinc-800/50">
+                <div className="max-w-[800px] mx-auto flex items-end gap-2">
+                  <div className="flex-1 relative flex items-end bg-[#242f3d] rounded-[24px] border border-transparent focus-within:border-[#3390ec]/30 transition-all px-2 py-1 shadow-lg">
+                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-zinc-500 hover:text-[#3390ec] transition-colors rounded-full">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-5.5 w-5.5">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                      </svg>
+                    </button>
+                    
+                    <textarea
+                      ref={textareaRef}
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          void handleSend()
+                        }
+                      }}
+                      placeholder="Write a message..."
+                      rows={1}
+                      className="flex-1 resize-none bg-transparent border-0 focus:ring-0 text-[15px] leading-[1.45] py-2.5 px-2 max-h-[400px] overflow-y-auto custom-scrollbar-visible placeholder:text-zinc-500 text-white"
+                      style={{ fieldSizing: 'content' } as React.CSSProperties}
+                    />
+                    
+                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-zinc-500 hover:text-yellow-500 transition-colors rounded-full">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <button 
+                    onClick={() => void handleSend()} 
+                    disabled={isSending || !messageText.trim()}
+                    className={cn(
+                      "h-11 w-11 rounded-full flex items-center justify-center shrink-0 shadow-lg transition-all active:scale-90",
+                      messageText.trim() 
+                        ? "bg-[#3390ec] text-white hover:bg-[#2b82d9]" 
+                        : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    )}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={cn("h-5.5 w-5.5 transition-transform", messageText.trim() ? "translate-x-0.5" : "")}>
+                      <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+                <p className="mt-2 text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                   CognilabsAI • {selectedConversation.channel} • {selectedConversation.chat_mode}
+                </p>
               </div>
             </>
           )}
