@@ -104,6 +104,32 @@ function glyphPath(name: GlyphName) {
           <rect x="3.75" y="16.25" width="6" height="4" rx="1.5" />
         </>
       )
+    case 'cognilabsai-chat':
+      return (
+        <>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          <circle cx="9" cy="10" r=".85" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="10" r=".85" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="10" r=".85" fill="currentColor" stroke="none" />
+        </>
+      )
+    case 'cognilabsai-integrations':
+      return (
+        <>
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+        </>
+      )
+    case 'audit':
+      return (
+        <>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14,2 14,8 20,8" />
+          <line x1="9" y1="13" x2="15" y2="13" />
+          <line x1="9" y1="17" x2="13" y2="17" />
+          <polyline points="9,9 10,9 11,9" />
+        </>
+      )
     default:
       return (
         <>

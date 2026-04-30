@@ -10,6 +10,9 @@ export type GlyphName =
   | 'auth'
   | 'integrations'
   | 'projects'
+  | 'cognilabsai-chat'
+  | 'cognilabsai-integrations'
+  | 'audit'
   | 'default'
 
 export function getNavigationGlyphName(pathname: string): GlyphName {
@@ -21,6 +24,9 @@ export function getNavigationGlyphName(pathname: string): GlyphName {
   if (pathname.startsWith('/payment')) return 'payment'
   if (pathname.startsWith('/wordpress')) return 'wordpress'
   if (pathname.startsWith('/updates')) return 'updates'
+  if (pathname.startsWith('/cognilabsai/chat')) return 'cognilabsai-chat'
+  if (pathname.startsWith('/cognilabsai/integrations')) return 'cognilabsai-integrations'
+  if (pathname.startsWith('/audit')) return 'audit'
   if (pathname.startsWith('/integrations')) return 'integrations'
   if (pathname.startsWith('/auth')) return 'auth'
   if (pathname.startsWith('/projects') || pathname.startsWith('/boards')) return 'projects'

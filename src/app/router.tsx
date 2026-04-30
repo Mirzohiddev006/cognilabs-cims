@@ -183,6 +183,18 @@ const BoardDetailPage = lazyPage(
   () => import('../features/projects/pages/BoardDetailPage'),
   'BoardDetailPage',
 )
+const CognilabsAIChatPage = lazyPage(
+  () => import('../features/cognilabsai/pages/CognilabsAIChatPage'),
+  'CognilabsAIChatPage',
+)
+const CognilabsAIIntegrationsPage = lazyPage(
+  () => import('../features/cognilabsai/pages/CognilabsAIIntegrationsPage'),
+  'CognilabsAIIntegrationsPage',
+)
+const AuditLogsPage = lazyPage(
+  () => import('../features/auditLogs/pages/AuditLogsPage'),
+  'AuditLogsPage',
+)
 
 export const router = createBrowserRouter([
   {
@@ -364,6 +376,38 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute>
                     {withPageLoader(<BoardDetailPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'cognilabsai/chat',
+                element: (
+                  <ProtectedRoute permissionKey="cognilabsai_chat">
+                    {withPageLoader(<CognilabsAIChatPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'cognilabsai/integrations',
+                element: (
+                  <ProtectedRoute permissionKey="cognilabsai_integrations">
+                    {withPageLoader(<CognilabsAIIntegrationsPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'cognilabsai',
+                element: (
+                  <ProtectedRoute permissionKey="cognilabsai_chat">
+                    <Navigate to="/cognilabsai/chat" replace />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'audit/logs',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    {withPageLoader(<AuditLogsPage />)}
                   </ProtectedRoute>
                 ),
               },
