@@ -221,6 +221,17 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
   )
 }
 
+// Xato keltirib chiqargan DateSeparator komponenti qo'shildi
+function DateSeparator({ date }: { date: string }) {
+  return (
+    <div className="flex justify-center my-4 sticky top-2 z-20">
+      <span className="rounded-full bg-[#121214]/80 border border-white/10 px-4 py-1.5 text-[12px] font-medium text-zinc-400 shadow-sm backdrop-blur-md">
+        {date}
+      </span>
+    </div>
+  )
+}
+
 function TelegramSearchModal({
   onClose,
   onStartChat,
@@ -383,7 +394,6 @@ export function CognilabsAIChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { showToast } = useToast()
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeTab] = useState<ChannelTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(
@@ -574,11 +584,10 @@ export function CognilabsAIChatPage() {
   const aiPaused = selectedConversation?.pause_reason === 'operator'
 
   return (
-    // Asosiy sahifa wrapper'i. CIMS skrinshotidagi kabi umumiy fon bg-[#0a0a0b]
     <div className="flex h-full min-h-0 flex-col bg-[#09090b] text-zinc-200 font-sans p-2 lg:p-4 gap-4">
       <div className="flex min-h-0 flex-1 gap-4 overflow-hidden w-full max-w-[1400px] mx-auto">
         
-        {/* Chap panel – Chatlar ro'yxati (Sidebar) */}
+        {/* Chap panel – Chatlar ro'yxati */}
         <div
           className={cn(
             'flex w-full flex-col md:w-80 lg:w-[380px] bg-[#121214] border border-white/5 rounded-2xl overflow-hidden shadow-sm',
@@ -705,7 +714,7 @@ export function CognilabsAIChatPage() {
                   {supportsAi && (
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost" 
                       onClick={() => handleToggleAi(aiPaused ? 'resume' : 'pause')}
                       disabled={isTogglingAi}
                       className={cn(
@@ -728,7 +737,7 @@ export function CognilabsAIChatPage() {
                 </div>
               </div>
 
-              {/* Xabarlar oynasi (Scrollable area) */}
+              {/* Xabarlar oynasi */}
               <div className="relative flex-1 overflow-hidden z-10 bg-[#0c0c0e]">
                  <div className="h-full overflow-y-auto px-6 py-6 custom-scrollbar-visible flex flex-col scroll-smooth">
                   <div className="flex-1" />
@@ -766,7 +775,7 @@ export function CognilabsAIChatPage() {
                 </div>
               </div>
 
-              {/* Xabar yozish qismi (Input area) */}
+              {/* Xabar yozish qismi */}
               <div className="shrink-0 bg-[#121214] p-4 z-30 border-t border-white/5">
                 <div className="max-w-[900px] mx-auto relative flex items-end gap-3 bg-[#1a1a1f] rounded-2xl px-3 py-2 border border-white/10 focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/50 transition-all shadow-sm">
                   
