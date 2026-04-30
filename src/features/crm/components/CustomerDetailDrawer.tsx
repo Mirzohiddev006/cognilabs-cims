@@ -109,9 +109,11 @@ function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
 export function CustomerDetailContent({
   customer,
   audioSource,
+  onOpenChat,
 }: {
   customer: CustomerSummary
   audioSource: string | null
+  onOpenChat?: () => void
 }) {
   const { t } = useTranslation()
   const customerName = getCustomerDisplayName(customer)
@@ -148,6 +150,18 @@ export function CustomerDetailContent({
               </div>
 
               <div className="flex flex-wrap gap-2">
+                {onOpenChat ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={onOpenChat}
+                  >
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 mr-1.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    {t('customers.detail.go_to_chat', "Suhbat filega o'tish")}
+                  </Button>
+                ) : null}
                 {audioSource ? (
                   <Button variant="secondary" size="sm" asChild>
                     <a href={audioSource} target="_blank" rel="noreferrer">
@@ -386,7 +400,16 @@ export function CustomerDetailDrawer({
                 }}
               />
             ) : customer ? (
-              <CustomerDetailContent customer={customer} audioSource={audioSource} />
+              <CustomerDetailContent
+                customer={customer}
+                audioSource={audioSource}
+                onOpenChat={(() => {
+                  if (!customer.chat_url || !onOpenChat) return undefined
+                  const match = customer.chat_url.match(/conversation_id=(\d+)/)
+                  const convId = match ? Number(match[1]) : null
+                  return convId ? () => { onOpenChat(convId); onClose() } : undefined
+                })()}
+              />
             ) : (
               <EmptyStateBlock
                 eyebrow={t('customers.detail', 'Customer detail')}

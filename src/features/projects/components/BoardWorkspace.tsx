@@ -473,7 +473,10 @@ export function BoardWorkspace({
       />
     </div>
   ) : (
-    <div className="flex-1 overflow-hidden">
+    <div
+      className={isEmbedded ? 'flex-1 overflow-hidden' : 'overflow-hidden'}
+      style={!isEmbedded ? { height: 'calc(100vh - 162px)' } : undefined}
+    >
       <KanbanBoard
         columns={board.columns}
         members={allUsers}
@@ -498,7 +501,7 @@ export function BoardWorkspace({
           {content}
         </div>
       ) : (
-        <div className="flex-1 flex flex-col min-h-0 md:-mx-6 lg:-mx-8">
+        <div className="flex flex-col md:-mx-6 lg:-mx-8">
           {header}
           {content}
         </div>

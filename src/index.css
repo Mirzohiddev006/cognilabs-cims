@@ -1414,7 +1414,7 @@ html.light .custom-scrollbar-visible:hover::-webkit-scrollbar-thumb {
 }
 
 .horizontal-scrollbar-visible::-webkit-scrollbar {
-  height: 18px;
+  height: 16px;
 }
 .horizontal-scrollbar-visible::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.4);
