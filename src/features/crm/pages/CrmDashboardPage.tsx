@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -29,12 +28,6 @@ import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-f
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
-import {
-  cognilabsaiService,
-  type ConversationItem,
-  type MessageItem,
-} from '../../../shared/api/services/cognilabsai.service'
-
 const emptyCustomers: CustomerSummary[] = []
 const emptyStatuses: DynamicStatusOption[] = []
 

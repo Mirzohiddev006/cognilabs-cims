@@ -639,16 +639,6 @@ export function CognilabsAIChatPage() {
     }
   }
 
-  async function handleRetryAi() {
-    if (!selectedConversationId) return
-    try {
-      await cognilabsaiService.retryAi(selectedConversationId)
-      showToast({ title: 'AI retry triggered', tone: 'success' })
-    } catch (err) {
-      showToast({ title: 'Error', description: getApiErrorMessage(err), tone: 'error' })
-    }
-  }
-
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   const showChat = selectedConversationId !== null
   const supportsAi = selectedConversation?.supports_ai ?? false
