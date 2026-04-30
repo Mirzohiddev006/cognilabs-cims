@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/purity */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   useCallback,
   useEffect,
@@ -62,12 +60,11 @@ function AvatarOrInitials({
     .join('')
     .toUpperCase() || '?'
 
-  // Telegram often uses vibrant solid colors for generic avatars
   return (
     <div
       className={cn(
         sizeClass,
-        'shrink-0 rounded-full bg-[linear-gradient(135deg,#3b82f6,#2563eb)] text-white font-semibold flex items-center justify-center select-none',
+        'shrink-0 rounded-full bg-primary text-primary-foreground font-semibold flex items-center justify-center select-none',
       )}
     >
       {initials}
@@ -82,8 +79,8 @@ function ChannelBadge({ channel, chatMode }: { channel: string; chatMode: string
       className={cn(
         'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide transition-colors',
         isInstagram
-          ? 'bg-pink-500/15 text-pink-400'
-          : 'bg-[#3390ec]/15 text-[#3390ec]',
+          ? 'bg-pink-500/15 text-pink-500'
+          : 'bg-primary/15 text-primary',
       )}
     >
       {chatMode === 'instagram_ai' ? 'AI' : 'OP'}
@@ -110,6 +107,7 @@ function ConversationListItem({
   onSelect: () => void
 }) {
   const name = getClientName(conv)
+  // eslint-disable-next-line react-hooks/purity
   const isOnline = conv.last_message_at && (Date.now() - new Date(conv.last_message_at).getTime() < 1000 * 60 * 5)
   
   return (
@@ -119,16 +117,16 @@ function ConversationListItem({
       className={cn(
         'group w-full rounded-xl px-2.5 py-2 text-left transition-colors duration-150 relative overflow-hidden flex items-center gap-3',
         isActive
-          ? 'bg-[#3390ec] text-white'
-          : 'hover:bg-[#202b36] text-[var(--foreground)]',
+          ? 'bg-primary text-primary-foreground'
+          : 'hover:bg-accent hover:text-accent-foreground text-foreground',
       )}
     >
       <div className="relative shrink-0">
         <AvatarOrInitials avatarUrl={conv.client_avatar_url} name={name} size="md" />
         {isOnline && (
           <div className={cn(
-            "absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 bg-[#00ff00]",
-            isActive ? "border-[#3390ec]" : "border-[#17212b] group-hover:border-[#202b36]"
+            "absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 bg-green-500",
+            isActive ? "border-primary" : "border-background group-hover:border-accent"
           )} />
         )}
       </div>
@@ -137,14 +135,14 @@ function ConversationListItem({
         <div className="flex items-baseline justify-between gap-2">
           <p className={cn(
             'truncate text-[15px] font-medium leading-tight',
-            isActive ? 'text-white' : 'text-white'
+            isActive ? 'text-primary-foreground' : 'text-foreground'
           )}>
             {name}
           </p>
           {conv.last_message_at ? (
             <span className={cn(
               'shrink-0 text-[12px]',
-              isActive ? 'text-white/80' : 'text-[#7a8b9a]'
+              isActive ? 'text-primary-foreground/80' : 'text-muted-foreground'
             )}>
               {new Date(conv.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
@@ -156,14 +154,14 @@ function ConversationListItem({
             {conv.last_message_preview ? (
               <p className={cn(
                 'truncate text-[14px] leading-snug',
-                isActive ? 'text-white/90' : 'text-[#7a8b9a]'
+                isActive ? 'text-primary-foreground/90' : 'text-muted-foreground'
               )}>
                 {conv.last_message_preview}
               </p>
             ) : (
               <p className={cn(
                 'italic text-[13px]',
-                isActive ? 'text-white/60' : 'text-[#7a8b9a]'
+                isActive ? 'text-primary-foreground/60' : 'text-muted-foreground'
               )}>No messages yet</p>
             )}
           </div>
@@ -185,7 +183,7 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
   if (isSystem) {
     return (
       <div className="flex justify-center my-2">
-        <span className="rounded-full bg-[#182533]/60 px-3 py-1 text-[13px] font-medium text-white/80 shadow-sm backdrop-blur-sm">
+        <span className="rounded-full bg-muted/80 px-3 py-1 text-[13px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm">
           {msg.text}
         </span>
       </div>
@@ -201,21 +199,19 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
         className={cn(
           'relative max-w-[85%] sm:max-w-[70%] px-3.5 py-1.5 text-[15px] shadow-sm',
           isClient
-            ? 'bg-[#182533] text-white' // Telegram Dark Mode receiver bubble
-            : 'bg-[#2b5278] text-white', // Telegram Dark Mode sender bubble
-          // Telegram style border radius
+            ? 'bg-secondary text-secondary-foreground'
+            : 'bg-primary text-primary-foreground',
           'rounded-2xl',
           showTail && isClient && 'rounded-bl-none',
           showTail && !isClient && 'rounded-br-none'
         )}
       >
-        {/* The little tail triangle for Telegram look */}
         {showTail && (
           <svg
             viewBox="0 0 11 20"
             className={cn(
               "absolute bottom-0 w-[11px] h-[20px]",
-              isClient ? "-left-[10px] text-[#182533]" : "-right-[10px] text-[#2b5278]"
+              isClient ? "-left-[10px] text-secondary" : "-right-[10px] text-primary"
             )}
             style={{ fill: "currentColor" }}
           >
@@ -230,7 +226,7 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
         {(isAi || msg.sender_type === 'operator') && (
           <p className={cn(
             'mb-0.5 text-[13px] font-medium', 
-            isAi ? 'text-violet-400' : 'text-[#64b5f6]'
+            isAi ? 'opacity-80 text-purple-300' : 'opacity-80'
           )}>
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
@@ -238,7 +234,6 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
         
         <p className="whitespace-pre-wrap break-words leading-[1.45]">
           {msg.text}
-          {/* Spacer to float time to the bottom right without overlapping text */}
           <span className="inline-block w-12" />
         </p>
         
@@ -247,8 +242,7 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
           {!isClient && (
-            <svg viewBox="0 0 16 15" className={cn("h-[14px] w-[14px] fill-current", isAi ? "text-violet-300" : "text-[#40a7e3]")}>
-              {/* Telegram double checkmark simplified */}
+            <svg viewBox="0 0 16 15" className="h-[14px] w-[14px] fill-current">
               <path d="M10.97 3.53a.75.75 0 0 1 1.06 0l3.5 3.5a.75.75 0 1 1-1.06 1.06L11.5 5.12l-2.97 2.97a.75.75 0 0 1-1.06-1.06l3.5-3.5zm-5 0a.75.75 0 0 1 1.06 0l3.5 3.5a.75.75 0 1 1-1.06 1.06L6.5 5.12 3.03 8.59a.75.75 0 0 1-1.06-1.06l4-4z" />
             </svg>
           )}
@@ -261,7 +255,7 @@ function MessageBubble({ msg, showTail }: { msg: MessageItem; showTail?: boolean
 function DateSeparator({ date }: { date: string }) {
   return (
     <div className="flex justify-center my-3 sticky top-2 z-20">
-      <span className="rounded-full bg-[#182533]/70 backdrop-blur-md px-3 py-1 text-[13px] font-medium text-white shadow-sm">
+      <span className="rounded-full bg-muted/80 backdrop-blur-md px-3 py-1 text-[13px] font-medium text-muted-foreground shadow-sm">
         {date}
       </span>
     </div>
@@ -324,11 +318,11 @@ function TelegramSearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md rounded-xl bg-[#17212b] p-6 shadow-2xl animate-page-enter">
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-xl bg-card p-6 shadow-2xl animate-page-enter border border-border">
         <div className="mb-6 flex items-center justify-between">
-          <h3 className="text-xl font-medium text-white">New Telegram Chat</h3>
-          <button type="button" onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-white/10 text-[#7a8b9a] transition-colors">
+          <h3 className="text-xl font-medium text-card-foreground">New Telegram Chat</h3>
+          <button type="button" onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-accent text-muted-foreground transition-colors">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
               <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
             </svg>
@@ -336,7 +330,7 @@ function TelegramSearchModal({
         </div>
 
         <div className="relative group">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#7a8b9a] group-focus-within:text-[#3390ec] transition-colors">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
           </svg>
@@ -347,14 +341,14 @@ function TelegramSearchModal({
               setQuery(e.target.value)
               setSelectedPeer(null)
             }}
-            className="h-12 pl-10 pr-4 bg-[#242f3d] border-transparent focus:border-[#3390ec] rounded-lg transition-all text-base text-white placeholder:text-[#7a8b9a]"
+            className="h-12 pl-10 pr-4 bg-muted border-transparent focus:border-primary rounded-lg transition-all text-base text-foreground placeholder:text-muted-foreground"
             autoFocus
           />
         </div>
 
         {isSearching ? (
           <div className="mt-6 flex flex-col items-center justify-center py-8">
-             <div className="h-8 w-8 border-2 border-[#3390ec]/30 border-t-[#3390ec] rounded-full animate-spin" />
+             <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : results.length > 0 ? (
           <div className="mt-4 max-h-[320px] space-y-1 overflow-y-auto custom-scrollbar-visible pr-1">
@@ -366,20 +360,20 @@ function TelegramSearchModal({
                 className={cn(
                   'w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
                   selectedPeer?.peer === item.peer
-                    ? 'bg-[#3390ec] text-white'
-                    : 'hover:bg-[#202b36] text-white',
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-accent text-foreground',
                 )}
               >
                 <AvatarOrInitials avatarUrl={item.avatar_url} name={item.full_name || item.username || item.peer} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[15px] font-medium">{item.full_name || item.username || item.peer}</p>
-                  {item.username ? <p className={cn("truncate text-[13px]", selectedPeer?.peer === item.peer ? "text-white/80" : "text-[#7a8b9a]")}>@{item.username}</p> : null}
+                  {item.username ? <p className={cn("truncate text-[13px]", selectedPeer?.peer === item.peer ? "text-primary-foreground/80" : "text-muted-foreground")}>@{item.username}</p> : null}
                 </div>
               </button>
             ))}
           </div>
         ) : query.trim() && !isSearching ? (
-          <div className="mt-6 flex flex-col items-center justify-center py-8 text-center text-[#7a8b9a]">
+          <div className="mt-6 flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
              <p className="text-[15px] font-medium">No results found</p>
           </div>
         ) : null}
@@ -391,7 +385,7 @@ function TelegramSearchModal({
               onChange={(e) => setMessageText(e.target.value)}
               rows={3}
               placeholder="Type your first message..."
-              className="w-full resize-none rounded-lg border border-transparent bg-[#242f3d] px-4 py-3 text-[15px] text-white focus:outline-none focus:ring-1 focus:ring-[#3390ec] transition-all placeholder:text-[#7a8b9a]"
+              className="w-full resize-none rounded-lg border border-transparent bg-muted px-4 py-3 text-[15px] text-foreground focus:outline-none focus:ring-1 focus:ring-primary transition-all placeholder:text-muted-foreground"
             />
           </div>
         ) : null}
@@ -401,7 +395,7 @@ function TelegramSearchModal({
             variant="ghost" 
             onClick={onClose} 
             disabled={isSending}
-            className="flex-1 h-11 rounded-lg font-medium text-[#3390ec] hover:bg-[#3390ec]/10"
+            className="flex-1 h-11 rounded-lg font-medium"
           >
             Cancel
           </Button>
@@ -415,7 +409,7 @@ function TelegramSearchModal({
                 }
               }}
               disabled={isSending || (!selectedPeer.existing_conversation_id && !messageText.trim())}
-              className="flex-[2] h-11 rounded-lg font-medium bg-[#3390ec] text-white hover:bg-[#2b82d9]"
+              className="flex-[2] h-11 rounded-lg font-medium"
             >
               {selectedPeer.existing_conversation_id ? 'Open Chat' : isSending ? 'Starting...' : 'Start Chat'}
             </Button>
@@ -511,7 +505,6 @@ export function CognilabsAIChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // WebSocket setup
   useEffect(() => {
     if (!wsKey) return
 
@@ -549,10 +542,7 @@ export function CognilabsAIChatPage() {
         }
       }
 
-      sock.onerror = () => {
-        // reconnect silently
-      }
-
+      sock.onerror = () => {}
       sock.onclose = () => {
         setTimeout(connect, 5000)
       }
@@ -563,8 +553,7 @@ export function CognilabsAIChatPage() {
     return () => {
       wsRef.current?.close()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wsKey])
+  }, [wsKey, selectedConversationId])
 
   const handleSelectConversation = useCallback((id: number) => {
     setSelectedConversationId(id)
@@ -625,25 +614,24 @@ export function CognilabsAIChatPage() {
   const aiPaused = selectedConversation?.pause_reason === 'operator'
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#0e1621] text-white font-sans">
+    <div className="flex h-full min-h-0 flex-col bg-background text-foreground font-sans">
       <div className="flex min-h-0 flex-1 gap-0 overflow-hidden">
-        {/* Left panel – conversation list (Telegram Sidebar) */}
+        {/* Left panel – conversation list */}
         <div
           className={cn(
-            'flex w-full flex-col border-r border-black/20 md:w-80 lg:w-[420px] bg-[#17212b]',
+            'flex w-full flex-col border-r border-border md:w-80 lg:w-[420px] bg-card',
             showChat && isMobile ? 'hidden' : 'flex',
           )}
         >
-          {/* Header/Search - Telegram Style */}
+          {/* Header/Search */}
           <div className="shrink-0 px-4 py-3 flex gap-3 items-center">
-            <button className="text-[#7a8b9a] hover:text-[#3390ec] transition-colors p-1">
-              {/* Telegram Hamburger Menu Icon */}
+            <button className="text-muted-foreground hover:text-primary transition-colors p-1">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
                 <path d="M3 12h18M3 6h18M3 18h18" strokeLinecap="round" />
               </svg>
             </button>
             <div className="relative flex-1 group">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#7a8b9a] group-focus-within:text-[#3390ec] transition-colors">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.3-4.3" />
               </svg>
@@ -651,7 +639,7 @@ export function CognilabsAIChatPage() {
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 pl-10 pr-4 text-[15px] bg-[#242f3d] border-transparent focus:border-transparent focus:bg-[#0e1621] rounded-full transition-all text-white placeholder:text-[#7a8b9a] outline-none"
+                className="h-10 pl-10 pr-4 text-[15px] bg-muted border-transparent focus:border-primary rounded-full transition-all text-foreground placeholder:text-muted-foreground outline-none"
               />
             </div>
           </div>
@@ -662,16 +650,16 @@ export function CognilabsAIChatPage() {
               <div className="p-4 space-y-4">
                  {[1,2,3,4,5].map(i => (
                    <div key={i} className="flex gap-3 animate-pulse px-2">
-                     <div className="h-12 w-12 rounded-full bg-[#242f3d]" />
+                     <div className="h-12 w-12 rounded-full bg-muted" />
                      <div className="flex-1 space-y-2 py-1">
-                       <div className="h-3 w-1/3 bg-[#242f3d] rounded" />
-                       <div className="h-3 w-3/4 bg-[#242f3d] rounded" />
+                       <div className="h-3 w-1/3 bg-muted rounded" />
+                       <div className="h-3 w-3/4 bg-muted rounded" />
                      </div>
                    </div>
                  ))}
               </div>
             ) : filteredConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-[#7a8b9a]">
+              <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                  <p className="text-[15px] font-medium">No conversations</p>
               </div>
             ) : (
@@ -688,11 +676,11 @@ export function CognilabsAIChatPage() {
             )}
           </div>
           
-          {/* Floating Action Button (New Chat) */}
+          {/* Floating Action Button */}
           <div className="absolute bottom-6 right-6 lg:left-[350px]">
             <button
                onClick={() => setShowNewTelegramModal(true)}
-               className="h-14 w-14 flex items-center justify-center rounded-full bg-[#3390ec] hover:bg-[#2b82d9] text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+               className="h-14 w-14 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg transition-transform hover:scale-105 active:scale-95"
              >
                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
                  <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5l13.732-13.732z" strokeLinecap="round" strokeLinejoin="round" />
@@ -701,32 +689,32 @@ export function CognilabsAIChatPage() {
           </div>
         </div>
 
-        {/* Right panel – chat (Telegram Chat Area) */}
+        {/* Right panel – chat area */}
         <div
           className={cn(
-            'flex min-h-0 flex-1 flex-col bg-[#0e1621] relative',
+            'flex min-h-0 flex-1 flex-col bg-background relative',
             !showChat && isMobile ? 'hidden' : 'flex',
           )}
         >
-          {/* Telegram Background Pattern */}
-          <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 bg-repeat bg-[length:400px_400px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='360' height='360' viewBox='0 0 360 360' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l20 20M30 10l-20 20' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='10' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Crect x='200' y='50' width='30' height='20' rx='5' stroke='%23fff' stroke-width='1' fill='none'/%3E%3Cpath d='M300 200l20-10-10 20z' stroke='%23fff' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }} />
+          {/* Subtle Background Pattern (Optional) */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-repeat bg-[length:400px_400px]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='360' height='360' viewBox='0 0 360 360' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10l20 20M30 10l-20 20' stroke='currentColor' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='10' stroke='currentColor' stroke-width='1' fill='none'/%3E%3Crect x='200' y='50' width='30' height='20' rx='5' stroke='currentColor' stroke-width='1' fill='none'/%3E%3Cpath d='M300 200l20-10-10 20z' stroke='currentColor' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }} />
 
           {!selectedConversation ? (
             <div className="flex flex-1 items-center justify-center relative z-10">
-               <div className="text-center px-4 py-1.5 rounded-full bg-[#182533]/80 backdrop-blur-sm">
-                 <p className="text-[14px] font-medium text-white/80">Select a chat to start messaging</p>
+               <div className="text-center px-4 py-1.5 rounded-full bg-muted/80 backdrop-blur-sm border border-border">
+                 <p className="text-[14px] font-medium text-muted-foreground">Select a chat to start messaging</p>
                </div>
             </div>
           ) : (
             <>
-              {/* Chat header (Telegram Desktop Style) */}
-              <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2 bg-[#17212b] z-30 shadow-sm border-b border-black/20">
+              {/* Chat header */}
+              <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2 bg-card z-30 shadow-sm border-b border-border">
                 <div className="flex items-center gap-3 min-w-0 cursor-pointer hover:opacity-80 transition-opacity">
                   {isMobile ? (
                     <button
                       type="button"
                       onClick={() => setSelectedConversationId(null)}
-                      className="mr-1 rounded-full p-2 hover:bg-[#202b36] text-[#7a8b9a]"
+                      className="mr-1 rounded-full p-2 hover:bg-accent text-muted-foreground"
                     >
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-6 w-6">
                         <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -737,12 +725,12 @@ export function CognilabsAIChatPage() {
                     <AvatarOrInitials avatarUrl={selectedConversation.client_avatar_url} name={getClientName(selectedConversation)} size="sm" />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-[16px] font-medium leading-tight">{getClientName(selectedConversation)}</p>
+                    <p className="truncate text-[16px] font-medium leading-tight text-foreground">{getClientName(selectedConversation)}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-[13px] text-[#7a8b9a] font-normal">last seen recently</p>
+                      <p className="text-[13px] text-muted-foreground font-normal">last seen recently</p>
                       {selectedConversation.pause_reason && (
                         <>
-                          <span className="h-1 w-1 rounded-full bg-[#7a8b9a]" />
+                          <span className="h-1 w-1 rounded-full bg-muted-foreground" />
                           <PauseReasonBadge reason={selectedConversation.pause_reason} />
                         </>
                       )}
@@ -750,7 +738,7 @@ export function CognilabsAIChatPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-[#7a8b9a]">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   {supportsAi && (
                     <Button
                       size="sm"
@@ -759,25 +747,24 @@ export function CognilabsAIChatPage() {
                       disabled={isTogglingAi}
                       className={cn(
                         "h-9 px-3 rounded-md text-[13px] font-medium transition-colors", 
-                        aiPaused ? "text-[#00ff00] hover:bg-[#00ff00]/10" : "text-amber-500 hover:bg-amber-500/10"
+                        aiPaused ? "text-green-500 hover:bg-green-500/10" : "text-amber-500 hover:bg-amber-500/10"
                       )}
                     >
                       {aiPaused ? 'Resume AI' : 'Pause AI'}
                     </Button>
                   )}
-                  {/* Telegram Header Action Icons */}
-                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-[#202b36] transition-colors">
+                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent transition-colors">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
                       <circle cx="11" cy="11" r="8" />
                       <path d="m21 21-4.3-4.3" />
                     </svg>
                   </button>
-                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-[#202b36] transition-colors">
+                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent transition-colors">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                   </button>
-                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-[#202b36] transition-colors">
+                  <button className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-accent transition-colors">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
                       <circle cx="12" cy="12" r="1" />
                       <circle cx="12" cy="5" r="1" />
@@ -793,12 +780,12 @@ export function CognilabsAIChatPage() {
                   <div className="flex-1" />
                   {isLoadingMessages ? (
                     <div className="py-20 flex flex-col items-center justify-center">
-                       <div className="h-8 w-8 border-2 border-[#3390ec]/30 border-t-[#3390ec] rounded-full animate-spin" />
+                       <div className="h-8 w-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="py-10 flex flex-col items-center justify-center text-center">
-                       <div className="px-4 py-1.5 rounded-full bg-[#182533]/80 backdrop-blur-sm">
-                         <p className="text-[14px] font-medium text-white/80">No messages here yet...</p>
+                       <div className="px-4 py-1.5 rounded-full bg-muted/80 backdrop-blur-sm border border-border">
+                         <p className="text-[14px] font-medium text-muted-foreground">No messages here yet...</p>
                        </div>
                     </div>
                   ) : (
@@ -812,7 +799,6 @@ export function CognilabsAIChatPage() {
                           acc.push(<DateSeparator key={`date-${msg.created_at}`} date={msgDate} />)
                         }
                         
-                        // Show tail if it's the last message in a block from the same sender
                         const nextMsg = messages[idx + 1]
                         const showTail = !nextMsg || nextMsg.sender_type !== msg.sender_type || (new Date(nextMsg.created_at).toLocaleDateString([], { month: 'long', day: 'numeric' }) !== msgDate)
                         
@@ -825,12 +811,11 @@ export function CognilabsAIChatPage() {
                 </div>
               </div>
 
-              {/* Composer (Telegram Input Area) */}
-              <div className="shrink-0 bg-[#17212b] px-4 py-3 z-30">
+              {/* Composer */}
+              <div className="shrink-0 bg-card px-4 py-3 z-30 border-t border-border">
                 <div className="max-w-[800px] mx-auto flex items-end gap-2">
-                  <div className="flex-1 relative flex items-end bg-[#242f3d] rounded-xl px-2 py-1 shadow-sm">
-                    {/* Attachment Icon */}
-                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-[#7a8b9a] hover:text-[#3390ec] transition-colors rounded-full">
+                  <div className="flex-1 relative flex items-end bg-muted rounded-xl px-2 py-1 shadow-sm border border-border/50">
+                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors rounded-full">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-[22px] w-[22px] -rotate-45">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -848,12 +833,11 @@ export function CognilabsAIChatPage() {
                       }}
                       placeholder="Write a message..."
                       rows={1}
-                      className="flex-1 resize-none bg-transparent border-0 focus:ring-0 text-[15px] leading-[1.45] py-2.5 px-2 max-h-[400px] overflow-y-auto custom-scrollbar-visible placeholder:text-[#7a8b9a] text-white outline-none"
+                      className="flex-1 resize-none bg-transparent border-0 focus:ring-0 text-[15px] leading-[1.45] py-2.5 px-2 max-h-[400px] overflow-y-auto custom-scrollbar-visible placeholder:text-muted-foreground text-foreground outline-none"
                       style={{ fieldSizing: 'content' } as React.CSSProperties}
                     />
                     
-                    {/* Emoji Icon */}
-                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-[#7a8b9a] hover:text-[#3390ec] transition-colors rounded-full">
+                    <button type="button" className="h-10 w-10 shrink-0 flex items-center justify-center text-muted-foreground hover:text-primary transition-colors rounded-full">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-[22px] w-[22px]">
                         <circle cx="12" cy="12" r="10" />
                         <path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01" strokeLinecap="round" strokeLinejoin="round" />
@@ -861,15 +845,14 @@ export function CognilabsAIChatPage() {
                     </button>
                   </div>
                   
-                  {/* Send / Microphone Button */}
                   <button 
                     onClick={() => void handleSend()} 
                     disabled={isSending || !messageText.trim()}
                     className={cn(
-                      "h-[46px] w-[46px] rounded-full flex items-center justify-center shrink-0 transition-colors",
+                      "h-[46px] w-[46px] rounded-full flex items-center justify-center shrink-0 transition-colors shadow-sm",
                       messageText.trim() 
-                        ? "bg-[#3390ec] text-white hover:bg-[#2b82d9]" 
-                        : "bg-[#242f3d] text-[#7a8b9a] hover:text-white"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                        : "bg-muted text-muted-foreground border border-border/50 hover:text-foreground"
                     )}
                   >
                     {messageText.trim() ? (
