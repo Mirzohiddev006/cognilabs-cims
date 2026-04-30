@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { useTheme } from '../../../app/hooks/useTheme'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
@@ -38,7 +37,6 @@ export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { theme } = useTheme()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user } = useAuth()
@@ -85,7 +83,6 @@ export function ProjectDetailPage() {
 
   const project = projectQuery.data
   const projectImage = resolveMediaUrl(project?.image) ?? project?.image ?? null
-  const priorityConfigMap = getPriorityConfig()
 
   const selectedBoardId = parseBoardId(searchParams.get('board'))
   const selectedBoardParam = searchParams.get('board')
