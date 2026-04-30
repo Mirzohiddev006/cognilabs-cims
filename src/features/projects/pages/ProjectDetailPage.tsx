@@ -308,7 +308,7 @@ export function ProjectDetailPage() {
 
   return (
     <>
-      <div className="relative flex flex-col gap-4 sm:gap-6 page-enter h-[calc(100dvh-88px)] overflow-hidden">
+      <div className="relative flex flex-1 flex-col gap-4 sm:gap-6 page-enter min-h-0 overflow-hidden">
         {/* Background Project Header (Jira Style) - More compact on mobile */}
         <div className="relative shrink-0 overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-6 shadow-sm">
           <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 sm:h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />

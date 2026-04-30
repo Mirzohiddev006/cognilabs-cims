@@ -1387,53 +1387,59 @@ html.light :is(.card-base, .dialog-content, .page-header-card, .glass-panel, .ca
 
 /* ─── CUSTOM SCROLLBARS ───────────────────────────────────────── */
 .custom-scrollbar-visible::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 .custom-scrollbar-visible::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar-visible::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 10px;
 }
+.custom-scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
 .custom-scrollbar-visible:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.40);
+  background: rgba(255, 255, 255, 0.50);
+}
+html.light .custom-scrollbar-visible::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
 }
 html.light .custom-scrollbar-visible::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.20);
+  background: rgba(0, 0, 0, 0.25);
 }
 html.light .custom-scrollbar-visible:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(0, 0, 0, 0.40);
 }
 
 .horizontal-scrollbar-visible::-webkit-scrollbar {
-  height: 8px;
+  height: 12px;
 }
 .horizontal-scrollbar-visible::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   margin: 0 16px;
 }
 .horizontal-scrollbar-visible::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 10px;
-  border: 2px solid transparent;
+  border: 3px solid transparent;
   background-clip: padding-box;
 }
 .horizontal-scrollbar-visible:hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.45);
-  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.6);
+  border: 3px solid transparent;
   background-clip: padding-box;
 }
 html.light .horizontal-scrollbar-visible::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.1);
 }
 html.light .horizontal-scrollbar-visible::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.3);
 }
 html.light .horizontal-scrollbar-visible:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.32);
+  background: rgba(0, 0, 0, 0.45);
 }
 
 .custom-scrollbar-none::-webkit-scrollbar {

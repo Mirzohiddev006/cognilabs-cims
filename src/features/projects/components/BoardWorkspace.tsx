@@ -184,14 +184,14 @@ export function BoardWorkspace({
     }
   }
 
-  async function handleArchiveBoard() {
-    if (!canManageProjects || !board || board.is_archived) {
+  async function handleDeleteBoard() {
+    if (!canManageProjects || !board) {
       return
     }
 
     const ok = await confirm({
-      title: lt('Archive board?'),
-      description: `"${board.name}" ${lt('will be archived. All data is preserved.')}`,
+      title: lt('Delete board?'),
+      description: `"${board.name}" ${lt('will be permanently deleted. This action cannot be undone.')}`,
       tone: 'danger',
     })
 
@@ -201,7 +201,7 @@ export function BoardWorkspace({
 
     try {
       await projectsService.deleteBoard(board.id)
-      showToast({ title: lt('Board archived'), tone: 'success' })
+      showToast({ title: lt('Board deleted'), tone: 'success' })
       await notifyBoardsChanged()
 
       if (isEmbedded) {
@@ -210,7 +210,7 @@ export function BoardWorkspace({
 
       navigate(`/projects/${board.project_id}`)
     } catch {
-      showToast({ title: lt('Failed to archive board'), tone: 'error' })
+      showToast({ title: lt('Failed to delete board'), tone: 'error' })
     }
   }
 
@@ -449,8 +449,8 @@ export function BoardWorkspace({
           <Button variant="ghost" size="sm" onClick={() => setIsEditBoardOpen(true)}>
             {lt('Edit')}
           </Button>
-          <Button variant="danger" size="sm" onClick={handleArchiveBoard}>
-            {lt('Archive')}
+          <Button variant="danger" size="sm" onClick={handleDeleteBoard}>
+            {lt('Delete')}
           </Button>
         </div>
       ) : null}
@@ -494,11 +494,11 @@ export function BoardWorkspace({
   return (
     <>
       {isEmbedded ? (
-        <div className="h-full flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {content}
         </div>
       ) : (
-        <div className="flex flex-col md:-mx-6 lg:-mx-8" style={{ height: 'calc(100dvh - 88px)' }}>
+        <div className="flex-1 flex flex-col min-h-0 md:-mx-6 lg:-mx-8">
           {header}
           {content}
         </div>

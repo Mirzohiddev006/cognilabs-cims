@@ -20,7 +20,7 @@ function RootLayoutFrame() {
     <div className="app-shell-grid" style={shellStyle}>
       <AppSidebar />
       <div
-        className="relative flex min-h-screen flex-col"
+        className="relative flex h-screen flex-col overflow-hidden"
         style={{
           background: isDark
             ? 'linear-gradient(180deg, rgba(5,7,12,0.96), rgba(7,8,12,1))'
@@ -28,8 +28,8 @@ function RootLayoutFrame() {
         }}
       >
         <AppHeader />
-        <main className="app-shell-main relative z-10 flex-1 px-4 pb-6 pt-4 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-[1600px]">
+        <main className="app-shell-main relative z-10 flex-1 flex flex-col min-h-0 px-4 pb-6 pt-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1600px] flex-1 flex flex-col min-h-0">
             <Outlet />
           </div>
         </main>
