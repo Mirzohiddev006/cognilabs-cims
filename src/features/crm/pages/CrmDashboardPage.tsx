@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
@@ -503,7 +504,7 @@ export function CrmDashboardPage() {
       '90d': statusSummaryQuery.data.last_90_days,
     } as const
 
-    return map[selectedPeriod] ?? null
+    return map[selectedPeriod as keyof typeof map] ?? null
   }, [selectedPeriod, statusSummaryQuery.data])
 
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
@@ -604,7 +605,7 @@ export function CrmDashboardPage() {
   }
 
   function syncCustomerInUi(nextCustomer: CustomerSummary) {
-    dashboardQuery.setData((current) => {
+    dashboardQuery.setData((current: typeof dashboardQuery.data) => {
       if (!current) {
         return current
       }
@@ -765,7 +766,7 @@ export function CrmDashboardPage() {
   ]
   const platformFilterOptions = [
     { value: '', label: t('customers.filters.all_platforms', 'All platforms') },
-    ...availablePlatforms.map((platform) => ({ value: platform, label: platform })),
+    ...availablePlatforms.map((platform: string) => ({ value: platform, label: platform })),
   ]
   const pageSizeOptions: SelectFieldOption[] = [
     { value: '10', label: t('common.per_page', '{{count}} per page', { count: 10 }) },
@@ -1108,7 +1109,7 @@ export function CrmDashboardPage() {
         audioFileName={audioFile?.name ?? selectedCustomer?.audio_file_id ?? null}
         onClose={() => setIsFormOpen(false)}
         onChange={(field, value) =>
-          setFormValues((current) => ({
+          setFormValues((current: CustomerFormValues) => ({
             ...current,
             [field]: value,
           }))
