@@ -383,7 +383,8 @@ export function CognilabsAIChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { showToast } = useToast()
 
-  const [activeTab, setActiveTab] = useState<ChannelTab>('all')
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [activeTab] = useState<ChannelTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedConversationId, setSelectedConversationId] = useState<number | null>(
     () => {
