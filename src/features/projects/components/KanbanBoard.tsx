@@ -227,7 +227,7 @@ export function KanbanBoard({
     >
       {/* Full-height horizontal scroll canvas */}
       <div className="h-full w-full overflow-x-auto overflow-y-hidden horizontal-scrollbar-visible">
-        <div className="flex h-full items-start gap-3 px-4 py-4 sm:px-8">
+        <div className="flex h-full items-start gap-3 sm:gap-4 px-3 py-3 sm:px-8 sm:py-5">
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {localColumns.map((col) => (
               <KanbanColumn

@@ -308,24 +308,23 @@ export function ProjectDetailPage() {
 
   return (
     <>
-      <div className="relative flex flex-col gap-8 page-enter h-full">
-        {/* Background Project Header (Jira Style) */}
-        <div className="relative shrink-0 overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-8 shadow-sm">
-          <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
-          <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/5 blur-3xl" />
+      <div className="relative flex flex-col gap-4 sm:gap-8 page-enter h-full overflow-hidden">
+        {/* Background Project Header (Jira Style) - More compact on mobile */}
+        <div className="relative shrink-0 overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-8 shadow-sm">
+          <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 sm:h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
 
-          <div className="relative z-10 flex flex-col gap-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex min-w-0 items-start gap-5">
+          <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-5">
                 {projectImage ? (
                   <img
                     src={projectImage}
                     alt={project.project_name}
-                    className="h-14 w-14 shrink-0 rounded-2xl border border-[var(--border)] object-cover shadow-md"
+                    className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-xl sm:rounded-2xl border border-[var(--border)] object-cover shadow-md"
                   />
                 ) : (
                   <div
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[var(--border)] text-xl font-black"
+                    className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl border border-[var(--border)] text-lg sm:text-xl font-black"
                     style={{
                       background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
                       color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
@@ -336,161 +335,210 @@ export function ProjectDetailPage() {
                 )}
 
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
-                     <Link to="/projects" className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1.5">
+                     <Link to="/projects" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
                         {lt('Projects')}
                      </Link>
-                     <span className="text-[var(--border)] text-[10px]">/</span>
-                     <span className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">{lt('Board')}</span>
+                     <span className="text-[var(--border)] text-[9px] sm:text-[10px]">/</span>
+                     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">{lt('Board')}</span>
                   </div>
-                  <h1 className="text-2xl font-black tracking-tight text-[var(--foreground)] sm:text-3xl">
+                  <h1 className="text-xl sm:text-3xl font-black tracking-tight text-[var(--foreground)] truncate">
                     {project.project_name}
                   </h1>
                 </div>
               </div>
 
               {canManageProjects ? (
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button variant="ghost" size="sm" className="rounded-xl bg-[var(--accent-soft)]" onClick={() => setIsEditProjectOpen(true)}>
+                <div className="flex shrink-0 items-center gap-2 sm:mt-0">
+                  <Button variant="ghost" size="sm" className="rounded-xl h-8 sm:h-10 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-sm" onClick={() => setIsEditProjectOpen(true)}>
                     {lt('Edit')}
                   </Button>
-                  <Button variant="danger" size="sm" className="rounded-xl bg-red-500/10 text-red-400 border-transparent" onClick={handleDeleteProject}>
+                  <Button variant="danger" size="sm" className="rounded-xl h-8 sm:h-10 bg-red-500/10 text-red-400 border-transparent px-3 sm:px-4 text-[11px] sm:text-sm" onClick={handleDeleteProject}>
                     {lt('Delete')}
                   </Button>
                 </div>
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-3">
+            {/* Stats row - Hidden/compact on mobile */}
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t border-[var(--border)]/30 pt-3 sm:pt-0 sm:border-0">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <Avatar
                   name={project.created_by.name}
                   surname={project.created_by.surname}
                   imageUrl={project.created_by.profile_image}
-                  size="sm"
-                  className="ring-2 ring-[var(--border)]"
+                  size="xs"
+                  className="sm:w-8 sm:h-8 ring-2 ring-[var(--border)]"
                 />
-                <div>
+                <div className="hidden sm:block">
                   <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Lead')}</p>
                   <p className="text-xs font-bold text-[var(--foreground)]">
                     {project.created_by.name} {project.created_by.surname}
                   </p>
                 </div>
+                <div className="sm:hidden">
+                  <span className="text-[10px] font-bold text-[var(--foreground)] truncate max-w-[100px] block">
+                    {project.created_by.name}
+                  </span>
+                </div>
               </div>
 
-              <div className="h-6 w-px bg-[var(--border)] opacity-60" />
+              <div className="h-4 sm:h-6 w-px bg-[var(--border)] opacity-60" />
 
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Timeline')}</p>
-                <p className="text-xs font-bold text-[var(--foreground)]">
+                <p className="hidden sm:block text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Timeline')}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-[var(--foreground)]">
                   {formatProjectDate(project.created_at)}
                 </p>
               </div>
 
-              <div className="h-6 w-px bg-[var(--border)] opacity-60" />
+              <div className="h-4 sm:h-6 w-px bg-[var(--border)] opacity-60" />
 
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Stats')}</p>
-                <p className="text-xs font-bold text-[var(--foreground)]">
-                  {project.boards_count} {lt('boards')}
+                <p className="hidden sm:block text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Stats')}</p>
+                <p className="text-[10px] sm:text-xs font-bold text-[var(--foreground)]">
+                  {project.boards_count} <span className="hidden sm:inline">{lt('boards')}</span>
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Boards Content Overlay Container */}
-        <div className="relative z-20 flex-1 -mt-4 bg-[var(--background)] rounded-t-[40px] px-2 pt-2">
-           <Card noPadding className="h-full flex flex-col overflow-hidden rounded-[32px] border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
-              {/* Board Header & Filters Area */}
-              <div className="flex flex-wrap items-center justify-between gap-6 border-b border-[var(--border)] bg-[var(--accent-soft)]/20 px-8 py-5">
-                 <div className="flex items-center gap-6">
-                    {/* Board Tabs */}
-                    <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/10 dark:bg-white/5 border border-[var(--border)]">
-                      {activeBoards.map((board) => {
-                        const isSelected = selectedBoard?.id === board.id
-                        return (
-                          <button
-                            key={board.id}
-                            type="button"
-                            onClick={() => selectBoard(board.id)}
-                            className={cn(
-                               "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
-                               isSelected 
-                                 ? "bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-md border border-[var(--border)] scale-105"
-                                 : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/5"
-                            )}
-                          >
-                            {board.name}
-                          </button>
-                        )
-                      })}
-                      {canManageProjects && (
-                         <button
-                            type="button"
-                            onClick={() => setIsCreateBoardOpen(true)}
-                            className="w-9 h-9 flex items-center justify-center rounded-xl text-[var(--muted)] hover:bg-white/5 transition-colors"
-                            title={lt('Add board')}
-                         >
-                            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
-                               <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                            </svg>
-                         </button>
-                      )}
+        {/* Boards Content Overlay Container - Full screen on mobile */}
+        <div className="relative z-20 flex-1 -mt-2 sm:-mt-4 bg-[var(--background)] rounded-t-[28px] sm:rounded-t-[40px] px-0 sm:px-2 pt-1 sm:pt-2 min-h-0 flex flex-col">
+           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-t-[24px] sm:rounded-[32px] border-x border-t sm:border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
+              {/* Board Header & Filters Area - Highly scrollable on mobile */}
+              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--accent-soft)]/20 px-4 sm:px-8 py-3 sm:py-5">
+                 <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
+                    <div className="flex items-center gap-3 sm:gap-6 overflow-hidden flex-1">
+                       {/* Board Tabs - Horizontal Scroll on mobile */}
+                       <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl bg-black/10 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
+                         {activeBoards.map((board) => {
+                           const isSelected = selectedBoard?.id === board.id
+                           return (
+                             <button
+                               key={board.id}
+                               type="button"
+                               onClick={() => selectBoard(board.id)}
+                               className={cn(
+                                  "whitespace-nowrap px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shrink-0",
+                                  isSelected 
+                                    ? "bg-[var(--surface-elevated)] text-[var(--foreground)] shadow-md border border-[var(--border)] scale-105"
+                                    : "text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-white/5"
+                               )}
+                             >
+                               {board.name}
+                             </button>
+                           )
+                         })}
+                         {canManageProjects && (
+                            <button
+                               type="button"
+                               onClick={() => setIsCreateBoardOpen(true)}
+                               className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg sm:rounded-xl text-[var(--muted)] hover:bg-white/5 transition-colors shrink-0"
+                               title={lt('Add board')}
+                            >
+                               <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                               </svg>
+                            </button>
+                         )}
+                       </div>
+
+                       <div className="hidden sm:block h-8 w-px bg-[var(--border)] shrink-0" />
+
+                       {/* Members Selector (Desktop) */}
+                       <div className="hidden sm:flex items-center gap-3 shrink-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Members')}:</p>
+                          <div className="flex items-center -space-x-2">
+                             {projectMembers.map((member) => {
+                               const isExpanded = member.id === expandedMemberId
+                               return (
+                                 <button
+                                   key={member.id}
+                                   type="button"
+                                   onClick={() => selectMember(member.id)}
+                                   className={cn(
+                                     'relative transition-transform hover:scale-110 hover:z-10',
+                                     isExpanded ? 'scale-110 z-10' : 'z-0'
+                                   )}
+                                 >
+                                   <Avatar
+                                     name={member.name}
+                                     surname={member.surname}
+                                     imageUrl={member.profile_image}
+                                     size="sm"
+                                     className={cn(
+                                        "ring-2 ring-[var(--surface)] transition-all",
+                                        isExpanded ? "ring-blue-500 shadow-glow-blue" : "ring-[var(--border)]"
+                                     )}
+                                   />
+                                 </button>
+                               )
+                             })}
+                          </div>
+                       </div>
                     </div>
 
-                    <div className="h-8 w-px bg-[var(--border)]" />
+                    {/* Desktop Right Actions */}
+                    <div className="hidden sm:flex items-center gap-3 shrink-0">
+                       {canManageProjects && (
+                          <Button
+                             variant="secondary"
+                             size="sm"
+                             className="h-9 rounded-xl font-black uppercase tracking-widest bg-[var(--accent-soft)]"
+                             onClick={() => setIsCreateBoardOpen(true)}
+                          >
+                            {tr('New list', 'Yangi list', 'Novyi spisok')}
+                          </Button>
+                       )}
+                    </div>
 
-                    {/* Members Selector (Moved from project info) */}
-                    <div className="flex items-center gap-3">
-                       <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Members')}:</p>
-                       <div className="flex items-center -space-x-2">
-                          {projectMembers.map((member) => {
-                            const isExpanded = member.id === expandedMemberId
-                            return (
-                              <button
-                                key={member.id}
-                                type="button"
-                                onClick={() => selectMember(member.id)}
-                                className={cn(
-                                  'relative transition-transform hover:scale-110 hover:z-10',
-                                  isExpanded ? 'scale-110 z-10' : 'z-0'
-                                )}
-                              >
-                                <Avatar
-                                  name={member.name}
-                                  surname={member.surname}
-                                  imageUrl={member.profile_image}
-                                  size="sm"
-                                  className={cn(
-                                     "ring-2 ring-[var(--surface)] transition-all",
-                                     isExpanded ? "ring-blue-500 shadow-glow-blue" : "ring-[var(--border)]"
-                                  )}
-                                />
-                              </button>
-                            )
-                          })}
-                       </div>
+                    {/* Mobile Create Button */}
+                    <div className="sm:hidden flex items-center shrink-0">
+                       {canManageProjects && (
+                          <button
+                             onClick={() => setIsCreateBoardOpen(true)}
+                             className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg"
+                          >
+                             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14" strokeLinecap="round"/></svg>
+                          </button>
+                       )}
                     </div>
                  </div>
 
-                 {/* Right Actions */}
-                 <div className="flex items-center gap-3">
-                    {canManageProjects && (
-                       <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-9 rounded-xl font-black uppercase tracking-widest bg-[var(--accent-soft)]"
-                          onClick={() => setIsCreateBoardOpen(true)}
-                       >
-                         {tr('New list', 'Yangi list', 'Novyi spisok')}
-                       </Button>
-                    )}
+                 {/* Mobile Members Row */}
+                 <div className="sm:hidden flex items-center gap-3 overflow-hidden">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)] shrink-0">{lt('Team')}:</p>
+                    <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar-none pb-1">
+                       {projectMembers.map((member) => {
+                         const isExpanded = member.id === expandedMemberId
+                         return (
+                           <button
+                             key={member.id}
+                             type="button"
+                             onClick={() => selectMember(member.id)}
+                             className="shrink-0"
+                           >
+                             <Avatar
+                               name={member.name}
+                               surname={member.surname}
+                               imageUrl={member.profile_image}
+                               size="sm"
+                               className={cn(
+                                  "h-7 w-7 ring-2 transition-all",
+                                  isExpanded ? "ring-blue-500 shadow-glow-blue scale-110" : "ring-[var(--border)]"
+                               )}
+                             />
+                           </button>
+                         )
+                       })}
+                    </div>
                  </div>
               </div>
 
               {/* Scrollable Board Workspace */}
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 min-h-0">
                  {selectedBoard ? (
                     <BoardWorkspace
                       boardId={selectedBoard.id}
@@ -499,7 +547,7 @@ export function ProjectDetailPage() {
                       onBoardsChanged={() => projectQuery.refetch()}
                     />
                  ) : (
-                    <div className="flex h-full items-center justify-center p-12">
+                    <div className="flex h-full items-center justify-center p-8 sm:p-12">
                        <StateBlock
                          tone="empty"
                          eyebrow={lt('No boards')}
@@ -514,8 +562,8 @@ export function ProjectDetailPage() {
 
         {/* Member Tasks Panel (Overlay when member is selected) */}
         {expandedMember && expandedMemberId !== null && (
-           <div className="fixed bottom-8 right-8 z-[60] w-[420px] max-w-[calc(100vw-4rem)]">
-              <Card variant="glass" className="rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden">
+           <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[60] w-[calc(100vw-2rem)] sm:w-[420px] max-w-full">
+              <Card variant="glass" className="rounded-[28px] sm:rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden">
                  <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
                     <div className="flex items-center gap-3">
                        <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="md" />
