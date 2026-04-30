@@ -107,6 +107,7 @@ function ConversationListItem({
   onSelect: () => void
 }) {
   const name = getClientName(conv)
+  // eslint-disable-next-line react-hooks/purity
   const isOnline = conv.last_message_at && (Date.now() - new Date(conv.last_message_at).getTime() < 1000 * 60 * 5)
   
   return (

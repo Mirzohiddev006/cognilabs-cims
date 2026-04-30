@@ -461,7 +461,7 @@ export function BoardWorkspace({
     <div className={isEmbedded ? 'p-6' : 'flex flex-1 items-center justify-center'}>
       <StateBlock
         tone="empty"
-        eyebrow={lt('Empty board')}
+        eyebrow={lt('No boards')}
         title={lt('No columns yet')}
         description={
           isReadOnlyBoard
@@ -473,7 +473,7 @@ export function BoardWorkspace({
       />
     </div>
   ) : (
-    <div className={isEmbedded ? 'h-[min(72vh,760px)] min-h-[460px] overflow-hidden' : 'flex-1 overflow-hidden'}>
+    <div className="flex-1 overflow-hidden">
       <KanbanBoard
         columns={board.columns}
         members={allUsers}
