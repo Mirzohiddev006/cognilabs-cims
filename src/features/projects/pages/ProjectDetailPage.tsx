@@ -308,23 +308,23 @@ export function ProjectDetailPage() {
 
   return (
     <>
-      <div className="relative flex flex-col gap-4 sm:gap-8 page-enter h-full overflow-hidden">
+      <div className="relative flex flex-col gap-4 sm:gap-6 page-enter h-[calc(100dvh-88px)] overflow-hidden">
         {/* Background Project Header (Jira Style) - More compact on mobile */}
-        <div className="relative shrink-0 overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-8 shadow-sm">
+        <div className="relative shrink-0 overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-6 shadow-sm">
           <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 sm:h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
 
-          <div className="relative z-10 flex flex-col gap-4 sm:gap-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="relative z-10 flex flex-col gap-4 sm:gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 items-start gap-3 sm:gap-5">
                 {projectImage ? (
                   <img
                     src={projectImage}
                     alt={project.project_name}
-                    className="h-10 w-10 sm:h-14 sm:w-14 shrink-0 rounded-xl sm:rounded-2xl border border-[var(--border)] object-cover shadow-md"
+                    className="h-10 w-10 sm:h-12 sm:w-12 shrink-0 rounded-xl border border-[var(--border)] object-cover shadow-md"
                   />
                 ) : (
                   <div
-                    className="flex h-10 w-10 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl border border-[var(--border)] text-lg sm:text-xl font-black"
+                    className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-lg sm:text-xl font-black"
                     style={{
                       background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
                       color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
@@ -335,14 +335,14 @@ export function ProjectDetailPage() {
                 )}
 
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1.5">
+                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
                      <Link to="/projects" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
                         {lt('Projects')}
                      </Link>
                      <span className="text-[var(--border)] text-[9px] sm:text-[10px]">/</span>
                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">{lt('Board')}</span>
                   </div>
-                  <h1 className="text-xl sm:text-3xl font-black tracking-tight text-[var(--foreground)] truncate">
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--foreground)] truncate">
                     {project.project_name}
                   </h1>
                 </div>
@@ -350,10 +350,10 @@ export function ProjectDetailPage() {
 
               {canManageProjects ? (
                 <div className="flex shrink-0 items-center gap-2 sm:mt-0">
-                  <Button variant="ghost" size="sm" className="rounded-xl h-8 sm:h-10 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-sm" onClick={() => setIsEditProjectOpen(true)}>
+                  <Button variant="ghost" size="sm" className="rounded-xl h-8 sm:h-9 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-xs" onClick={() => setIsEditProjectOpen(true)}>
                     {lt('Edit')}
                   </Button>
-                  <Button variant="danger" size="sm" className="rounded-xl h-8 sm:h-10 bg-red-500/10 text-red-400 border-transparent px-3 sm:px-4 text-[11px] sm:text-sm" onClick={handleDeleteProject}>
+                  <Button variant="danger" size="sm" className="rounded-xl h-8 sm:h-9 bg-red-500/10 text-red-400 border-transparent px-3 sm:px-4 text-[11px] sm:text-xs" onClick={handleDeleteProject}>
                     {lt('Delete')}
                   </Button>
                 </div>
@@ -361,17 +361,16 @@ export function ProjectDetailPage() {
             </div>
 
             {/* Stats row - Hidden/compact on mobile */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t border-[var(--border)]/30 pt-3 sm:pt-0 sm:border-0">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t border-[var(--border)]/30 pt-3 sm:pt-2 sm:border-t-0 sm:mt-0">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Avatar
                   name={project.created_by.name}
                   surname={project.created_by.surname}
                   imageUrl={project.created_by.profile_image}
                   size="xs"
-                  className="sm:w-8 sm:h-8 ring-2 ring-[var(--border)]"
+                  className="ring-2 ring-[var(--border)]"
                 />
                 <div className="hidden sm:block">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Lead')}</p>
                   <p className="text-xs font-bold text-[var(--foreground)]">
                     {project.created_by.name} {project.created_by.surname}
                   </p>
@@ -383,19 +382,17 @@ export function ProjectDetailPage() {
                 </div>
               </div>
 
-              <div className="h-4 sm:h-6 w-px bg-[var(--border)] opacity-60" />
+              <div className="h-4 sm:h-4 w-px bg-[var(--border)] opacity-60" />
 
               <div>
-                <p className="hidden sm:block text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Timeline')}</p>
                 <p className="text-[10px] sm:text-xs font-bold text-[var(--foreground)]">
                   {formatProjectDate(project.created_at)}
                 </p>
               </div>
 
-              <div className="h-4 sm:h-6 w-px bg-[var(--border)] opacity-60" />
+              <div className="h-4 sm:h-4 w-px bg-[var(--border)] opacity-60" />
 
               <div>
-                <p className="hidden sm:block text-[9px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Stats')}</p>
                 <p className="text-[10px] sm:text-xs font-bold text-[var(--foreground)]">
                   {project.boards_count} <span className="hidden sm:inline">{lt('boards')}</span>
                 </p>
@@ -404,11 +401,11 @@ export function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Boards Content Overlay Container - Full screen on mobile */}
+        {/* Boards Content Overlay Container - Scroll internally */}
         <div className="relative z-20 flex-1 -mt-2 sm:-mt-4 bg-[var(--background)] rounded-t-[28px] sm:rounded-t-[40px] px-0 sm:px-2 pt-1 sm:pt-2 min-h-0 flex flex-col">
-           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-t-[24px] sm:rounded-[32px] border-x border-t sm:border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
+           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-t-[24px] sm:rounded-t-[32px] border-x border-t sm:border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
               {/* Board Header & Filters Area - Highly scrollable on mobile */}
-              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--accent-soft)]/20 px-4 sm:px-8 py-3 sm:py-5">
+              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--accent-soft)]/20 px-4 sm:px-8 py-3 sm:py-4">
                  <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
                     <div className="flex items-center gap-3 sm:gap-6 overflow-hidden flex-1">
                        {/* Board Tabs - Horizontal Scroll on mobile */}
@@ -560,36 +557,56 @@ export function ProjectDetailPage() {
            </Card>
         </div>
 
-        {/* Member Tasks Panel (Overlay when member is selected) */}
+        {/* Member Tasks Panel (Centered Overlay with Backdrop) */}
         {expandedMember && expandedMemberId !== null && (
-           <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-[60] w-[calc(100vw-2rem)] sm:w-[420px] max-w-full">
-              <Card variant="glass" className="rounded-[28px] sm:rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden">
-                 <div className="flex items-center justify-between p-5 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
-                    <div className="flex items-center gap-3">
+           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
+              {/* Backdrop */}
+              <button 
+                 className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default" 
+                 onClick={() => setExpandedMemberId(null)}
+              />
+              
+              {/* Center Modal */}
+              <Card variant="glass" className="relative z-10 w-full max-w-lg rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
+                 <div className="flex items-center justify-between p-6 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
+                    <div className="flex items-center gap-4">
                        <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="md" />
                        <div>
-                          <p className="text-sm font-black text-[var(--foreground)]">{expandedMember.name} {expandedMember.surname}</p>
-                          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">{expandedMember.job_title || lt('Member')}</p>
+                          <p className="text-base font-black text-[var(--foreground)]">{expandedMember.name} {expandedMember.surname}</p>
+                          <p className="text-xs font-bold text-blue-400 uppercase tracking-widest">{expandedMember.job_title || lt('Member')}</p>
                        </div>
                     </div>
-                    <button onClick={() => setExpandedMemberId(null)} className="h-8 w-8 rounded-full flex items-center justify-center bg-black/10 hover:bg-black/20 text-[var(--muted-strong)]">
-                       <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
+                    <button onClick={() => setExpandedMemberId(null)} className="h-10 w-10 rounded-xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
+                       <svg viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
                     </button>
                  </div>
-                 <div className="max-h-[400px] overflow-y-auto p-4 custom-scrollbar-visible space-y-3 bg-[var(--surface-elevated)]">
+                 <div className="max-h-[60vh] overflow-y-auto p-6 custom-scrollbar-visible space-y-4 bg-[var(--surface-elevated)]">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] mb-2">{lt('Active Tasks in this Project')}</h4>
                     {isExpandedMemberTasksLoading ? (
-                       <div className="space-y-3">
-                          {[1,2,3].map(i => <div key={i} className="h-20 animate-pulse rounded-2xl bg-white/5 border border-white/5" />)}
+                       <div className="space-y-4">
+                          {[1,2,3].map(i => <div key={i} className="h-24 animate-pulse rounded-2xl bg-white/5 border border-white/5" />)}
                        </div>
                     ) : expandedMemberTasks.length === 0 ? (
-                       <p className="text-center py-8 text-xs font-bold text-[var(--muted)]">{lt('No active tasks')}</p>
+                       <div className="flex flex-col items-center justify-center py-12 opacity-30">
+                          <svg viewBox="0 0 24 24" className="h-12 w-12 mb-4" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22c5.523 0 9-4.477 9-10S17.523 2 12 2 3 6.477 3 12s3.477 10 9 10z"/><path d="M12 8v4M12 16h.01" strokeWidth="2" strokeLinecap="round"/></svg>
+                          <p className="text-sm font-bold text-[var(--muted)]">{lt('No active tasks')}</p>
+                       </div>
                     ) : (
                        expandedMemberTasks.map(task => (
-                          <Link key={task.id} to={`/projects/${project.id}?board=${task.board_id}`} className="block p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--accent-soft)] transition-all">
-                             <p className="text-sm font-bold text-[var(--foreground)] mb-1">{task.title}</p>
+                          <Link 
+                             key={task.id} 
+                             to={`/projects/${project.id}?board=${task.board_id}`} 
+                             onClick={() => setExpandedMemberId(null)}
+                             className="group block p-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--blue-border)] hover:bg-[var(--accent-soft)] transition-all transform hover:-translate-y-1"
+                          >
+                             <div className="flex justify-between items-start mb-3">
+                                <p className="text-base font-black text-[var(--foreground)] group-hover:text-blue-400 transition-colors">{task.title}</p>
+                             </div>
                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-[var(--muted-strong)]">{task.board_name}</span>
-                                <Badge variant="blue" size="sm" className="text-[9px]">{task.column_name}</Badge>
+                                <div className="flex items-center gap-2">
+                                   <span className="text-[11px] font-bold text-[var(--muted-strong)] uppercase tracking-wider">{task.board_name}</span>
+                                </div>
+                                <Badge variant="blue" size="sm" className="text-[10px] font-black px-2 py-0.5 rounded-lg">{task.column_name}</Badge>
                              </div>
                           </Link>
                        ))
