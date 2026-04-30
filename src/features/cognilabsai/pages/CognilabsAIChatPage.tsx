@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/purity */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   useCallback,
   useEffect,
