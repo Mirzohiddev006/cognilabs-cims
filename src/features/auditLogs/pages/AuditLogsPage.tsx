@@ -6,7 +6,6 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
-import { Badge } from '../../../shared/ui/badge'
 import { LoadingStateBlock, ErrorStateBlock, EmptyStateBlock } from '../../../shared/ui/state-block'
 import { auditService, type AuditLogItem, type AuditLogsParams } from '../../../shared/api/services/audit.service'
 
@@ -297,16 +296,17 @@ export function AuditLogsPage() {
 
       {/* Table */}
       {query.isLoading ? (
-        <LoadingStateBlock />
+        <LoadingStateBlock eyebrow="Loading" title="Fetching audit logs..." />
       ) : query.isError ? (
         <ErrorStateBlock
+          eyebrow="Error"
           title="Failed to load audit logs"
           description={getApiErrorMessage(query.error)}
           actionLabel="Retry"
           onAction={() => void query.refetch()}
         />
       ) : !query.data?.items.length ? (
-        <EmptyStateBlock title="No logs found" description="Try adjusting your filters." />
+        <EmptyStateBlock eyebrow="Empty" title="No logs found" description="Try adjusting your filters." />
       ) : (
         <>
           <div className="overflow-x-auto rounded-2xl border border-[var(--border)]">

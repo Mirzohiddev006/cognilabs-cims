@@ -33,15 +33,6 @@ function getClientName(conv: ConversationItem): string {
   return conv.client_full_name || conv.client_username || `#${conv.id}`
 }
 
-function getClientInitials(conv: ConversationItem): string {
-  const name = getClientName(conv)
-  const parts = name.trim().split(/\s+/)
-  if (parts.length >= 2) {
-    return `${parts[0]![0]}${parts[1]![0]}`.toUpperCase()
-  }
-  return name.slice(0, 2).toUpperCase()
-}
-
 function AvatarOrInitials({
   avatarUrl,
   name,
@@ -390,7 +381,7 @@ export function CognilabsAIChatPage() {
     },
   )
 
-  const integrationsQuery = useAsyncData(
+  useAsyncData(
     () => cognilabsaiService.getIntegrations(),
     [],
     {
@@ -625,16 +616,17 @@ export function CognilabsAIChatPage() {
           {/* List */}
           <div className="flex-1 overflow-y-auto p-2">
             {conversationsQuery.isLoading ? (
-              <LoadingStateBlock />
+              <LoadingStateBlock eyebrow="Loading" title="Fetching conversations..." />
             ) : conversationsQuery.isError ? (
               <ErrorStateBlock
+                eyebrow="Error"
                 title="Failed to load"
                 description={getApiErrorMessage(conversationsQuery.error)}
                 actionLabel="Retry"
                 onAction={() => void conversationsQuery.refetch()}
               />
             ) : filteredConversations.length === 0 ? (
-              <EmptyStateBlock title="No conversations" description="No matching conversations found." />
+              <EmptyStateBlock eyebrow="Empty" title="No conversations" description="No matching conversations found." />
             ) : (
               <div className="space-y-0.5">
                 {filteredConversations.map((conv) => (
@@ -720,9 +712,9 @@ export function CognilabsAIChatPage() {
               {/* Messages */}
               <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
                 {isLoadingMessages ? (
-                  <LoadingStateBlock />
+                  <LoadingStateBlock eyebrow="Loading" title="Fetching messages..." />
                 ) : messages.length === 0 ? (
-                  <EmptyStateBlock title="No messages" description="Start the conversation." />
+                  <EmptyStateBlock eyebrow="Empty" title="No messages" description="Start the conversation." />
                 ) : (
                   messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
                 )}

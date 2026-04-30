@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
-import { cn } from '../../../shared/lib/cn'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
@@ -125,10 +124,11 @@ export function CognilabsAIIntegrationsPage() {
     }
   }
 
-  if (query.isLoading) return <LoadingStateBlock />
+  if (query.isLoading) return <LoadingStateBlock eyebrow="Loading" title="Fetching integration settings..." />
   if (query.isError) {
     return (
       <ErrorStateBlock
+        eyebrow="Error"
         title="Failed to load integrations"
         description={getApiErrorMessage(query.error)}
         actionLabel="Retry"
