@@ -20,7 +20,7 @@ function RootLayoutFrame() {
     <div className="app-shell-grid" style={shellStyle}>
       <AppSidebar />
       <div
-        className="relative flex h-screen flex-col overflow-hidden"
+        className="relative flex min-h-screen flex-col"
         style={{
           background: isDark
             ? 'linear-gradient(180deg, rgba(5,7,12,0.96), rgba(7,8,12,1))'
@@ -43,10 +43,6 @@ export function RootLayout() {
   return (
     <AppShellProvider>
       <RootLayoutFrame />
-    </AppShellProvider>
-  )
-}
-e />
     </AppShellProvider>
   )
 }
