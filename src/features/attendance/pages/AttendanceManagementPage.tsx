@@ -33,7 +33,7 @@ export function AttendanceManagementPage() {
   )
 
   const filteredData = (query.data ?? []).filter(item =>
-    item.full_name.toLowerCase().includes(search.toLowerCase())
+    item.full_name?.toLowerCase().includes(search.toLowerCase()) ?? true
   )
 
   const months = [
