@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { attendanceService, type MonthlyOfficeTime } from '../../../shared/api/services/attendance.service'
+import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Card } from '../../../shared/ui/card'
 import { PageHeader } from '../../../shared/ui/page-header'
@@ -9,51 +9,112 @@ import { Input } from '../../../shared/ui/input'
 import { Button } from '../../../shared/ui/button'
 import { Modal } from '../../../shared/ui/modal'
 
+type NormalizedDay = {
+  date: string
+  checkIn: string | null
+  checkOut: string | null
+  workedHours: number
+  status: string
+}
+
+type NormalizedEmployee = {
+  employeeId: number
+  fullName: string
+  totalWorkedHours: number
+  days: NormalizedDay[]
+}
+
+function resolveNum(obj: Record<string, unknown>, ...keys: string[]): number {
+  for (const key of keys) {
+    const val = obj[key]
+    if (typeof val === 'number' && isFinite(val)) return val
+    if (typeof val === 'string' && val.trim() !== '') {
+      const parsed = parseFloat(val)
+      if (isFinite(parsed)) return parsed
+    }
+  }
+  return 0
+}
+
+function resolveStr(obj: Record<string, unknown>, ...keys: string[]): string {
+  for (const key of keys) {
+    const val = obj[key]
+    if (typeof val === 'string' && val.trim()) return val.trim()
+  }
+  return ''
+}
+
+function normalizeDay(raw: unknown): NormalizedDay {
+  const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  return {
+    date: resolveStr(d, 'date', 'attendance_date'),
+    checkIn: resolveStr(d, 'check_in', 'check_in_time') || null,
+    checkOut: resolveStr(d, 'check_out', 'check_out_time') || null,
+    workedHours: resolveNum(d, 'worked_hours', 'worked_hours_decimal', 'hours'),
+    status: resolveStr(d, 'status') || 'unknown',
+  }
+}
+
+function normalizeEmployee(raw: unknown): NormalizedEmployee {
+  const e = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const firstName = resolveStr(e, 'first_name', 'name')
+  const lastName = resolveStr(e, 'last_name', 'surname')
+  const fullName =
+    resolveStr(e, 'full_name', 'fullName', 'employee_name') ||
+    [firstName, lastName].filter(Boolean).join(' ') ||
+    `Employee #${resolveNum(e, 'employee_id', 'id', 'user_id')}`
+
+  return {
+    employeeId: resolveNum(e, 'employee_id', 'id', 'user_id'),
+    fullName,
+    totalWorkedHours: resolveNum(e, 'total_worked_hours', 'total_hours', 'worked_hours_decimal', 'total_hours_decimal'),
+    days: Array.isArray(e.days) ? e.days.map(normalizeDay) : [],
+  }
+}
+
+function extractEmployeeList(raw: unknown): NormalizedEmployee[] {
+  if (Array.isArray(raw)) return raw.map(normalizeEmployee)
+  if (raw && typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>
+    for (const key of ['employees', 'items', 'data', 'results', 'records']) {
+      if (Array.isArray(obj[key])) return (obj[key] as unknown[]).map(normalizeEmployee)
+    }
+  }
+  return []
+}
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 export function AttendanceManagementPage() {
   const [date, setDate] = useState(() => {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() + 1 }
   })
   const [search, setSearch] = useState('')
-  const [selectedEmployee, setSelectedEmployee] = useState<MonthlyOfficeTime | null>(null)
+  const [selected, setSelected] = useState<NormalizedEmployee | null>(null)
 
   const query = useAsyncData(
     async () => {
       const raw = await attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month)
-      if (Array.isArray(raw)) return raw as MonthlyOfficeTime[]
-      if (raw && typeof raw === 'object') {
-        const obj = raw as Record<string, unknown>
-        for (const key of ['employees', 'items', 'data', 'results']) {
-          if (Array.isArray(obj[key])) return obj[key] as MonthlyOfficeTime[]
-        }
-      }
-      return [] as MonthlyOfficeTime[]
+      return extractEmployeeList(raw)
     },
-    [date.year, date.month]
+    [date.year, date.month],
   )
 
-  const filteredData = (query.data ?? []).filter(item =>
-    item.full_name?.toLowerCase().includes(search.toLowerCase()) ?? true
+  const employees = query.data ?? []
+  const filtered = employees.filter(e =>
+    e.fullName.toLowerCase().includes(search.toLowerCase()),
   )
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-
-  const nextMonth = () => {
-    setDate(prev => {
-      if (prev.month === 12) return { year: prev.year + 1, month: 1 }
-      return { ...prev, month: prev.month + 1 }
-    })
-  }
-
-  const prevMonth = () => {
-    setDate(prev => {
-      if (prev.month === 1) return { year: prev.year - 1, month: 12 }
-      return { ...prev, month: prev.month - 1 }
-    })
-  }
+  const nextMonth = () => setDate(prev =>
+    prev.month === 12 ? { year: prev.year + 1, month: 1 } : { ...prev, month: prev.month + 1 },
+  )
+  const prevMonth = () => setDate(prev =>
+    prev.month === 1 ? { year: prev.year - 1, month: 12 } : { ...prev, month: prev.month - 1 },
+  )
 
   return (
     <div className="page-enter space-y-6">
@@ -63,21 +124,20 @@ export function AttendanceManagementPage() {
         description="Monitor team presence and office time."
       />
 
-      <Card className="p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
+      <Card className="p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
             <Button variant="secondary" size="sm" onClick={prevMonth}>←</Button>
-            <h2 className="text-lg font-bold min-w-[140px] text-center">
-              {months[date.month - 1]} {date.year}
+            <h2 className="min-w-[148px] text-center text-base font-bold text-[var(--foreground)]">
+              {MONTHS[date.month - 1]} {date.year}
             </h2>
             <Button variant="secondary" size="sm" onClick={nextMonth}>→</Button>
           </div>
-
-          <div className="flex flex-1 max-w-sm">
+          <div className="w-full max-w-xs">
             <Input
               placeholder="Search employee..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               className="h-10"
             />
           </div>
@@ -87,7 +147,11 @@ export function AttendanceManagementPage() {
       {query.isLoading ? (
         <LoadingStateBlock eyebrow="Attendance" title="Loading attendance data..." />
       ) : query.isError ? (
-        <ErrorStateBlock eyebrow="Attendance" title="Failed to load attendance data" />
+        <ErrorStateBlock eyebrow="Attendance" title="Failed to load attendance data" description="Check that the attendance API is reachable." />
+      ) : filtered.length === 0 ? (
+        <Card className="px-6 py-10 text-center text-sm text-[var(--muted-strong)]">
+          {employees.length === 0 ? 'No attendance data for this period.' : 'No employees match your search.'}
+        </Card>
       ) : (
         <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
           <div className="overflow-x-auto">
@@ -96,91 +160,105 @@ export function AttendanceManagementPage() {
                 <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
                   <th className="px-6 py-4">Employee</th>
                   <th className="px-6 py-4 text-center">Worked Hours</th>
-                  <th className="px-6 py-4">Status Today</th>
+                  <th className="px-6 py-4">Last Status</th>
                   <th className="px-6 py-4 text-right">Details</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
-                {filteredData?.map(item => (
-                  <tr key={item.employee_id} className="group hover:bg-[var(--accent-soft)]/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-[var(--accent-soft)] grid place-items-center font-bold text-blue-500">
-                          {item.full_name?.charAt(0) ?? '?'}
+                {filtered.map(item => {
+                  const lastDay = item.days.length > 0 ? item.days[item.days.length - 1] : null
+                  return (
+                    <tr key={item.employeeId} className="group transition-colors hover:bg-[var(--accent-soft)]/5">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-sm font-bold text-blue-500">
+                            {item.fullName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[var(--foreground)]">{item.fullName}</p>
+                            <p className="text-xs text-[var(--muted-strong)]">ID: {item.employeeId}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-[var(--foreground)]">{item.full_name}</p>
-                          <p className="text-xs text-[var(--muted-strong)]">ID: {item.employee_id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="text-sm font-black text-blue-500">
-                        {item.total_worked_hours.toFixed(1)}h
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {item.days.length > 0 ? (
-                        <Badge
-                          variant={item.days[item.days.length - 1].status === 'present' ? 'success' : 'secondary'}
-                          className="capitalize"
-                        >
-                          {item.days[item.days.length - 1].status}
-                        </Badge>
-                      ) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                       <Button variant="ghost" size="sm" onClick={() => setSelectedEmployee(item)}>
-                         View History
-                       </Button>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className="text-sm font-black text-blue-500">
+                          {item.totalWorkedHours.toFixed(1)}h
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {lastDay ? (
+                          <Badge
+                            variant={lastDay.status === 'present' ? 'success' : 'secondary'}
+                            className="capitalize"
+                          >
+                            {lastDay.status}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-[var(--muted-strong)]">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Button variant="ghost" size="sm" onClick={() => setSelected(item)}>
+                          View History
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         </Card>
       )}
 
-      {selectedEmployee && (
+      {selected && (
         <Modal
-          open={!!selectedEmployee}
-          onClose={() => setSelectedEmployee(null)}
-          title={`${selectedEmployee.full_name} - Attendance`}
-          description={`${months[date.month - 1]} ${date.year} Detailed Logs`}
+          open
+          onClose={() => setSelected(null)}
+          title={`${selected.fullName} — Attendance`}
+          description={`${MONTHS[date.month - 1]} ${date.year} · Detailed Logs`}
           size="xl"
         >
-          <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Check In</th>
-                  <th className="px-4 py-3">Check Out</th>
-                  <th className="px-4 py-3 text-right">Hours</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border)]">
-                {selectedEmployee.days.map(day => (
-                  <tr key={day.date} className="hover:bg-[var(--accent-soft)]/5">
-                    <td className="px-4 py-3 text-sm">{day.date}</td>
-                    <td className="px-4 py-3">
-                      <Badge variant={day.status === 'present' ? 'success' : 'secondary'} size="sm" className="capitalize">
-                        {day.status}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{day.check_in || '-'}</td>
-                    <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{day.check_out || '-'}</td>
-                    <td className="px-4 py-3 text-right text-sm font-bold">{day.worked_hours.toFixed(1)}h</td>
+          {selected.days.length === 0 ? (
+            <p className="py-6 text-center text-sm text-[var(--muted-strong)]">No daily records found.</p>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Check In</th>
+                    <th className="px-4 py-3">Check Out</th>
+                    <th className="px-4 py-3 text-right">Hours</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {selected.days.map((day, i) => (
+                    <tr key={day.date || i} className="hover:bg-[var(--accent-soft)]/5">
+                      <td className="px-4 py-3 text-sm font-medium text-[var(--foreground)]">{day.date || '—'}</td>
+                      <td className="px-4 py-3">
+                        <Badge
+                          variant={day.status === 'present' ? 'success' : day.status === 'absent' ? 'danger' : 'secondary'}
+                          size="sm"
+                          className="capitalize"
+                        >
+                          {day.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{day.checkIn || '—'}</td>
+                      <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{day.checkOut || '—'}</td>
+                      <td className="px-4 py-3 text-right text-sm font-bold text-[var(--foreground)]">
+                        {day.workedHours > 0 ? `${day.workedHours.toFixed(1)}h` : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Modal>
       )}
     </div>
   )
 }
-
