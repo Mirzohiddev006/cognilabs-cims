@@ -174,12 +174,3 @@ export function AttendanceManagementPage() {
   )
 }
 
-       </tbody>
-            </table>
-          </div>
-        </Modal>
-      )}
-    </div>
-  )
-}
-

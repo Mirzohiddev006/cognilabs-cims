@@ -169,13 +169,3 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
     </Card>
   )
 }
-Start adding notes to this customer.')}
-          />
-        )}
-      </div>
-    </Card>
-  )
-}
-rd>
-  )
-}
