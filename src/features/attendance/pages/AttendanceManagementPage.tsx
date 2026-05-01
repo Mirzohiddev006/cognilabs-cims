@@ -46,30 +46,53 @@ function resolveStr(obj: Record<string, unknown>, ...keys: string[]): string {
 
 function normalizeDay(raw: unknown): NormalizedDay {
   const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const durationMinutes = resolveNum(d, 'duration_minutes')
+  const workedHours =
+    resolveNum(d, 'worked_hours', 'worked_hours_decimal', 'hours') ||
+    (durationMinutes > 0 ? durationMinutes / 60 : 0)
+  const checkIn = resolveStr(d, 'check_in_time', 'check_in') || null
   return {
     date: resolveStr(d, 'date', 'attendance_date'),
-    checkIn: resolveStr(d, 'check_in', 'check_in_time') || null,
-    checkOut: resolveStr(d, 'check_out', 'check_out_time') || null,
-    workedHours: resolveNum(d, 'worked_hours', 'worked_hours_decimal', 'hours'),
-    status: resolveStr(d, 'status') || 'unknown',
+    checkIn,
+    checkOut: resolveStr(d, 'check_out_time', 'check_out') || null,
+    workedHours,
+    status: checkIn ? 'present' : resolveStr(d, 'status') || 'absent',
   }
 }
 
 function normalizeEmployee(raw: unknown): NormalizedEmployee {
   const e = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const firstName = resolveStr(e, 'first_name', 'name')
-  const lastName = resolveStr(e, 'last_name', 'surname')
+
+  // Support nested employee / monthly_stats objects (office-time-me style)
+  const empObj = (e.employee && typeof e.employee === 'object' ? e.employee : {}) as Record<string, unknown>
+  const statsObj = (e.monthly_stats && typeof e.monthly_stats === 'object' ? e.monthly_stats : {}) as Record<string, unknown>
+
+  const employeeId =
+    resolveNum(e, 'employee_id', 'id', 'user_id') ||
+    resolveNum(empObj, 'id', 'employee_id')
+
   const fullName =
     resolveStr(e, 'full_name', 'fullName', 'employee_name') ||
-    [firstName, lastName].filter(Boolean).join(' ') ||
-    `Employee #${resolveNum(e, 'employee_id', 'id', 'user_id')}`
+    resolveStr(empObj, 'full_name', 'fullName', 'name') ||
+    [resolveStr(e, 'first_name', 'name'), resolveStr(e, 'last_name', 'surname')].filter(Boolean).join(' ') ||
+    `Employee #${employeeId || '?'}`
 
-  return {
-    employeeId: resolveNum(e, 'employee_id', 'id', 'user_id'),
-    fullName,
-    totalWorkedHours: resolveNum(e, 'total_worked_hours', 'total_hours', 'worked_hours_decimal', 'total_hours_decimal'),
-    days: Array.isArray(e.days) ? e.days.map(normalizeDay) : [],
+  const totalWorkedHours =
+    resolveNum(e, 'total_worked_hours', 'total_hours', 'worked_hours_decimal', 'total_hours_decimal') ||
+    resolveNum(statsObj, 'total_hours')
+
+  // Days can be at root, or distributed across weekly_stats entries
+  let days: NormalizedDay[] = []
+  if (Array.isArray(e.days)) {
+    days = (e.days as unknown[]).map(normalizeDay)
+  } else if (Array.isArray(e.weekly_stats)) {
+    days = (e.weekly_stats as unknown[]).flatMap(w => {
+      const ws = (w && typeof w === 'object' ? w : {}) as Record<string, unknown>
+      return Array.isArray(ws.days) ? (ws.days as unknown[]).map(normalizeDay) : []
+    })
   }
+
+  return { employeeId, fullName, totalWorkedHours, days }
 }
 
 function extractEmployeeList(raw: unknown): NormalizedEmployee[] {
@@ -99,7 +122,10 @@ export function AttendanceManagementPage() {
   const query = useAsyncData(
     async () => {
       const raw = await attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month)
-      return extractEmployeeList(raw)
+      console.log('[AttendanceManagement] raw API response:', raw)
+      const list = extractEmployeeList(raw)
+      console.log('[AttendanceManagement] normalized employees:', list)
+      return list
     },
     [date.year, date.month],
   )
