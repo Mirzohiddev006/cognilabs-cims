@@ -375,6 +375,14 @@ export function ProjectDetailPage() {
 
               {canManageProjects ? (
                 <div className="flex shrink-0 items-center gap-2 sm:mt-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="rounded-xl h-8 sm:h-9 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-xs"
+                    onClick={() => navigate(`/audit/logs?entity_type=Project&entity_id=${project.id}`)}
+                  >
+                    {lt('History')}
+                  </Button>
                   <Button variant="ghost" size="sm" className="rounded-xl h-8 sm:h-9 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-xs" onClick={() => setIsEditProjectOpen(true)}>
                     {lt('Edit')}
                   </Button>

@@ -69,6 +69,16 @@ export type TokenResponse = {
   expires_in?: number
 }
 
+export type AdditionalNote = {
+  id: number
+  customer_id: number
+  note: string
+  created_by: number
+  created_by_full_name: string
+  created_at: string
+  updated_at: string
+}
+
 export type CustomerSummary = {
   id: number
   full_name?: string | null
@@ -117,6 +127,8 @@ export type CustomerSummary = {
   chat_url?: string | null
   crm_customer_id?: number | null
   created_at: string
+  is_archived?: boolean
+  additional_notes?: AdditionalNote[]
 }
 
 export type PaymentItem = {
@@ -360,6 +372,42 @@ export type MemberDeliveryBonusPayload = {
   description?: string
   award_date: string
   project_id?: number | null
+}
+
+export type SimpleBonusRecord = {
+  id: number
+  user_id: number
+  year: number
+  month: number
+  amount: number
+  reason: string
+  created_at?: string | null
+}
+
+export type SimpleBonusPayload = {
+  user_id: number
+  year: number
+  month: number
+  amount: number
+  reason: string
+}
+
+export type SimplePenaltyRecord = {
+  id: number
+  user_id: number
+  year: number
+  month: number
+  amount: number
+  reason: string
+  created_at?: string | null
+}
+
+export type SimplePenaltyPayload = {
+  user_id: number
+  year: number
+  month: number
+  amount: number
+  reason: string
 }
 
 export type MemberCompensationPolicyCategory = {

@@ -130,6 +130,15 @@ function glyphPath(name: GlyphName) {
           <polyline points="9,9 10,9 11,9" />
         </>
       )
+    case 'attendance':
+      return (
+        <>
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+          <circle cx="12" cy="14" r="3" />
+          <path d="M12 12.5V14l1 1" />
+        </>
+      )
     default:
       return (
         <>

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
@@ -120,19 +121,37 @@ const PAGE_SIZES = [25, 50, 100, 200]
 
 export function AuditLogsPage() {
   const { showToast } = useToast()
+  const [searchParams] = useSearchParams()
 
   const [params, setParams] = useState<AuditLogsParams>({ page: 1, page_size: 50 })
   const [filters, setFilters] = useState({
-    module: '',
-    table_name: '',
-    entity_type: '',
-    entity_id: '',
-    action: '',
-    actor_user_id: '',
-    from_date: '',
-    to_date: '',
+    module: searchParams.get('module') || '',
+    table_name: searchParams.get('table_name') || '',
+    entity_type: searchParams.get('entity_type') || '',
+    entity_id: searchParams.get('entity_id') || '',
+    action: searchParams.get('action') || '',
+    actor_user_id: searchParams.get('actor_user_id') || '',
+    from_date: searchParams.get('date_from') || '',
+    to_date: searchParams.get('date_to') || '',
   })
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
+
+  // Update filters if search params change (e.g. from navigation)
+  useEffect(() => {
+    if (searchParams.size > 0) {
+      setFilters({
+        module: searchParams.get('module') || '',
+        table_name: searchParams.get('table_name') || '',
+        entity_type: searchParams.get('entity_type') || '',
+        entity_id: searchParams.get('entity_id') || '',
+        action: searchParams.get('action') || '',
+        actor_user_id: searchParams.get('actor_user_id') || '',
+        from_date: searchParams.get('date_from') || '',
+        to_date: searchParams.get('date_to') || '',
+      })
+      setParams((prev) => ({ ...prev, page: 1 }))
+    }
+  }, [searchParams])
 
   const queryParams = useMemo((): AuditLogsParams => ({
     ...params,
@@ -142,6 +161,8 @@ export function AuditLogsPage() {
     entity_id: filters.entity_id || undefined,
     action: filters.action || undefined,
     actor_user_id: filters.actor_user_id ? Number(filters.actor_user_id) : undefined,
+    date_from: filters.from_date || undefined,
+    date_to: filters.to_date || undefined,
   }), [params, filters])
 
   const query = useAsyncData(
@@ -273,6 +294,24 @@ export function AuditLogsPage() {
               value={filters.actor_user_id}
               onChange={(e) => setFilters((p) => ({ ...p, actor_user_id: e.target.value }))}
               placeholder="numeric ID"
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date From</label>
+            <Input
+              type="date"
+              value={filters.from_date}
+              onChange={(e) => setFilters((p) => ({ ...p, from_date: e.target.value }))}
+              className="h-8 text-sm"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date To</label>
+            <Input
+              type="date"
+              value={filters.to_date}
+              onChange={(e) => setFilters((p) => ({ ...p, to_date: e.target.value }))}
               className="h-8 text-sm"
             />
           </div>

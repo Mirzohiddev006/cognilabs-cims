@@ -1321,9 +1321,17 @@ export function CeoUsersPage() {
         footer={
           <>
             {profileUser ? (
-              <Button onClick={() => openSalaryDetail(profileUser)}>
-                {t('ceo.users.profile.open_salary')}
-              </Button>
+              <>
+                <Button onClick={() => openSalaryDetail(profileUser)}>
+                  {t('ceo.users.profile.open_salary')}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/audit/logs?actor_user_id=${profileUser.id}`)}
+                >
+                  View Activity Logs
+                </Button>
+              </>
             ) : null}
             <Button variant="secondary" onClick={() => setProfileUser(null)}>
               {t('common.close')}

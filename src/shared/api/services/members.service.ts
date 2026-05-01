@@ -3,6 +3,8 @@ import type {
   MemberCompensationPolicyResponse,
   MemberDeliveryBonusPayload,
   MemberMistakePayload,
+  SimpleBonusPayload,
+  SimplePenaltyPayload,
 } from '../types'
 
 function serializeEmployeeIds(employeeIds?: number[]) {
@@ -34,6 +36,12 @@ export type MemberDeliveryBonusListParams = {
 
 export type MemberCompensationPolicyParams = {
   employeeIds?: number[]
+}
+
+export type SimpleBonusPenaltyListParams = {
+  user_id?: number
+  year?: number
+  month?: number
 }
 
 export type AddMemberUpdatePayload = {
@@ -256,6 +264,58 @@ export const membersService = {
   deleteMemberUpdate(updateId: number) {
     return request<unknown>({
       path: `/members/member/update/${updateId}`,
+      method: 'DELETE',
+    })
+  },
+
+  listSimpleBonuses(params?: SimpleBonusPenaltyListParams) {
+    return request<unknown>({
+      path: '/members/member/simple-bonuses',
+      query: {
+        user_id: params?.user_id,
+        year: params?.year,
+        month: params?.month,
+      },
+    })
+  },
+
+  createSimpleBonus(payload: SimpleBonusPayload) {
+    return request<unknown>({
+      path: '/members/member/simple-bonus',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  deleteSimpleBonus(bonusId: number) {
+    return request<unknown>({
+      path: `/members/member/simple-bonus/${bonusId}`,
+      method: 'DELETE',
+    })
+  },
+
+  listSimplePenalties(params?: SimpleBonusPenaltyListParams) {
+    return request<unknown>({
+      path: '/members/member/simple-penalties',
+      query: {
+        user_id: params?.user_id,
+        year: params?.year,
+        month: params?.month,
+      },
+    })
+  },
+
+  createSimplePenalty(payload: SimplePenaltyPayload) {
+    return request<unknown>({
+      path: '/members/member/simple-penalty',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  deleteSimplePenalty(penaltyId: number) {
+    return request<unknown>({
+      path: `/members/member/simple-penalty/${penaltyId}`,
       method: 'DELETE',
     })
   },

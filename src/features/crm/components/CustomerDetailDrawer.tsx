@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -17,6 +18,7 @@ import { Card } from '../../../shared/ui/card'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
+import { CustomerAdditionalNotes } from './CustomerAdditionalNotes'
 
 function formatCustomerNotes(notes?: string | null) {
   if (!notes) {
@@ -116,6 +118,7 @@ export function CustomerDetailContent({
   onOpenChat?: () => void
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
 
@@ -150,6 +153,16 @@ export function CustomerDetailContent({
               </div>
 
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 mr-1.5" aria-hidden="true">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Activity Logs
+                </Button>
                 {onOpenChat ? (
                   <Button
                     variant="secondary"
@@ -272,6 +285,8 @@ export function CustomerDetailContent({
               )}
             </div>
           </Card>
+
+          <CustomerAdditionalNotes customerId={customer.id} />
         </div>
       </div>
     </section>

@@ -195,6 +195,14 @@ const AuditLogsPage = lazyPage(
   () => import('../features/auditLogs/pages/AuditLogsPage'),
   'AuditLogsPage',
 )
+const AttendanceManagementPage = lazyPage(
+  () => import('../features/attendance/pages/AttendanceManagementPage'),
+  'AttendanceManagementPage',
+)
+const PersonalAttendancePage = lazyPage(
+  () => import('../features/attendance/pages/PersonalAttendancePage'),
+  'PersonalAttendancePage',
+)
 
 export const router = createBrowserRouter([
   {
@@ -226,6 +234,14 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: 'member/attendance',
+                element: (
+                  <ProtectedRoute audience="member">
+                    {withPageLoader(<PersonalAttendancePage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
                 path: 'member',
                 element: (
                   <ProtectedRoute audience="member">
@@ -238,6 +254,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     {withPageLoader(<CeoDashboardPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'ceo/attendance',
+                element: (
+                  <ProtectedRoute permissionKey="ceo">
+                    {withPageLoader(<AttendanceManagementPage />)}
                   </ProtectedRoute>
                 ),
               },

@@ -1,5 +1,6 @@
 import { request } from '../http'
 import type {
+  AdditionalNote,
   ConversionRateResponse,
   CreateResponse,
   CustomerPeriodReportResponse,
@@ -130,6 +131,35 @@ export const crmService = {
       path: '/crm/customers/bulk-delete',
       method: 'DELETE',
       body: { customer_ids: customerIds },
+    })
+  },
+
+  getAdditionalNotes(customerId: number) {
+    return request<{ customer_id: number; items: AdditionalNote[]; total_count: number }>({
+      path: `/crm/customers/${customerId}/notes`,
+    })
+  },
+
+  addAdditionalNote(customerId: number, note: string) {
+    return request<AdditionalNote>({
+      path: `/crm/customers/${customerId}/notes`,
+      method: 'POST',
+      body: { note },
+    })
+  },
+
+  updateAdditionalNote(customerId: number, noteId: number, note: string) {
+    return request<AdditionalNote>({
+      path: `/crm/customers/${customerId}/notes/${noteId}`,
+      method: 'PUT',
+      body: { note },
+    })
+  },
+
+  deleteAdditionalNote(customerId: number, noteId: number) {
+    return request<SuccessResponse>({
+      path: `/crm/customers/${customerId}/notes/${noteId}`,
+      method: 'DELETE',
     })
   },
 

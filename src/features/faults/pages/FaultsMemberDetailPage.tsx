@@ -7,6 +7,8 @@ import type {
   MemberDeliveryBonusRecord,
   MemberMistakePayload,
   MemberMistakeRecord,
+  SimpleBonusRecord,
+  SimplePenaltyRecord,
 } from '../../../shared/api/types'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
@@ -27,6 +29,8 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import {
   DeliveryBonusSection,
   MistakeIncidentSection,
+  SimpleBonusSection,
+  SimplePenaltySection,
 } from '../components/CompensationRecordPanels'
 import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpdateCalendar'
 import { RefreshIcon } from '../components/SalaryEstimatePrimitives'
@@ -90,6 +94,11 @@ type DeliveryBonusFormState = {
   awardDate: string
 }
 
+type SimpleBonusPenaltyFormState = {
+  amount: string
+  reason: string
+}
+
 type CompensationDeleteTarget =
   | {
       kind: 'mistake'
@@ -98,6 +107,14 @@ type CompensationDeleteTarget =
   | {
       kind: 'delivery-bonus'
       record: MemberDeliveryBonusRecord
+    }
+  | {
+      kind: 'simple-bonus'
+      record: SimpleBonusRecord
+    }
+  | {
+      kind: 'simple-penalty'
+      record: SimplePenaltyRecord
     }
 
 function clampNumber(value: number, min: number, max: number) {
@@ -323,6 +340,12 @@ export function FaultsMemberDetailPage({
   const [isMistakeSubmitting, setIsMistakeSubmitting] = useState(false)
   const [isDeliveryBonusSubmitting, setIsDeliveryBonusSubmitting] = useState(false)
   const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false)
+  const [simpleBonusDraft, setSimpleBonusDraft] = useState<SimpleBonusPenaltyFormState>({ amount: '', reason: '' })
+  const [simplePenaltyDraft, setSimplePenaltyDraft] = useState<SimpleBonusPenaltyFormState>({ amount: '', reason: '' })
+  const [isSimpleBonusDialogOpen, setIsSimpleBonusDialogOpen] = useState(false)
+  const [isSimplePenaltyDialogOpen, setIsSimplePenaltyDialogOpen] = useState(false)
+  const [isSimpleBonusSubmitting, setIsSimpleBonusSubmitting] = useState(false)
+  const [isSimplePenaltySubmitting, setIsSimplePenaltySubmitting] = useState(false)
   const lt = translateCurrentLiteral
   const locale = getIntlLocale()
   const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -506,6 +529,35 @@ export function FaultsMemberDetailPage({
     },
   )
 
+  const simpleBonusesQuery = useAsyncData(
+    async () => {
+      const raw = await membersService.listSimpleBonuses({ user_id: memberId, year, month })
+      if (Array.isArray(raw)) return raw as SimpleBonusRecord[]
+      if (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).items)) {
+        return (raw as Record<string, unknown>).items as SimpleBonusRecord[]
+      }
+      return [] as SimpleBonusRecord[]
+    },
+    [memberId, year, month],
+    { enabled: Number.isFinite(memberId) && memberId > 0 && showCompensationActions },
+  )
+
+  const simplePenaltiesQuery = useAsyncData(
+    async () => {
+      const raw = await membersService.listSimplePenalties({ user_id: memberId, year, month })
+      if (Array.isArray(raw)) return raw as SimplePenaltyRecord[]
+      if (raw && typeof raw === 'object' && Array.isArray((raw as Record<string, unknown>).items)) {
+        return (raw as Record<string, unknown>).items as SimplePenaltyRecord[]
+      }
+      return [] as SimplePenaltyRecord[]
+    },
+    [memberId, year, month],
+    { enabled: Number.isFinite(memberId) && memberId > 0 && showCompensationActions },
+  )
+
+  const simpleBonuses = simpleBonusesQuery.data ?? []
+  const simplePenalties = simplePenaltiesQuery.data ?? []
+
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
   const mistakeCategoryOptions = getCompensationPolicyCategoryOptions(compensationPolicy).map((option) => ({
@@ -553,6 +605,8 @@ export function FaultsMemberDetailPage({
       await Promise.all([
         detailQuery.refetch(),
         showCompensationActions ? allUsersQuery.refetch() : Promise.resolve(undefined),
+        showCompensationActions ? simpleBonusesQuery.refetch() : Promise.resolve(undefined),
+        showCompensationActions ? simplePenaltiesQuery.refetch() : Promise.resolve(undefined),
       ])
       showToast({
         title: lt('Member detail refreshed'),
@@ -751,26 +805,119 @@ export function FaultsMemberDetailPage({
     setIsDeleteSubmitting(true)
 
     try {
-      const response =
-        deleteTarget.kind === 'mistake'
-          ? await membersService.deleteMistake(deleteTarget.record.id)
-          : await membersService.deleteDeliveryBonus(deleteTarget.record.id)
+      let response: unknown
 
-      await detailQuery.refetch()
+      if (deleteTarget.kind === 'mistake') {
+        response = await membersService.deleteMistake(deleteTarget.record.id)
+        await detailQuery.refetch()
+      } else if (deleteTarget.kind === 'delivery-bonus') {
+        response = await membersService.deleteDeliveryBonus(deleteTarget.record.id)
+        await detailQuery.refetch()
+      } else if (deleteTarget.kind === 'simple-bonus') {
+        response = await membersService.deleteSimpleBonus(deleteTarget.record.id)
+        await simpleBonusesQuery.refetch()
+      } else {
+        response = await membersService.deleteSimplePenalty(deleteTarget.record.id)
+        await simplePenaltiesQuery.refetch()
+      }
+
+      const recordTitle = 'title' in deleteTarget.record ? deleteTarget.record.title : deleteTarget.record.reason
+      const successTitle =
+        deleteTarget.kind === 'mistake' ? lt('Mistake deleted') :
+        deleteTarget.kind === 'delivery-bonus' ? lt('Delivery bonus deleted') :
+        deleteTarget.kind === 'simple-bonus' ? tr('Simple bonus deleted', 'Oddiy bonus o\'chirildi', 'Простой бонус удалён') :
+        tr('Simple penalty deleted', 'Oddiy jarima o\'chirildi', 'Простой штраф удалён')
       showToast({
-        title: deleteTarget.kind === 'mistake' ? lt('Mistake deleted') : lt('Delivery bonus deleted'),
-        description: getSuccessMessage(response, `${deleteTarget.record.title} ${lt('removed.')}`),
+        title: successTitle,
+        description: getSuccessMessage(response, `${recordTitle} ${lt('removed.')}`),
         tone: 'success',
       })
       setDeleteTarget(null)
     } catch (error) {
+      const errorTitle =
+        deleteTarget.kind === 'mistake' ? lt('Mistake not deleted') :
+        deleteTarget.kind === 'delivery-bonus' ? lt('Delivery bonus not deleted') :
+        deleteTarget.kind === 'simple-bonus' ? tr('Simple bonus not deleted', 'Oddiy bonus o\'chirilmadi', 'Простой бонус не удалён') :
+        tr('Simple penalty not deleted', 'Oddiy jarima o\'chirilmadi', 'Простой штраф не удалён')
       showToast({
-        title: deleteTarget.kind === 'mistake' ? lt('Mistake not deleted') : lt('Delivery bonus not deleted'),
+        title: errorTitle,
         description: getApiErrorMessage(error),
         tone: 'error',
       })
     } finally {
       setIsDeleteSubmitting(false)
+    }
+  }
+
+  async function handleSubmitSimpleBonus() {
+    if (!detail) return
+
+    const amount = Number(simpleBonusDraft.amount)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast({ title: tr('Invalid amount', 'Noto\'g\'ri summa', 'Неверная сумма'), description: tr('Amount must be a positive number.', 'Summa musbat son bo\'lishi kerak.', 'Сумма должна быть положительным числом.'), tone: 'error' })
+      return
+    }
+
+    if (!simpleBonusDraft.reason.trim()) {
+      showToast({ title: tr('Reason required', 'Sabab kiritilmagan', 'Причина обязательна'), description: tr('Enter a reason for the bonus.', 'Bonus uchun sabab kiriting.', 'Введите причину для бонуса.'), tone: 'error' })
+      return
+    }
+
+    setIsSimpleBonusSubmitting(true)
+
+    try {
+      await membersService.createSimpleBonus({
+        user_id: detail.report.id,
+        year,
+        month,
+        amount,
+        reason: simpleBonusDraft.reason.trim(),
+      })
+      await simpleBonusesQuery.refetch()
+      setIsSimpleBonusDialogOpen(false)
+      setSimpleBonusDraft({ amount: '', reason: '' })
+      showToast({ title: tr('Simple bonus added', 'Oddiy bonus qo\'shildi', 'Простой бонус добавлен'), description: `${detail.report.fullName} ${lt('updated.')}`, tone: 'success' })
+    } catch (error) {
+      showToast({ title: tr('Simple bonus not added', 'Oddiy bonus qo\'shilmadi', 'Простой бонус не добавлен'), description: getApiErrorMessage(error), tone: 'error' })
+    } finally {
+      setIsSimpleBonusSubmitting(false)
+    }
+  }
+
+  async function handleSubmitSimplePenalty() {
+    if (!detail) return
+
+    const amount = Number(simplePenaltyDraft.amount)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      showToast({ title: tr('Invalid amount', 'Noto\'g\'ri summa', 'Неверная сумма'), description: tr('Amount must be a positive number.', 'Summa musbat son bo\'lishi kerak.', 'Сумма должна быть положительным числом.'), tone: 'error' })
+      return
+    }
+
+    if (!simplePenaltyDraft.reason.trim()) {
+      showToast({ title: tr('Reason required', 'Sabab kiritilmagan', 'Причина обязательна'), description: tr('Enter a reason for the penalty.', 'Jarima uchun sabab kiriting.', 'Введите причину для штрафа.'), tone: 'error' })
+      return
+    }
+
+    setIsSimplePenaltySubmitting(true)
+
+    try {
+      await membersService.createSimplePenalty({
+        user_id: detail.report.id,
+        year,
+        month,
+        amount,
+        reason: simplePenaltyDraft.reason.trim(),
+      })
+      await simplePenaltiesQuery.refetch()
+      setIsSimplePenaltyDialogOpen(false)
+      setSimplePenaltyDraft({ amount: '', reason: '' })
+      showToast({ title: tr('Simple penalty added', 'Oddiy jarima qo\'shildi', 'Простой штраф добавлен'), description: `${detail.report.fullName} ${lt('updated.')}`, tone: 'success' })
+    } catch (error) {
+      showToast({ title: tr('Simple penalty not added', 'Oddiy jarima qo\'shilmadi', 'Простой штраф не добавлен'), description: getApiErrorMessage(error), tone: 'error' })
+    } finally {
+      setIsSimplePenaltySubmitting(false)
     }
   }
 
@@ -901,6 +1048,16 @@ export function FaultsMemberDetailPage({
                 {showCompensationActions ? (
                   <Button variant="success" size="sm" onClick={() => openDeliveryBonusDialog()} className="rounded-xl">
                     {tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу')}
+                  </Button>
+                ) : null}
+                {showCompensationActions ? (
+                  <Button variant="success" size="sm" onClick={() => { setSimpleBonusDraft({ amount: '', reason: '' }); setIsSimpleBonusDialogOpen(true) }} className="rounded-xl">
+                    {tr('Add simple bonus', "Oddiy bonus qo'shish", 'Добавить простой бонус')}
+                  </Button>
+                ) : null}
+                {showCompensationActions ? (
+                  <Button variant="danger" size="sm" onClick={() => { setSimplePenaltyDraft({ amount: '', reason: '' }); setIsSimplePenaltyDialogOpen(true) }} className="rounded-xl">
+                    {tr('Add simple penalty', "Oddiy jarima qo'shish", 'Добавить простой штраф')}
                   </Button>
                 ) : null}
                 <Button
@@ -1305,6 +1462,26 @@ export function FaultsMemberDetailPage({
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'delivery-bonus', record: item }) : undefined}
               />
             </Card>
+            {showCompensationActions ? (
+              <Card noPadding className="overflow-hidden rounded-[24px]">
+                <SimpleBonusSection
+                  items={simpleBonuses}
+                  editable
+                  onAdd={() => { setSimpleBonusDraft({ amount: '', reason: '' }); setIsSimpleBonusDialogOpen(true) }}
+                  onDelete={(item) => setDeleteTarget({ kind: 'simple-bonus', record: item })}
+                />
+              </Card>
+            ) : null}
+            {showCompensationActions ? (
+              <Card noPadding className="overflow-hidden rounded-[24px]">
+                <SimplePenaltySection
+                  items={simplePenalties}
+                  editable
+                  onAdd={() => { setSimplePenaltyDraft({ amount: '', reason: '' }); setIsSimplePenaltyDialogOpen(true) }}
+                  onDelete={(item) => setDeleteTarget({ kind: 'simple-penalty', record: item })}
+                />
+              </Card>
+            ) : null}
           </div>
         </CardSection>
       </Card>
@@ -1608,8 +1785,13 @@ export function FaultsMemberDetailPage({
         <Dialog
           open={Boolean(deleteTarget)}
           onClose={() => setDeleteTarget(null)}
-          title={deleteTarget?.kind === 'mistake' ? lt('Delete mistake incident') : lt('Delete delivery bonus')}
-          description={deleteTarget ? `${lt('This will remove')} "${deleteTarget.record.title}" ${lt('from the selected month.')}` : undefined}
+          title={
+            deleteTarget?.kind === 'mistake' ? lt('Delete mistake incident') :
+            deleteTarget?.kind === 'delivery-bonus' ? lt('Delete delivery bonus') :
+            deleteTarget?.kind === 'simple-bonus' ? tr('Delete simple bonus', 'Oddiy bonusni o\'chirish', 'Удалить простой бонус') :
+            tr('Delete simple penalty', 'Oddiy jarimani o\'chirish', 'Удалить простой штраф')
+          }
+          description={deleteTarget ? `${lt('This will remove')} "${('title' in deleteTarget.record ? deleteTarget.record.title : deleteTarget.record.reason)}" ${lt('from the selected month.')}` : undefined}
           tone="danger"
           footer={
             <>
@@ -1623,12 +1805,108 @@ export function FaultsMemberDetailPage({
           }
         >
           <div className="rounded-[18px] border border-red-500/20 bg-red-50 px-4 py-4 text-sm text-[var(--muted-strong)] dark:bg-red-500/8 dark:text-white/84">
-            <p className="font-semibold text-[var(--foreground)] dark:text-white">{deleteTarget?.record.title}</p>
+            <p className="font-semibold text-[var(--foreground)] dark:text-white">
+              {'title' in (deleteTarget?.record ?? {}) ? (deleteTarget?.record as { title: string }).title : (deleteTarget?.record as { reason: string } | undefined)?.reason}
+            </p>
             <p className="mt-2 text-sm text-[var(--muted-strong)] dark:text-white/72">
               {deleteTarget?.kind === 'mistake'
                 ? lt('The mistake incident entry will be permanently removed from this employee history.')
-                : lt('The delivery bonus record will be permanently removed from this employee history.')}
+                : deleteTarget?.kind === 'delivery-bonus'
+                ? lt('The delivery bonus record will be permanently removed from this employee history.')
+                : deleteTarget?.kind === 'simple-bonus'
+                ? tr('The simple bonus will be permanently removed.', 'Oddiy bonus butunlay o\'chiriladi.', 'Простой бонус будет удалён навсегда.')
+                : tr('The simple penalty will be permanently removed.', 'Oddiy jarima butunlay o\'chiriladi.', 'Простой штраф будет удалён навсегда.')}
             </p>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={isSimpleBonusDialogOpen}
+          onClose={() => setIsSimpleBonusDialogOpen(false)}
+          eyebrow={tr('Workspace dialog', 'Ish maydoni dialogi', 'Диалог рабочего пространства')}
+          title={`${tr('Add simple bonus for', "Oddiy bonus qo'shish:", 'Добавить простой бонус для')} ${detail?.report.fullName ?? ''}`}
+          description={`${getMonthName(month)} ${year}`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsSimpleBonusDialogOpen(false)} disabled={isSimpleBonusSubmitting}>
+                {tr('Cancel', 'Bekor qilish', 'Отмена')}
+              </Button>
+              <Button variant="success" onClick={() => void handleSubmitSimpleBonus()} loading={isSimpleBonusSubmitting}>
+                {tr('Save bonus', 'Bonusni saqlash', 'Сохранить бонус')}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+                {tr('Amount', 'Summa', 'Сумма')}
+              </label>
+              <Input
+                type="number"
+                min="1"
+                value={simpleBonusDraft.amount}
+                onChange={(event) => setSimpleBonusDraft((s) => ({ ...s, amount: event.target.value }))}
+                placeholder="100000"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+                {tr('Reason', 'Sabab', 'Причина')}
+              </label>
+              <Textarea
+                value={simpleBonusDraft.reason}
+                onChange={(event) => setSimpleBonusDraft((s) => ({ ...s, reason: event.target.value }))}
+                placeholder={tr('Reason for the bonus', 'Bonus uchun sabab', 'Причина бонуса')}
+              />
+            </div>
+          </div>
+        </Dialog>
+      ) : null}
+
+      {showCompensationActions ? (
+        <Dialog
+          open={isSimplePenaltyDialogOpen}
+          onClose={() => setIsSimplePenaltyDialogOpen(false)}
+          eyebrow={tr('Workspace dialog', 'Ish maydoni dialogi', 'Диалог рабочего пространства')}
+          title={`${tr('Add simple penalty for', "Oddiy jarima qo'shish:", 'Добавить простой штраф для')} ${detail?.report.fullName ?? ''}`}
+          description={`${getMonthName(month)} ${year}`}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsSimplePenaltyDialogOpen(false)} disabled={isSimplePenaltySubmitting}>
+                {tr('Cancel', 'Bekor qilish', 'Отмена')}
+              </Button>
+              <Button variant="danger" onClick={() => void handleSubmitSimplePenalty()} loading={isSimplePenaltySubmitting}>
+                {tr('Save penalty', 'Jarimani saqlash', 'Сохранить штраф')}
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+                {tr('Amount', 'Summa', 'Сумма')}
+              </label>
+              <Input
+                type="number"
+                min="1"
+                value={simplePenaltyDraft.amount}
+                onChange={(event) => setSimplePenaltyDraft((s) => ({ ...s, amount: event.target.value }))}
+                placeholder="100000"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+                {tr('Reason', 'Sabab', 'Причина')}
+              </label>
+              <Textarea
+                value={simplePenaltyDraft.reason}
+                onChange={(event) => setSimplePenaltyDraft((s) => ({ ...s, reason: event.target.value }))}
+                placeholder={tr('Reason for the penalty', 'Jarima uchun sabab', 'Причина штрафа')}
+              />
+            </div>
           </div>
         </Dialog>
       ) : null}

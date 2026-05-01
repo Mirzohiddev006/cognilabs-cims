@@ -1,6 +1,8 @@
 import type {
   MemberDeliveryBonusRecord,
   MemberMistakeRecord,
+  SimpleBonusRecord,
+  SimplePenaltyRecord,
 } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
@@ -8,7 +10,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { CardSection } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
-import { formatDetailDate } from '../lib/salaryEstimates'
+import { formatAmount, formatDetailDate } from '../lib/salaryEstimates'
 
 const lt = translateCurrentLiteral
 const tr = (key: string, uzFallback: string, ruFallback: string) => {
@@ -250,6 +252,168 @@ export function DeliveryBonusSection({
       ) : (
         <p className="text-sm text-[var(--muted-strong)]">
           {tr('No delivery bonus records were returned for the selected month.', 'Tanlangan oy uchun topshirish bonuslari qaytmadi.', 'Za vybrannyi mesyats zapisi o bonusakh za sdachu ne vernulis.')}
+        </p>
+      )}
+    </CardSection>
+  )
+}
+
+type SimpleBonusSectionProps = {
+  items: SimpleBonusRecord[]
+  editable?: boolean
+  onAdd?: () => void
+  onDelete?: (item: SimpleBonusRecord) => void
+  className?: string
+}
+
+export function SimpleBonusSection({
+  items,
+  editable = false,
+  onAdd,
+  onDelete,
+  className,
+}: SimpleBonusSectionProps) {
+  return (
+    <CardSection
+      className={className}
+      title={tr('Simple bonuses', 'Oddiy bonuslar', 'Простые бонусы')}
+      headerAction={
+        <>
+          <Badge variant={items.length > 0 ? 'success' : 'outline'}>
+            {items.length} {lt('entries')}
+          </Badge>
+          {editable && onAdd ? (
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl font-semibold text-[var(--success-text)]">
+              {tr('Add bonus', "Bonus qo'shish", 'Добавить бонус')}
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      {items.length > 0 ? (
+        <DataTable
+          zebra
+          className="rounded-none border-x-0 border-b-0"
+          caption={tr('Simple bonuses table', 'Oddiy bonuslar jadvali', 'Tablitsa prostykh bonusov')}
+          rows={items}
+          getRowKey={(row) => `simple-bonus-${row.id}`}
+          columns={[
+            {
+              key: 'reason',
+              header: tr('Reason', 'Sabab', 'Prichina'),
+              render: (row) => <span className="font-semibold text-[var(--success-text)]">{row.reason}</span>,
+            },
+            {
+              key: 'amount',
+              header: tr('Amount', 'Summa', 'Summa'),
+              align: 'right',
+              render: (row) => <span className="font-semibold text-[var(--success-text)]">{formatAmount(row.amount)}</span>,
+            },
+            {
+              key: 'date',
+              header: tr('Date', 'Sana', 'Data'),
+              render: (row) => row.created_at ? formatDetailDate(row.created_at) : '-',
+            },
+            {
+              key: 'actions',
+              header: tr('Actions', 'Amallar', 'Deystviya'),
+              render: (row) => editable && onDelete ? (
+                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
+                  <ActionsMenu
+                    label={`${lt('Open bonus actions for')} ${row.reason}`}
+                    items={[
+                      { label: lt('Delete bonus'), onSelect: () => onDelete(row), tone: 'danger' },
+                    ]}
+                  />
+                </div>
+              ) : '-',
+            },
+          ]}
+        />
+      ) : (
+        <p className="text-sm text-[var(--muted-strong)]">
+          {tr('No simple bonuses for the selected period.', 'Tanlangan davr uchun oddiy bonuslar yo\'q.', 'Za vybrannyi period prostykh bonusov net.')}
+        </p>
+      )}
+    </CardSection>
+  )
+}
+
+type SimplePenaltySectionProps = {
+  items: SimplePenaltyRecord[]
+  editable?: boolean
+  onAdd?: () => void
+  onDelete?: (item: SimplePenaltyRecord) => void
+  className?: string
+}
+
+export function SimplePenaltySection({
+  items,
+  editable = false,
+  onAdd,
+  onDelete,
+  className,
+}: SimplePenaltySectionProps) {
+  return (
+    <CardSection
+      className={className}
+      title={tr('Simple penalties', 'Oddiy jarimalar', 'Простые штрафы')}
+      headerAction={
+        <>
+          <Badge variant={items.length > 0 ? 'danger' : 'outline'}>
+            {items.length} {lt('entries')}
+          </Badge>
+          {editable && onAdd ? (
+            <Button variant="ghost" size="sm" onClick={onAdd} className="rounded-xl text-[var(--danger-text)]">
+              {tr('Add penalty', "Jarima qo'shish", 'Добавить штраф')}
+            </Button>
+          ) : null}
+        </>
+      }
+    >
+      {items.length > 0 ? (
+        <DataTable
+          zebra
+          className="rounded-none border-x-0 border-b-0"
+          caption={tr('Simple penalties table', 'Oddiy jarimalar jadvali', 'Tablitsa prostykh shtrafov')}
+          rows={items}
+          getRowKey={(row) => `simple-penalty-${row.id}`}
+          columns={[
+            {
+              key: 'reason',
+              header: tr('Reason', 'Sabab', 'Prichina'),
+              render: (row) => <span className="font-semibold text-[var(--foreground)]">{row.reason}</span>,
+            },
+            {
+              key: 'amount',
+              header: tr('Amount', 'Summa', 'Summa'),
+              align: 'right',
+              render: (row) => <span className="font-semibold text-[var(--danger-text)]">{formatAmount(row.amount)}</span>,
+            },
+            {
+              key: 'date',
+              header: tr('Date', 'Sana', 'Data'),
+              render: (row) => row.created_at ? formatDetailDate(row.created_at) : '-',
+            },
+            {
+              key: 'actions',
+              header: tr('Actions', 'Amallar', 'Deystviya'),
+              render: (row) => editable && onDelete ? (
+                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
+                  <ActionsMenu
+                    label={`${lt('Open penalty actions for')} ${row.reason}`}
+                    items={[
+                      { label: lt('Delete penalty'), onSelect: () => onDelete(row), tone: 'danger' },
+                    ]}
+                  />
+                </div>
+              ) : '-',
+            },
+          ]}
+        />
+      ) : (
+        <p className="text-sm text-[var(--muted-strong)]">
+          {tr('No simple penalties for the selected period.', 'Tanlangan davr uchun oddiy jarimalar yo\'q.', 'Za vybrannyi period prostykh shtrafov net.')}
         </p>
       )}
     </CardSection>

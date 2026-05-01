@@ -64,7 +64,7 @@ export function KanbanColumn({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex h-full w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-2xl overflow-hidden',
+        'flex max-h-[calc(100%-24px)] sm:max-h-[calc(100%-40px)] w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-2xl overflow-hidden',
         'bg-[var(--accent-soft)]/40 backdrop-blur-md',
         'border border-[var(--border)]',
         'shadow-sm',
@@ -83,7 +83,7 @@ export function KanbanColumn({
       {/* Column header — drag handle */}
       <div
         className={cn(
-          'flex items-center justify-between gap-2 px-4 py-3',
+          'flex shrink-0 items-center justify-between gap-2 px-4 py-3',
           readOnly ? 'select-none' : 'cursor-grab active:cursor-grabbing select-none',
         )}
         {...(!readOnly ? attributes : {})}
@@ -131,7 +131,7 @@ export function KanbanColumn({
 
       {/* Add card button — Renamed to Task qo'shish */}
       {!readOnly ? (
-        <div className="px-2 pb-3 pt-1">
+        <div className="shrink-0 px-2 pb-3 pt-1">
           <button
             type="button"
             onClick={() => onAddCard(column.id)}

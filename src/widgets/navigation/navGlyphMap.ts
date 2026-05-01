@@ -13,11 +13,14 @@ export type GlyphName =
   | 'cognilabsai-chat'
   | 'cognilabsai-integrations'
   | 'audit'
+  | 'attendance'
   | 'default'
 
 export function getNavigationGlyphName(pathname: string): GlyphName {
+  if (pathname.startsWith('/member/attendance')) return 'attendance'
   if (pathname.startsWith('/member')) return 'member'
   if (pathname.startsWith('/ceo/ai')) return 'ai'
+  if (pathname.startsWith('/ceo/attendance')) return 'attendance'
   if (pathname.startsWith('/ceo')) return 'ceo'
   if (pathname.startsWith('/crm')) return 'crm'
   if (pathname.startsWith('/faults')) return 'faults'

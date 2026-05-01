@@ -32,6 +32,16 @@ export const navigationItems: readonly NavigationItem[] = [
     audience: 'member',
   },
   {
+    to: '/member/attendance',
+    label: 'My Attendance',
+    description: 'Track your personal office time and daily presence.',
+    group: 'Member',
+    sidebar: true,
+    permissionKey: undefined,
+    defaultRedirect: false,
+    audience: 'member',
+  },
+  {
     to: '/ceo/dashboard',
     label: 'CEO Dashboard',
     description: 'Executive metrics, operational highlights, and daily performance indicators.',
@@ -39,6 +49,15 @@ export const navigationItems: readonly NavigationItem[] = [
     permissionKey: 'ceo',
     sidebar: true,
     defaultRedirect: true,
+  },
+  {
+    to: '/ceo/attendance',
+    label: 'Attendance',
+    description: 'Monitor team monthly office time and daily presence.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
   },
   {
     to: '/crm',
