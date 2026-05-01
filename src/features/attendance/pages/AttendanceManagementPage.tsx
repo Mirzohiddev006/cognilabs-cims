@@ -75,9 +75,9 @@ export function AttendanceManagementPage() {
       </Card>
 
       {query.isLoading ? (
-        <LoadingStateBlock title="Loading attendance data..." />
+        <LoadingStateBlock eyebrow="Attendance" title="Loading attendance data..." />
       ) : query.isError ? (
-        <ErrorStateBlock title="Failed to load attendance data" />
+        <ErrorStateBlock eyebrow="Attendance" title="Failed to load attendance data" />
       ) : (
         <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
           <div className="overflow-x-auto">

@@ -1,12 +1,11 @@
-import { useMemo, useState } from 'react'
-import { attendanceService, type OfficeTimeMe } from '../../../shared/api/services/attendance.service'
+import { useState } from 'react'
+import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Card } from '../../../shared/ui/card'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
 import { Badge } from '../../../shared/ui/badge'
-import { cn } from '../../../shared/lib/cn'
 
 export function PersonalAttendancePage() {
   const [date, setDate] = useState(() => {

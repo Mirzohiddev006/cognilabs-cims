@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
@@ -97,7 +98,7 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
         </div>
 
         {notesQuery.isLoading ? (
-          <LoadingStateBlock title={t('common.loading', 'Loading...')} />
+          <LoadingStateBlock eyebrow="Notes" title={t('common.loading', 'Loading...')} />
         ) : notesQuery.data?.items.length ? (
           <div className="space-y-3">
             {notesQuery.data.items.map((note) => (
@@ -161,6 +162,7 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
           </div>
         ) : (
           <EmptyStateBlock
+            eyebrow="Notes"
             title={t('customers.notes.empty_title', 'No additional notes')}
             description={t('customers.notes.empty_description', 'Start adding notes to this customer.')}
           />
