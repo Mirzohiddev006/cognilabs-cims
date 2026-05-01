@@ -58,6 +58,27 @@ export type SalaryEstimateSnapshot = {
   updateDays?: number
   productivityPercentage?: number
   qualifiesProductivityBonus?: boolean
+  formulaText?: string
+  calculationBreakdown?: {
+    base_salary: number
+    bonus_lines: Array<{
+      type: string
+      label: string
+      applied: boolean
+      percent: number
+      amount: number
+      reason?: string
+    }>
+    deduction_lines: Array<{
+      type: string
+      label: string
+      applied: boolean
+      percent: number
+      amount: number
+      reason?: string
+    }>
+    formula_text?: string
+  }
 }
 
 export type EmployeeSalaryReport = {
@@ -84,6 +105,8 @@ export type EmployeeSalaryReport = {
   qualifiesProductivityBonus: boolean
   hasPenalty: boolean
   hasBonus: boolean
+  formulaText?: string
+  calculationBreakdown?: SalaryEstimateSnapshot['calculationBreakdown']
 }
 
 export type SalaryLedgerItem = {
@@ -1078,6 +1101,9 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     productivityRecord ? findFirstNumber(productivityRecord, ['percentage', 'update_percentage', 'completion_percentage']) : undefined
   const qualifiesProductivityBonus =
     productivityRecord ? toBoolean(productivityRecord.qualifies_productivity_bonus ?? productivityRecord.qualifiesBonus) : null
+  const formulaText = findFirstString(salaryRecord ?? parsedEntry, ['formula_text', 'formula'])
+  const calculationBreakdown = findFirstRecord(salaryRecord ?? parsedEntry, ['calculation_breakdown', 'calculationBreakdown']) as SalaryEstimateSnapshot['calculationBreakdown']
+
   const userName = resolveRecordDisplayName(...sources)
   const roleLabel =
     sources.map((source) => findFirstString(source, ['job_title', 'role_name', 'role'])).find(Boolean)
@@ -1108,6 +1134,8 @@ export function normalizeEstimateEntry(entry: UnknownRecord): SalaryEstimateSnap
     updateDays,
     productivityPercentage,
     qualifiesProductivityBonus: qualifiesProductivityBonus ?? undefined,
+    formulaText,
+    calculationBreakdown,
   }
 
   normalizedEstimateEntryCache.set(entry, normalizedSnapshot)
@@ -1182,6 +1210,8 @@ export function buildReportFromUser(user: CeoUserRecord, snapshot?: SalaryEstima
       (Number.isFinite(bonusEntries) && bonusEntries > 0) ||
       (Number.isFinite(totalBonusPercent) && totalBonusPercent > 0) ||
       qualifiesProductivityBonus,
+    formulaText: snapshot?.formulaText,
+    calculationBreakdown: snapshot?.calculationBreakdown,
   }
 }
 
@@ -1319,6 +1349,8 @@ export function mergeReportWithSnapshot(
   const afterPenalty = resolvedSalaryMetrics?.afterPenalty ?? report.afterPenalty
   const finalSalary = resolvedSalaryMetrics?.finalSalary ?? report.finalSalary
   const estimatedSalary = resolvedSalaryMetrics?.estimatedSalary ?? report.estimatedSalary
+  const formulaText = snapshot?.formulaText ?? report.formulaText
+  const calculationBreakdown = snapshot?.calculationBreakdown ?? report.calculationBreakdown
 
   return {
     ...report,
@@ -1335,6 +1367,7 @@ export function mergeReportWithSnapshot(
     penaltyPoints,
     penaltyEntries,
     deliveryBonusCount,
+    bonus_entries: bonusEntries, // Fixed potential type mismatch if needed, but report usually has bonusEntries
     bonusEntries,
     penaltyPercentage,
     totalBonusPercent,
@@ -1353,6 +1386,8 @@ export function mergeReportWithSnapshot(
       (Number.isFinite(bonusEntries) && bonusEntries > 0) ||
       (Number.isFinite(totalBonusPercent) && totalBonusPercent > 0) ||
       qualifiesProductivityBonus,
+    formulaText,
+    calculationBreakdown,
   } satisfies EmployeeSalaryReport
 }
 

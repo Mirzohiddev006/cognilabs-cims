@@ -148,7 +148,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
             onPointerDown={stopCardAction}
             onMouseDown={stopCardAction}
           >
-            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)]/92 p-0.5 shadow-[var(--shadow-sm)] backdrop-blur-md">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-[var(--accent-soft)] transition-colors">
               <ActionsMenu
                 label={lt('Card actions')}
                 items={[

@@ -207,87 +207,92 @@ export function CustomerDetailContent({
         </div>
       </Card>
 
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="grid gap-5">
-          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
-            <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle
-                title={t('customers.detail.profile.title', 'Profile')}
-                description={t('customers.detail.profile.description', 'Core contact and routing metadata returned by the CRM detail endpoint.')}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* 1. Profile Card */}
+        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+          <div className="border-b border-[var(--border)] px-6 py-5">
+            <SectionTitle
+              title={t('customers.detail.profile.title', 'Profile')}
+              description={t('customers.detail.profile.description', 'Core contact and routing metadata.')}
+            />
+          </div>
+          <div className="grid gap-3 px-6 py-5">
+            {[
+              [t('common.phone', 'Phone'), customer.phone_number ?? customer.phone ?? '-'],
+              [t('common.platform', 'Platform'), getCustomerDisplayPlatform(customer) || '-'],
+              [t('customers.detail.audio_file_id', 'Audio file ID'), customer.audio_file_id || '-'],
+              [t('common.assistant', 'Assistant'), customer.assistant_name || '-'],
+              [
+                t('common.conversation_language', 'Conversation language'),
+                formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
+              ],
+              [t('common.recall_time', 'Recall time'), formatNumericDateTime(customer.recall_time)],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+                <span className="text-sm text-[var(--muted-strong)]">{label}</span>
+                <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* 2. Operator Notes Card */}
+        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+          <div className="border-b border-[var(--border)] px-6 py-5">
+            <SectionTitle
+              title={t('customers.detail.notes.title', 'Notes')}
+              description={t('customers.detail.notes.description', 'Operator notes.')}
+            />
+          </div>
+          <div className="px-6 py-5">
+            {formattedNotes.length > 0 ? (
+              <div className="space-y-4">
+                {formattedNotes.map((note, index) => (
+                  <p key={`${customer.id}-note-${index}`} className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">
+                    {note}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <EmptyStateBlock
+                eyebrow={t('customers.detail.notes.title', 'Notes')}
+                title={t('customers.detail.notes.empty_title', 'No notes')}
+                description={t('customers.detail.notes.empty_description', 'There are no notes.')}
               />
-            </div>
-            <div className="grid gap-3 px-6 py-5">
-              {[
-                [t('common.phone', 'Phone'), customer.phone_number ?? customer.phone ?? '-'],
-                [t('common.platform', 'Platform'), getCustomerDisplayPlatform(customer) || '-'],
-                [t('customers.detail.audio_file_id', 'Audio file ID'), customer.audio_file_id || '-'],
-                [t('common.assistant', 'Assistant'), customer.assistant_name || '-'],
-                [
-                  t('common.conversation_language', 'Conversation language'),
-                  formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
-                ],
-                [t('common.recall_time', 'Recall time'), formatNumericDateTime(customer.recall_time)],
-              ].map(([label, value]) => (
-                <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
-                  <span className="text-sm text-[var(--muted-strong)]">{label}</span>
-                  <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
+            )}
+          </div>
+        </Card>
 
-          {audioSource ? <CustomerAudioPanel audioSource={audioSource} /> : null}
-        </div>
-
-        <div className="grid gap-5">
-          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
-            <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle
-                title={t('customers.detail.notes.title', 'Notes')}
-                description={t('customers.detail.notes.description', 'Operator notes attached to the customer record.')}
+        {/* 3. AI Summary Card */}
+        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+          <div className="border-b border-[var(--border)] px-6 py-5">
+            <SectionTitle
+              title={t('customers.detail.ai_summary.title', 'AI summary')}
+              description={t('customers.detail.ai_summary.description', 'CRM-generated summary.')}
+            />
+          </div>
+          <div className="px-6 py-5">
+            {customer.aisummary ? (
+              <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.aisummary}</p>
+            ) : (
+              <EmptyStateBlock
+                eyebrow={t('customers.detail.ai_summary.title', 'AI summary')}
+                title={t('customers.detail.ai_summary.empty_title', 'No AI summary')}
+                description={t('customers.detail.ai_summary.empty_description', 'AI summary is not available.')}
               />
-            </div>
-            <div className="px-6 py-5">
-              {formattedNotes.length > 0 ? (
-                <div className="space-y-4">
-                  {formattedNotes.map((note, index) => (
-                    <p key={`${customer.id}-note-${index}`} className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">
-                      {note}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <EmptyStateBlock
-                  eyebrow={t('customers.detail.notes.title', 'Notes')}
-                  title={t('customers.detail.notes.empty_title', 'No notes')}
-                  description={t('customers.detail.notes.empty_description', 'There are no notes for this customer.')}
-                />
-              )}
-            </div>
-          </Card>
+            )}
+          </div>
+        </Card>
 
-          <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
-            <div className="border-b border-[var(--border)] px-6 py-5">
-              <SectionTitle
-                title={t('customers.detail.ai_summary.title', 'AI summary')}
-                description={t('customers.detail.ai_summary.description', 'CRM-generated summary snapshot for faster context recovery.')}
-              />
-            </div>
-            <div className="px-6 py-5">
-              {customer.aisummary ? (
-                <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.aisummary}</p>
-              ) : (
-                <EmptyStateBlock
-                  eyebrow={t('customers.detail.ai_summary.title', 'AI summary')}
-                  title={t('customers.detail.ai_summary.empty_title', 'No AI summary')}
-                  description={t('customers.detail.ai_summary.empty_description', 'AI summary is not available for this record.')}
-                />
-              )}
-            </div>
-          </Card>
+        {/* 4. Additional Notes Card */}
+        <CustomerAdditionalNotes customerId={customer.id} />
 
-          <CustomerAdditionalNotes customerId={customer.id} />
-        </div>
+        {/* Audio Panel (Separated or as an extra row) */}
+        {audioSource ? (
+          <div className="lg:col-span-2">
+            <CustomerAudioPanel audioSource={audioSource} />
+          </div>
+        ) : null}
       </div>
     </section>
   )

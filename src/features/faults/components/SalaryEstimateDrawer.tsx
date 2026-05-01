@@ -183,7 +183,55 @@ export function SalaryEstimateDrawer({
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+            {/* Formula and Breakdown */}
+            {(report.formulaText || report.calculationBreakdown) && (
+              <div className="mt-6 space-y-4">
+                {report.formulaText && (
+                  <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted-strong)]">Calculation Formula</p>
+                    <p className="font-mono text-xs leading-relaxed text-[var(--foreground)] sm:text-sm">{report.formulaText}</p>
+                  </div>
+                )}
+
+                {report.calculationBreakdown && (
+                  <div className="grid gap-2.5">
+                    {report.calculationBreakdown.bonus_lines.map((line, index) => (
+                      <div key={`bonus-${index}`} className="flex items-center justify-between rounded-[20px] border border-blue-500/18 bg-blue-500/5 p-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="shrink-0 rounded-md bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-blue-500">Bonus</span>
+                            <h4 className="truncate text-[13px] font-bold text-[var(--foreground)]">{line.label}</h4>
+                          </div>
+                          {line.reason && <p className="mt-1 text-[11px] text-[var(--muted-strong)]">{line.reason}</p>}
+                        </div>
+                        <div className="pl-3 text-right">
+                          <p className="text-[14px] font-black text-blue-500">+{formatAmount(line.amount)}</p>
+                          <p className="text-[10px] font-bold text-blue-400">{line.percent}%</p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {report.calculationBreakdown.deduction_lines.map((line, index) => (
+                      <div key={`deduction-${index}`} className="flex items-center justify-between rounded-[20px] border border-rose-500/18 bg-rose-500/5 p-4">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="shrink-0 rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-500">Deduction</span>
+                            <h4 className="truncate text-[13px] font-bold text-[var(--foreground)]">{line.label}</h4>
+                          </div>
+                          {line.reason && <p className="mt-1 text-[11px] text-[var(--muted-strong)]">{line.reason}</p>}
+                        </div>
+                        <div className="pl-3 text-right">
+                          <p className="text-[14px] font-black text-rose-500">-{formatAmount(line.amount)}</p>
+                          <p className="text-[10px] font-bold text-rose-400">{line.percent}%</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
               <DetailStatTile label={lt('Final salary')} value={formatAmount(report.finalSalary)} theme={theme} />
               <DetailStatTile label={lt('Estimated salary')} value={formatAmount(report.estimatedSalary)} theme={theme} />
               <DetailStatTile label={lt('Base salary')} value={formatAmount(report.baseSalary)} theme={theme} />

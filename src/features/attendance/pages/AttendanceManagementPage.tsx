@@ -106,7 +106,7 @@ export function AttendanceManagementPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-[var(--accent-soft)] grid place-items-center font-bold text-blue-500">
-                          {item.full_name.charAt(0)}
+                          {item.full_name?.charAt(0) ?? '?'}
                         </div>
                         <div>
                           <p className="text-sm font-bold text-[var(--foreground)]">{item.full_name}</p>

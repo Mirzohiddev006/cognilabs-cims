@@ -230,17 +230,18 @@ export function KanbanBoard({
         <div className="flex h-full items-start gap-3 sm:gap-4 px-3 py-3 sm:px-8 sm:py-5">
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {localColumns.map((col) => (
-              <KanbanColumn
-                key={col.id}
-                column={col}
-                onAddCard={onAddCard}
-                onEditColumn={onEditColumn}
-                onDeleteColumn={onDeleteColumn}
-                onEditCard={onEditCard}
-                onDeleteCard={onDeleteCard}
-                onClickCard={onClickCard}
-                readOnly={readOnly}
-              />
+              <div key={col.id} className="flex h-full max-h-full shrink-0 flex-col">
+                <KanbanColumn
+                  column={col}
+                  onAddCard={onAddCard}
+                  onEditColumn={onEditColumn}
+                  onDeleteColumn={onDeleteColumn}
+                  onEditCard={onEditCard}
+                  onDeleteCard={onDeleteCard}
+                  onClickCard={onClickCard}
+                  readOnly={readOnly}
+                />
+              </div>
             ))}
           </SortableContext>
 

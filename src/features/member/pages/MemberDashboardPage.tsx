@@ -584,6 +584,61 @@ export function MemberDashboardPage() {
           </div>
         </div>
 
+        {/* Salary Calculation Formula and Breakdown */}
+        {(detail.report.formulaText || detail.report.calculationBreakdown) && (
+          <div className="mt-6 space-y-5">
+            <SectionTitle
+              title={lt('Calculation breakdown')}
+              description={lt('Detailed formula used to compute your final salary.')}
+            />
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              {detail.report.formulaText && (
+                <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-6 shadow-sm">
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--muted-strong)]">Formula</p>
+                  <p className="font-mono text-sm leading-relaxed text-[var(--foreground)]">{detail.report.formulaText}</p>
+                </div>
+              )}
+
+              {detail.report.calculationBreakdown && (
+                <div className="grid gap-3">
+                  {detail.report.calculationBreakdown.bonus_lines.map((line, index) => (
+                    <div key={`bonus-${index}`} className="flex items-center justify-between rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 transition hover:bg-blue-500/8">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0 rounded-md bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-blue-500">Bonus</span>
+                          <h4 className="truncate text-sm font-semibold text-[var(--foreground)]">{line.label}</h4>
+                        </div>
+                        {line.reason && <p className="mt-1 text-xs text-[var(--muted-strong)]">{line.reason}</p>}
+                      </div>
+                      <div className="pl-4 text-right">
+                        <p className="text-sm font-black text-blue-500">+{formatAmount(line.amount)}</p>
+                        <p className="text-[10px] font-bold text-blue-400">{line.percent}%</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {detail.report.calculationBreakdown.deduction_lines.map((line, index) => (
+                    <div key={`deduction-${index}`} className="flex items-center justify-between rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 transition hover:bg-rose-500/8">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0 rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-500">Deduction</span>
+                          <h4 className="truncate text-sm font-semibold text-[var(--foreground)]">{line.label}</h4>
+                        </div>
+                        {line.reason && <p className="mt-1 text-xs text-[var(--muted-strong)]">{line.reason}</p>}
+                      </div>
+                      <div className="pl-4 text-right">
+                        <p className="text-sm font-black text-rose-500">-{formatAmount(line.amount)}</p>
+                        <p className="text-[10px] font-bold text-rose-400">{line.percent}%</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
           <div className="rounded-[22px] border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
