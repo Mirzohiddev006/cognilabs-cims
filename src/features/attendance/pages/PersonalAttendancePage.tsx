@@ -50,21 +50,35 @@ function resolveStr(obj: Record<string, unknown>, ...keys: string[]): string {
 
 function normalizeDay(raw: unknown): NormalizedDay {
   const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const durationMinutes = resolveNum(d, 'duration_minutes')
+  const workedHours =
+    resolveNum(d, 'worked_hours', 'worked_hours_decimal') ||
+    (durationMinutes > 0 ? durationMinutes / 60 : 0)
+  const checkIn = resolveStr(d, 'check_in_time', 'check_in') || null
   return {
     date: resolveStr(d, 'date', 'attendance_date'),
-    checkIn: resolveStr(d, 'check_in', 'check_in_time') || null,
-    checkOut: resolveStr(d, 'check_out', 'check_out_time') || null,
-    workedHours: resolveNum(d, 'worked_hours', 'worked_hours_decimal', 'hours'),
-    status: resolveStr(d, 'status') || 'unknown',
+    checkIn,
+    checkOut: resolveStr(d, 'check_out_time', 'check_out') || null,
+    workedHours,
+    status: checkIn ? 'present' : resolveStr(d, 'status') || 'absent',
   }
 }
 
-function normalizeWeek(raw: unknown, index: number): NormalizedWeek {
+function normalizeWeek(raw: unknown, index: number, allDays: NormalizedDay[]): NormalizedWeek {
   const w = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+  const dateFrom = resolveStr(w, 'date_from')
+  const dateTo = resolveStr(w, 'date_to')
+  const days =
+    dateFrom && dateTo
+      ? allDays.filter(d => d.date >= dateFrom && d.date <= dateTo)
+      : Array.isArray(w.days)
+        ? (w.days as unknown[]).map(normalizeDay)
+        : []
+  const totalHours = resolveNum(w, 'total_hours', 'worked_hours', 'worked_hours_decimal')
   return {
     weekNumber: resolveNum(w, 'week_number', 'week') || index + 1,
-    workedHours: resolveNum(w, 'worked_hours', 'worked_hours_decimal', 'total_hours', 'hours'),
-    days: Array.isArray(w.days) ? w.days.map(normalizeDay) : [],
+    workedHours: totalHours || days.reduce((sum, d) => sum + d.workedHours, 0),
+    days,
   }
 }
 
@@ -72,14 +86,18 @@ function normalizeOfficeTime(raw: unknown): NormalizedOfficeTime | null {
   if (!raw || typeof raw !== 'object') return null
   const obj = raw as Record<string, unknown>
 
-  const weeks: NormalizedWeek[] = Array.isArray(obj.weeks)
-    ? obj.weeks.map(normalizeWeek)
-    : []
+  const period = (obj.period && typeof obj.period === 'object' ? obj.period : {}) as Record<string, unknown>
+  const monthlyStats = (obj.monthly_stats && typeof obj.monthly_stats === 'object' ? obj.monthly_stats : {}) as Record<string, unknown>
+
+  const allDays = Array.isArray(obj.days) ? (obj.days as unknown[]).map(normalizeDay) : []
+
+  const weeklySource = Array.isArray(obj.weekly_stats) ? obj.weekly_stats : Array.isArray(obj.weeks) ? obj.weeks : []
+  const weeks: NormalizedWeek[] = (weeklySource as unknown[]).map((w, i) => normalizeWeek(w, i, allDays))
 
   return {
-    year: resolveNum(obj, 'year'),
-    month: resolveNum(obj, 'month'),
-    totalWorkedHours: resolveNum(obj, 'total_worked_hours', 'total_hours', 'worked_hours_decimal'),
+    year: resolveNum(period, 'year') || resolveNum(obj, 'year'),
+    month: resolveNum(period, 'month') || resolveNum(obj, 'month'),
+    totalWorkedHours: resolveNum(monthlyStats, 'total_hours') || resolveNum(obj, 'total_worked_hours', 'total_hours'),
     weeks,
   }
 }

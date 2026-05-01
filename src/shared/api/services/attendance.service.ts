@@ -3,11 +3,21 @@ import { request } from '../http'
 export type AttendanceRecord = {
   id: number
   employee_id: number
+  full_name: string
+  email: string
+  role: string
+  role_name: string
   attendance_date: string
   check_in_time: string | null
   check_out_time: string | null
+  created_by: number | null
   created_at: string
   updated_at: string
+}
+
+export type AttendanceRecordsResponse = {
+  items: AttendanceRecord[]
+  total_count: number
 }
 
 export type AttendanceUser = {
@@ -55,20 +65,42 @@ export type MonthlyOfficeTime = {
 }
 
 export type OfficeTimeMe = {
-  year: number
-  month: number
-  total_worked_hours: number
-  weeks: {
-    week_number: number
-    worked_hours: number
-    days: {
-      date: string
-      check_in: string | null
-      check_out: string | null
-      worked_hours: number
-      status: string
-    }[]
+  employee: {
+    id: number
+    full_name: string
+    role: string
+  }
+  period: {
+    year: number
+    month: number
+    from: string
+    to: string
+  }
+  days: {
+    date: string
+    weekday: string
+    check_in_time: string | null
+    check_out_time: string | null
+    duration_minutes: number | null
+    is_complete: boolean
   }[]
+  weekly_stats: {
+    week_number: number
+    week_label: string
+    date_from: string
+    date_to: string
+    days_present: number
+    total_minutes: number
+    avg_daily_minutes: number
+    total_hours: number
+  }[]
+  monthly_stats: {
+    days_present: number
+    days_complete: number
+    total_minutes: number
+    avg_daily_minutes: number
+    total_hours: number
+  }
 }
 
 export const attendanceService = {
@@ -80,7 +112,7 @@ export const attendanceService = {
   },
 
   getRecords(params: { employee_id?: number; start_date?: string; end_date?: string }) {
-    return request<AttendanceRecord[]>({
+    return request<AttendanceRecordsResponse>({
       path: '/attendance/records',
       query: params,
     })
