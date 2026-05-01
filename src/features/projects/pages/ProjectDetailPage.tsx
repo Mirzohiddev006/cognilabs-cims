@@ -633,7 +633,7 @@ export function ProjectDetailPage() {
                     </button>
                  </div>
                  
-                 <div className="max-h-[70vh] overflow-y-auto p-6 sm:p-10 custom-scrollbar-visible bg-[var(--surface-elevated)]">
+                 <div className="max-h-[70vh] overflow-y-auto p-6 sm:p-10 custom-scrollbar-visible bg-[var(--surface-elevated)] boards-section">
                     <div className="flex items-center justify-between mb-8">
                        <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">{lt('Active Tasks Assignment')}</h4>
                        <Badge variant="blue" className="px-3 py-1 rounded-full font-black">{expandedMemberTasks.length} {lt('Items')}</Badge>

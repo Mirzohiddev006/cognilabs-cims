@@ -124,7 +124,7 @@ export function CardDetailModal({
       />
 
       {/* Main Container */}
-      <div className="relative z-10 flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)]">
+      <div className="relative z-10 flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)] boards-section">
         
         {/* Top Header Decor - Neutralized blue gradient for all priorities */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[var(--blue-dim)] via-[var(--blue-dim)]/30 to-transparent opacity-60" />
@@ -204,7 +204,7 @@ export function CardDetailModal({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto custom-scrollbar-visible">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
             
             {/* Main Column */}
@@ -234,7 +234,7 @@ export function CardDetailModal({
                    </div>
 
                    {images.length > 1 && (
-                      <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth px-1">
+                      <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar-visible scroll-smooth px-1">
                          {images.map((img, idx) => (
                             <button
                                key={img.id}
