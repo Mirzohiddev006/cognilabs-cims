@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
-import type { AdditionalNote } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
 import { Button } from '../../../shared/ui/button'
@@ -168,5 +167,15 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
         )}
       </div>
     </Card>
+  )
+}
+Start adding notes to this customer.')}
+          />
+        )}
+      </div>
+    </Card>
+  )
+}
+rd>
   )
 }

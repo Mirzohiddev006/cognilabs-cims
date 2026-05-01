@@ -76,9 +76,9 @@ export function PersonalAttendancePage() {
       </div>
 
       {query.isLoading ? (
-        <LoadingStateBlock title="Loading attendance..." description="Please wait while we fetch your records." />
+        <LoadingStateBlock eyebrow="Attendance" title="Loading attendance..." description="Please wait while we fetch your records." />
       ) : query.isError ? (
-        <ErrorStateBlock title="Failed to load attendance" description="There was an error retrieving your records." />
+        <ErrorStateBlock eyebrow="Attendance" title="Failed to load attendance" description="There was an error retrieving your records." />
       ) : data ? (
         <div className="grid gap-6">
           {data.weeks.map(week => (

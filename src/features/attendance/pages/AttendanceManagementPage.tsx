@@ -3,7 +3,6 @@ import { attendanceService, type MonthlyOfficeTime } from '../../../shared/api/s
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Card } from '../../../shared/ui/card'
 import { PageHeader } from '../../../shared/ui/page-header'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
 import { Badge } from '../../../shared/ui/badge'
 import { Input } from '../../../shared/ui/input'
@@ -167,6 +166,15 @@ export function AttendanceManagementPage() {
                   </tr>
                 ))}
               </tbody>
+            </table>
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+       </tbody>
             </table>
           </div>
         </Modal>
