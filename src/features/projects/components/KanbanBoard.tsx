@@ -22,7 +22,7 @@ type KanbanBoardProps = {
   members: UserSummary[]
   onMoveCard: (cardId: number, columnId: number, order: number) => Promise<void>
   onMoveColumn: (columnId: number, order: number) => Promise<void>
-  onAddCard: (columnId: number) => void
+  onAddCard: (columnId: number, title: string) => void
   onEditCard: (card: CardRecord) => void
   onDeleteCard: (cardId: number) => void
   onClickCard: (card: CardRecord) => void
@@ -225,12 +225,12 @@ export function KanbanBoard({
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      {/* Full-height horizontal scroll canvas */}
-      <div className="h-full w-full overflow-x-auto overflow-y-hidden horizontal-scrollbar-visible">
-        <div className="flex h-full items-start gap-3 sm:gap-4 px-3 py-3 sm:px-8 sm:py-5">
+      {/* Horizontal + vertical scroll canvas — Trello-like */}
+      <div className="h-full w-full overflow-x-auto overflow-y-auto horizontal-scrollbar-visible">
+        <div className="flex min-h-full items-start gap-3 sm:gap-4 px-3 py-3 sm:px-8 sm:py-5">
           <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
             {localColumns.map((col) => (
-              <div key={col.id} className="flex h-full max-h-full shrink-0 flex-col">
+              <div key={col.id} className="shrink-0 self-start">
                 <KanbanColumn
                   column={col}
                   onAddCard={onAddCard}

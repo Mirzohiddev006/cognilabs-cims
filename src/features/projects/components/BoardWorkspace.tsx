@@ -23,6 +23,7 @@ import { KanbanBoard } from './KanbanBoard'
 
 type BoardWorkspaceMode = 'embedded' | 'fullscreen'
 type AddCardState = { columnId: number } | null
+
 type EditCardState = { card: CardRecord } | null
 type EditColumnState = { column: ColumnRecord } | null
 
@@ -274,6 +275,18 @@ export function BoardWorkspace({
     }
   }
 
+  async function handleQuickCreateCard(columnId: number, title: string) {
+    if (!canManageProjects || !board || board.is_archived) return
+    const fd = new FormData()
+    fd.append('title', title)
+    try {
+      await projectsService.createCard(columnId, fd)
+      await boardQuery.refetch()
+    } catch (error) {
+      showToast({ title: lt('Failed to create card'), description: getApiErrorMessage(error), tone: 'error' })
+    }
+  }
+
   async function handleCreateCard(fd: FormData) {
     if (!canManageProjects || !addCardState || board?.is_archived) {
       return
@@ -482,7 +495,7 @@ export function BoardWorkspace({
         members={allUsers}
         onMoveCard={handleMoveCard}
         onMoveColumn={handleMoveColumn}
-        onAddCard={(columnId) => setAddCardState({ columnId })}
+        onAddCard={handleQuickCreateCard}
         onEditCard={(card) => setEditCardState({ card })}
         onDeleteCard={handleDeleteCard}
         onClickCard={(card) => setDetailCard(card)}
