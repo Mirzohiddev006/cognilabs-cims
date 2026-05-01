@@ -14,7 +14,20 @@ export function PersonalAttendancePage() {
   })
 
   const query = useAsyncData(
-    () => attendanceService.getOfficeTimeMe(date.year, date.month),
+    async () => {
+      const raw = await attendanceService.getOfficeTimeMe(date.year, date.month)
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        const obj = raw as Record<string, unknown>
+        if (Array.isArray(obj.weeks)) return raw
+        for (const key of ['data', 'result', 'office_time', 'attendance']) {
+          const nested = obj[key]
+          if (nested && typeof nested === 'object' && !Array.isArray(nested) && Array.isArray((nested as Record<string, unknown>).weeks)) {
+            return nested as typeof raw
+          }
+        }
+      }
+      return raw
+    },
     [date.year, date.month]
   )
 
@@ -80,7 +93,7 @@ export function PersonalAttendancePage() {
         <ErrorStateBlock eyebrow="Attendance" title="Failed to load attendance" description="There was an error retrieving your records." />
       ) : data ? (
         <div className="grid gap-6">
-          {data.weeks.map(week => (
+          {(data.weeks ?? []).map(week => (
             <Card key={week.week_number} className="overflow-hidden rounded-[24px] border-[var(--border)]">
               <div className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 px-6 py-4 flex items-center justify-between">
                 <SectionTitle

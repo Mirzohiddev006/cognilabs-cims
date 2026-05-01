@@ -112,10 +112,12 @@ export function CustomerDetailContent({
   customer,
   audioSource,
   onOpenChat,
+  hideActions = false,
 }: {
   customer: CustomerSummary
   audioSource: string | null
   onOpenChat?: () => void
+  hideActions?: boolean
 }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -152,37 +154,35 @@ export function CustomerDetailContent({
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 mr-1.5" aria-hidden="true">
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Activity Logs
-                </Button>
-                {onOpenChat ? (
+              {!hideActions && (
+                <div className="flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
-                    onClick={onOpenChat}
+                    onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
                   >
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 mr-1.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                      <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 mr-1.5" aria-hidden="true">
+                      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    {t('customers.detail.go_to_chat', "Suhbat filega o'tish")}
+                    {t('customers.detail.activity_logs', 'Activity Logs')}
                   </Button>
-                ) : null}
-                {audioSource ? (
-                  <Button variant="secondary" size="sm" asChild>
-                    <a href={audioSource} target="_blank" rel="noreferrer">
-                      {t('common.open_audio', 'Open audio')}
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
+                  {onOpenChat ? (
+                    <Button variant="secondary" size="sm" onClick={onOpenChat}>
+                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 mr-1.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                        <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      {t('customers.detail.go_to_chat', "Suhbatga o'tish")}
+                    </Button>
+                  ) : null}
+                  {audioSource ? (
+                    <Button variant="secondary" size="sm" asChild>
+                      <a href={audioSource} target="_blank" rel="noreferrer">
+                        {t('common.open_audio', 'Open audio')}
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -312,6 +312,7 @@ export function CustomerDetailDrawer({
   onOpenChat?: (conversationId: number) => void
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const detailQuery = useAsyncData(
     () => crmService.detail(customerId ?? 0),
     [customerId, open],
@@ -372,19 +373,34 @@ export function CustomerDetailDrawer({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {customer ? (
+                <button
+                  type="button"
+                  title={t('customers.detail.activity_logs', 'Activity Logs')}
+                  onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
+                  aria-label={t('customers.detail.activity_logs', 'Activity Logs')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              ) : null}
+
               {customer?.chat_url && onOpenChat ? (() => {
                 const match = customer.chat_url?.match(/conversation_id=(\d+)/)
                 const convId = match ? Number(match[1]) : null
                 return convId ? (
                   <button
                     type="button"
+                    title={t('customers.detail.view_chat', "Suhbatni ko'rish")}
                     onClick={() => onOpenChat(convId)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#3390ec]/30 bg-[#3390ec]/10 px-3 py-2 text-xs font-semibold text-[#3390ec] transition hover:bg-[#3390ec]/20"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#3390ec]/30 bg-[#3390ec]/10 px-3 text-xs font-semibold text-[#3390ec] transition hover:bg-[#3390ec]/20"
                   >
                     <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                       <path d="M14 10a1.33 1.33 0 0 1-1.33 1.33H4.67L2 14V3.33A1.33 1.33 0 0 1 3.33 2h9.34A1.33 1.33 0 0 1 14 3.33z" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    {t('customers.detail.view_chat', "Suhbatni ko'rish")}
+                    {t('customers.detail.view_chat', "Suhbat")}
                   </button>
                 ) : null
               })() : null}
@@ -392,7 +408,7 @@ export function CustomerDetailDrawer({
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] hover:text-[var(--foreground)]"
                 aria-label={t('customers.detail.close', 'Close detail drawer')}
               >
                 <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -423,12 +439,7 @@ export function CustomerDetailDrawer({
               <CustomerDetailContent
                 customer={customer}
                 audioSource={audioSource}
-                onOpenChat={(() => {
-                  if (!customer.chat_url || !onOpenChat) return undefined
-                  const match = customer.chat_url.match(/conversation_id=(\d+)/)
-                  const convId = match ? Number(match[1]) : null
-                  return convId ? () => { onOpenChat(convId); onClose() } : undefined
-                })()}
+                hideActions
               />
             ) : (
               <EmptyStateBlock
