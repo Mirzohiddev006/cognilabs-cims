@@ -1367,7 +1367,6 @@ export function mergeReportWithSnapshot(
     penaltyPoints,
     penaltyEntries,
     deliveryBonusCount,
-    bonus_entries: bonusEntries, // Fixed potential type mismatch if needed, but report usually has bonusEntries
     bonusEntries,
     penaltyPercentage,
     totalBonusPercent,
