@@ -1414,7 +1414,7 @@ html.light .custom-scrollbar-visible:hover::-webkit-scrollbar-thumb {
 }
 
 .horizontal-scrollbar-visible::-webkit-scrollbar {
-  height: 16px;
+  height: 14px;
 }
 .horizontal-scrollbar-visible::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.4);
@@ -1450,10 +1450,11 @@ html.light .horizontal-scrollbar-visible:hover::-webkit-scrollbar-thumb {
   scrollbar-width: none;
 }
 
-/* ─── BOARDS SECTION SCROLLBARS (16PX) ────────────────────────── */
+/* ─── BOARDS SECTION SCROLLBARS (14PX) ────────────────────────── */
+.boards-section::-webkit-scrollbar,
 .boards-section *::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 .boards-section *::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
