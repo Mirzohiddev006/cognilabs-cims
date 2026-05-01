@@ -348,7 +348,7 @@ export function CognilabsAIIntegrationsPage() {
                         value={value}
                         onChange={(e) => updateField(field.key, e.target.value)}
                         placeholder={field.placeholder}
-                        rows={6}
+                        rows={12}
                         className="w-full resize-y rounded-xl border border-(--border) bg-(--surface) px-3 py-2.5 text-sm text-(--foreground) placeholder:text-(--muted) focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-shadow"
                       />
                     ) : isSecret ? (
