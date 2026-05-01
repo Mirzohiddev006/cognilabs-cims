@@ -18,11 +18,21 @@ export function AttendanceManagementPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<MonthlyOfficeTime | null>(null)
 
   const query = useAsyncData(
-    () => attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month),
+    async () => {
+      const raw = await attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month)
+      if (Array.isArray(raw)) return raw as MonthlyOfficeTime[]
+      if (raw && typeof raw === 'object') {
+        const obj = raw as Record<string, unknown>
+        for (const key of ['employees', 'items', 'data', 'results']) {
+          if (Array.isArray(obj[key])) return obj[key] as MonthlyOfficeTime[]
+        }
+      }
+      return [] as MonthlyOfficeTime[]
+    },
     [date.year, date.month]
   )
 
-  const filteredData = query.data?.filter(item =>
+  const filteredData = (query.data ?? []).filter(item =>
     item.full_name.toLowerCase().includes(search.toLowerCase())
   )
 
