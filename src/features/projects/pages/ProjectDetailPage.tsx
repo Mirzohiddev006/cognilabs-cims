@@ -78,6 +78,7 @@ export function ProjectDetailPage() {
 
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false)
+  const [editBoard, setEditBoard] = useState<any | null>(null)
   const [isProjectSubmitting, setIsProjectSubmitting] = useState(false)
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
   const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null)
@@ -283,21 +284,27 @@ export function ProjectDetailPage() {
     }
   }
 
-  async function handleCreateBoard(values: { name: string; description?: string }) {
+  async function handleSaveBoard(values: { name: string; description?: string }) {
     if (!canManageProjects || !project) {
       return
     }
 
     setIsBoardSubmitting(true)
     try {
-      const createdBoard = await projectsService.createBoard(project.id, values)
-      showToast({ title: lt('Board created'), tone: 'success' })
+      if (editBoard) {
+        await projectsService.updateBoard(editBoard.id, values)
+        showToast({ title: lt('Board updated'), tone: 'success' })
+      } else {
+        const createdBoard = await projectsService.createBoard(project.id, values)
+        showToast({ title: lt('Board created'), tone: 'success' })
+        selectBoard(createdBoard.id)
+      }
       setIsCreateBoardOpen(false)
+      setEditBoard(null)
       await projectQuery.refetch()
-      selectBoard(createdBoard.id)
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: lt('Failed to create board'), tone: 'error' })
+      showToast({ title: editBoard ? lt('Failed to update board') : lt('Failed to create board'), tone: 'error' })
     } finally {
       setIsBoardSubmitting(false)
     }
@@ -465,8 +472,8 @@ export function ProjectDetailPage() {
                                  type="button"
                                  onClick={() => selectBoard(board.id)}
                                  className={cn(
-                                   "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
-                                   canManageProjects ? "pr-7" : "pr-4 sm:pr-5",
+                                   "whitespace-nowrap pl-3.5 sm:pl-4 py-1.5 sm:py-2 rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest transition-all",
+                                   canManageProjects ? "pr-8" : "pr-3.5 sm:pr-4",
                                    isSelected
                                      ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
                                      : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
@@ -475,21 +482,28 @@ export function ProjectDetailPage() {
                                  {board.name}
                                </button>
                                {canManageProjects && (
-                                 <button
-                                   type="button"
-                                   onClick={(e) => { e.stopPropagation(); void handleDeleteBoard(board.id, board.name) }}
-                                   className={cn(
-                                     "absolute right-1.5 flex h-4 w-4 items-center justify-center rounded transition-all",
-                                     isSelected
-                                       ? "text-white/70 hover:text-white hover:bg-white/20"
-                                       : "opacity-0 group-hover:opacity-100 text-[var(--muted)] hover:text-red-400 hover:bg-red-400/10"
-                                   )}
-                                   title={lt('Delete board')}
-                                 >
-                                   <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                     <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/>
-                                   </svg>
-                                 </button>
+                                 <div className={cn(
+                                   "absolute right-1 transition-all",
+                                   isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                 )}>
+                                   <ActionsMenu
+                                     triggerVariant="icon"
+                                     items={[
+                                       {
+                                         label: lt('Edit'),
+                                         onSelect: () => {
+                                           setEditBoard(board)
+                                           setIsCreateBoardOpen(true)
+                                         }
+                                       },
+                                       {
+                                         label: lt('Delete'),
+                                         tone: 'danger',
+                                         onSelect: () => void handleDeleteBoard(board.id, board.name)
+                                       }
+                                     ]}
+                                   />
+                                 </div>
                                )}
                              </div>
                            )
@@ -721,10 +735,14 @@ export function ProjectDetailPage() {
 
           <BoardFormModal
             open={isCreateBoardOpen}
-            onClose={() => setIsCreateBoardOpen(false)}
-            onSubmit={handleCreateBoard}
-            title={lt('Create board')}
-            submitLabel={lt('Create')}
+            onClose={() => {
+              setIsCreateBoardOpen(false)
+              setEditBoard(null)
+            }}
+            onSubmit={handleSaveBoard}
+            initial={editBoard}
+            title={editBoard ? lt('Edit board') : lt('Create board')}
+            submitLabel={editBoard ? lt('Save changes') : lt('Create')}
             isSubmitting={isBoardSubmitting}
           />
         </>

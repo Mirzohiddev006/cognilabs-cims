@@ -1963,9 +1963,6 @@ export function CeoTeamUpdatesPage() {
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-blue-400/80">
-                {lt('CEO Dashboard')}
-              </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
                 {lt('Team Monthly Updates')}
               </h1>

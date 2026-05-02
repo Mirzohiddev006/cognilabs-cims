@@ -1,7 +1,6 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -120,7 +119,6 @@ export function CustomerDetailContent({
   hideActions?: boolean
 }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
 
@@ -156,16 +154,6 @@ export function CustomerDetailContent({
 
               {!hideActions && (
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5 mr-1.5" aria-hidden="true">
-                      <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    {t('customers.detail.activity_logs', 'Activity Logs')}
-                  </Button>
                   {onOpenChat ? (
                     <Button variant="secondary" size="sm" onClick={onOpenChat}>
                       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 mr-1.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
@@ -312,7 +300,6 @@ export function CustomerDetailDrawer({
   onOpenChat?: (conversationId: number) => void
 }) {
   const { t } = useTranslation()
-  const navigate = useNavigate()
   const detailQuery = useAsyncData(
     () => crmService.detail(customerId ?? 0),
     [customerId, open],
@@ -373,20 +360,6 @@ export function CustomerDetailDrawer({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {customer ? (
-                <button
-                  type="button"
-                  title={t('customers.detail.activity_logs', 'Activity Logs')}
-                  onClick={() => navigate(`/audit/logs?entity_type=Customer&entity_id=${customer.id}`)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-                  aria-label={t('customers.detail.activity_logs', 'Activity Logs')}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
-                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              ) : null}
-
               {customer?.chat_url && onOpenChat ? (() => {
                 const match = customer.chat_url?.match(/conversation_id=(\d+)/)
                 const convId = match ? Number(match[1]) : null

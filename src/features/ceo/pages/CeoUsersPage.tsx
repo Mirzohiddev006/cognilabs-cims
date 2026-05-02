@@ -18,13 +18,12 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
-import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
 import { PermissionEditorModal } from '../components/PermissionEditorModal'
@@ -898,19 +897,6 @@ export function CeoUsersPage() {
 
   return (
     <section className="space-y-8">
-      <PageHeader
-        eyebrow={lt('CEO / Users')}
-        title={lt('Users & Permissions')}
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => void refreshAll()}>
-              {lt('Refresh')}
-            </Button>
-            <Button onClick={openCreateUserModal}>{tr('Create user', 'Foydalanuvchi yaratish', 'Создать пользователя')}</Button>
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-4 stagger-children">
         <MetricCard label={lt('Users')} value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
         <MetricCard label={tr('Active', 'Faol', 'Активные')} value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
@@ -920,20 +906,21 @@ export function CeoUsersPage() {
 
       <Card noPadding>
         <CardHeader className="flex-row items-center justify-between space-y-0">
-          <div className="space-y-1">
-            <CardTitle>{lt('CEO users table')}</CardTitle>
-            <CardDescription>{tr(
-              'Search, edit, toggle status, manage permissions, and review message history directly from the table.',
-              'Jadvalning o‘zidan qidirish, tahrirlash, statusni almashtirish, ruxsatlarni boshqarish va xabarlar tarixini ko‘rish mumkin.',
-              'Прямо из таблицы можно искать, редактировать, менять статус, управлять разрешениями и просматривать историю сообщений.',
-            )}</CardDescription>
+          <CardTitle>{lt('CEO users table')}</CardTitle>
+          <div className="flex items-center gap-3">
+            <Input
+              className="w-full md:w-80"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={lt('Search by email, name, or role')}
+            />
+            <Button variant="secondary" size="sm" onClick={() => void refreshAll()}>
+              {lt('Refresh')}
+            </Button>
+            <Button size="sm" onClick={openCreateUserModal}>
+              {tr('Create user', 'Foydalanuvchi yaratish', 'Создать пользователя')}
+            </Button>
           </div>
-          <Input
-            className="w-full md:w-80"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={lt('Search by email, name, or role')}
-          />
         </CardHeader>
         <CardContent>
           <DataTable

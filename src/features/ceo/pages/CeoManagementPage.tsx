@@ -1126,10 +1126,7 @@ export function CeoManagementPage() {
       {activeTab === 'statuses' ? (
         <Card noPadding>
           <CardHeader className="flex-row items-center justify-between space-y-0">
-            <div className="space-y-1">
-              <CardTitle>{lt('Statuses')}</CardTitle>
-              <CardDescription>{lt('Dynamic CRM statuses are managed from this table with create, edit, and delete actions.')}</CardDescription>
-            </div>
+            <CardTitle>{lt('Statuses')}</CardTitle>
             <Badge variant="success">{statuses.length} {lt('statuses')}</Badge>
           </CardHeader>
           <CardContent>
