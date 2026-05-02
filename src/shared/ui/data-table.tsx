@@ -76,7 +76,6 @@ export function DataTable<T>({
   emptyState,
   pageSize = 75,
   zebra = false,
-  compact = false,
   onRowClick,
   className,
   fillHeight = false,
