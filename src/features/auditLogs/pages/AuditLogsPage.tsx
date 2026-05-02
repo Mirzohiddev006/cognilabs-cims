@@ -90,7 +90,6 @@ export function AuditLogsPage() {
   const lt = translateCurrentLiteral
 
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
-  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [module, setModule] = useState(searchParams.get('module') || '')
   const [tableName, setTableName] = useState(searchParams.get('table_name') || '')
   const [action, setAction] = useState(searchParams.get('action') || '')
@@ -109,13 +108,12 @@ export function AuditLogsPage() {
       entity_type: entityType || undefined,
       entity_id: entityId || undefined,
     }),
-    [page, search, module, tableName, action, actorUserId, entityType, entityId]
+    [page, module, tableName, action, actorUserId, entityType, entityId]
   )
 
   useEffect(() => {
     const params: Record<string, string> = {}
     if (page > 1) params.page = String(page)
-    if (search) params.search = search
     if (module) params.module = module
     if (tableName) params.table_name = tableName
     if (action) params.action = action
@@ -123,7 +121,7 @@ export function AuditLogsPage() {
     if (entityType) params.entity_type = entityType
     if (entityId) params.entity_id = entityId
     setSearchParams(params, { replace: true })
-  }, [page, search, module, tableName, action, actorUserId, entityType, entityId, setSearchParams])
+  }, [page, module, tableName, action, actorUserId, entityType, entityId, setSearchParams])
 
   const logs = logsQuery.data?.items ?? []
   const total = logsQuery.data?.total_items ?? 0
