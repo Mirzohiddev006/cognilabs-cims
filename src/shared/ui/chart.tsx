@@ -35,9 +35,11 @@ export function ChartContainer({
 export { Tooltip as ChartTooltip }
 
 type TooltipContentProps = TooltipProps<number, string> & {
-  labelFormatter?: (label: string, payload: TooltipProps<number, string>['payload']) => ReactNode
+  labelFormatter?: (label: string, payload: any) => ReactNode
   formatter?: (value: number, name: string) => ReactNode
   className?: string
+  payload?: any[]
+  label?: any
 }
 
 export function ChartTooltipContent({
@@ -60,7 +62,7 @@ export function ChartTooltipContent({
         ? labelFormatter(String(label), payload)
         : <p className="mb-1.5 text-[10px] font-semibold text-[var(--muted)]">{label}</p>
       }
-      {payload.map((item) => (
+      {payload.map((item: any) => (
         <div key={String(item.dataKey)}>
           {formatter
             ? formatter(item.value as number, String(item.dataKey))
