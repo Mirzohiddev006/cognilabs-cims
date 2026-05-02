@@ -15,12 +15,12 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../../shared/ui/card'
+import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
 import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 
 const now = new Date()
@@ -2015,14 +2015,6 @@ export function CeoTeamUpdatesPage() {
                   {missingTodayCount} {lt('missing today')}
                 </Badge>
               ) : null}
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => navigate('/ceo/workday-overrides')}
-                className="min-h-[42px] rounded-xl border border-white/10 bg-white/4 px-3 py-1.5 text-white hover:border-white/15 hover:bg-white/6"
-              >
-                {lt('Workday overrides')}
-              </Button>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
                 <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</Label>
                 <Input
@@ -2140,286 +2132,152 @@ export function CeoTeamUpdatesPage() {
         />
       </div>
 
-      {/* Filters */}
-      <Card variant="glass" className="p-5">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-          <SectionTitle
-            title={lt('Workday Overrides')}
-            description={lt('Holiday and short-day rules are shown together with monthly update expectations.')}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="blue">{workdayOverrides.length} {lt('entries')}</Badge>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => navigate('/ceo/workday-overrides')}
-              className="rounded-xl"
-            >
-              {lt('Open overrides page')}
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            accent="warning"
-            label={tr('Holiday Rules', 'Bayram qoidalari', 'Pravila prazdnichnykh dnei')}
-            value={holidayOverrides.length}
-            icon={
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M10 3v4" />
-                <path d="M10 13v4" />
-                <path d="M3 10h4" />
-                <path d="M13 10h4" />
-                <circle cx="10" cy="10" r="3" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            accent="blue"
-            label={tr('Short Day Rules', 'Qisqa kun qoidalari', 'Pravila korotkogo dnya')}
-            value={shortDayOverrides.length}
-            icon={
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="10" cy="10" r="8" />
-                <path d="M10 5v5l3 2" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            accent="success"
-            label={tr('No Update Required', 'Yangilanish talab qilinmaydi', 'Obnovlenie ne trebuetsya')}
-            value={noUpdateOverrides.length}
-            icon={
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6.5 10 2.5 2.5 4.5-4.5" />
-                <circle cx="10" cy="10" r="8" />
-              </svg>
-            }
-          />
-          <SummaryCard
-            accent="default"
-            label={tr('Specific Scope', 'Aniq qamrov', 'Tochnyi okhvat')}
-            value={scopedOverrideCount}
-            icon={
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="7" r="3" />
-                <path d="M2 17c0-3.3 2.7-6 6-6" />
-                <path d="M13 7h4" />
-                <path d="M15 5v4" />
-              </svg>
-            }
-          />
-        </div>
-
-        <div className="mt-5">
-          {workdayOverridesQuery.isError ? (
-            <div className="rounded-[20px] border border-amber-500/18 bg-amber-500/[0.08] px-4 py-4 text-sm text-amber-100/82">
-              {lt('Workday overrides could not be loaded. The team table remains available, but the overrides section is empty.')}
-            </div>
-          ) : workdayOverrides.length > 0 ? (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {workdayOverrides.slice(0, 4).map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-[20px] border border-white/10 bg-white/[0.03] px-4 py-4"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-white">{item.title}</p>
-                    <Badge variant={normalizeOverrideDayType(item.day_type) === 'short_day' ? 'blue' : 'warning'}>
-                      {getOverrideTypeLabel(item.day_type)}
-                    </Badge>
-                    <Badge variant={item.update_required ? 'success' : 'outline'}>
-                      {item.update_required ? lt('Update required') : lt('No update required')}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-sm text-(--muted-strong)">{formatShortDate(item.special_date)}</p>
-                  <p className="mt-2 text-sm text-white/76">{getOverrideScopeLabel(item)}</p>
-                  {item.note?.trim() ? (
-                    <p className="mt-2 line-clamp-2 text-sm text-white/70">{item.note}</p>
-                  ) : null}
-                  {item.workday_hours ? (
-                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-blue-300/70">
-                      {lt('Workday hours')}: {item.workday_hours}h
-                    </p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="rounded-[20px] border border-dashed border-white/10 bg-black/10 px-4 py-5 text-sm text-(--muted)">
-              {lt('No override records were found for this period.')}
-            </div>
-          )}
-        </div>
-      </Card>
-
-      <Card variant="glass" className="p-5">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <SectionTitle title={lt('Filters and Comparison Controls')} />
+      <Card noPadding>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle>{lt('Filters and Comparison Controls')}</CardTitle>
           <Badge variant="blue">
             {translateCurrentLiteral('Showing')} {employees.length} {translateCurrentLiteral('of')} {totalEmployees} {translateCurrentLiteral('employees')}
           </Badge>
-        </div>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-6 grid gap-3 sm:grid-cols-3">
+            <div>
+              <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+                {translateCurrentLiteral('Search employee')}
+              </Label>
+              <div className="relative">
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-(--muted)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="7" cy="7" r="4.5" />
+                  <path d="M10.5 10.5l3 3" />
+                </svg>
+                <Input
+                  placeholder={translateCurrentLiteral('Search by name')}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div>
-            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              {translateCurrentLiteral('Search employee')}
-            </Label>
-            <div className="relative">
-              <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-(--muted)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <circle cx="7" cy="7" r="4.5" />
-                <path d="M10.5 10.5l3 3" />
-              </svg>
-              <Input
-                placeholder={translateCurrentLiteral('Search by name')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
+            <div>
+              <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+                {translateCurrentLiteral('Sort by')}
+              </Label>
+              <SelectField
+                value={sortKey}
+                options={[...SORT_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
+                onValueChange={(value) => setSortKey(value as SortKey)}
+              />
+            </div>
+
+            <div>
+              <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+                {translateCurrentLiteral('Status')}
+              </Label>
+              <SelectField
+                value={statusFilter}
+                options={[...STATUS_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
+                onValueChange={(value) => setStatusFilter(value as StatusFilter)}
               />
             </div>
           </div>
 
-          <div>
-            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              {translateCurrentLiteral('Sort by')}
-            </Label>
-            <SelectField
-              value={sortKey}
-              options={[...SORT_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
-              onValueChange={(value) => setSortKey(value as SortKey)}
-              className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
-            >
-              <option value="submitted">{translateCurrentLiteral('Most updates')}</option>
-              <option value="missing">{translateCurrentLiteral('Most missing')}</option>
-              <option value="completion">{translateCurrentLiteral('Completion rate')}</option>
-              <option value="name">{translateCurrentLiteral('Name A-Z')}</option>
-            </SelectField>
-          </div>
-
-          <div>
-            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
-              {translateCurrentLiteral('Status')}
-            </Label>
-            <SelectField
-              value={statusFilter}
-              options={[...STATUS_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
-              onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-              className="min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition-[border-color,box-shadow,background-color] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)] focus:border-[var(--border-focus)] focus:bg-[var(--input-surface-hover)] focus:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(59,130,246,0.12)] sm:text-[15px]"
-            >
-              <option value="all">{translateCurrentLiteral('All')}</option>
-              <option value="on_track">{translateCurrentLiteral('On Track')}</option>
-              <option value="needs_attention">{translateCurrentLiteral('Needs Attention')}</option>
-            </SelectField>
-          </div>
-        </div>
-      </Card>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-2xl border-(--border) bg-(--card) shadow-(--shadow-sm)">
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="bg-(--muted-surface)">
-                {['Employee', 'Submitted', 'Missing', 'Completion', 'Last Update', 'Monthly Activity', 'Status', 'Action'].map((col) => (
-                  <th
-                    key={col}
-                    className="whitespace-nowrap border-b border-(--border) px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.16em] text-(--caption)"
-                  >
-                    {translateCurrentLiteral(col)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-(--muted)">
-                    {search || statusFilter !== 'all'
-                      ? translateCurrentLiteral('No employees match the current filters.')
-                      : `${translateCurrentLiteral('No data for')} ${selectedMonthName} ${year}.`}
-                  </td>
-                </tr>
-              ) : (
-                employees.map((emp, idx) => (
-                  <tr
-                    key={emp.user_id}
-                    className={cn(
-                      'table-row-hover border-b border-(--border) last:border-b-0',
-                      canOpenMemberDetail(emp) && 'cursor-pointer',
-                      idx % 2 === 0 && 'bg-white/[0.012]',
-                    )}
-                    onClick={() => {
-                      if (canOpenMemberDetail(emp)) {
-                        openMemberDetail(emp)
-                      }
+          <DataTable
+            caption={lt('Team Monthly Updates')}
+            rows={employees}
+            getRowKey={(emp) => String(emp.user_id)}
+            onRowClick={openMemberDetail}
+            zebra
+            emptyState={
+              <EmptyStateBlock
+                title={
+                  search || statusFilter !== 'all'
+                    ? translateCurrentLiteral('No employees match the current filters.')
+                    : `${translateCurrentLiteral('No data for')} ${selectedMonthName} ${year}.`
+                }
+              />
+            }
+            columns={[
+              {
+                key: 'identity',
+                header: lt('Employee'),
+                render: (emp) => (
+                  <div className="flex items-center gap-3">
+                    <EmployeeAvatar name={emp.user_name} imageUrl={emp.profile_image} />
+                    <span className="text-sm font-semibold text-[var(--foreground)]">{emp.user_name}</span>
+                  </div>
+                ),
+              },
+              {
+                key: 'submitted',
+                header: lt('Submitted'),
+                render: (emp) => (
+                  <span className="text-sm font-semibold text-[var(--foreground)] tabular-nums" data-ui-number="true">
+                    {emp.submitted_count}
+                  </span>
+                ),
+              },
+              {
+                key: 'missing',
+                header: lt('Missing'),
+                render: (emp) => (
+                  <span className="text-sm font-semibold tabular-nums text-rose-300" data-ui-number="true" data-keep-color="true">
+                    {emp.missing_count}
+                  </span>
+                ),
+              },
+              {
+                key: 'completion',
+                header: lt('Completion'),
+                render: (emp) => <CompletionPill pct={emp.completion_percentage} />,
+              },
+              {
+                key: 'last_update',
+                header: lt('Last Update'),
+                render: (emp) => (
+                  <span className="whitespace-nowrap text-sm text-(--muted-strong)">
+                    {emp.last_update_date ? formatShortDate(emp.last_update_date) : '-'}
+                  </span>
+                ),
+              },
+              {
+                key: 'activity',
+                header: lt('Monthly Activity'),
+                render: (emp) => (
+                  <div className="w-[18rem]">
+                    <ActivityStrip employee={emp} month={month} year={year} />
+                  </div>
+                ),
+              },
+              {
+                key: 'status',
+                header: lt('Status'),
+                render: (emp) => <TrackBadge pct={emp.completion_percentage} />,
+              },
+              {
+                key: 'actions',
+                header: lt('Action'),
+                render: (emp) => (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="whitespace-nowrap rounded-lg"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      openMemberDetail(emp)
                     }}
-                    onKeyDown={(event) => {
-                      if (!canOpenMemberDetail(emp)) {
-                        return
-                      }
-
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        openMemberDetail(emp)
-                      }
-                    }}
-                    tabIndex={canOpenMemberDetail(emp) ? 0 : -1}
-                    role={canOpenMemberDetail(emp) ? 'link' : undefined}
-                    aria-label={canOpenMemberDetail(emp) ? `${translateCurrentLiteral('Open salary details for')} ${emp.user_name}` : undefined}
+                    disabled={!canOpenMemberDetail(emp)}
                   >
-                    <td className="px-4 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <EmployeeAvatar name={emp.user_name} imageUrl={emp.profile_image} />
-                        <div>
-                          <span className="text-sm font-semibold text-[var(--foreground)]">{emp.user_name}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-sm font-semibold text-[var(--foreground)] tabular-nums" data-ui-number="true">
-                      {emp.submitted_count}
-                    </td>
-                    <td className="px-4 py-3.5 text-sm font-semibold tabular-nums text-rose-300" data-ui-number="true" data-keep-color="true">
-                      {emp.missing_count}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <CompletionPill pct={emp.completion_percentage} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3.5 text-sm text-(--muted-strong)">
-                      {emp.last_update_date ? formatShortDate(emp.last_update_date) : '-'}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="w-[18rem]">
-                        <ActivityStrip employee={emp} month={month} year={year} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <TrackBadge pct={emp.completion_percentage} />
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="whitespace-nowrap rounded-lg"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          openMemberDetail(emp)
-                        }}
-                        disabled={!canOpenMemberDetail(emp)}
-                      >
-                        {translateCurrentLiteral('View Details')}
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    {translateCurrentLiteral('View Details')}
+                  </Button>
+                ),
+              },
+            ]}
+          />
+        </CardContent>
 
         {employees.length > 0 && (
-          <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface) px-4 py-2.5">
+          <CardFooter className="flex items-center justify-between bg-(--muted-surface) px-4 py-2.5">
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-(--muted)" data-i18n-skip="true" data-activity-legend="true">
               <ActivityLegendItem status="submitted" label="Active month" />
               <ActivityLegendItem status="missing" label="No reports" />
@@ -2430,9 +2288,9 @@ export function CeoTeamUpdatesPage() {
             <p className="text-[11px] text-(--muted)">
               {selectedMonthName} {year}
             </p>
-          </div>
+          </CardFooter>
         )}
-      </div>
+      </Card>
     </section>
   )
 }

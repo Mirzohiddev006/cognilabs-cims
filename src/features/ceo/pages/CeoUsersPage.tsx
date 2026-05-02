@@ -919,34 +919,32 @@ export function CeoUsersPage() {
         <MetricCard label={tr('Messages', 'Xabarlar', 'Сообщения')} value={formatCompactNumber(statistics?.messages_count ?? 0)} accent="violet" sparkBars={[2,3,4,3,5,4]} />
       </div>
 
-      <Card className="p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <SectionTitle
-            eyebrow={lt('Users list')}
-            title={lt('CEO users table')}
-            description={tr(
+      <Card noPadding>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <div className="space-y-1">
+            <CardTitle>{lt('CEO users table')}</CardTitle>
+            <CardDescription>{tr(
               'Search, edit, toggle status, manage permissions, and review message history directly from the table.',
               'Jadvalning o‘zidan qidirish, tahrirlash, statusni almashtirish, ruxsatlarni boshqarish va xabarlar tarixini ko‘rish mumkin.',
               'Прямо из таблицы можно искать, редактировать, менять статус, управлять разрешениями и просматривать историю сообщений.',
-            )}
-          />
+            )}</CardDescription>
+          </div>
           <Input
             className="w-full md:w-80"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={lt('Search by email, name, or role')}
           />
-        </div>
-
-        <div className="mt-6">
+        </CardHeader>
+        <CardContent>
           <DataTable
             caption={lt('CEO users table')}
             rows={filteredUsers}
             getRowKey={(row) => String(row.id)}
             onRowClick={openProfileDialog}
+            zebra
             emptyState={
               <EmptyStateBlock
-                eyebrow={lt('Users')}
             title={lt('No users found')}
             description={lt('There are no users matching your search or the database is empty.')}
               />
@@ -967,7 +965,7 @@ export function CeoUsersPage() {
                   >
                     <UserAvatar user={row} size="sm" />
                     <div className="min-w-0">
-                      <p className="truncate font-bold tracking-tight text-[var(--foreground)] transition group-hover/user:text-[var(--blue-text)]">
+                      <p className="truncate font-semibold text-[var(--foreground)] transition group-hover/user:text-[var(--blue-text)]">
                         {row.name} {row.surname}
                       </p>
                       <p className="truncate text-xs font-medium text-[var(--muted-strong)]">{row.email}</p>
@@ -1113,7 +1111,7 @@ export function CeoUsersPage() {
               },
             ]}
           />
-        </div>
+        </CardContent>
       </Card>
 
       <UserFormModal

@@ -226,13 +226,9 @@ export function WebsiteStatsPage() {
         )}
       />
 
-      <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <SectionTitle
-            eyebrow={t('ceo.website.section.analytics_eyebrow')}
-            title={t('ceo.website.section.analytics_title')}
-            description={t('ceo.website.section.analytics_description', { url: trackedWebsiteUrl })}
-          />
+      <Card noPadding>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle>{t('ceo.website.section.analytics_title')}</CardTitle>
           <div className="w-full max-w-[180px]">
             <SelectField
               value={analyticsRange}
@@ -240,9 +236,9 @@ export function WebsiteStatsPage() {
               onValueChange={setAnalyticsRange}
             />
           </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             label={t('ceo.website.metric.page_views')}
             value={formatCompactNumber(pageViewsMetric)}
@@ -267,19 +263,17 @@ export function WebsiteStatsPage() {
             accent="warning"
             sparkBars={[1, Math.max(realtimeActiveUsersMetric * 0.4, 1), Math.max(realtimeActiveUsersMetric * 0.7, 1), Math.max(realtimeActiveUsersMetric, 1)]}
           />
-        </div>
+          </div>
+        </CardContent>
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card variant="glass" className="overflow-hidden p-0">
-          <div className="border-b border-white/10 px-6 py-5">
-            <SectionTitle
-              eyebrow={t('ceo.website.top_pages_eyebrow')}
-              title={t('ceo.website.top_pages_title')}
-              description={t('ceo.website.top_pages_description')}
-            />
-          </div>
-          <div className="px-6 py-5">
+        <Card noPadding>
+          <CardHeader>
+            <CardTitle>{t('ceo.website.top_pages_title')}</CardTitle>
+            <CardDescription>{t('ceo.website.top_pages_description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
             {analyticsQuery.isLoading && !analyticsQuery.data ? (
               <LoadingStateBlock
                 eyebrow={t('ceo.website.section.analytics_eyebrow')}
@@ -345,18 +339,15 @@ export function WebsiteStatsPage() {
                 ]}
               />
             )}
-          </div>
+          </CardContent>
         </Card>
 
-        <Card variant="glass" className="overflow-hidden p-0">
-          <div className="border-b border-white/10 px-6 py-5">
-            <SectionTitle
-              eyebrow={t('ceo.website.realtime_eyebrow')}
-              title={t('ceo.website.realtime_title')}
-              description={t('ceo.website.realtime_description')}
-            />
-          </div>
-          <div className="px-6 py-5">
+        <Card noPadding>
+          <CardHeader>
+            <CardTitle>{t('ceo.website.realtime_title')}</CardTitle>
+            <CardDescription>{t('ceo.website.realtime_description')}</CardDescription>
+          </CardHeader>
+          <CardContent>
             {realtimeAnalyticsQuery.isLoading && !realtimeAnalyticsQuery.data ? (
               <LoadingStateBlock
                 eyebrow={t('ceo.website.realtime_eyebrow')}
@@ -404,7 +395,7 @@ export function WebsiteStatsPage() {
                 ))}
               </div>
             )}
-          </div>
+          </CardContent>
         </Card>
       </div>
     </section>

@@ -1045,16 +1045,15 @@ export function CeoManagementPage() {
       </div>
 
       {activeTab === 'pages' ? (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              title={lt('Pages Registry')}
-              description={lt('Permission page catalog is managed from this table with create, edit, and delete actions.')}
-            />
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle>{lt('Pages Registry')}</CardTitle>
+              <CardDescription>{lt('Permission page catalog is managed from this table with create, edit, and delete actions.')}</CardDescription>
+            </div>
             <Badge variant="blue">{pageItems.length} {lt('pages')}</Badge>
-          </div>
-
-          <div className="mt-6">
+          </CardHeader>
+          <CardContent>
             <DataTable
               caption={lt('Management pages')}
               rows={pageItems}
@@ -1121,21 +1120,20 @@ export function CeoManagementPage() {
                 },
               ]}
             />
-          </div>
+          </CardContent>
         </Card>
       ) : null}
 
       {activeTab === 'statuses' ? (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              title={lt('Statuses')}
-              description={lt('Dynamic CRM statuses are managed from this table with create, edit, and delete actions.')}
-            />
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle>{lt('Statuses')}</CardTitle>
+              <CardDescription>{lt('Dynamic CRM statuses are managed from this table with create, edit, and delete actions.')}</CardDescription>
+            </div>
             <Badge variant="success">{statuses.length} {lt('statuses')}</Badge>
-          </div>
-
-          <div className="mt-6">
+          </CardHeader>
+          <CardContent>
             <DataTable
               caption={lt('Management statuses')}
               rows={statuses}
@@ -1202,21 +1200,20 @@ export function CeoManagementPage() {
                 },
               ]}
             />
-          </div>
+          </CardContent>
         </Card>
       ) : null}
 
       {activeTab === 'roles' ? (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              title={lt('Roles')}
-              description={lt('User role management follows the same CRUD workflow as the statuses section.')}
-            />
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div className="space-y-1">
+              <CardTitle>{lt('Roles')}</CardTitle>
+              <CardDescription>{lt('User role management follows the same CRUD workflow as the statuses section.')}</CardDescription>
+            </div>
             <Badge variant="violet">{roles.length} {lt('roles')}</Badge>
-          </div>
-
-          <div className="mt-6">
+          </CardHeader>
+          <CardContent>
             <DataTable
               caption={lt('Management roles')}
               rows={roles}
@@ -1274,18 +1271,19 @@ export function CeoManagementPage() {
                 },
               ]}
             />
-          </div>
+          </CardContent>
         </Card>
       ) : null}
 
       {activeTab === 'images' ? (
-        <Card className="p-6">
-          <SectionTitle
-            title={tr('Images Cleanup', 'Rasmlarni tozalash', 'Ochistka izobrazhenii')}
-            description={tr('Image library, detail preview va selection-based cleanup shu section ichida ishlaydi.', 'Rasm kutubxonasi, detal korinishi va tanlov boyicha tozalash shu bolim ichida ishlaydi.', 'Biblioteka izobrazhenii, detalnyi predprosmotr i ochistka po vyboru rabotayut v etom razdele.')}
-          />
+        <Card noPadding>
+          <CardHeader>
+            <CardTitle>{tr('Images Cleanup', 'Rasmlarni tozalash', 'Ochistka izobrazhenii')}</CardTitle>
+            <CardDescription>{tr('Image library, detail preview va selection-based cleanup shu section ichida ishlaydi.', 'Rasm kutubxonasi, detal korinishi va tanlov boyicha tozalash shu bolim ichida ishlaydi.', 'Biblioteka izobrazhenii, detalnyi predprosmotr i ochistka po vyboru rabotayut v etom razdele.')}</CardDescription>
+          </CardHeader>
+          <CardContent>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
               label={tr('Images loaded', 'Yuklangan rasmlar', 'Zagruzhennye izobrazheniya')}
               value={imagesQuery.data?.total_count ?? imageItems.length}
@@ -2050,4 +2048,3 @@ export function CeoManagementPage() {
     </section>
   )
 }
-
