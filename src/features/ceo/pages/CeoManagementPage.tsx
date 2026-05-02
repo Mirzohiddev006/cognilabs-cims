@@ -24,13 +24,12 @@ import { useToast } from '../../../shared/toast/useToast'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
 import { PageHeader } from '../../../shared/ui/page-header'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
@@ -1529,6 +1528,7 @@ export function CeoManagementPage() {
               )}
             </div>
           </div>
+        </CardContent>
 
           {/* Legacy cleanup panel removed
           <div className="mt-5 grid gap-5 xl:grid-cols-2">

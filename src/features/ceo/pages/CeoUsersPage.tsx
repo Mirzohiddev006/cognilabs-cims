@@ -18,13 +18,12 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { Textarea } from '../../../shared/ui/textarea'
@@ -945,8 +944,9 @@ export function CeoUsersPage() {
             zebra
             emptyState={
               <EmptyStateBlock
-            title={lt('No users found')}
-            description={lt('There are no users matching your search or the database is empty.')}
+                eyebrow={lt('CEO / Users')}
+                title={lt('No users found')}
+                description={lt('There are no users matching your search or the database is empty.')}
               />
             }
             columns={[

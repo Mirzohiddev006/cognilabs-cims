@@ -21,7 +21,7 @@ import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
 import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
-import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 
 const now = new Date()
 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -343,20 +343,7 @@ function SummaryCard({ icon, label, value, accent = 'default' }: {
   )
 }
 
-function getOverrideTypeLabel(dayType: string | null | undefined) {
-  return normalizeOverrideDayType(dayType) === 'short_day'
-    ? translateCurrentLiteral('Short Day')
-    : translateCurrentLiteral('Holiday')
-}
 
-function getOverrideScopeLabel(item: WorkdayOverrideRecord) {
-  if (item.target_type === 'all') {
-    return translateCurrentLiteral('All members')
-  }
-
-  return item.member_name?.trim()
-    || (item.member_id ? `${translateCurrentLiteral('Member')} #${item.member_id}` : translateCurrentLiteral('Selected members'))
-}
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat(getIntlLocale(), {
@@ -1526,7 +1513,7 @@ function mergeEmployeeStats(
   const statsHasUsefulNumericValues = hasUsefulMonthlyNumericStats(statsEntry)
   const employeeHasUsefulNumericValues = hasUsefulMonthlyNumericStats(employee)
   const shouldUseStatsNumericValues = statsHasUsefulNumericValues && !employeeHasUsefulNumericValues
-  const shouldUseStatsDailyStatuses = Boolean(statsEntry.daily_statuses?.length) && !Boolean(employee.daily_statuses?.length)
+  const shouldUseStatsDailyStatuses = Boolean(statsEntry.daily_statuses?.length) && !employee.daily_statuses?.length
 
   return {
     ...employee,
@@ -1900,10 +1887,6 @@ export function CeoTeamUpdatesPage() {
     () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
     [sourceEmployees, search, sortKey, statusFilter],
   )
-  const workdayOverrides = useMemo(
-    () => [...(workdayOverridesQuery.data ?? [])].sort((left, right) => right.special_date.localeCompare(left.special_date)),
-    [workdayOverridesQuery.data],
-  )
 
   const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
   const lt = translateCurrentLiteral
@@ -1915,23 +1898,6 @@ export function CeoTeamUpdatesPage() {
     })),
     [locale],
   )
-  const tr = (key: string, uzFallback: string, ruFallback: string) => {
-    const value = lt(key)
-
-    if (value !== key) {
-      return value
-    }
-
-    if (locale.startsWith('ru')) {
-      return ruFallback
-    }
-
-    if (locale.startsWith('en')) {
-      return key
-    }
-
-    return uzFallback
-  }
 
   if (
     (memberOptionsQuery.isLoading && historyQuery.isLoading && !hasRosterData) ||
@@ -1989,10 +1955,6 @@ export function CeoTeamUpdatesPage() {
     ? statsEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, statsEmployees[0])
     : null
   const selectedMonthName = getMonthName(month)
-  const holidayOverrides = workdayOverrides.filter((item) => normalizeOverrideDayType(item.day_type) === 'holiday')
-  const shortDayOverrides = workdayOverrides.filter((item) => normalizeOverrideDayType(item.day_type) === 'short_day')
-  const noUpdateOverrides = workdayOverrides.filter((item) => !item.update_required)
-  const scopedOverrideCount = workdayOverrides.filter((item) => item.target_type !== 'all').length
 
   return (
     <section className="space-y-6 page-enter">
@@ -2190,12 +2152,9 @@ export function CeoTeamUpdatesPage() {
             zebra
             emptyState={
               <EmptyStateBlock
-                title={
-                  search || statusFilter !== 'all'
-                    ? translateCurrentLiteral('No employees match the current filters.')
-                    : `${translateCurrentLiteral('No data for')} ${selectedMonthName} ${year}.`
-                }
-              />
+                title={search || statusFilter !== 'all'
+                  ? translateCurrentLiteral('No employees match the current filters.')
+                  : `${translateCurrentLiteral('No data for')} ${selectedMonthName} ${year}.`} eyebrow={''}              />
             }
             columns={[
               {
