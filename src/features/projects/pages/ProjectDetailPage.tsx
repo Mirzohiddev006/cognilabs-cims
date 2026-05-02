@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
@@ -42,6 +42,24 @@ export function ProjectDetailPage() {
   const { confirm } = useConfirm()
   const { user } = useAuth()
   const lt = translateCurrentLiteral
+  const locale = getIntlLocale()
+  const tr = (key: string, uzFallback: string, ruFallback: string) => {
+    const value = lt(key)
+
+    if (value !== key) {
+      return value
+    }
+
+    if (locale.startsWith('ru')) {
+      return ruFallback
+    }
+
+    if (locale.startsWith('en')) {
+      return key
+    }
+
+    return uzFallback
+  }
 
   const id = Number(projectId)
   const canManageProjects = Boolean(user)
@@ -60,7 +78,6 @@ export function ProjectDetailPage() {
 
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false)
-  const [editBoard, setEditBoard] = useState<any | null>(null)
   const [isProjectSubmitting, setIsProjectSubmitting] = useState(false)
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
   const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null)
@@ -266,27 +283,21 @@ export function ProjectDetailPage() {
     }
   }
 
-  async function handleSaveBoard(values: { name: string; description?: string }) {
+  async function handleCreateBoard(values: { name: string; description?: string }) {
     if (!canManageProjects || !project) {
       return
     }
 
     setIsBoardSubmitting(true)
     try {
-      if (editBoard) {
-        await projectsService.updateBoard(editBoard.id, values)
-        showToast({ title: lt('Board updated'), tone: 'success' })
-      } else {
-        const createdBoard = await projectsService.createBoard(project.id, values)
-        showToast({ title: lt('Board created'), tone: 'success' })
-        selectBoard(createdBoard.id)
-      }
+      const createdBoard = await projectsService.createBoard(project.id, values)
+      showToast({ title: lt('Board created'), tone: 'success' })
       setIsCreateBoardOpen(false)
-      setEditBoard(null)
       await projectQuery.refetch()
+      selectBoard(createdBoard.id)
       notifyProjectsNavigationChanged()
     } catch {
-      showToast({ title: editBoard ? lt('Failed to update board') : lt('Failed to create board'), tone: 'error' })
+      showToast({ title: lt('Failed to create board'), tone: 'error' })
     } finally {
       setIsBoardSubmitting(false)
     }
@@ -438,78 +449,131 @@ export function ProjectDetailPage() {
         </div>
 
         {/* Boards Content Overlay Container - Scroll internally */}
-        <div className="relative z-20 flex-1 bg-[var(--background)] rounded-[32px] px-0 sm:px-4 pt-4 sm:pt-6 min-h-0 flex flex-col">
-           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
-              {/* Board Header & Filters Area */}
-              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--blue-dim)]/30 px-6 sm:px-10 py-5 sm:py-6 backdrop-blur-md">
-                 <div className="flex items-center justify-between gap-6 mb-5 sm:mb-2">
-                    <div className="flex items-center gap-6 overflow-hidden flex-1">
-                       {/* Project Name (Left) */}
-                       <div className="shrink-0">
-                         <h1 className="text-2xl font-black tracking-tight text-[var(--foreground)] truncate">
-                           {project.project_name}
-                         </h1>
-                       </div>
-
-                       <div className="h-10 w-px bg-[var(--border)] shrink-0" />
-
-                       {/* Board Tabs */}
-                       <div className="flex items-center gap-3 p-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
+        <div className="relative z-20 flex-1 -mt-2 sm:-mt-4 bg-[var(--background)] rounded-t-[28px] sm:rounded-t-[40px] px-0 sm:px-2 pt-1 sm:pt-2 min-h-0 flex flex-col">
+           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-t-[24px] sm:rounded-t-[32px] border-x border-t sm:border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
+              {/* Board Header & Filters Area - Highly scrollable on mobile */}
+              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--blue-dim)]/30 px-4 sm:px-8 py-3 sm:py-4 backdrop-blur-md">
+                 <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
+                    <div className="flex items-center gap-3 sm:gap-6 overflow-hidden flex-1">
+                       {/* Board Tabs - Horizontal Scroll on mobile */}
+                       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
                          {activeBoards.map((board) => {
                            const isSelected = selectedBoard?.id === board.id
                            return (
-                             <div key={board.id} className="group relative flex shrink-0 items-center gap-2">
+                             <div key={board.id} className="group relative flex shrink-0 items-center">
                                <button
                                  type="button"
                                  onClick={() => selectBoard(board.id)}
                                  className={cn(
-                                   "whitespace-nowrap pl-5 pr-5 py-3 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all",
+                                   "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
+                                   canManageProjects ? "pr-7" : "pr-4 sm:pr-5",
                                    isSelected
-                                     ? "bg-blue-600 text-white shadow-[0_4px_16px_rgba(37,99,235,0.4)] scale-105"
-                                     : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/10"
+                                     ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
+                                     : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
                                  )}
                                >
                                  {board.name}
                                </button>
                                {canManageProjects && (
-                                 <div className={cn(
-                                   "pr-2 transition-all",
-                                   isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                 )}>
-                                   <ActionsMenu
-                                     triggerVariant="icon"
-                                     items={[
-                                       {
-                                         label: lt('Edit'),
-                                         onSelect: () => {
-                                           setEditBoard(board)
-                                           setIsCreateBoardOpen(true)
-                                         }
-                                       },
-                                       {
-                                         label: lt('New List'),
-                                         onSelect: () => setIsCreateBoardOpen(true)
-                                       },
-                                       {
-                                         label: lt('Delete'),
-                                         tone: 'danger',
-                                         onSelect: () => void handleDeleteBoard(board.id, board.name)
-                                       }
-                                     ]}
-                                   />
-                                 </div>
+                                 <button
+                                   type="button"
+                                   onClick={(e) => { e.stopPropagation(); void handleDeleteBoard(board.id, board.name) }}
+                                   className={cn(
+                                     "absolute right-1.5 flex h-4 w-4 items-center justify-center rounded transition-all",
+                                     isSelected
+                                       ? "text-white/70 hover:text-white hover:bg-white/20"
+                                       : "opacity-0 group-hover:opacity-100 text-[var(--muted)] hover:text-red-400 hover:bg-red-400/10"
+                                   )}
+                                   title={lt('Delete board')}
+                                 >
+                                   <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                     <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/>
+                                   </svg>
+                                 </button>
                                )}
                              </div>
                            )
                          })}
+                         {canManageProjects && (
+                            <button
+                               type="button"
+                               onClick={() => setIsCreateBoardOpen(true)}
+                               className="w-9 h-9 flex items-center justify-center rounded-xl text-[var(--muted-strong)] hover:bg-white/10 hover:text-[var(--foreground)] transition-all shrink-0"
+                               title={lt('Add board')}
+                            >
+                               <svg viewBox="0 0 16 16" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                               </svg>
+                            </button>
+                         )}
                        </div>
+
+                       <div className="hidden sm:block h-8 w-px bg-[var(--border)] shrink-0" />
+
+                       {/* Members Selector (Desktop) */}
+                       <div className="hidden sm:flex items-center gap-3 shrink-0">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Members')}:</p>
+                          <div className="flex items-center -space-x-2">
+                             {projectMembers.map((member) => {
+                               const isExpanded = member.id === expandedMemberId
+                               return (
+                                 <button
+                                   key={member.id}
+                                   type="button"
+                                   onClick={() => selectMember(member.id)}
+                                   className={cn(
+                                     'relative transition-transform hover:scale-110 hover:z-10',
+                                     isExpanded ? 'scale-110 z-10' : 'z-0'
+                                   )}
+                                 >
+                                   <Avatar
+                                     name={member.name}
+                                     surname={member.surname}
+                                     imageUrl={member.profile_image}
+                                     size="sm"
+                                     className={cn(
+                                        "ring-2 ring-[var(--surface)] transition-all",
+                                        isExpanded ? "ring-blue-500 shadow-glow-blue" : "ring-[var(--border)]"
+                                     )}
+                                   />
+                                 </button>
+                               )
+                             })}
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* Desktop Right Actions */}
+                    <div className="hidden sm:flex items-center gap-3 shrink-0">
+                       {canManageProjects && (
+                          <Button
+                             variant="secondary"
+                             size="sm"
+                             className="h-9 rounded-xl font-black uppercase tracking-widest bg-[var(--accent-soft)]"
+                             onClick={() => setIsCreateBoardOpen(true)}
+                          >
+                            {tr('New list', 'Yangi list', 'Novyi spisok')}
+                          </Button>
+                       )}
+                    </div>
+
+                    {/* Mobile Create Button */}
+                    <div className="sm:hidden flex items-center shrink-0">
+                       {canManageProjects && (
+                          <button
+                             onClick={() => setIsCreateBoardOpen(true)}
+                             className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg"
+                          >
+                             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14" strokeLinecap="round"/></svg>
+                          </button>
+                       )}
                     </div>
                  </div>
 
-                 {/* Team Members Row */}
-                 <div className="flex items-center gap-4">
-                    <p className="text-[11px] font-black uppercase tracking-widest text-[var(--muted)] shrink-0">{lt('Team')}:</p>
-                    <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar-none pb-1">
+                 {/* Mobile Members Row */}
+                 <div className="sm:hidden flex items-center gap-3 overflow-hidden">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)] shrink-0">{lt('Team')}:</p>
+                    <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar-none pb-1">
                        {projectMembers.map((member) => {
                          const isExpanded = member.id === expandedMemberId
                          return (
@@ -523,9 +587,9 @@ export function ProjectDetailPage() {
                                name={member.name}
                                surname={member.surname}
                                imageUrl={member.profile_image}
-                               size="md"
+                               size="sm"
                                className={cn(
-                                  "h-10 w-10 ring-2 transition-all",
+                                  "h-7 w-7 ring-2 transition-all",
                                   isExpanded ? "ring-blue-500 shadow-glow-blue scale-110" : "ring-[var(--border)]"
                                )}
                              />
@@ -657,14 +721,10 @@ export function ProjectDetailPage() {
 
           <BoardFormModal
             open={isCreateBoardOpen}
-            onClose={() => {
-              setIsCreateBoardOpen(false)
-              setEditBoard(null)
-            }}
-            onSubmit={handleSaveBoard}
-            initial={editBoard}
-            title={editBoard ? lt('Edit board') : lt('Create board')}
-            submitLabel={editBoard ? lt('Save changes') : lt('Create')}
+            onClose={() => setIsCreateBoardOpen(false)}
+            onSubmit={handleCreateBoard}
+            title={lt('Create board')}
+            submitLabel={lt('Create')}
             isSubmitting={isBoardSubmitting}
           />
         </>
