@@ -348,7 +348,6 @@ export function AppSidebar() {
                               </Badge>
                             ) : null}
                           </div>
-                          <p className="ui-helper truncate uppercase tracking-[0.14em] text-[var(--muted)] opacity-70">{itemGroup}</p>
                         </div>
                       </NavLink>
 
@@ -461,7 +460,6 @@ export function AppSidebar() {
 
                   <div className="min-w-0 flex-1">
                     <p className="ui-body truncate font-semibold">{itemLabel}</p>
-                    <p className="ui-helper truncate uppercase tracking-[0.14em] text-[var(--muted)] opacity-70">{itemGroup}</p>
                   </div>
                 </NavLink>
               )
