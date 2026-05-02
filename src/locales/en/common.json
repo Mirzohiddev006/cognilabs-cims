@@ -623,6 +623,7 @@
   "ceo.dashboard.recurring.inactive_count": "{{count}} inactive",
   "ceo.dashboard.recurring.total_amount": "{{amount}} total",
   "ceo.dashboard.recurring.create": "Create reminder",
+  "ceo.dashboard.recurring.empty_eyebrow": "Recurring Payments",
   "ceo.dashboard.recurring.empty_title": "No reminders yet",
   "ceo.dashboard.recurring.empty_description": "The recurring company payment endpoint returned an empty list.",
   "ceo.dashboard.recurring.no_note": "No note",

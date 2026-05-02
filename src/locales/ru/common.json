@@ -623,6 +623,7 @@
   "ceo.dashboard.recurring.inactive_count": "{{count}} неактивных",
   "ceo.dashboard.recurring.total_amount": "{{amount}} всего",
   "ceo.dashboard.recurring.create": "Создать напоминание",
+  "ceo.dashboard.recurring.empty_eyebrow": "Регулярные Платежи",
   "ceo.dashboard.recurring.empty_title": "Напоминаний пока нет",
   "ceo.dashboard.recurring.empty_description": "Endpoint регулярных платежей компании вернул пустой список.",
   "ceo.dashboard.recurring.no_note": "Без заметки",

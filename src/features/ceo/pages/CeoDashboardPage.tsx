@@ -432,6 +432,7 @@ export function CeoDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
+        eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
         title={t('ceo.dashboard.loading.title')}
         description={t('ceo.dashboard.loading.description')}
       />
@@ -441,6 +442,7 @@ export function CeoDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
+        eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
         title={t('ceo.dashboard.error.title')}
         description={t('ceo.dashboard.error.description')}
         actionLabel={t('common.retry')}
@@ -538,6 +540,7 @@ export function CeoDashboardPage() {
             zebra
             emptyState={
               <EmptyStateBlock
+                eyebrow={t('ceo.dashboard.recurring.empty_eyebrow')}
                 title={t('ceo.dashboard.recurring.empty_title')}
               />
             }
@@ -629,6 +632,7 @@ export function CeoDashboardPage() {
               zebra
               emptyState={
                 <EmptyStateBlock
+                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
                   title={t('ceo.dashboard.messages.empty_title')}
                 />
               }
@@ -699,6 +703,7 @@ export function CeoDashboardPage() {
               zebra
               emptyState={
                 <EmptyStateBlock
+                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
                   title={t('ceo.dashboard.payments.empty_title')}
                 />
               }
@@ -787,6 +792,7 @@ export function CeoDashboardPage() {
             zebra
             emptyState={
               <EmptyStateBlock
+                eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
                 title="Reminderlar yo'q"
                 description="Company recurring payment endpoint hozircha bo'sh ro'yxat qaytardi."
               />
@@ -894,3 +900,4 @@ export function CeoDashboardPage() {
     </section>
   )
 }
+

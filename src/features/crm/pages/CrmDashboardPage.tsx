@@ -892,7 +892,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.search_label', 'Search')}
-              </label>
+              </Label>
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -904,7 +904,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.status_label', 'Status')}
-              </label>
+              </Label>
               <SelectField
                 key={`crm-status-filter-${statusFilter || 'all'}`}
                 value={statusFilter}
@@ -916,7 +916,7 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.platform_label', 'Platform')}
-              </label>
+              </Label>
               <SelectField
                 key={`crm-platform-filter-${platformFilter || 'all'}`}
                 value={platformFilter}
@@ -928,21 +928,21 @@ export function CrmDashboardPage() {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.start_date_label', 'Start date')}
-              </label>
+              </Label>
               <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.end_date_label', 'End date')}
-              </label>
+              </Label>
               <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.pagination_label', 'Pagination')}
-              </label>
+              </Label>
               <SelectField
                 key={`crm-page-size-${pageSize}`}
                 value={pageSize}

@@ -516,7 +516,7 @@ export function CeoWorkdayOverridesPage() {
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
-                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.year', 'Year')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.year', 'Year')}</Label>
                 <Input
                   type="number"
                   min="2020"
@@ -528,7 +528,7 @@ export function CeoWorkdayOverridesPage() {
               </div>
 
               <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
-                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.month', 'Month')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.month', 'Month')}</Label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -733,7 +733,7 @@ export function CeoWorkdayOverridesPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.date', 'Date')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.date', 'Date')}</Label>
                 <Input
                   type="date"
                   value={formState.specialDate}
@@ -741,7 +741,7 @@ export function CeoWorkdayOverridesPage() {
                 />
               </div>
               <div>
-                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.type', 'Type')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.type', 'Type')}</Label>
                 <SelectField
                   value={String(formState.dayType)}
                   options={DAY_TYPE_OPTIONS.map((option) => ({ ...option, label: lt(option.label) }))}
@@ -751,7 +751,7 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             <div>
-              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.title', 'Title')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.title', 'Title')}</Label>
               <Input
                 value={formState.title}
                 onChange={(event) => setForm({ title: event.target.value })}
@@ -762,7 +762,7 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             <div>
-              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.note', 'Note')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.note', 'Note')}</Label>
               <Textarea
                 value={formState.note}
                 onChange={(event) => setForm({ note: event.target.value })}
@@ -772,7 +772,7 @@ export function CeoWorkdayOverridesPage() {
 
             {formState.dayType === 'short_day' ? (
               <div>
-                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.workday_hours', 'Workday hours')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.workday_hours', 'Workday hours')}</Label>
                 <Input
                   type="number"
                   min="1"
@@ -855,7 +855,7 @@ export function CeoWorkdayOverridesPage() {
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <Label className="text-sm font-semibold text-[var(--foreground)]">
                     {editingOverride ? tx('common.member', 'Member') : tx('common.members', 'Members')}
-                  </label>
+                  </Label>
                   <Badge variant="secondary">
                     {tx('ceo.workday.form.selected_count', '{{count}} selected', { count: formState.memberIds.length })}
                   </Badge>

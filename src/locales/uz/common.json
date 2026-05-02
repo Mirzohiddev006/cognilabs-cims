@@ -623,6 +623,7 @@
   "ceo.dashboard.recurring.inactive_count": "{{count}} nofaol",
   "ceo.dashboard.recurring.total_amount": "Jami {{amount}}",
   "ceo.dashboard.recurring.create": "Eslatma yaratish",
+  "ceo.dashboard.recurring.empty_eyebrow": "Muntazam To'lovlar",
   "ceo.dashboard.recurring.empty_title": "Eslatmalar yo'q",
   "ceo.dashboard.recurring.empty_description": "Kompaniyaning doimiy to'lov endpointi bo'sh ro'yxat qaytardi.",
   "ceo.dashboard.recurring.no_note": "Izoh yo'q",
