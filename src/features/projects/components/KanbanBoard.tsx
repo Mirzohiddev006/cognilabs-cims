@@ -22,7 +22,7 @@ type KanbanBoardProps = {
   members: UserSummary[]
   onMoveCard: (cardId: number, columnId: number, order: number) => Promise<void>
   onMoveColumn: (columnId: number, order: number) => Promise<void>
-  onAddCard: (columnId: number, title: string) => void
+  onOpenAddCardModal: (columnId: number) => void
   onEditCard: (card: CardRecord) => void
   onDeleteCard: (cardId: number) => void
   onClickCard: (card: CardRecord) => void
@@ -41,7 +41,7 @@ export function KanbanBoard({
   columns: propColumns,
   onMoveCard,
   onMoveColumn,
-  onAddCard,
+  onOpenAddCardModal,
   onEditCard,
   onDeleteCard,
   onClickCard,
@@ -233,7 +233,7 @@ export function KanbanBoard({
               <div key={col.id} className="shrink-0 self-start">
                 <KanbanColumn
                   column={col}
-                  onAddCard={onAddCard}
+                  onOpenAddCardModal={onOpenAddCardModal}
                   onEditColumn={onEditColumn}
                   onDeleteColumn={onDeleteColumn}
                   onEditCard={onEditCard}

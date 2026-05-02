@@ -9,7 +9,7 @@ import { KanbanCard } from './KanbanCard'
 
 type KanbanColumnProps = {
   column: ColumnRecord
-  onAddCard: (columnId: number, title: string) => void
+  onOpenAddCardModal: (columnId: number) => void
   onEditColumn: (column: ColumnRecord) => void
   onDeleteColumn: (columnId: number) => void
   onEditCard: (card: CardRecord) => void
@@ -21,7 +21,7 @@ type KanbanColumnProps = {
 
 export function KanbanColumn({
   column,
-  onAddCard,
+  onOpenAddCardModal,
   onEditColumn,
   onDeleteColumn,
   onEditCard,
@@ -42,38 +42,7 @@ export function KanbanColumn({
 
   const cardIds = useMemo(() => column.cards.map((c) => `card-${c.id}`), [column.cards])
 
-  const [isAdding, setIsAdding] = useState(false)
-  const [addTitle, setAddTitle] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-
-  const startAdding = () => {
-    setIsAdding(true)
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus()
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      }
-    })
-  }
-
-  const cancelAdding = () => {
-    setIsAdding(false)
-    setAddTitle('')
-  }
-
-  const confirmAdd = () => {
-    const title = addTitle.trim()
-    if (!title) { cancelAdding(); return }
-    onAddCard(column.id, title)
-    setAddTitle('')
-    requestAnimationFrame(() => {
-      textareaRef.current?.focus()
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-      }
-    })
-  }
 
   const {
     attributes,
@@ -144,7 +113,7 @@ export function KanbanColumn({
         ) : null}
       </div>
 
-      {/* Cards scroll area + inline add form */}
+      {/* Cards scroll area */}
       <div
         ref={scrollRef}
         className="min-h-[4px] max-h-[calc(100vh-260px)] overflow-y-auto overflow-x-hidden px-2 pt-0.5 pb-2 custom-scrollbar-visible"
@@ -163,51 +132,14 @@ export function KanbanColumn({
             ))}
           </div>
         </SortableContext>
-
-        {/* Inline add form — Trello-style */}
-        {isAdding && (
-          <div className="mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-2.5 shadow-md">
-            <textarea
-              ref={textareaRef}
-              value={addTitle}
-              onChange={(e) => setAddTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); confirmAdd() }
-                if (e.key === 'Escape') cancelAdding()
-              }}
-              placeholder={tr('Enter card title...', 'Task nomini kiriting...', 'Введите название задачи...')}
-              rows={2}
-              className="w-full resize-none rounded-lg bg-transparent px-1 py-1 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none"
-            />
-            <div className="mt-2 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={confirmAdd}
-                className="rounded-lg bg-blue-500 px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-blue-600 active:bg-blue-700"
-              >
-                {tr('Add card', 'Qo\'shish', 'Добавить')}
-              </button>
-              <button
-                type="button"
-                onClick={cancelAdding}
-                aria-label="Cancel"
-                className="rounded-lg p-1.5 text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
-              >
-                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 3l10 10M13 3L3 13" strokeLinecap="round" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Add card button — below scroll area, shown only when not adding */}
-      {!readOnly && !isAdding ? (
+      {/* Add card button — below scroll area */}
+      {!readOnly ? (
         <div className="shrink-0 px-2 pb-3 pt-1">
           <button
             type="button"
-            onClick={startAdding}
+            onClick={() => onOpenAddCardModal(column.id)}
             className="flex w-full items-center gap-2 rounded-xl border border-transparent bg-transparent px-3 py-2 text-[12px] font-bold text-[var(--muted-strong)] transition hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5">

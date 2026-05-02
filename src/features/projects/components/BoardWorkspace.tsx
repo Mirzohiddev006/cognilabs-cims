@@ -495,7 +495,7 @@ export function BoardWorkspace({
         members={allUsers}
         onMoveCard={handleMoveCard}
         onMoveColumn={handleMoveColumn}
-        onAddCard={handleQuickCreateCard}
+        onOpenAddCardModal={(columnId) => setAddCardState({ columnId })}
         onEditCard={(card) => setEditCardState({ card })}
         onDeleteCard={handleDeleteCard}
         onClickCard={(card) => setDetailCard(card)}

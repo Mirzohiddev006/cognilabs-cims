@@ -1025,24 +1025,6 @@ export function CeoManagementPage() {
         )}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <SummaryCard
-          label="Available pages"
-          value={pageItems.length}
-          hint="Management pages endpoint orqali aniqlandi."
-        />
-        <SummaryCard
-          label="Active statuses"
-          value={statuses.filter((item) => item.is_active).length}
-          hint="Inactive statuslar ham list ichida qoladi."
-        />
-        <SummaryCard
-          label="Active roles"
-          value={roles.filter((item) => item.is_active).length}
-          hint="System rolelar backend tomonidan himoyalanishi mumkin."
-        />
-      </div>
-
       <div className="grid gap-3 md:grid-cols-4">
         {tabOptions.map((tab) => (
           <button

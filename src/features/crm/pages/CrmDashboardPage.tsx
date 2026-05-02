@@ -771,46 +771,42 @@ export function CrmDashboardPage() {
 
   return (
     <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
-      <PageHeader
-        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
-        title={t('customers.page.title', 'Customer operations dashboard')}
-        actions={
-          <>
-            <Button variant="secondary" onClick={() => void refreshAll()}>
-              {t('customers.actions.refresh', 'Refresh')}
-            </Button>
-            <Button onClick={openCreateModal}>{t('customers.actions.add', 'Add customer')}</Button>
-          </>
-        }
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          {periodOptions.map((option) => {
+            const isActive = selectedPeriod === option.value
+            return (
+              <button
+                key={option.value || 'all'}
+                type="button"
+                onClick={() => setSelectedPeriod(option.value)}
+                className={cn(
+                  'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+                  isActive
+                    ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text)'
+                    : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
+                )}
+              >
+                {option.label}
+              </button>
+            )
+          })}
+          {selectedPeriod && periodReportQuery.data ? (
+            <Badge variant="blue" dot>
+              {t('customers.period.range', '{{from}} → {{to}}', {
+                from: periodReportQuery.data.from_date,
+                to: periodReportQuery.data.to_date,
+              })}
+            </Badge>
+          ) : null}
+        </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {periodOptions.map((option) => {
-          const isActive = selectedPeriod === option.value
-          return (
-            <button
-              key={option.value || 'all'}
-              type="button"
-              onClick={() => setSelectedPeriod(option.value)}
-              className={cn(
-                'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
-                isActive
-                  ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text)'
-                  : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
-              )}
-            >
-              {option.label}
-            </button>
-          )
-        })}
-        {selectedPeriod && periodReportQuery.data ? (
-          <Badge variant="blue" dot>
-            {t('customers.period.range', '{{from}} → {{to}}', {
-              from: periodReportQuery.data.from_date,
-              to: periodReportQuery.data.to_date,
-            })}
-          </Badge>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => void refreshAll()}>
+            {t('customers.actions.refresh', 'Refresh')}
+          </Button>
+          <Button onClick={openCreateModal}>{t('customers.actions.add', 'Add customer')}</Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">

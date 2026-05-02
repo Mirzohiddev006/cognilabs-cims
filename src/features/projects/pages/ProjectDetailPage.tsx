@@ -360,13 +360,6 @@ export function ProjectDetailPage() {
                 )}
 
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
-                     <Link to="/projects" className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-                        {lt('Projects')}
-                     </Link>
-                     <span className="text-[var(--border)] text-[9px] sm:text-[10px]">/</span>
-                     <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-blue-400">{lt('Board')}</span>
-                  </div>
                   <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--foreground)] truncate">
                     {project.project_name}
                   </h1>
@@ -375,20 +368,40 @@ export function ProjectDetailPage() {
 
               {canManageProjects ? (
                 <div className="flex shrink-0 items-center gap-2 sm:mt-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="rounded-xl h-8 sm:h-9 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-xs"
-                    onClick={() => navigate(`/audit/logs?entity_type=Project&entity_id=${project.id}`)}
-                  >
-                    {lt('History')}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="rounded-xl h-8 sm:h-9 bg-[var(--accent-soft)] px-3 sm:px-4 text-[11px] sm:text-xs" onClick={() => setIsEditProjectOpen(true)}>
-                    {lt('Edit')}
-                  </Button>
-                  <Button variant="danger" size="sm" className="rounded-xl h-8 sm:h-9 bg-red-500/10 text-red-400 border-transparent px-3 sm:px-4 text-[11px] sm:text-xs" onClick={handleDeleteProject}>
-                    {lt('Delete')}
-                  </Button>
+                  <ActionsMenu
+                    triggerVariant="button"
+                    label={lt('Actions')}
+                    items={[
+                      {
+                        label: lt('History'),
+                        icon: (
+                          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M7.5 1.5C4.18629 1.5 1.5 4.18629 1.5 7.5C1.5 10.8137 4.18629 13.5 7.5 13.5C10.8137 13.5 13.5 10.8137 13.5 7.5C13.5 4.18629 10.8137 1.5 7.5 1.5ZM0.5 7.5C0.5 3.63401 3.63401 0.5 7.5 0.5C11.366 0.5 14.5 3.63401 14.5 7.5C14.5 11.366 11.366 14.5 7.5 14.5C3.63401 14.5 0.5 11.366 0.5 7.5ZM8 4C8 3.44772 7.55228 3 7 3C6.44772 3 6 3.44772 6 4V7.5C6 7.76522 6.10536 8.01957 6.29289 8.20711L8.29289 10.2071C8.68342 10.5976 9.31658 10.5976 9.70711 10.2071C10.0976 9.81658 10.0976 9.18342 9.70711 8.79289L8 6.88582V4Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                          </svg>
+                        ),
+                        onSelect: () => navigate(`/audit/logs?entity_type=Project&entity_id=${project.id}`),
+                      },
+                      {
+                        label: lt('Edit'),
+                        icon: (
+                          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.8536 1.14645C11.6583 0.951184 11.3417 0.951184 11.1464 1.14645L3.71457 8.57836C3.62459 8.66834 3.55263 8.77461 3.50251 8.89155L2.04044 12.303C1.9599 12.491 2.00189 12.709 2.14645 12.8536C2.29101 12.9981 2.50905 13.0401 2.69697 12.9596L6.10845 11.4975C6.22539 11.4474 6.33166 11.3754 6.42164 11.2854L13.8536 3.85355C14.0488 3.65829 14.0488 3.34171 13.8536 3.14645L11.8536 1.14645ZM4.42168 9.28547L10.5 3.20711L11.7929 4.5L5.71453 10.5784L4.21921 11.2192L4.42168 9.28547Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                          </svg>
+                        ),
+                        onSelect: () => setIsEditProjectOpen(true),
+                      },
+                      {
+                        label: lt('Delete'),
+                        tone: 'danger',
+                        icon: (
+                          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 -9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H11V12C11 12.5523 10.5523 13 10 13H5C9.44772 13 9 12.5523 9 12V4L3.5 4C3.22386 4 3 3.77614 3 3.5ZM5 4V12H10V4H5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                          </svg>
+                        ),
+                        onSelect: handleDeleteProject,
+                      },
+                    ]}
+                  />
                 </div>
               ) : null}
             </div>
@@ -451,7 +464,7 @@ export function ProjectDetailPage() {
                                  type="button"
                                  onClick={() => selectBoard(board.id)}
                                  className={cn(
-                                   "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all",
+                                   "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
                                    canManageProjects ? "pr-7" : "pr-4 sm:pr-5",
                                    isSelected
                                      ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"

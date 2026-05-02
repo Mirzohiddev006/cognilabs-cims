@@ -362,39 +362,34 @@ export function ProjectsListPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-6 page-enter">
-        <PageHeader
-          title={lt('Projects')}
-          meta={headerMeta}
-          actions={canManageProjects ? (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => setIsCreateOpen(true)}
-              leftIcon={(
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                </svg>
-              )}
-            >
-              {lt('New project')}
-            </Button>
-          ) : undefined}
-        />
-
+      <div className="flex flex-col gap-6 page-enter pt-4">
         <Card variant="glass" className="rounded-[28px]">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Members')}</p>
-                <h2 className="mt-2 text-lg font-semibold text-[var(--foreground)]">{tr('Project members overview', 'Loyiha azolari korinishi', 'Obzor uchastnikov proekta')}</h2>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">{lt('Members')}</h2>
 
-              {selectedMemberId !== null ? (
-                <Button variant="ghost" size="sm" onClick={() => selectMember(null)}>
-                  {lt('Clear member filter')}
-                </Button>
-              ) : null}
+              <div className="flex items-center gap-2">
+                {selectedMemberId !== null ? (
+                  <Button variant="ghost" size="sm" onClick={() => selectMember(null)}>
+                    {lt('Clear member filter')}
+                  </Button>
+                ) : null}
+
+                {canManageProjects ? (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => setIsCreateOpen(true)}
+                    leftIcon={(
+                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                        <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                      </svg>
+                    )}
+                  >
+                    {lt('New project')}
+                  </Button>
+                ) : undefined}
+              </div>
             </div>
 
             {membersPanelLoading ? (

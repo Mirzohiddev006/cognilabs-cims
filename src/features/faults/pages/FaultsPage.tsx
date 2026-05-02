@@ -680,88 +680,18 @@ export function FaultsPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px]">
-        <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
-          <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
-          <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
-          <div className="page-header-decor pointer-events-none absolute -right-10 top-6 h-28 w-28 rounded-full bg-cyan-400/8 blur-3xl" />
-
-          <div className="relative z-10 flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
-                  {lt('CEO Salary Estimates')}
-                </p>
-                <h1 className="page-header-title ui-page-title mt-2">
-                  {lt('Salary Estimates, Penalties and Bonuses')}
-                </h1>
-                <p className="mt-3 max-w-3xl text-sm text-[var(--muted)]">
-                  {tr(
-                    'Monthly breakdown for active employees. Open a member to inspect the full salary detail on its own page.',
-                    "Faol xodimlar uchun oylik kesim. To'liq maosh tafsilotini ko'rish uchun xodimni oching.",
-                    'Помесячная сводка по активным сотрудникам. Откройте сотрудника, чтобы посмотреть полные детали зарплаты.',
-                  )}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="rounded-full px-3 py-1 text-xs">
-                  {month}/{year}
-                </Badge>
-                <Badge
-                  variant={(apiSummary.employeesWithPenalties ?? 0) > 0 ? 'danger' : 'outline'}
-                  className="rounded-full px-3 py-1 text-xs"
-                >
-                  {formatCount(apiSummary.employeesWithPenalties)} {lt('with penalties')}
-                </Badge>
-                <Badge
-                  variant={(apiSummary.employeesWithBonuses ?? 0) > 0 ? 'success' : 'outline'}
-                  className="rounded-full px-3 py-1 text-xs"
-                >
-                  {formatCount(apiSummary.employeesWithBonuses)} {lt('with bonuses')}
-                </Badge>
-                <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs">{tr('Employee API summary', 'Employee API xulosasi', 'Сводка Employee API')}</Badge>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tr('Year', 'Yil', 'Год')}</label>
-                <Input
-                  type="number"
-                  min="2020"
-                  max="2035"
-                  value={year}
-                  onChange={(event) => updatePeriod({ year: clampNumber(Number(event.target.value) || defaultYear, 2020, 2035) })}
-                  className="rounded-xl"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tr('Month', 'Oy', 'Месяц')}</label>
-                <SelectField
-                  value={String(month)}
-                  options={monthOptions}
-                  onValueChange={(value) => updatePeriod({ month: clampNumber(Number(value), 1, 12) })}
-                  className="rounded-xl"
-                />
-              </div>
-
-              <div className="md:self-end">
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  leftIcon={<RefreshIcon />}
-                  onClick={() => void handleRefresh()}
-                  className="w-full justify-center rounded-xl md:w-auto"
-                >
-                  {lt('Refresh')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
+      <div className="flex items-center justify-between">
+        <div />
+        <Button
+          variant="secondary"
+          size="lg"
+          leftIcon={<RefreshIcon />}
+          onClick={() => void handleRefresh()}
+          className="rounded-xl"
+        >
+          {lt('Refresh')}
+        </Button>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <DetailStatTile label={tr('Employees', 'Xodimlar', 'Сотрудники')} value={formatCount(apiSummary.totalEmployees)} />
@@ -773,13 +703,6 @@ export function FaultsPage() {
       </div>
 
       <Card className="rounded-[24px] border-[var(--border)] p-6">
-        <div className="mb-5 flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">{lt('All Members')}</h2>
-          <p className="text-sm text-[var(--muted-strong)]">
-            {tr('Detailed salary-estimate breakdown for the selected period.', 'Tanlangan davr uchun batafsil maosh hisobi.', 'Подробная разбивка оценки зарплаты за выбранный период.')}
-          </p>
-        </div>
-
         <DataTable
           caption={lt('Salary estimate breakdown')}
           rows={reports}

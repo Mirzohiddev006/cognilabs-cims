@@ -10,22 +10,22 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    'card-base',
+    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm',
 
   elevated:
-    'card-base card-elevated',
+    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md',
 
   glass:
-    'card-glass-variant card-base backdrop-blur-xl bg-white/3',
+    'rounded-xl border border-[var(--border)] bg-white/5 backdrop-blur-xl text-[var(--foreground)] shadow-lg',
 
   metric:
-    'card-base card-metric card-elevated',
+    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm hover:shadow-md transition-shadow',
 
   glow:
-    'card-base card-glow',
+    'rounded-xl border border-blue-500/20 bg-[var(--card)] text-[var(--foreground)] shadow-[0_0_15px_rgba(59,130,246,0.1)]',
 
   inset:
-    'card-inset-variant rounded-xl border border-(--border) bg-(--card)',
+    'rounded-xl border border-[var(--border)] bg-[var(--accent-soft)]/20 text-[var(--foreground)]',
 }
 
 export function Card({

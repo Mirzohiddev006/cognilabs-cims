@@ -125,7 +125,7 @@ export function DataTable<T>({
                   key={col.key}
                   style={getColumnStyle(col)}
                   className={cn(
-                    'h-12 px-4 text-left align-middle font-semibold text-[var(--muted)] whitespace-nowrap',
+                    'h-12 px-4 text-left align-middle font-bold text-[11px] uppercase tracking-[0.12em] text-[var(--muted-strong)] whitespace-nowrap',
                     alignClassName[col.align ?? 'left'],
                   )}
                 >

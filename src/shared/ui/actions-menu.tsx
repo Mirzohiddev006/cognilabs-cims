@@ -36,7 +36,14 @@ function getMenuPosition(trigger: HTMLElement, itemCount: number): MenuPosition 
 export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMenuProps) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
-  const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0 })
+  const [position, setPosition] = useState<MenuPosition | null>(null)
+
+  const openMenu = () => {
+    if (triggerRef.current) {
+      setPosition(getMenuPosition(triggerRef.current, items.length))
+      setIsOpen(true)
+    }
+  }
 
   useEffect(() => {
     if (!isOpen || !triggerRef.current) {
@@ -57,7 +64,6 @@ export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMe
       }
     }
 
-    updatePosition()
     window.addEventListener('resize', updatePosition)
     window.addEventListener('scroll', updatePosition, true)
     window.addEventListener('keydown', handleKeyDown)
@@ -69,6 +75,28 @@ export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMe
     }
   }, [isOpen, items.length])
 
+  if (items.length === 0) return null
+
+  // If there's only 1 item, show its name directly and make it a single action button
+  if (items.length === 1) {
+    const item = items[0]
+    return (
+      <button
+        type="button"
+        onClick={item.onSelect}
+        title={typeof label === 'string' ? label : item.label}
+        className={cn(
+          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] text-xs font-medium',
+          item.tone === 'danger' ? 'text-red-500 hover:text-red-600 border-red-500/20 hover:border-red-500/40' : 'text-[var(--foreground)]',
+        )}
+      >
+        {item.icon && <span className="mr-2 flex h-3.5 w-3.5 items-center justify-center">{item.icon}</span>}
+        {item.label}
+      </button>
+    )
+  }
+
+  // If 2 or more items, always show dots icon as per requirement
   return (
     <>
       <button
@@ -76,27 +104,18 @@ export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMe
         type="button"
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        onClick={() => setIsOpen((current) => !current)}
+        onClick={openMenu}
+        title={typeof label === 'string' ? label : undefined}
         className={cn(
-          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
-          triggerVariant === 'icon'
-            ? 'h-9 w-9 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]'
-            : 'h-9 px-4 py-2 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] text-sm font-medium',
+          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 w-9 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
         )}
       >
-        {label || (
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
-            <path d="M3.625 7.5C3.625 8.12132 3.12132 8.625 2.5 8.625C1.87868 8.625 1.375 8.12132 1.375 7.5C1.375 6.87868 1.87868 6.375 2.5 6.375C3.12132 6.375 3.625 6.87868 3.625 7.5ZM8.625 7.5C8.625 8.12132 8.12132 8.625 7.5 8.625C6.87868 8.625 6.375 8.12132 6.375 7.5C6.375 6.87868 6.87868 6.375 7.5 6.375C8.12132 6.375 8.625 6.87868 8.625 7.5ZM13.625 7.5C13.625 8.12132 13.1213 8.625 12.5 8.625C11.8787 8.625 11.375 8.12132 11.375 7.5C11.375 6.87868 11.8787 6.375 12.5 6.375C13.1213 6.375 13.625 6.87868 13.625 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
-          </svg>
-        )}
-        {triggerVariant === 'button' && (
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 h-4 w-4 opacity-50">
-            <path d="M4.10876 6.15876C3.9135 5.9635 3.9135 5.64692 4.10876 5.45165C4.30402 5.25639 4.6206 5.25639 4.81587 5.45165L7.5 8.13578L10.1841 5.45165C10.3794 5.25639 10.696 5.25639 10.8912 5.45165C11.0865 5.64692 11.0865 5.9635 10.8912 6.15876L7.85355 9.19645C7.65829 9.39171 7.34171 9.39171 7.14645 9.19645L4.10876 6.15876Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
-          </svg>
-        )}
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
+          <path d="M3.625 7.5C3.625 8.12132 3.12132 8.625 2.5 8.625C1.87868 8.625 1.375 8.12132 1.375 7.5C1.375 6.87868 1.87868 6.375 2.5 6.375C3.12132 6.375 3.625 6.87868 3.625 7.5ZM8.625 7.5C8.625 8.12132 8.12132 8.625 7.5 8.625C6.87868 8.625 6.375 8.12132 6.375 7.5C6.375 6.87868 6.87868 6.375 7.5 6.375C8.12132 6.375 8.625 6.87868 8.625 7.5ZM13.625 7.5C13.625 8.12132 13.1213 8.625 12.5 8.625C11.8787 8.625 11.375 8.12132 11.375 7.5C11.375 6.87868 11.8787 6.375 12.5 6.375C13.1213 6.375 13.625 6.87868 13.625 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+        </svg>
       </button>
 
-      {isOpen && typeof document !== 'undefined'
+      {isOpen && position && typeof document !== 'undefined'
         ? createPortal(
             <>
               <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />

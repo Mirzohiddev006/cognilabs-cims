@@ -951,7 +951,6 @@ export function CeoUsersPage() {
               />
             }
             columns={[
-              {
                 key: 'identity',
                 header: lt('User'),
                 render: (row) => (
@@ -961,15 +960,15 @@ export function CeoUsersPage() {
                       event.stopPropagation()
                       openProfileDialog(row)
                     }}
-                    className="group/user -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-[18px] px-2 py-1 text-left transition hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)]"
+                    className="group/user flex w-full items-center gap-3 rounded-[12px] py-1 text-left transition hover:text-[var(--blue-text)] focus-visible:outline-none"
                     aria-label={`${lt('Profile')}: ${row.name} ${row.surname}`}
                   >
                     <UserAvatar user={row} size="sm" />
-                    <div>
-                      <p className="font-bold tracking-tight text-[var(--foreground)] transition group-hover/user:text-[var(--blue-text)]">
+                    <div className="min-w-0">
+                      <p className="truncate font-bold tracking-tight text-[var(--foreground)] transition group-hover/user:text-[var(--blue-text)]">
                         {row.name} {row.surname}
                       </p>
-                      <p className="text-xs font-medium text-[var(--muted-strong)]">{row.email}</p>
+                      <p className="truncate text-xs font-medium text-[var(--muted-strong)]">{row.email}</p>
                       {row.job_title ? (
                         renderJobTitleTag(row.job_title, row.role)
                       ) : null}
