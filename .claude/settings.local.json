@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npx vite *)",
       "Bash(grep -E \"\\\\.\\(tsx?|jsx?\\)$\")",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(findstr /i \"recharts chart\")",
+      "Bash(npm install *)"
     ]
   }
 }

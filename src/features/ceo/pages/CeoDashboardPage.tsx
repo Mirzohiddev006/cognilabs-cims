@@ -9,11 +9,10 @@ import { formatCurrency, formatShortDate } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card } from '../../../shared/ui/card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { PageHeader } from '../../../shared/ui/page-header'
-import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
@@ -512,11 +511,12 @@ export function CeoDashboardPage() {
         }
       />
 
-      <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <SectionTitle
-            title={t('ceo.dashboard.recurring.title')}
-          />
+      <Card noPadding>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>
+            <CardDescription>{t('ceo.dashboard.recurring.description', 'Manage recurring company payments')}</CardDescription>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="success" dot>
               {t('ceo.dashboard.recurring.active_count', { count: activeRecurringPayments })}
@@ -531,8 +531,8 @@ export function CeoDashboardPage() {
               {t('ceo.dashboard.recurring.create')}
             </Button>
           </div>
-        </div>
-        <div className="mt-6">
+        </CardHeader>
+        <CardContent>
           <DataTable
             caption={t('ceo.dashboard.recurring.title')}
             rows={companyPayments}
@@ -599,7 +599,7 @@ export function CeoDashboardPage() {
               },
             ]}
           />
-        </div>
+        </CardContent>
       </Card>
 
       <CrmDashboardCharts
@@ -615,16 +615,14 @@ export function CeoDashboardPage() {
       />
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              title={t('ceo.dashboard.messages.title')}
-            />
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>{t('ceo.dashboard.messages.title')}</CardTitle>
             <Badge variant="violet" dot>
               {t('ceo.dashboard.messages.entries', { count: messages.length })}
             </Badge>
-          </div>
-          <div className="mt-6">
+          </CardHeader>
+          <CardContent>
             <DataTable
               caption={t('ceo.dashboard.messages.title')}
               rows={messages}
@@ -678,14 +676,12 @@ export function CeoDashboardPage() {
                 },
               ]}
             />
-          </div>
+          </CardContent>
         </Card>
 
-        <Card className="p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <SectionTitle
-              title={t('ceo.dashboard.payments.title')}
-            />
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>{t('ceo.dashboard.payments.title')}</CardTitle>
             <div className="flex flex-wrap gap-2">
               <Badge variant="success" dot>
                 {t('ceo.dashboard.payments.paid_count', { count: payments.filter((row) => row.payment).length })}
@@ -694,8 +690,8 @@ export function CeoDashboardPage() {
                 {t('ceo.dashboard.payments.pending_count', { count: payments.filter((row) => !row.payment).length })}
               </Badge>
             </div>
-          </div>
-          <div className="mt-6">
+          </CardHeader>
+          <CardContent>
             <DataTable
               caption={t('ceo.dashboard.payments.title')}
               rows={payments}
@@ -759,16 +755,17 @@ export function CeoDashboardPage() {
                 },
               ]}
             />
-          </div>
+          </CardContent>
         </Card>
       </div>
 
       {showRecurringPayments && (
-      <Card className="p-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <SectionTitle
-            title="Company payment reminders"
-          />
+      <Card noPadding>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+          <div>
+            <CardTitle>Company payment reminders</CardTitle>
+            <CardDescription>Review upcoming recurring costs</CardDescription>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Badge variant="success" dot>
               {activeRecurringPayments} active
@@ -783,8 +780,8 @@ export function CeoDashboardPage() {
               Create reminder
             </Button>
           </div>
-        </div>
-        <div className="mt-6">
+        </CardHeader>
+        <CardContent>
           <DataTable
             caption="Company payment reminders"
             rows={companyPayments}
@@ -849,7 +846,7 @@ export function CeoDashboardPage() {
               },
             ]}
           />
-        </div>
+        </CardContent>
       </Card>
       )}
 
@@ -900,4 +897,3 @@ export function CeoDashboardPage() {
     </section>
   )
 }
-

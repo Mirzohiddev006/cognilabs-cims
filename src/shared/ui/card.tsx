@@ -52,14 +52,39 @@ export function CardHeader({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div
-      className={cn(
-        'flex items-start justify-between gap-4 border-b border-(--border) px-5 py-5',
-        className,
-      )}
+    <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  )
+}
+
+export function CardTitle({
+  className,
+  ...props
+}: HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h3
+      className={cn('text-lg font-semibold leading-none tracking-tight text-(--foreground)', className)}
       {...props}
     />
   )
+}
+
+export function CardDescription({
+  className,
+  ...props
+}: HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p
+      className={cn('text-sm text-(--muted)', className)}
+      {...props}
+    />
+  )
+}
+
+export function CardContent({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn('p-6 pt-0', className)} {...props} />
 }
 
 export function CardBody({
