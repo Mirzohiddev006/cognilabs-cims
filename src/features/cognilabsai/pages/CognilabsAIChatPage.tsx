@@ -9,6 +9,7 @@ import { useSearchParams } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { Button } from '../../../shared/ui/button'
@@ -466,6 +467,7 @@ function TelegramSearchModal({
 export function CognilabsAIChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { showToast } = useToast()
+  const { user } = useAuth()
 
   const [activeTab, setActiveTab] = useState<ChannelTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -552,21 +554,53 @@ export function CognilabsAIChatPage() {
     container.scrollTop = container.scrollHeight
   }, [messages])
 
+  const selectedConversationIdRef = useRef(selectedConversationId)
+  useEffect(() => {
+    selectedConversationIdRef.current = selectedConversationId
+  }, [selectedConversationId])
+
   useEffect(() => {
     if (!wsKey) return
 
-    let sock: WebSocket | null = null
+    let socket: WebSocket | null = null
+    let isComponentMounted = true
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null
 
     function connect() {
-      sock = cognilabsaiService.createWebSocket(wsKey!)
+      if (!isComponentMounted) return
+
+      const sock = cognilabsaiService.createWebSocket(wsKey!)
+      socket = sock
       wsRef.current = sock
 
       sock.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data as string) as WsEvent
           if (data.type === 'message.created') {
-            if (data.conversation_id === selectedConversationId) {
-              setMessages((prev) => [...prev, data.message])
+            if (data.conversation_id === selectedConversationIdRef.current) {
+              setMessages((prev) => {
+                // Avoid duplicates by checking ID
+                if (prev.some((m) => m.id === data.message.id)) {
+                  return prev
+                }
+
+                // Check for optimistic message match (same text and sender, and has a temporary ID)
+                // We use a large ID (> 1e12) as a heuristic for Date.now() temporary IDs
+                const optimisticIdx = prev.findIndex(
+                  (m) =>
+                    m.id > 1000000000000 &&
+                    m.text === data.message.text &&
+                    m.sender_type === data.message.sender_type,
+                )
+
+                if (optimisticIdx !== -1) {
+                  const newMessages = [...prev]
+                  newMessages[optimisticIdx] = data.message
+                  return newMessages
+                }
+
+                return [...prev, data.message]
+              })
             }
             setConversations((prev) =>
               prev.map((c) =>
@@ -591,16 +625,22 @@ export function CognilabsAIChatPage() {
 
       sock.onerror = () => {}
       sock.onclose = () => {
-        setTimeout(connect, 5000)
+        if (isComponentMounted) {
+          reconnectTimeout = setTimeout(connect, 5000)
+        }
       }
     }
 
     connect()
 
     return () => {
-      wsRef.current?.close()
+      isComponentMounted = false
+      if (reconnectTimeout) clearTimeout(reconnectTimeout)
+      if (socket) {
+        socket.close()
+      }
     }
-  }, [wsKey, selectedConversationId])
+  }, [wsKey])
 
   const handleSelectConversation = useCallback((id: number) => {
     setSelectedConversationId(id)
@@ -620,8 +660,8 @@ export function CognilabsAIChatPage() {
       conversation_id: selectedConversationId,
       channel: selectedConversation?.channel ?? '',
       sender_type: 'operator',
-      operator_user_id: null,
-      operator_name_snapshot: null,
+      operator_user_id: user?.id ?? null,
+      operator_name_snapshot: user ? `${user.name} ${user.surname}` : 'Operator',
       client_external_id: null,
       instagram_message_id: null,
       telegram_message_id: null,

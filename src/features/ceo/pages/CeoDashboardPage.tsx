@@ -459,20 +459,57 @@ export function CeoDashboardPage() {
         eyebrow="CEO / Day 6"
         title={t('ceo.dashboard.header.title')}
         actions={
-          <div className="grid w-full gap-2 sm:grid-cols-2 xl:w-[28rem]">
-            <Button className="w-full justify-center" variant="secondary" onClick={() => void refreshAll()}>
-              {t('common.refresh')}
-            </Button>
-            <Button className="w-full justify-center" variant="ghost" onClick={() => setIsBroadcastOpen(true)}>
-              {t('ceo.dashboard.actions.send_broadcast')}
-            </Button>
-            <Button className="w-full justify-center" variant="ghost" onClick={openCreateCompanyPaymentModal}>
-              {t('ceo.dashboard.actions.add_recurring')}
-            </Button>
-            <Button className="w-full justify-center" onClick={openCreatePaymentModal}>
-              {t('ceo.dashboard.actions.create_payment')}
-            </Button>
-          </div>
+          <ActionsMenu
+            triggerVariant="button"
+            label={t('common.actions')}
+            items={[
+              {
+                label: t('common.refresh'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M1.84998 7.46254C1.84998 4.3586 4.37103 1.83754 7.47498 1.83754C8.91301 1.83754 10.2222 2.37681 11.218 3.26444L10.375 4.10744C10.2773 4.20517 10.2773 4.36346 10.375 4.46119C10.4727 4.55892 10.631 4.55892 10.7287 4.46119L12.1287 3.06119C12.2264 2.96346 12.2264 2.80517 12.1287 2.70744L10.7287 1.30744C10.631 1.20971 10.4727 1.20971 10.375 1.30744C10.2773 1.40517 10.2773 1.56346 10.375 1.66119L11.0821 2.36831C10.1064 1.5034 8.8507 0.987539 7.47498 0.987539C3.90164 0.987539 1 3.88918 1 7.46254C1 11.0359 3.90164 13.9375 7.47498 13.9375C11.0483 13.9375 13.95 11.0359 13.95 7.46254H13.1C13.1 10.5665 10.579 13.0875 7.47498 13.0875C4.37103 13.0875 1.84998 10.5665 1.84998 7.46254Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: () => void refreshAll(),
+              },
+              {
+                label: t('ceo.dashboard.actions.send_broadcast'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M1.20308 1.04312C1.17743 1.0114 1.14304 0.998483 1.10954 1.0003C1.07604 1.00212 1.0428 1.01861 1.02217 1.04482C1.00147 1.07112 0.993416 1.10425 0.99966 1.13524C1.0059 1.16623 1.02613 1.1942 1.05562 1.21175L13.8056 8.71175C13.8407 8.73238 13.8824 8.7332 13.918 8.71392C13.9536 8.69464 13.9774 8.65851 13.982 8.61802C13.9867 8.57753 13.9714 8.53924 13.9416 8.51478L1.20308 1.04312ZM1.00391 13.9961L1.00391 13.9961C1.00366 13.9961 1.00341 13.9961 1.00316 13.9961C0.96346 13.9959 0.925828 13.9782 0.90151 13.9482C0.877192 13.9182 0.868725 13.8791 0.878413 13.8423L2.24357 8.61833L8.00004 7.5L2.24357 6.38167L0.878413 1.15774C0.868725 1.1209 0.877192 1.08179 0.90151 1.05182C0.925828 1.02185 0.96346 1.00407 1.00316 1.00388C1.00341 1.00388 1.00366 1.00388 1.00391 1.00388C1.03664 1.00388 1.06913 1.01639 1.09241 1.03967L13.9124 13.8597C13.9405 13.8878 13.9536 13.9261 13.9479 13.9649C13.9422 14.0037 13.9184 14.0372 13.8839 14.0551C13.8493 14.0729 13.8087 14.0726 13.7744 14.0543L1.00391 13.9961Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: () => setIsBroadcastOpen(true),
+              },
+              {
+                label: t('ceo.dashboard.actions.create_payment'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M7.5 0.75C3.77208 0.75 0.75 3.77208 0.75 7.5C0.75 11.2279 3.77208 14.25 7.5 14.25C11.2279 14.25 14.25 11.2279 14.25 7.5C14.25 3.77208 11.2279 0.75 7.5 0.75ZM7.5 1.75C4.32436 1.75 1.75 4.32436 1.75 7.5C1.75 10.6756 4.32436 13.25 7.5 13.25C10.6756 13.25 13.25 10.6756 13.25 7.5C13.25 4.32436 10.6756 1.75 7.5 1.75ZM7.5 4.5C7.77614 4.5 8 4.72386 8 5V7H10C10.2761 7 10.5 7.22386 10.5 7.5C10.5 7.77614 10.2761 8 10 8H8V10C8 10.2761 7.77614 10.5 7.5 10.5C7.22386 10.5 7 10.2761 7 10V8H5C4.72386 8 4.5 7.77614 4.5 7.5C4.5 7.22386 4.72386 7 5 7H7V5C7 4.72386 7.22386 4.5 7.5 4.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: openCreatePaymentModal,
+              },
+              {
+                label: t('ceo.dashboard.actions.add_recurring'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M11.5 3C12.3284 3 13 3.67157 13 4.5V11.5C13 12.3284 12.3284 13 11.5 13H3.5C2.67157 13 2 12.3284 2 11.5V4.5C2 3.67157 2.67157 3 3.5 3H11.5ZM11.5 4H3.5C3.22386 4 3 4.22386 3 4.5V11.5C3 11.7761 3.22386 12 3.5 12H11.5C11.7761 12 12 11.7761 12 11.5V4.5C12 4.22386 11.7761 4 11.5 4ZM4.5 5.5H5.5V6.5H4.5V5.5ZM6.5 5.5H8.5V6.5H6.5V5.5ZM4.5 7.5H5.5V8.5H4.5V7.5ZM6.5 7.5H8.5V8.5H6.5V7.5ZM4.5 9.5H5.5V10.5H4.5V9.5ZM6.5 9.5H8.5V10.5H6.5V9.5ZM9.5 5.5H10.5V6.5H9.5V5.5ZM9.5 7.5H10.5V8.5H9.5V7.5ZM9.5 9.5H10.5V10.5H9.5V9.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: openCreateCompanyPaymentModal,
+              },
+              {
+                label: t('ceo.dashboard.recurring.create'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M7.5 1.5C7.77614 1.5 8 1.72386 8 2V3.06456C10.263 3.44099 12 5.42043 12 7.8V10.5H13C13.2761 10.5 13.5 10.7239 13.5 11C13.5 11.2761 13.2761 11.5 13 11.5H2C1.72386 11.5 1.5 11.2761 1.5 11C1.5 10.7239 1.72386 10.5 2 10.5H3V7.8C3 5.42043 4.73703 3.44099 7 3.06456V2C7 1.72386 7.22386 1.5 7.5 1.5ZM4 10.5H11V7.8C11 5.867 9.433 4.3 7.5 4.3C5.567 4.3 4 5.867 4 7.8V10.5ZM7.5 12.5C8.32843 12.5 9 13.1716 9 14H6C6 13.1716 6.67157 12.5 7.5 12.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: openCreateCompanyPaymentModal,
+              },
+            ]}
+          />
         }
       />
 

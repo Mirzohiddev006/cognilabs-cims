@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 
@@ -6,11 +6,13 @@ export type ActionsMenuItem = {
   label: string
   onSelect: () => void
   tone?: 'default' | 'danger'
+  icon?: ReactNode
 }
 
 type ActionsMenuProps = {
   items: ActionsMenuItem[]
-  label?: string
+  label?: ReactNode
+  triggerVariant?: 'icon' | 'button'
 }
 
 type MenuPosition = {
@@ -18,20 +20,20 @@ type MenuPosition = {
   left: number
 }
 
-function getMenuPosition(trigger: HTMLButtonElement, itemCount: number): MenuPosition {
+function getMenuPosition(trigger: HTMLElement, itemCount: number): MenuPosition {
   const rect = trigger.getBoundingClientRect()
-  const menuWidth = 196
-  const menuHeight = itemCount * 44 + 16
+  const menuWidth = 220
+  const menuHeight = itemCount * 40 + 12
   const left = Math.min(Math.max(8, rect.right - menuWidth), window.innerWidth - menuWidth - 8)
   const openAbove = rect.bottom + menuHeight + 8 > window.innerHeight && rect.top - menuHeight - 8 >= 8
   const top = openAbove
     ? Math.max(8, rect.top - menuHeight - 8)
-    : Math.min(rect.bottom + 8, window.innerHeight - menuHeight - 8)
+    : Math.min(rect.bottom + 4, window.innerHeight - menuHeight - 8)
 
   return { top, left }
 }
 
-export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps) {
+export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMenuProps) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0 })
@@ -72,17 +74,26 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
       <button
         ref={triggerRef}
         type="button"
-        aria-label={label}
         aria-expanded={isOpen}
         aria-haspopup="menu"
         onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+        className={cn(
+          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+          triggerVariant === 'icon'
+            ? 'h-9 w-9 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]'
+            : 'h-9 px-4 py-2 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] text-sm font-medium',
+        )}
       >
-        <svg viewBox="0 0 16 16" className="h-4 w-4 fill-current" aria-hidden="true">
-          <circle cx="3" cy="8" r="1.25" />
-          <circle cx="8" cy="8" r="1.25" />
-          <circle cx="13" cy="8" r="1.25" />
-        </svg>
+        {label || (
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">
+            <path d="M3.625 7.5C3.625 8.12132 3.12132 8.625 2.5 8.625C1.87868 8.625 1.375 8.12132 1.375 7.5C1.375 6.87868 1.87868 6.375 2.5 6.375C3.12132 6.375 3.625 6.87868 3.625 7.5ZM8.625 7.5C8.625 8.12132 8.12132 8.625 7.5 8.625C6.87868 8.625 6.375 8.12132 6.375 7.5C6.375 6.87868 6.87868 6.375 7.5 6.375C8.12132 6.375 8.625 6.87868 8.625 7.5ZM13.625 7.5C13.625 8.12132 13.1213 8.625 12.5 8.625C11.8787 8.625 11.375 8.12132 11.375 7.5C11.375 6.87868 11.8787 6.375 12.5 6.375C13.1213 6.375 13.625 6.87868 13.625 7.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+          </svg>
+        )}
+        {triggerVariant === 'button' && (
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="ml-2 h-4 w-4 opacity-50">
+            <path d="M4.10876 6.15876C3.9135 5.9635 3.9135 5.64692 4.10876 5.45165C4.30402 5.25639 4.6206 5.25639 4.81587 5.45165L7.5 8.13578L10.1841 5.45165C10.3794 5.25639 10.696 5.25639 10.8912 5.45165C11.0865 5.64692 11.0865 5.9635 10.8912 6.15876L7.85355 9.19645C7.65829 9.39171 7.34171 9.39171 7.14645 9.19645L4.10876 6.15876Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+          </svg>
+        )}
       </button>
 
       {isOpen && typeof document !== 'undefined'
@@ -91,7 +102,7 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
               <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
                 role="menu"
-                className="fixed z-50 min-w-[196px] rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                className="fixed z-50 min-w-[220px] overflow-hidden rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-1 text-[var(--foreground)] shadow-[var(--shadow-lg)] animate-in fade-in zoom-in-95 duration-100"
                 style={position}
               >
                 {items.map((item) => (
@@ -104,26 +115,14 @@ export function ActionsMenu({ items, label = 'Open actions' }: ActionsMenuProps)
                       item.onSelect()
                     }}
                     className={cn(
-                      'flex w-full items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-xs font-medium transition-colors',
+                      'relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-[var(--accent-soft)] focus:text-[var(--accent-foreground)] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 hover:bg-[var(--accent-soft)]',
                       item.tone === 'danger'
-                        ? 'text-red-500 hover:border-red-500/15 hover:bg-red-500/10 hover:text-red-600'
-                        : 'text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+                        ? 'text-red-500 hover:text-red-600'
+                        : 'text-[var(--foreground)]',
                     )}
                   >
-                    <span className="flex items-center gap-2">
-                      <span
-                        className={cn(
-                          'inline-block h-1.5 w-1.5 rounded-full bg-[var(--muted)]/40',
-                          item.tone === 'danger'
-                            ? 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.45)]'
-                            : 'bg-blue-400/80 shadow-[0_0_8px_rgba(96,165,250,0.38)]',
-                        )}
-                      />
-                      <span>{item.label}</span>
-                    </span>
-                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-[var(--muted)]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                      <path d="M6 4l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    {item.icon && <span className="mr-2 flex h-3.5 w-3.5 items-center justify-center">{item.icon}</span>}
+                    {item.label}
                   </button>
                 ))}
               </div>

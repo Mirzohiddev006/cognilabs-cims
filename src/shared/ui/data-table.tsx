@@ -112,24 +112,23 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        'overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]',
+        'w-full',
         fillHeight && 'flex h-full min-h-0 flex-col',
         className,
       )}
     >
-      <div className={cn('overflow-x-auto px-3 pb-2 sm:px-0 sm:pb-0', fillHeight && 'flex-1')}>
-        <table className="w-full min-w-max border-collapse">
+      <div className={cn('overflow-x-auto custom-scrollbar-visible', fillHeight && 'flex-1')}>
+        <table className="w-full min-w-max border-collapse text-sm">
           {localizedCaption ? <caption className="sr-only">{localizedCaption}</caption> : null}
 
           <thead>
-            <tr className="bg-[var(--muted-surface)]">
+            <tr className="border-b border-[var(--border)] transition-colors">
               {columns.map((col) => (
                 <th
                   key={col.key}
                   style={getColumnStyle(col)}
                   className={cn(
-                    headPadding,
-                    'ui-table-heading border-b border-[var(--border)] text-[var(--caption)] whitespace-nowrap',
+                    'h-12 px-4 text-left align-middle font-semibold text-[var(--muted)] whitespace-nowrap',
                     alignClassName[col.align ?? 'left'],
                   )}
                 >
@@ -139,7 +138,7 @@ export function DataTable<T>({
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="[&_tr:last-child]:border-0">
             {visibleRows.map((row, rowIndex) => {
               const isEven = rowIndex % 2 === 0
 
@@ -148,7 +147,7 @@ export function DataTable<T>({
                   key={getRowKey(row)}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={cn(
-                    'table-row-hover group border-b border-[var(--border)] last:border-b-0',
+                    'border-b border-[var(--border)] transition-colors hover:bg-[var(--accent-soft)]',
                     zebra && isEven && 'bg-white/[0.012]',
                     onRowClick && 'cursor-pointer',
                   )}
@@ -158,10 +157,8 @@ export function DataTable<T>({
                       key={col.key}
                       style={getColumnStyle(col)}
                       className={cn(
-                        rowPadding,
-                        'ui-table-cell font-medium text-[var(--foreground)] align-middle',
+                        'p-4 align-middle text-[var(--foreground)]',
                         alignClassName[col.align ?? 'left'],
-                        'group-hover:text-[var(--foreground)]',
                       )}
                     >
                       {col.render(row)}
@@ -175,64 +172,65 @@ export function DataTable<T>({
       </div>
 
       {totalPages > 1 ? (
-        <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--muted-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="ui-table-meta text-[var(--caption)]">
+        <div className="flex items-center justify-end space-x-2 py-4 px-2">
+          <div className="flex-1 text-xs text-[var(--muted)]">
             {translateCurrent('common.results_range', '{{start}}-{{end}} of {{total}} results', {
               start: startIndex + 1,
               end: endIndex,
               total: rows.length,
             })}
-          </p>
+          </div>
 
-          <div className="flex flex-wrap items-center gap-1">
+          <div className="flex items-center space-x-2">
             <Button
-              variant="ghost"
-              size="md"
-              className="px-2"
+              variant="secondary"
+              size="sm"
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
-              aria-label={translateCurrent('common.previous_page', 'Previous page')}
+              className="h-8 px-2"
             >
               <ChevronLeft />
+              <span className="ml-1 text-xs font-medium">Prev</span>
             </Button>
 
-            {visiblePageItems.map((item, index) => {
-              if (item === 'ellipsis') {
-                return (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="inline-flex min-w-[28px] items-center justify-center px-1.5 text-sm text-[var(--caption)]"
-                    aria-hidden="true"
-                  >
-                    ...
-                  </span>
-                )
-              }
+            <div className="flex items-center gap-1">
+              {visiblePageItems.map((item, index) => {
+                if (item === 'ellipsis') {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="inline-flex h-8 w-8 items-center justify-center text-xs text-[var(--muted)]"
+                    >
+                      ...
+                    </span>
+                  )
+                }
 
-              return (
-                <Button
-                  key={item}
-                  variant={item === currentPage ? 'secondary' : 'ghost'}
-                  size="md"
-                  className={cn(
-                    'min-w-[28px] px-1.5',
-                    item === currentPage && 'border-[var(--border-hover)] font-semibold text-white',
-                  )}
-                  onClick={() => setCurrentPage(item)}
-                >
-                  {item}
-                </Button>
-              )
-            })}
+                return (
+                  <Button
+                    key={item}
+                    variant={item === currentPage ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className={cn(
+                      'h-8 w-8 p-0 text-xs font-medium',
+                      item === currentPage && 'border border-[var(--border)] bg-[var(--accent-soft)]',
+                    )}
+                    onClick={() => setCurrentPage(item)}
+                  >
+                    {item}
+                  </Button>
+                )
+              })}
+            </div>
 
             <Button
-              variant="ghost"
-              size="md"
-              className="px-2"
+              variant="secondary"
+              size="sm"
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
-              aria-label={translateCurrent('common.next_page', 'Next page')}
+              className="h-8 px-2"
             >
+              <span className="mr-1 text-xs font-medium">Next</span>
               <ChevronRight />
             </Button>
           </div>
