@@ -150,25 +150,23 @@ export function AttendanceManagementPage() {
         description="Monitor team presence and office time."
       />
 
-      <Card className="p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm" onClick={prevMonth}>←</Button>
-            <h2 className="min-w-[148px] text-center text-base font-bold text-[var(--foreground)]">
-              {MONTHS[date.month - 1]} {date.year}
-            </h2>
-            <Button variant="secondary" size="sm" onClick={nextMonth}>→</Button>
-          </div>
-          <div className="w-full max-w-xs">
-            <Input
-              placeholder="Search employee..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="h-10"
-            />
-          </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" size="sm" onClick={prevMonth}>←</Button>
+          <h2 className="min-w-[148px] text-center text-base font-bold text-[var(--foreground)]">
+            {MONTHS[date.month - 1]} {date.year}
+          </h2>
+          <Button variant="secondary" size="sm" onClick={nextMonth}>→</Button>
         </div>
-      </Card>
+        <div className="w-full max-w-xs">
+          <Input
+            placeholder="Search employee..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-10"
+          />
+        </div>
+      </div>
 
       {query.isLoading ? (
         <LoadingStateBlock eyebrow="Attendance" title="Loading attendance data..." />

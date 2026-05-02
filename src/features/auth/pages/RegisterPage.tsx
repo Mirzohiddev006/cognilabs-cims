@@ -4,6 +4,7 @@ import { useLocale } from '../../../app/hooks/useLocale'
 import type { RegisterPayload } from '../../../shared/api/services/auth.service'
 import { authService } from '../../../shared/api/services/auth.service'
 import { Button } from '../../../shared/ui/button'
+import { Label } from '../../../shared/ui/label'
 import { SelectField } from '../../../shared/ui/select-field'
 import { AuthFeedback } from '../components/AuthFeedback'
 import { AuthField } from '../components/AuthField'
@@ -157,7 +158,7 @@ export function RegisterPage() {
             onChange={(event) => setValues((current) => ({ ...current, job_title: event.target.value }))}
           />
 
-          <label className="grid gap-2">
+          <Label className="grid gap-2">
             <span className="text-xs font-bold text-white tracking-tight">{t('auth.register.role', 'Role')}</span>
             <SelectField
               value={values.role}
@@ -165,7 +166,7 @@ export function RegisterPage() {
               options={roleOptions}
               className="min-h-12 rounded-xl px-4"
             />
-          </label>
+          </Label>
         </div>
 
         <Button size="lg" type="submit" disabled={isSubmitting}>

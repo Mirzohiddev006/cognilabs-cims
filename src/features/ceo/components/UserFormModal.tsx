@@ -1,4 +1,5 @@
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { Modal } from '../../../shared/ui/modal'
 import { Button } from '../../../shared/ui/button'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
@@ -66,35 +67,35 @@ export function UserFormModal({
       }
     >
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="grid gap-2">
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('auth.email')}</span>
           <Input value={values.email} placeholder="user@example.com" onChange={(event) => onChange('email', event.target.value)} />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.users.form.company_code')}</span>
           <Input
             value={values.company_code}
             placeholder={t('ceo.users.form.company_code_placeholder')}
             onChange={(event) => onChange('company_code', event.target.value)}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.name')}</span>
           <Input value={values.name} placeholder={t('ceo.users.form.name_placeholder')} onChange={(event) => onChange('name', event.target.value)} />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.surname')}</span>
           <Input value={values.surname} placeholder={t('ceo.users.form.surname_placeholder')} onChange={(event) => onChange('surname', event.target.value)} />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.job_title')}</span>
           <Input
             value={values.job_title ?? ''}
             placeholder={t('ceo.users.form.job_title_placeholder')}
             onChange={(event) => onChange('job_title', event.target.value)}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">
             {mode === 'edit' ? t('ceo.users.form.password_optional') : t('auth.password')}
           </span>
@@ -104,16 +105,16 @@ export function UserFormModal({
             value={values.password}
             onChange={(event) => onChange('password', event.target.value)}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('auth.register.telegram_id')}</span>
           <Input
             value={values.telegram_id ?? ''}
             placeholder={t('auth.register.telegram_placeholder')}
             onChange={(event) => onChange('telegram_id', event.target.value)}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.users.form.default_salary')}</span>
           <Input
             type="number"
@@ -121,8 +122,8 @@ export function UserFormModal({
             value={values.default_salary ?? 0}
             onChange={(event) => onChange('default_salary', Number(event.target.value))}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.role')}</span>
           <SelectField
             value={values.role}
@@ -132,10 +133,10 @@ export function UserFormModal({
             disabled={isRolesLoading && availableRoleOptions.length === 0}
             className="min-h-12 rounded-xl px-4"
           />
-        </label>
+        </Label>
       </div>
 
-      <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
+      <Label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
         <input
           type="checkbox"
           checked={values.is_active}
@@ -143,7 +144,7 @@ export function UserFormModal({
           className="h-4 w-4 rounded border border-[var(--border)] accent-blue-500 dark:border-white/10"
         />
         <span className="text-xs font-bold text-[var(--foreground)] dark:text-white">{t('ceo.users.form.active')}</span>
-      </label>
+      </Label>
     </Modal>
   )
 }

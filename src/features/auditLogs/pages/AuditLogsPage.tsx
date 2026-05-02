@@ -7,6 +7,7 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { LoadingStateBlock, ErrorStateBlock, EmptyStateBlock } from '../../../shared/ui/state-block'
 import { auditService, type AuditLogItem, type AuditLogsParams } from '../../../shared/api/services/audit.service'
 
@@ -242,7 +243,7 @@ export function AuditLogsPage() {
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">Filters</p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Module</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Module</Label>
             <Input
               value={filters.module}
               onChange={(e) => setFilters((p) => ({ ...p, module: e.target.value }))}
@@ -251,7 +252,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Table</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Table</Label>
             <Input
               value={filters.table_name}
               onChange={(e) => setFilters((p) => ({ ...p, table_name: e.target.value }))}
@@ -260,7 +261,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Entity Type</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Entity Type</Label>
             <Input
               value={filters.entity_type}
               onChange={(e) => setFilters((p) => ({ ...p, entity_type: e.target.value }))}
@@ -269,7 +270,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Entity ID</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Entity ID</Label>
             <Input
               value={filters.entity_id}
               onChange={(e) => setFilters((p) => ({ ...p, entity_id: e.target.value }))}
@@ -278,7 +279,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Action</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Action</Label>
             <select
               value={filters.action}
               onChange={(e) => setFilters((p) => ({ ...p, action: e.target.value }))}
@@ -289,7 +290,7 @@ export function AuditLogsPage() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Actor User ID</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Actor User ID</Label>
             <Input
               value={filters.actor_user_id}
               onChange={(e) => setFilters((p) => ({ ...p, actor_user_id: e.target.value }))}
@@ -298,7 +299,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date From</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date From</Label>
             <Input
               type="date"
               value={filters.from_date}
@@ -307,7 +308,7 @@ export function AuditLogsPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date To</label>
+            <Label className="mb-1 block text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Date To</Label>
             <Input
               type="date"
               value={filters.to_date}
@@ -321,7 +322,7 @@ export function AuditLogsPage() {
           <Button size="sm" onClick={applyFilters}>Apply Filters</Button>
           <Button size="sm" variant="secondary" onClick={clearFilters}>Clear</Button>
           <div className="ml-auto flex items-center gap-2">
-            <label className="text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Per page</label>
+            <Label className="text-[10px] font-medium text-[var(--muted)] uppercase tracking-wide">Per page</Label>
             <select
               value={params.page_size}
               onChange={(e) => setParams((p) => ({ ...p, page: 1, page_size: Number(e.target.value) }))}

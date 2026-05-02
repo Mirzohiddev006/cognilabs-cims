@@ -432,7 +432,6 @@ export function CeoDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CEO / Day 6"
         title={t('ceo.dashboard.loading.title')}
         description={t('ceo.dashboard.loading.description')}
       />
@@ -442,7 +441,6 @@ export function CeoDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CEO / Day 6"
         title={t('ceo.dashboard.error.title')}
         description={t('ceo.dashboard.error.description')}
         actionLabel={t('common.retry')}
@@ -456,7 +454,6 @@ export function CeoDashboardPage() {
   return (
     <section className="space-y-8">
       <PageHeader
-        eyebrow="CEO / Day 6"
         title={t('ceo.dashboard.header.title')}
         actions={
           <ActionsMenu
@@ -516,7 +513,6 @@ export function CeoDashboardPage() {
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
-            eyebrow={t('ceo.dashboard.recurring.eyebrow')}
             title={t('ceo.dashboard.recurring.title')}
           />
           <div className="flex flex-wrap gap-2">
@@ -542,7 +538,6 @@ export function CeoDashboardPage() {
             zebra
             emptyState={
               <EmptyStateBlock
-                eyebrow={t('ceo.dashboard.recurring.eyebrow')}
                 title={t('ceo.dashboard.recurring.empty_title')}
               />
             }
@@ -620,7 +615,6 @@ export function CeoDashboardPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              eyebrow={t('ceo.dashboard.messages.eyebrow')}
               title={t('ceo.dashboard.messages.title')}
             />
             <Badge variant="violet" dot>
@@ -635,7 +629,6 @@ export function CeoDashboardPage() {
               zebra
               emptyState={
                 <EmptyStateBlock
-                  eyebrow={t('ceo.dashboard.messages.eyebrow')}
                   title={t('ceo.dashboard.messages.empty_title')}
                 />
               }
@@ -687,7 +680,6 @@ export function CeoDashboardPage() {
         <Card className="p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <SectionTitle
-              eyebrow={t('ceo.dashboard.payments.eyebrow')}
               title={t('ceo.dashboard.payments.title')}
             />
             <div className="flex flex-wrap gap-2">
@@ -707,7 +699,6 @@ export function CeoDashboardPage() {
               zebra
               emptyState={
                 <EmptyStateBlock
-                  eyebrow={t('ceo.dashboard.payments.eyebrow')}
                   title={t('ceo.dashboard.payments.empty_title')}
                 />
               }
@@ -771,7 +762,6 @@ export function CeoDashboardPage() {
       <Card className="p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <SectionTitle
-            eyebrow="Recurring payments"
             title="Company payment reminders"
           />
           <div className="flex flex-wrap gap-2">
@@ -797,7 +787,6 @@ export function CeoDashboardPage() {
             zebra
             emptyState={
               <EmptyStateBlock
-                eyebrow="Recurring payments"
                 title="Reminderlar yo'q"
                 description="Company recurring payment endpoint hozircha bo'sh ro'yxat qaytardi."
               />

@@ -1,5 +1,6 @@
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { Modal } from '../../../shared/ui/modal'
 import { Textarea } from '../../../shared/ui/textarea'
 import { useTranslation } from 'react-i18next'
@@ -60,15 +61,15 @@ export function MessageComposerModal({
         </div>
       ) : null}
       <div className="mt-4 grid gap-4">
-        <label className="grid gap-2">
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.messages.subject')}</span>
           <Input
             value={values.subject}
             placeholder={t('ceo.messages.subject_placeholder')}
             onChange={(event) => onChange('subject', event.target.value)}
           />
-        </label>
-        <label className="grid gap-2">
+        </Label>
+        <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.messages.body')}</span>
           <Textarea
             rows={7}
@@ -76,7 +77,7 @@ export function MessageComposerModal({
             placeholder={t('ceo.messages.body_placeholder')}
             onChange={(event) => onChange('body', event.target.value)}
           />
-        </label>
+        </Label>
       </div>
     </Modal>
   )

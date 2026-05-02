@@ -19,6 +19,7 @@ import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
@@ -515,7 +516,7 @@ export function CeoWorkdayOverridesPage() {
 
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.year', 'Year')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.year', 'Year')}</label>
                 <Input
                   type="number"
                   min="2020"
@@ -527,7 +528,7 @@ export function CeoWorkdayOverridesPage() {
               </div>
 
               <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.month', 'Month')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{tx('common.month', 'Month')}</label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -732,7 +733,7 @@ export function CeoWorkdayOverridesPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.date', 'Date')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.date', 'Date')}</label>
                 <Input
                   type="date"
                   value={formState.specialDate}
@@ -740,7 +741,7 @@ export function CeoWorkdayOverridesPage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.type', 'Type')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.type', 'Type')}</label>
                 <SelectField
                   value={String(formState.dayType)}
                   options={DAY_TYPE_OPTIONS.map((option) => ({ ...option, label: lt(option.label) }))}
@@ -750,7 +751,7 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.title', 'Title')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.title', 'Title')}</label>
               <Input
                 value={formState.title}
                 onChange={(event) => setForm({ title: event.target.value })}
@@ -761,7 +762,7 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.note', 'Note')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('common.note', 'Note')}</label>
               <Textarea
                 value={formState.note}
                 onChange={(event) => setForm({ note: event.target.value })}
@@ -771,7 +772,7 @@ export function CeoWorkdayOverridesPage() {
 
             {formState.dayType === 'short_day' ? (
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.workday_hours', 'Workday hours')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{tx('ceo.workday.form.workday_hours', 'Workday hours')}</label>
                 <Input
                   type="number"
                   min="1"
@@ -852,7 +853,7 @@ export function CeoWorkdayOverridesPage() {
             {!formState.appliesToAll ? (
               <div>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <label className="text-sm font-semibold text-[var(--foreground)]">
+                  <Label className="text-sm font-semibold text-[var(--foreground)]">
                     {editingOverride ? tx('common.member', 'Member') : tx('common.members', 'Members')}
                   </label>
                   <Badge variant="secondary">

@@ -28,6 +28,7 @@ import { Card } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
@@ -1343,7 +1344,7 @@ export function CeoManagementPage() {
 
             <div className="mt-5 grid gap-4 lg:grid-cols-[1.2fr_0.85fr_0.85fr]">
               <div>
-                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Search')}</label>
+                <Label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Search')}</Label>
                 <Input
                   value={imageSearch}
                   onChange={(event) => setImageSearch(event.target.value)}
@@ -1352,7 +1353,7 @@ export function CeoManagementPage() {
               </div>
 
               <div>
-                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Category')}</label>
+                <Label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{lt('Category')}</Label>
                 <SelectField
                   value={imageCategoryFilter}
                   options={imageCategoryOptions.map((option) => ({
@@ -1375,7 +1376,7 @@ export function CeoManagementPage() {
               </div>
 
               <div>
-                <label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{tr('Reference filter', 'Boglanish filtri', 'Filtr svyazei')}</label>
+                <Label className={cn('mb-2 block text-sm font-semibold', managementStaticCardTitle)}>{tr('Reference filter', 'Boglanish filtri', 'Filtr svyazei')}</Label>
                 <SelectField
                   value={imageReferenceFilter}
                   options={imageReferenceFilterOptions.map((option) => ({
@@ -1544,7 +1545,7 @@ export function CeoManagementPage() {
 
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">Image path</label>
+                  <Label className="mb-2 block text-sm font-semibold text-white">Image path</Label>
                   <Input
                     value={singleDeleteForm.imagePath}
                     onChange={(event) => setSingleDeleteForm({ imagePath: event.target.value })}
@@ -1573,7 +1574,7 @@ export function CeoManagementPage() {
               </div>
               <div className="mt-4 space-y-4">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">Image paths</label>
+                  <Label className="mb-2 block text-sm font-semibold text-white">Image paths</Label>
                   <Textarea
                     value={bulkDeleteForm.imagePathsText}
                     onChange={(event) => setBulkDeleteForm((current) => ({ ...current, imagePathsText: event.target.value }))}
@@ -1582,7 +1583,7 @@ export function CeoManagementPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-white">Category</label>
+                  <Label className="mb-2 block text-sm font-semibold text-white">Category</Label>
                   <SelectField
                     value={bulkDeleteForm.category}
                     options={imageCategoryOptions}
@@ -1795,7 +1796,7 @@ export function CeoManagementPage() {
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</Label>
               <Input
                 value={pageForm.name}
                 onChange={(event) => setPageForm((current) => ({ ...current, name: event.target.value }))}
@@ -1805,7 +1806,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</Label>
               <Input
                 value={pageForm.displayName}
                 onChange={(event) => setPageForm((current) => ({ ...current, displayName: event.target.value }))}
@@ -1814,7 +1815,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</Label>
               <Textarea
                 value={pageForm.description}
                 onChange={(event) => setPageForm((current) => ({ ...current, description: event.target.value }))}
@@ -1825,7 +1826,7 @@ export function CeoManagementPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Route path')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Route path')}</Label>
               <Input
                 value={pageForm.routePath}
                 onChange={(event) => setPageForm((current) => ({ ...current, routePath: event.target.value }))}
@@ -1834,7 +1835,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</Label>
               <Input
                 type="number"
                 value={pageForm.order}
@@ -1887,7 +1888,7 @@ export function CeoManagementPage() {
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</Label>
               <Input
                 value={statusForm.name}
                 onChange={(event) => setStatusForm((current) => ({ ...current, name: event.target.value }))}
@@ -1897,7 +1898,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</Label>
               <Input
                 value={statusForm.displayName}
                 onChange={(event) => setStatusForm((current) => ({ ...current, displayName: event.target.value }))}
@@ -1906,7 +1907,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</Label>
               <Textarea
                 value={statusForm.description}
                 onChange={(event) => setStatusForm((current) => ({ ...current, description: event.target.value }))}
@@ -1917,7 +1918,7 @@ export function CeoManagementPage() {
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Color')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Color')}</Label>
               <div className="flex flex-wrap items-center gap-3">
                 <Input
                   type="color"
@@ -1944,7 +1945,7 @@ export function CeoManagementPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-white">{lt('Order')}</Label>
               <Input
                 type="number"
                 value={statusForm.order}
@@ -1996,7 +1997,7 @@ export function CeoManagementPage() {
       >
         <div className="grid gap-4">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</label>
+            <Label className="mb-2 block text-sm font-semibold text-white">{lt('Name')}</Label>
             <Input
               value={roleForm.name}
               onChange={(event) => setRoleForm((current) => ({ ...current, name: event.target.value }))}
@@ -2006,7 +2007,7 @@ export function CeoManagementPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</label>
+            <Label className="mb-2 block text-sm font-semibold text-white">{lt('Display name')}</Label>
             <Input
               value={roleForm.displayName}
               onChange={(event) => setRoleForm((current) => ({ ...current, displayName: event.target.value }))}
@@ -2015,7 +2016,7 @@ export function CeoManagementPage() {
             </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</label>
+            <Label className="mb-2 block text-sm font-semibold text-white">{lt('Description')}</Label>
             <Textarea
               value={roleForm.description}
               onChange={(event) => setRoleForm((current) => ({ ...current, description: event.target.value }))}

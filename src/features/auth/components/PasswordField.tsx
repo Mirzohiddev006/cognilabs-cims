@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useLocale } from '../../../app/hooks/useLocale'
 import { cn } from '../../../shared/lib/cn'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 
 type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   label: string
@@ -17,7 +18,7 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
   const inputId = id ?? props.name
 
   return (
-    <label className="grid gap-2" htmlFor={inputId}>
+    <Label className="grid gap-2" htmlFor={inputId}>
       {label ? <span className="text-xs font-bold text-[var(--foreground)] tracking-tight">{label}</span> : null}
       <div className="relative group">
         {leadingIcon ? (
@@ -58,6 +59,6 @@ export function PasswordField({ label, error, hint, id, className, leadingIcon, 
       </div>
       {error ? <span className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">{error}</span> : null}
       {!error && hint ? <span className="text-[11px] font-medium text-zinc-500">{hint}</span> : null}
-    </label>
+    </Label>
   )
 }

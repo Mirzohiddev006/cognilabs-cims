@@ -281,7 +281,7 @@ export function AppSidebar() {
             : 'min-[961px]:opacity-100',
         )}
       >
-        <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
+        <div className="glass-panel flex h-full flex-col overflow-y-auto rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
           <button
             type="button"
             onClick={handleSidebarToggle}

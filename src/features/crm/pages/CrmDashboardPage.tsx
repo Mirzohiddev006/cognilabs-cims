@@ -23,6 +23,7 @@ import { Card } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
@@ -889,7 +890,7 @@ export function CrmDashboardPage() {
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.search_label', 'Search')}
               </label>
               <Input
@@ -901,7 +902,7 @@ export function CrmDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.status_label', 'Status')}
               </label>
               <SelectField
@@ -913,7 +914,7 @@ export function CrmDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.platform_label', 'Platform')}
               </label>
               <SelectField
@@ -925,21 +926,21 @@ export function CrmDashboardPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.start_date_label', 'Start date')}
               </label>
               <Input type="date" value={dateStart} onChange={(event) => setDateStart(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.end_date_label', 'End date')}
               </label>
               <Input type="date" value={dateEnd} onChange={(event) => setDateEnd(event.target.value)} className="h-9" />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
+              <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
                 {t('customers.filters.pagination_label', 'Pagination')}
               </label>
               <SelectField

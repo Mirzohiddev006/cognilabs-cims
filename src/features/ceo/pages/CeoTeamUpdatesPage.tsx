@@ -17,6 +17,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { MemberAvatar as SharedMemberAvatar } from '../../../shared/ui/member-avatar'
 import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
@@ -2023,7 +2024,7 @@ export function CeoTeamUpdatesPage() {
                 {lt('Workday overrides')}
               </Button>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</Label>
                 <Input
                   type="number"
                   min="2020"
@@ -2035,7 +2036,7 @@ export function CeoTeamUpdatesPage() {
               </div>
 
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</label>
+                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</Label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -2263,9 +2264,9 @@ export function CeoTeamUpdatesPage() {
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
               {translateCurrentLiteral('Search employee')}
-            </label>
+            </Label>
             <div className="relative">
               <svg className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-(--muted)" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <circle cx="7" cy="7" r="4.5" />
@@ -2281,9 +2282,9 @@ export function CeoTeamUpdatesPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
               {translateCurrentLiteral('Sort by')}
-            </label>
+            </Label>
             <SelectField
               value={sortKey}
               options={[...SORT_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}
@@ -2298,9 +2299,9 @@ export function CeoTeamUpdatesPage() {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
+            <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
               {translateCurrentLiteral('Status')}
-            </label>
+            </Label>
             <SelectField
               value={statusFilter}
               options={[...STATUS_OPTIONS].map((option) => ({ ...option, label: translateCurrentLiteral(option.label) }))}

@@ -318,7 +318,6 @@ export function CrmDashboardCharts({
     <Card className="overflow-hidden border-[var(--border)] p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('crm.charts.header.eyebrow')}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--foreground)]">{t('crm.charts.header.title')}</h2>
         </div>
 

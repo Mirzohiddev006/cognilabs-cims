@@ -23,6 +23,7 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -1270,7 +1271,7 @@ export function CeoUsersPage() {
                 </p>
               </div>
 
-              <label className="grid gap-2">
+              <Label className="grid gap-2">
                 <span className="text-xs font-semibold text-white">{t('ceo.messages.subject')}</span>
                 <Input
                   value={messageValues.subject}
@@ -1282,9 +1283,9 @@ export function CeoUsersPage() {
                     }))
                   }
                 />
-              </label>
+              </Label>
 
-              <label className="grid gap-2">
+              <Label className="grid gap-2">
                 <span className="text-xs font-semibold text-white">{t('ceo.messages.body')}</span>
                 <Textarea
                   rows={8}
@@ -1297,7 +1298,7 @@ export function CeoUsersPage() {
                     }))
                   }
                 />
-              </label>
+              </Label>
 
               <div className="flex flex-wrap justify-end gap-3">
                 <Button variant="secondary" onClick={() => setIsMessageDialogOpen(false)}>

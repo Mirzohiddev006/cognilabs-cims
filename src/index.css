@@ -127,23 +127,23 @@ html.light {
   color-scheme: light;
 
   /* Surface scale */
-  --background:        #F3F6FA;
-  --background-strong: #ECF1F6;
-  --surface:           rgba(252, 253, 255, 0.94);
-  --surface-elevated:  #FCFDFE;
-  --card:              #FBFCFE;
-  --card-hover:        #F5F8FC;
+  --background:        #F8FAFC;
+  --background-strong: #F1F5F9;
+  --surface:           #FFFFFF;
+  --surface-elevated:  #FFFFFF;
+  --card:              #FFFFFF;
+  --card-hover:        #F8FAFC;
 
   /* Text scale */
-  --foreground:        #142033;
-  --muted:             #64748B;
-  --muted-strong:      #334155;
-  --caption:           #7A8798;
+  --foreground:        #0F172A;
+  --muted:             #475569;
+  --muted-strong:      #1E293B;
+  --caption:           #64748B;
 
   /* Border scale — solid hex, high contrast */
-  --border:            #D6DEE8;
-  --border-hover:      #BECBD8;
-  --border-focus:      #93A4B8;
+  --border:            #E2E8F0;
+  --border-hover:      #CBD5E1;
+  --border-focus:      #94A3B8;
 
   /* Accent */
   --accent:            #0F172A;
@@ -190,24 +190,24 @@ html.light {
 
   /* Shell / Sidebar light overrides */
   --shell-collapse-btn-bg:           #ffffff;
-  --shell-collapse-btn-border:       #E5E7EB;
-  --shell-collapse-btn-hover-bg:     #F6F8FB;
-  --shell-collapse-btn-hover-border: #D1D5DB;
-  --shell-collapse-btn-text:         #142033;
-  --shell-icon-bg:                   #F4F7FB;
-  --shell-icon-border:               #E5E7EB;
-  --shell-nav-inactive-border:       #E5E7EB;
-  --shell-nav-inactive-bg:           #FAFCFF;
-  --shell-nav-hover-bg:              #F3F7FC;
-  --shell-nav-hover-text:            #142033;
-  --shell-nav-text:                  #223047;
-  --shell-header-bg:                 rgba(252,253,255,0.88);
-  --shell-profile-bg:                linear-gradient(180deg,#FCFDFE,#F4F7FB);
-  --shell-profile-border:            #E5E7EB;
-  --shell-profile-hover-bg:          linear-gradient(180deg,#FFFFFF,#EEF3F8);
-  --shell-profile-hover-border:      #D1D5DB;
-  --shell-text-primary:              #142033;
-  --shell-app-name-color:            #142033;
+  --shell-collapse-btn-border:       #E2E8F0;
+  --shell-collapse-btn-hover-bg:     #F8FAFC;
+  --shell-collapse-btn-hover-border: #CBD5E1;
+  --shell-collapse-btn-text:         #0F172A;
+  --shell-icon-bg:                   #F8FAFC;
+  --shell-icon-border:               #E2E8F0;
+  --shell-nav-inactive-border:       #E2E8F0;
+  --shell-nav-inactive-bg:           #FFFFFF;
+  --shell-nav-hover-bg:              #F1F5F9;
+  --shell-nav-hover-text:            #0F172A;
+  --shell-nav-text:                  #1E293B;
+  --shell-header-bg:                 rgba(255,255,255,0.9);
+  --shell-profile-bg:                linear-gradient(180deg,#FFFFFF,#F8FAFC);
+  --shell-profile-border:            #E2E8F0;
+  --shell-profile-hover-bg:          linear-gradient(180deg,#FFFFFF,#F1F5F9);
+  --shell-profile-hover-border:      #CBD5E1;
+  --shell-text-primary:              #0F172A;
+  --shell-app-name-color:            #0F172A;
   --shell-label-color:               #2563EB;
 }
 

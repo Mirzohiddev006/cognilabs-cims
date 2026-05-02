@@ -446,8 +446,7 @@ export function ProjectsListPage() {
                     size="lg"
                   />
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Selected member')}</p>
-                    <h2 className="mt-2 truncate text-xl font-semibold text-[var(--foreground)]">
+                    <h2 className="truncate text-xl font-semibold text-[var(--foreground)]">
                       {selectedMember.name} {selectedMember.surname}
                     </h2>
                   </div>

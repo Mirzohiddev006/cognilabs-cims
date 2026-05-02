@@ -21,6 +21,7 @@ import { Card, CardMetric, CardSection } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
 import { SelectField } from '../../../shared/ui/select-field'
 import { AsyncContentLoader } from '../../../shared/ui/async-content-loader'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -1075,7 +1076,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Year')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Year')}</Label>
                 <Input
                   type="number"
                   min="2020"
@@ -1087,7 +1088,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Month')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)]">{lt('Month')}</Label>
                 <SelectField
                   value={String(month)}
                   options={monthOptions}
@@ -1551,7 +1552,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Reviewer', "Ko'rib chiquvchi", 'Проверяющий')}</Label>
                 {reviewerOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.reviewerId}
@@ -1571,7 +1572,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</Label>
                 {projectOptions.length > 1 ? (
                   <SelectField
                     value={mistakeDraft.projectId}
@@ -1593,7 +1594,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Category', 'Kategoriya', 'Категория')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Category', 'Kategoriya', 'Категория')}</Label>
                 {mistakeCategoryOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.category}
@@ -1611,7 +1612,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Severity', 'Daraja', 'Степень')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Severity', 'Daraja', 'Степень')}</Label>
                 {severityOptions.length > 0 ? (
                   <SelectField
                     value={mistakeDraft.severity}
@@ -1631,7 +1632,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-[1fr_180px]">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</Label>
                 <Input
                   value={mistakeDraft.title}
                   onChange={(event) => setMistakeDraft((current) => ({ ...current, title: event.target.value }))}
@@ -1640,7 +1641,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Incident date', "Sodir bo'lgan sana", 'Дата инцидента')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Incident date', "Sodir bo'lgan sana", 'Дата инцидента')}</Label>
                 <Input
                   type="date"
                   value={mistakeDraft.incidentDate}
@@ -1650,7 +1651,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</Label>
               <Textarea
                 value={mistakeDraft.description}
                 onChange={(event) => setMistakeDraft((current) => ({ ...current, description: event.target.value }))}
@@ -1659,7 +1660,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+              <Label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.reachedClient}
@@ -1667,9 +1668,9 @@ export function FaultsMemberDetailPage({
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
                 {tr('Reached client', 'Mijozga yetib borgan', 'Дошло до клиента')}
-              </label>
+              </Label>
 
-              <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+              <Label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.unclearTask}
@@ -1677,7 +1678,7 @@ export function FaultsMemberDetailPage({
                   className="h-4 w-4 rounded border border-[var(--border)] bg-[var(--input-surface)] accent-blue-500 dark:border-white/15 dark:bg-transparent"
                 />
                 {tr('Unclear task', 'Vazifa noaniq', 'Неясная задача')}
-              </label>
+              </Label>
             </div>
           </div>
         </Dialog>
@@ -1713,7 +1714,7 @@ export function FaultsMemberDetailPage({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Bonus type', 'Bonus turi', 'Тип бонуса')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Bonus type', 'Bonus turi', 'Тип бонуса')}</Label>
                 {deliveryBonusTypeOptions.length > 0 ? (
                   <SelectField
                     value={deliveryBonusDraft.bonusType}
@@ -1731,7 +1732,7 @@ export function FaultsMemberDetailPage({
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Award date', 'Berilgan sana', 'Дата выдачи')}</label>
+                <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Award date', 'Berilgan sana', 'Дата выдачи')}</Label>
                 <Input
                   type="date"
                   value={deliveryBonusDraft.awardDate}
@@ -1741,7 +1742,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Title', 'Sarlavha', 'Название')}</Label>
               <Input
                 value={deliveryBonusDraft.title}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, title: event.target.value }))}
@@ -1750,7 +1751,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Project', 'Loyiha', 'Проект')}</Label>
               {projectOptions.length > 1 ? (
                 <SelectField
                   value={deliveryBonusDraft.projectId}
@@ -1770,7 +1771,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</label>
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">{tr('Description', 'Tavsif', 'Описание')}</Label>
               <Textarea
                 value={deliveryBonusDraft.description}
                 onChange={(event) => setDeliveryBonusDraft((current) => ({ ...current, description: event.target.value }))}
@@ -1841,9 +1842,9 @@ export function FaultsMemberDetailPage({
         >
           <div className="grid gap-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
                 {tr('Amount', 'Summa', 'Сумма')}
-              </label>
+              </Label>
               <Input
                 type="number"
                 min="1"
@@ -1853,9 +1854,9 @@ export function FaultsMemberDetailPage({
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
                 {tr('Reason', 'Sabab', 'Причина')}
-              </label>
+              </Label>
               <Textarea
                 value={simpleBonusDraft.reason}
                 onChange={(event) => setSimpleBonusDraft((s) => ({ ...s, reason: event.target.value }))}
@@ -1886,9 +1887,9 @@ export function FaultsMemberDetailPage({
         >
           <div className="grid gap-4">
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
                 {tr('Amount', 'Summa', 'Сумма')}
-              </label>
+              </Label>
               <Input
                 type="number"
                 min="1"
@@ -1898,9 +1899,9 @@ export function FaultsMemberDetailPage({
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
+              <Label className="mb-2 block text-sm font-semibold text-[var(--foreground)] dark:text-white">
                 {tr('Reason', 'Sabab', 'Причина')}
-              </label>
+              </Label>
               <Textarea
                 value={simplePenaltyDraft.reason}
                 onChange={(event) => setSimplePenaltyDraft((s) => ({ ...s, reason: event.target.value }))}

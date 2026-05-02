@@ -1,6 +1,7 @@
 import type { PermissionMap } from '../../../shared/api/types'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
+import { Label } from '../../../shared/ui/label'
 import { Modal } from '../../../shared/ui/modal'
 import { useTranslation } from 'react-i18next'
 import { getPermissionMeta } from '../lib/permissionCatalog'
@@ -75,7 +76,7 @@ export function PermissionEditorModal({
             const meta = getPermissionMeta(permissionKey)
 
             return (
-              <label
+              <Label
                 key={permissionKey}
                 className="flex cursor-pointer items-start gap-4 rounded-2xl border border-[var(--border)] bg-white px-4 py-4 transition-colors hover:bg-[var(--card-hover)] dark:bg-white/5 dark:hover:bg-white/10"
               >
@@ -90,7 +91,7 @@ export function PermissionEditorModal({
                   <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">{meta.description}</p>
                   <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-blue-500 opacity-70">{permissionKey}</p>
                 </div>
-              </label>
+              </Label>
             )
           })}
         </div>
