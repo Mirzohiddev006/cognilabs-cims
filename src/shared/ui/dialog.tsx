@@ -61,7 +61,7 @@ export function Dialog({
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] grid place-items-center p-3 sm:p-6">
+    <div className="fixed inset-0 z-[100] grid place-items-center p-3 sm:p-6">
       <button
         type="button"
         aria-label={translateCurrentLiteral('Close dialog')}
