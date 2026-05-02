@@ -105,8 +105,6 @@ export function DataTable<T>({
     return <>{emptyState ?? null}</>
   }
 
-  const rowPadding = compact ? 'py-2.5 px-4' : 'py-3.5 px-4'
-  const headPadding = compact ? 'py-2.5 px-4' : 'py-3 px-4'
   const localizedCaption = caption ? translateCurrentLiteral(caption) : null
 
   return (
