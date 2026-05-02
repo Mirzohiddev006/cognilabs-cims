@@ -177,4 +177,13 @@ export const navigationItems: readonly NavigationItem[] = [
     sidebar: true,
     defaultRedirect: false,
   },
+  {
+    to: '/audit/logs',
+    label: 'Audit Logs',
+    description: 'Track all create, update, delete and login events across the system.',
+    group: 'CEO',
+    permissionKey: 'ceo',
+    sidebar: true,
+    defaultRedirect: false,
+  },
 ]
