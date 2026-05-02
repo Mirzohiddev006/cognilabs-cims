@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { membersService } from '../../../shared/api/services/members.service'
 import {
@@ -8,14 +8,14 @@ import {
 } from '../../../shared/api/services/updateTracking.service'
 import type { DayStatus, EmployeeDayStatus, EmployeeMonthlyStats } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { formatShortDate, getLocalizedMonthName } from '../../../shared/lib/format'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../../shared/ui/card'
+import { Card, CardContent, CardFooter } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
 import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
@@ -217,25 +217,6 @@ function reconcileEmployeeMonthlyStats(
   }
 }
 
-/* SummaryCard Accent Maps */
-type AccentKey = 'default' | 'success' | 'warning' | 'blue' | 'violet'
-
-const summaryCardBorder = {
-  default: 'border-white/8',
-  success: 'border-emerald-500/20',
-  warning: 'border-amber-500/20',
-  blue:    'border-blue-500/20',
-  violet:  'border-violet-500/20',
-} as const satisfies Record<AccentKey, string>
-
-const summaryCardIcon = {
-  default: 'border-white/10 bg-white/6 text-(--muted-strong)',
-  success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
-  warning: 'border-amber-500/20 bg-amber-400/10 text-amber-300',
-  blue:    'border-blue-500/20 bg-blue-600/10 text-blue-300',
-  violet:  'border-violet-500/20 bg-violet-500/10 text-violet-300',
-} as const satisfies Record<AccentKey, string>
-
 function ActivityStrip({ employee, month, year }: { employee: EmployeeMonthlyStats, month: number, year: number }) {
   const statuses = buildMonthlyActivityStatuses(employee, month, year)
 
@@ -320,35 +301,6 @@ function EmployeeAvatar({ name, imageUrl }: { name: string; imageUrl?: string | 
       title={name}
     />
   )
-}
-
-function SummaryCard({ icon, label, value, accent = 'default' }: {
-  icon: ReactNode
-  label: string
-  value: ReactNode
-  accent?: AccentKey
-}) {
-  const localizedLabel = translateCurrentLiteral(label)
-
-  return (
-    <div className={cn('card-base flex items-center gap-4 px-5 py-4', summaryCardBorder[accent])}>
-      <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', summaryCardIcon[accent])}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-(--muted)">{localizedLabel}</p>
-        <p className="mt-1 truncate text-xl font-semibold leading-none text-[var(--foreground)]">{value}</p>
-      </div>
-    </div>
-  )
-}
-
-
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat(getIntlLocale(), {
-    maximumFractionDigits: 0,
-  }).format(value)
 }
 
 /* Parse All Users Updates Response */
@@ -1391,30 +1343,6 @@ function parseTeamUpdatesSummary(data: unknown): TeamUpdatesSummary | null {
   }
 }
 
-function parseMissingEmployeesCount(data: unknown): number | null {
-  const parsed = parsePayload(data)
-
-  if (Array.isArray(parsed)) {
-    return parsed.length
-  }
-
-  if (!isRecord(parsed)) {
-    return null
-  }
-
-  for (const key of ['employees', 'users', 'items', 'results', 'data', 'members']) {
-    if (Array.isArray(parsed[key])) {
-      return parsed[key].length
-    }
-  }
-
-  return toNumber(
-    parsed.missing_count ??
-    parsed.total_missing ??
-    parsed.count ??
-    parsed.total,
-  )
-}
 
 function parseSalarySummary(data: unknown): TeamSalarySummary | null {
   const parsed = parsePayload(data)
@@ -1702,16 +1630,12 @@ export function CeoTeamUpdatesPage() {
     [teamQuery.data, month, year],
   )
   const reconciledTeamEmployees = useMemo(
-    () => teamEmployees.map((employee) => reconcileEmployeeMonthlyStats(employee, month, year)),
+    () => teamEmployees.map((employee: EmployeeMonthlyStats) => reconcileEmployeeMonthlyStats(employee, month, year)),
     [month, teamEmployees, year],
   )
   const teamEmployeesLookup = useMemo(
     () => buildEmployeeStatsLookup(reconciledTeamEmployees),
     [reconciledTeamEmployees],
-  )
-  const missingTodayCount = useMemo(
-    () => parseMissingEmployeesCount(missingTodayQuery.data),
-    [missingTodayQuery.data],
   )
   const salarySummary = useMemo(
     () => parseSalarySummary(salaryQuery.data),
@@ -1722,7 +1646,7 @@ export function CeoTeamUpdatesPage() {
     [month, trackingMonthlyQuery.data, year],
   )
   const reconciledTrackingEmployees = useMemo(
-    () => trackingEmployees.map((employee) => reconcileEmployeeMonthlyStats(employee, month, year)),
+    () => trackingEmployees.map((employee: EmployeeMonthlyStats) => reconcileEmployeeMonthlyStats(employee, month, year)),
     [month, trackingEmployees, year],
   )
   const trackingEmployeesLookup = useMemo(
@@ -1740,7 +1664,7 @@ export function CeoTeamUpdatesPage() {
       const fallbackIds = new Set(
         fallbackEmployees
           .map((employee) => employee.user_id)
-          .filter((userId) => userId > 0),
+          .filter((userId: number) => userId > 0),
       )
       const fallbackNames = new Set(
         fallbackEmployees
@@ -1750,7 +1674,7 @@ export function CeoTeamUpdatesPage() {
       const merged = fallbackEmployees.map((employee) => (
         matchEmployeeFromLookup(trackingEmployeesLookup, employee) ?? employee
       ))
-      const extras = reconciledTrackingEmployees.filter((employee) => {
+      const extras = reconciledTrackingEmployees.filter((employee: EmployeeMonthlyStats) => {
         if (employee.user_id > 0 && fallbackIds.has(employee.user_id)) {
           return false
         }
@@ -1788,15 +1712,15 @@ export function CeoTeamUpdatesPage() {
     if (reconciledTrackingEmployees.length > 0) {
       const trackedIds = new Set(
         reconciledTrackingEmployees
-          .map((employee) => employee.user_id)
-          .filter((userId) => userId > 0),
+          .map((employee: EmployeeMonthlyStats) => employee.user_id)
+          .filter((userId: number) => userId > 0),
       )
       const trackedNames = new Set(
         reconciledTrackingEmployees
-          .map((employee) => normalizeLookupKey(employee.user_name))
+          .map((employee: EmployeeMonthlyStats) => normalizeLookupKey(employee.user_name))
           .filter(Boolean),
       )
-      const trackedEmployees = reconciledTrackingEmployees.map((employee) => (
+      const trackedEmployees = reconciledTrackingEmployees.map((employee: EmployeeMonthlyStats) => (
         reconcileEmployeeMonthlyStats(
           mergeEmployeeSalary(employee, salaryByEmployee.get(employee.user_id)),
           month,
@@ -1866,23 +1790,6 @@ export function CeoTeamUpdatesPage() {
     return Number.isFinite(employee.user_id) && employee.user_id > 0
   }
 
-  const statsEmployees = useMemo(() => {
-    const hasUsefulStats = (employeesList: EmployeeMonthlyStats[]) => employeesList.some((employee) => hasUsefulMonthlyStats(employee))
-
-    if (hasUsefulStats(sourceEmployees)) {
-      return sourceEmployees
-    }
-
-    if (hasUsefulStats(reconciledTrackingEmployees)) {
-      return reconciledTrackingEmployees
-    }
-
-    if (hasUsefulStats(reconciledTeamEmployees)) {
-      return reconciledTeamEmployees
-    }
-
-    return sourceEmployees
-  }, [reconciledTeamEmployees, reconciledTrackingEmployees, sourceEmployees])
   const employees = useMemo(
     () => filterAndSort(sourceEmployees, search, sortKey, statusFilter),
     [sourceEmployees, search, sortKey, statusFilter],
@@ -1890,13 +1797,12 @@ export function CeoTeamUpdatesPage() {
 
   const hasRosterData = rosterEmployees.length > 0 || historyEmployees.length > 0
   const lt = translateCurrentLiteral
-  const locale = getIntlLocale()
   const monthOptions = useMemo(
     () => Array.from({ length: 12 }, (_, index) => ({
       value: String(index + 1),
       label: getMonthName(index + 1),
     })),
-    [locale],
+    [],
   )
 
   if (
@@ -1931,34 +1837,15 @@ export function CeoTeamUpdatesPage() {
     (typeof teamSummary?.totalEmployees === 'number' && teamSummary.totalEmployees > 0
       ? teamSummary.totalEmployees
       : 0) ||
-    statsEmployees.length ||
+    employees.length ||
     sourceEmployees.length ||
     rosterEmployees.length ||
     salarySummary?.employeesCount ||
     0
-  const totalSubmitted =
-    (typeof teamSummary?.totalReports === 'number' && teamSummary.totalReports > 0
-      ? teamSummary.totalReports
-      : 0) ||
-    statsEmployees.reduce((s, e) => s + e.submitted_count, 0)
-  const totalMissing = statsEmployees.reduce((s, e) => s + e.missing_count, 0)
-  const totalEstimatedSalary = salarySummary?.totalEstimatedSalary ??
-    sourceEmployees.reduce((sum, employee) => sum + (employee.estimated_salary ?? 0), 0)
-  const avgCompletion =
-    (typeof teamSummary?.averageCompletion === 'number' && teamSummary.averageCompletion > 0
-      ? teamSummary.averageCompletion
-      : 0) ||
-    (statsEmployees.length
-      ? statsEmployees.reduce((s, e) => s + e.completion_percentage, 0) / statsEmployees.length
-      : 0)
-  const topPerformer = statsEmployees.length
-    ? statsEmployees.reduce((best, e) => e.completion_percentage > best.completion_percentage ? e : best, statsEmployees[0])
-    : null
   const selectedMonthName = getMonthName(month)
 
   return (
     <section className="space-y-6 page-enter">
-      {/* Header */}
       <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1968,7 +1855,6 @@ export function CeoTeamUpdatesPage() {
               </h1>
             </div>
             
-            {/* Filters and Counters */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm font-semibold text-(--muted-strong)">
                 {lt('Showing')} {employees.length} {lt('of')} {totalEmployees} {lt('Employees')}

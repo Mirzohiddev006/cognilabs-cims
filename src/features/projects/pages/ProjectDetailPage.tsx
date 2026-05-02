@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
@@ -42,24 +42,6 @@ export function ProjectDetailPage() {
   const { confirm } = useConfirm()
   const { user } = useAuth()
   const lt = translateCurrentLiteral
-  const locale = getIntlLocale()
-  const tr = (key: string, uzFallback: string, ruFallback: string) => {
-    const value = lt(key)
-
-    if (value !== key) {
-      return value
-    }
-
-    if (locale.startsWith('ru')) {
-      return ruFallback
-    }
-
-    if (locale.startsWith('en')) {
-      return key
-    }
-
-    return uzFallback
-  }
 
   const id = Number(projectId)
   const canManageProjects = Boolean(user)
