@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
@@ -307,8 +308,6 @@ export function AppSidebar() {
           <nav className="mt-3 flex flex-1 flex-col gap-2 overflow-y-auto pr-1">
             {sidebarNavigation.map((item) => {
               const itemLabel = getNavigationLabel(item.to, item.label)
-              const itemGroup = getNavigationGroup(item.to, item.group)
-
               if (item.to === '/projects') {
                 return (
                   <div key={item.to} className="space-y-1">
