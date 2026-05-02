@@ -1967,138 +1967,51 @@ export function CeoTeamUpdatesPage() {
                 {lt('Team Monthly Updates')}
               </h1>
             </div>
+            
+            {/* Filters and Counters */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-(--muted-strong)">
+                {lt('Showing')} {employees.length} {lt('of')} {totalEmployees} {lt('Employees')}
+              </p>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {typeof missingTodayCount === 'number' ? (
-                <Badge variant={missingTodayCount > 0 ? 'warning' : 'success'} dot>
-                  {missingTodayCount} {lt('missing today')}
-                </Badge>
-              ) : null}
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Year')}</Label>
-                <Input
-                  type="number"
-                  min="2020"
-                  max="2035"
-                  value={year}
-                  onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-                  className="min-h-0 h-6 w-18 border-white/10 bg-transparent px-2.5 text-sm text-white"
-                />
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Year')}</Label>
+                  <Input
+                    type="number"
+                    min="2020"
+                    max="2035"
+                    value={year}
+                    onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
+                    className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)]"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Month')}</Label>
+                  <SelectField
+                    value={String(month)}
+                    options={monthOptions}
+                    onValueChange={(value) => setMonth(Number(value))}
+                    className="h-7 min-w-[100px] border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)]"
+                  />
+                </div>
+
+                <Button
+                  variant="secondary"
+                  className="h-10 px-4 rounded-xl font-bold uppercase tracking-widest text-[11px]"
+                  onClick={() => void handleRefresh()}
+                >
+                  {lt('Refresh')}
+                </Button>
               </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/4 px-3 py-1.5">
-                <Label className="text-[10px] font-semibold uppercase tracking-wider text-(--muted)">{lt('Month')}</Label>
-                <SelectField
-                  value={String(month)}
-                  options={monthOptions}
-                  onValueChange={(value) => setMonth(Number(value))}
-                  className="min-h-0 h-9 min-w-28 border-white/10 bg-(--surface) text-sm text-white hover:border-white/15 hover:bg-white/6 focus-visible:border-white/20 focus-visible:bg-white/6 focus-visible:shadow-[inset_0_1px_2px_rgba(0,0,0,0.12),0_0_0_3px_rgba(255,255,255,0.06)]"
-                />
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => void handleRefresh()}
-                className="min-h-9 gap-1.5 rounded-xl"
-              >
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M1.5 8a6.5 6.5 0 1 1 1.2 3.8" />
-                  <path d="M1.5 12.5V8.5h4" />
-                </svg>
-                {lt('Refresh')}
-              </Button>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Metric Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6 stagger-children">
-        <SummaryCard
-          accent="blue"
-          label="Total Employees"
-          value={totalEmployees}
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="8" cy="7" r="3" />
-              <path d="M2 17c0-3.3 2.7-6 6-6" />
-              <circle cx="14" cy="9" r="2.5" />
-              <path d="M11 17c0-2.8 1.8-5 4.5-5" />
-            </svg>
-          }
-        />
-        <SummaryCard
-          accent="success"
-          label="Submitted Updates"
-          value={totalSubmitted}
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="10" cy="10" r="8" />
-              <path d="m6.5 10 2.5 2.5 4.5-4.5" />
-            </svg>
-          }
-        />
-        <SummaryCard
-          accent="warning"
-          label="Missing Workday Updates"
-          value={totalMissing}
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 3v7l4 2" />
-              <circle cx="10" cy="10" r="8" />
-            </svg>
-          }
-        />
-        <SummaryCard
-          accent="violet"
-          label="Average Completion Rate"
-          value={`${avgCompletion.toFixed(1)}%`}
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M2 10a8 8 0 1 1 16 0" />
-              <path d="M10 10V4" />
-              <path d="M10 10l4 2.5" />
-            </svg>
-          }
-        />
-        <SummaryCard
-          accent="default"
-          label="Estimated Payroll"
-          value={formatCurrency(totalEstimatedSalary)}
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h12" />
-              <path d="M4 10h12" />
-              <path d="M4 14h12" />
-              <path d="M7 3v14" />
-            </svg>
-          }
-        />
-        <SummaryCard
-          accent="default"
-          label="Top Performer"
-          value={
-            topPerformer
-              ? <span className="text-sm leading-snug">{topPerformer.user_name}<span className="ml-1.5 text-[11px] font-normal text-emerald-400">({topPerformer.completion_percentage.toFixed(1)}%)</span></span>
-              : '-'
-          }
-          icon={
-            <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 2l2.4 4.9 5.4.8-3.9 3.8.9 5.3L10 14.3l-4.8 2.5.9-5.3L2.2 7.7l5.4-.8z" />
-            </svg>
-          }
-        />
-      </div>
-
-      <Card noPadding>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle>{lt('Filters and Comparison Controls')}</CardTitle>
-          <Badge variant="blue">
-            {translateCurrentLiteral('Showing')} {employees.length} {translateCurrentLiteral('of')} {totalEmployees} {translateCurrentLiteral('employees')}
-          </Badge>
-        </CardHeader>
-        <CardContent>
+      <Card noPadding className="border-[var(--border)] overflow-hidden">
+        <CardContent className="pt-6">
           <div className="mb-6 grid gap-3 sm:grid-cols-3">
             <div>
               <Label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">

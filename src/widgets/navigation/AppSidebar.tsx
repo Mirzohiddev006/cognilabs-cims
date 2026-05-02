@@ -375,7 +375,7 @@ export function AppSidebar() {
                     </div>
 
                     {isProjectsExpanded ? (
-                      <div className="ml-4 space-y-1 border-l border-[var(--border)] pl-3">
+                      <div className="ml-4 space-y-1 border-l border-[var(--border)] pl-3 max-h-[30vh] overflow-y-auto pr-1">
                         {projectsQuery.isLoading ? (
                           <div className="space-y-1 py-1">
                             {Array.from({ length: 4 }).map((_, index) => (

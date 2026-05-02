@@ -177,7 +177,7 @@ export function AttendanceManagementPage() {
           {employees.length === 0 ? 'No attendance data for this period.' : 'No employees match your search.'}
         </Card>
       ) : (
-        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+        <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-lg">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
@@ -232,7 +232,7 @@ export function AttendanceManagementPage() {
               </tbody>
             </table>
           </div>
-        </Card>
+        </div>
       )}
 
       {selected && (

@@ -124,7 +124,7 @@ export function CustomerDetailContent({
 
   return (
     <section className="space-y-5">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--border)]">
+      <Card noPadding className="overflow-hidden rounded-[28px] border-[var(--border)] bg-[var(--surface-elevated)] shadow-none">
         <div className="relative overflow-hidden px-6 py-6 sm:px-7">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_34%),radial-gradient(circle_at_right,rgba(168,85,247,0.12),transparent_28%)]" />
 

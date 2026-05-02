@@ -456,34 +456,42 @@ export function ProjectDetailPage() {
         </div>
 
         {/* Boards Content Overlay Container - Scroll internally */}
-        <div className="relative z-20 flex-1 -mt-2 sm:-mt-4 bg-[var(--background)] rounded-t-[28px] sm:rounded-t-[40px] px-0 sm:px-2 pt-1 sm:pt-2 min-h-0 flex flex-col">
-           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-t-[24px] sm:rounded-t-[32px] border-x border-t sm:border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
-              {/* Board Header & Filters Area - Highly scrollable on mobile */}
-              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--blue-dim)]/30 px-4 sm:px-8 py-3 sm:py-4 backdrop-blur-md">
-                 <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
-                    <div className="flex items-center gap-3 sm:gap-6 overflow-hidden flex-1">
-                       {/* Board Tabs - Horizontal Scroll on mobile */}
-                       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
+        <div className="relative z-20 flex-1 bg-[var(--background)] rounded-[32px] px-0 sm:px-4 pt-4 sm:pt-6 min-h-0 flex flex-col">
+           <Card noPadding className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-[var(--border)] shadow-xl bg-[var(--surface)] backdrop-blur-xl">
+              {/* Board Header & Filters Area */}
+              <div className="flex flex-col border-b border-[var(--border)] bg-[var(--blue-dim)]/30 px-6 sm:px-10 py-5 sm:py-6 backdrop-blur-md">
+                 <div className="flex items-center justify-between gap-6 mb-5 sm:mb-2">
+                    <div className="flex items-center gap-6 overflow-hidden flex-1">
+                       {/* Project Name (Left) */}
+                       <div className="shrink-0">
+                         <h1 className="text-2xl font-black tracking-tight text-[var(--foreground)] truncate">
+                           {project.project_name}
+                         </h1>
+                       </div>
+
+                       <div className="h-10 w-px bg-[var(--border)] shrink-0" />
+
+                       {/* Board Tabs */}
+                       <div className="flex items-center gap-3 p-2 rounded-2xl bg-black/5 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
                          {activeBoards.map((board) => {
                            const isSelected = selectedBoard?.id === board.id
                            return (
-                             <div key={board.id} className="group relative flex shrink-0 items-center">
+                             <div key={board.id} className="group relative flex shrink-0 items-center gap-2">
                                <button
                                  type="button"
                                  onClick={() => selectBoard(board.id)}
                                  className={cn(
-                                   "whitespace-nowrap pl-3.5 sm:pl-4 py-1.5 sm:py-2 rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest transition-all",
-                                   canManageProjects ? "pr-8" : "pr-3.5 sm:pr-4",
+                                   "whitespace-nowrap pl-5 pr-5 py-3 rounded-xl text-[13px] font-black uppercase tracking-widest transition-all",
                                    isSelected
-                                     ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
-                                     : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
+                                     ? "bg-blue-600 text-white shadow-[0_4px_16px_rgba(37,99,235,0.4)] scale-105"
+                                     : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/10"
                                  )}
                                >
                                  {board.name}
                                </button>
                                {canManageProjects && (
                                  <div className={cn(
-                                   "absolute right-1 transition-all",
+                                   "pr-2 transition-all",
                                    isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                                  )}>
                                    <ActionsMenu
@@ -497,6 +505,10 @@ export function ProjectDetailPage() {
                                          }
                                        },
                                        {
+                                         label: lt('New List'),
+                                         onSelect: () => setIsCreateBoardOpen(true)
+                                       },
+                                       {
                                          label: lt('Delete'),
                                          tone: 'danger',
                                          onSelect: () => void handleDeleteBoard(board.id, board.name)
@@ -508,86 +520,14 @@ export function ProjectDetailPage() {
                              </div>
                            )
                          })}
-                         {canManageProjects && (
-                            <button
-                               type="button"
-                               onClick={() => setIsCreateBoardOpen(true)}
-                               className="w-9 h-9 flex items-center justify-center rounded-xl text-[var(--muted-strong)] hover:bg-white/10 hover:text-[var(--foreground)] transition-all shrink-0"
-                               title={lt('Add board')}
-                            >
-                               <svg viewBox="0 0 16 16" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                  <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                               </svg>
-                            </button>
-                         )}
                        </div>
-
-                       <div className="hidden sm:block h-8 w-px bg-[var(--border)] shrink-0" />
-
-                       {/* Members Selector (Desktop) */}
-                       <div className="hidden sm:flex items-center gap-3 shrink-0">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">{lt('Members')}:</p>
-                          <div className="flex items-center -space-x-2">
-                             {projectMembers.map((member) => {
-                               const isExpanded = member.id === expandedMemberId
-                               return (
-                                 <button
-                                   key={member.id}
-                                   type="button"
-                                   onClick={() => selectMember(member.id)}
-                                   className={cn(
-                                     'relative transition-transform hover:scale-110 hover:z-10',
-                                     isExpanded ? 'scale-110 z-10' : 'z-0'
-                                   )}
-                                 >
-                                   <Avatar
-                                     name={member.name}
-                                     surname={member.surname}
-                                     imageUrl={member.profile_image}
-                                     size="sm"
-                                     className={cn(
-                                        "ring-2 ring-[var(--surface)] transition-all",
-                                        isExpanded ? "ring-blue-500 shadow-glow-blue" : "ring-[var(--border)]"
-                                     )}
-                                   />
-                                 </button>
-                               )
-                             })}
-                          </div>
-                       </div>
-                    </div>
-
-                    {/* Desktop Right Actions */}
-                    <div className="hidden sm:flex items-center gap-3 shrink-0">
-                       {canManageProjects && (
-                          <Button
-                             variant="secondary"
-                             size="sm"
-                             className="h-9 rounded-xl font-black uppercase tracking-widest bg-[var(--accent-soft)]"
-                             onClick={() => setIsCreateBoardOpen(true)}
-                          >
-                            {tr('New list', 'Yangi list', 'Novyi spisok')}
-                          </Button>
-                       )}
-                    </div>
-
-                    {/* Mobile Create Button */}
-                    <div className="sm:hidden flex items-center shrink-0">
-                       {canManageProjects && (
-                          <button
-                             onClick={() => setIsCreateBoardOpen(true)}
-                             className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center text-white shadow-lg"
-                          >
-                             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 5v14M5 12h14" strokeLinecap="round"/></svg>
-                          </button>
-                       )}
                     </div>
                  </div>
 
-                 {/* Mobile Members Row */}
-                 <div className="sm:hidden flex items-center gap-3 overflow-hidden">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-[var(--muted)] shrink-0">{lt('Team')}:</p>
-                    <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar-none pb-1">
+                 {/* Team Members Row */}
+                 <div className="flex items-center gap-4">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-[var(--muted)] shrink-0">{lt('Team')}:</p>
+                    <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar-none pb-1">
                        {projectMembers.map((member) => {
                          const isExpanded = member.id === expandedMemberId
                          return (
@@ -601,9 +541,9 @@ export function ProjectDetailPage() {
                                name={member.name}
                                surname={member.surname}
                                imageUrl={member.profile_image}
-                               size="sm"
+                               size="md"
                                className={cn(
-                                  "h-7 w-7 ring-2 transition-all",
+                                  "h-10 w-10 ring-2 transition-all",
                                   isExpanded ? "ring-blue-500 shadow-glow-blue scale-110" : "ring-[var(--border)]"
                                )}
                              />
