@@ -10,7 +10,6 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
-import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'
@@ -37,7 +36,6 @@ import {
   getCompensationPolicyCategoryOptions,
   getCompensationPolicyDeliveryBonusOptions,
   getCompensationPolicySeverityOptions,
-  getMonthOptions,
   getMonthName,
   getSuccessMessage,
   isRecord,
@@ -204,7 +202,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
 
 export function FaultsPage() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const lt = translateCurrentLiteral
@@ -229,7 +227,6 @@ export function FaultsPage() {
 
     return tl(key, uzFallback, ruFallback)
   }
-  const monthOptions = useMemo(() => getMonthOptions(), [locale])
   const [mistakeTarget, setMistakeTarget] = useState<EmployeeSalaryReport | null>(null)
   const [mistakeDraft, setMistakeDraft] = useState<MistakeFormState>(() => createMistakeFormState())
   const [deliveryBonusTarget, setDeliveryBonusTarget] = useState<EmployeeSalaryReport | null>(null)
@@ -498,15 +495,6 @@ export function FaultsPage() {
 
   function openReportDrawer(report: EmployeeSalaryReport) {
     setActiveReportId(report.id)
-  }
-
-  function updatePeriod(next: { year?: number; month?: number }) {
-    const nextYear = next.year ?? year
-    const nextMonth = next.month ?? month
-    setSearchParams({
-      year: String(nextYear),
-      month: String(nextMonth),
-    }, { replace: true })
   }
 
   function openDetailPage(report: EmployeeSalaryReport) {

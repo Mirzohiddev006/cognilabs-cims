@@ -951,6 +951,7 @@ export function CeoUsersPage() {
               />
             }
             columns={[
+              {
                 key: 'identity',
                 header: lt('User'),
                 render: (row) => (

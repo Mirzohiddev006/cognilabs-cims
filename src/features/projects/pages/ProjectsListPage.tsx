@@ -4,13 +4,12 @@ import { useTheme } from '../../../app/hooks/useTheme'
 import { projectsService, type ProjectRecord, type UserSummary } from '../../../shared/api/services/projects.service'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { Input } from '../../../shared/ui/input'
-import { PageHeader } from '../../../shared/ui/page-header'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useToast } from '../../../shared/toast/useToast'
 import { useAuth } from '../../auth/hooks/useAuth'
@@ -36,24 +35,6 @@ export function ProjectsListPage() {
   const { confirm } = useConfirm()
   const { user } = useAuth()
   const lt = translateCurrentLiteral
-  const locale = getIntlLocale()
-  const tr = (key: string, uzFallback: string, ruFallback: string) => {
-    const value = lt(key)
-
-    if (value !== key) {
-      return value
-    }
-
-    if (locale.startsWith('ru')) {
-      return ruFallback
-    }
-
-    if (locale.startsWith('en')) {
-      return key
-    }
-
-    return uzFallback
-  }
   const [searchParams, setSearchParams] = useSearchParams()
   const isDark = theme === 'dark'
 
@@ -236,24 +217,6 @@ export function ProjectsListPage() {
         (project.project_description ?? '').toLowerCase().includes(query),
     )
   }, [scopedProjects, search])
-
-  const headerMeta = useMemo(() => {
-    const meta: Array<{ label: string; value: string; tone?: 'neutral' | 'blue' | 'success' | 'warning' | 'danger' | 'violet' }> = [
-      { label: lt('All projects'), value: String(total), tone: 'blue' },
-      { label: lt('Visible now'), value: String(filteredProjects.length), tone: selectedMemberId !== null ? 'violet' : 'success' },
-      { label: lt('Members'), value: String(members.length), tone: 'neutral' },
-    ]
-
-    if (selectedMember && memberOverview) {
-      meta.push({
-        label: lt('Assigned tasks'),
-        value: String(memberOverview.taskCount),
-        tone: memberOverview.taskCount > 0 ? 'warning' : 'neutral',
-      })
-    }
-
-    return meta
-  }, [filteredProjects.length, memberOverview, members.length, selectedMember, selectedMemberId, total])
 
   async function handleCreate(fd: FormData) {
     if (!canManageProjects) {

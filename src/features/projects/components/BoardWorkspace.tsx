@@ -275,18 +275,6 @@ export function BoardWorkspace({
     }
   }
 
-  async function handleQuickCreateCard(columnId: number, title: string) {
-    if (!canManageProjects || !board || board.is_archived) return
-    const fd = new FormData()
-    fd.append('title', title)
-    try {
-      await projectsService.createCard(columnId, fd)
-      await boardQuery.refetch()
-    } catch (error) {
-      showToast({ title: lt('Failed to create card'), description: getApiErrorMessage(error), tone: 'error' })
-    }
-  }
-
   async function handleCreateCard(fd: FormData) {
     if (!canManageProjects || !addCardState || board?.is_archived) {
       return

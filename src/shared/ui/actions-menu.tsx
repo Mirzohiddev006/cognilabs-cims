@@ -107,7 +107,10 @@ export function ActionsMenu({ items, label, triggerVariant = 'icon' }: ActionsMe
         onClick={openMenu}
         title={typeof label === 'string' ? label : undefined}
         className={cn(
-          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 w-9 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
+          'inline-flex items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
+          triggerVariant === 'icon'
+            ? 'h-9 w-9 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]'
+            : 'h-9 px-4 py-2 border border-[var(--border)] bg-transparent hover:bg-[var(--accent-soft)] text-sm font-medium',
         )}
       >
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4">

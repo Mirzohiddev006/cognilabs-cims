@@ -276,7 +276,7 @@ export function KanbanBoard({
           {activeDrag?.type === 'column' && (
             <KanbanColumn
               column={activeDrag.column}
-              onAddCard={() => {}}
+              onOpenAddCardModal={() => {}}
               onEditColumn={() => {}}
               onDeleteColumn={() => {}}
               onEditCard={() => {}}
