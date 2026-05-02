@@ -298,10 +298,10 @@ export function CognilabsAIIntegrationsPage() {
         </div>
 
         {/* Main content */}
-        <div className="min-w-0 flex-1">
-          <div className="rounded-2xl border border-(--border) bg-(--surface-elevated) overflow-hidden">
+        <div className="min-w-0 flex-1 min-h-0 flex flex-col">
+          <div className="flex flex-col rounded-2xl border border-(--border) bg-(--surface-elevated) overflow-hidden flex-1 min-h-0">
             {/* Section header */}
-            <div className="flex items-center gap-4 border-b border-(--border) px-6 py-5">
+            <div className="flex items-center gap-4 border-b border-(--border) px-6 py-5 shrink-0">
               <div
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-(--blue-border) bg-(--blue-dim) text-(--blue-text)"
               >
@@ -314,7 +314,7 @@ export function CognilabsAIIntegrationsPage() {
             </div>
 
             {/* Fields */}
-            <div className="space-y-5 px-6 py-6">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-3 px-6 py-4">
               {currentSection.fields.map((field) => {
                 const value = fieldValue(form, field.key)
                 const isSecret = field.type === 'password'
@@ -323,7 +323,7 @@ export function CognilabsAIIntegrationsPage() {
 
                 return (
                   <div key={field.key}>
-                    <div className="mb-1.5 flex items-center gap-2">
+                    <div className="mb-1 flex items-center gap-2">
                       <label className="text-xs font-semibold text-(--foreground)">
                         {field.label}
                       </label>
@@ -348,7 +348,7 @@ export function CognilabsAIIntegrationsPage() {
                         value={value}
                         onChange={(e) => updateField(field.key, e.target.value)}
                         placeholder={field.placeholder}
-                        rows={12}
+                        rows={8}
                         className="w-full resize-y rounded-xl border border-(--border) bg-(--surface) px-3 py-2.5 text-sm text-(--foreground) placeholder:text-(--muted) focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-shadow"
                       />
                     ) : isSecret ? (
@@ -403,7 +403,7 @@ export function CognilabsAIIntegrationsPage() {
             </div>
 
             {/* Section footer */}
-            <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface)/40 px-6 py-4">
+            <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface)/40 px-6 py-4 shrink-0">
               <p className="text-xs text-(--muted)">
                 {currentSection.fields.filter((f) => Boolean(fieldValue(form, f.key))).length} of {currentSection.fields.length} fields configured
               </p>
