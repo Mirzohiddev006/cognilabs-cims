@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { auditService, type AuditLogItem } from '../../../shared/api/services/audit.service'
-import { Card, CardContent } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
 import { Input } from '../../../shared/ui/input'
@@ -92,6 +91,10 @@ export function AuditLogsPage() {
 
   const [page, setPage] = useState(Number(searchParams.get('page')) || 1)
   const [search, setSearch] = useState(searchParams.get('search') || '')
+  const [module, setModule] = useState(searchParams.get('module') || '')
+  const [tableName, setTableName] = useState(searchParams.get('table_name') || '')
+  const [action, setAction] = useState(searchParams.get('action') || '')
+  const [actorUserId, setActorUserId] = useState(searchParams.get('actor_user_id') || '')
   const [entityType, setEntityType] = useState(searchParams.get('entity_type') || '')
   const [entityId, setEntityId] = useState(searchParams.get('entity_id') || '')
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
@@ -99,20 +102,28 @@ export function AuditLogsPage() {
   const logsQuery = useAsyncData(
     () => auditService.list({
       page,
+      module: module || undefined,
+      table_name: tableName || undefined,
+      action: action || undefined,
+      actor_user_id: actorUserId ? Number(actorUserId) : undefined,
       entity_type: entityType || undefined,
       entity_id: entityId || undefined,
     }),
-    [page, search, entityType, entityId]
+    [page, search, module, tableName, action, actorUserId, entityType, entityId]
   )
 
   useEffect(() => {
     const params: Record<string, string> = {}
     if (page > 1) params.page = String(page)
     if (search) params.search = search
+    if (module) params.module = module
+    if (tableName) params.table_name = tableName
+    if (action) params.action = action
+    if (actorUserId) params.actor_user_id = actorUserId
     if (entityType) params.entity_type = entityType
     if (entityId) params.entity_id = entityId
     setSearchParams(params, { replace: true })
-  }, [page, search, entityType, entityId, setSearchParams])
+  }, [page, search, module, tableName, action, actorUserId, entityType, entityId, setSearchParams])
 
   const logs = logsQuery.data?.items ?? []
   const total = logsQuery.data?.total_items ?? 0
@@ -127,16 +138,32 @@ export function AuditLogsPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-4 stagger-children">
-        <div className="md:col-span-2">
-          <Input
-            placeholder={lt('Search by action...')}
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
-          />
-        </div>
         <Input
-          placeholder={lt('Entity Type (e.g. Project)')}
+          placeholder={lt('Module')}
+          value={module}
+          onChange={(e) => { setModule(e.target.value); setPage(1) }}
+          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+        />
+        <Input
+          placeholder={lt('Table Name')}
+          value={tableName}
+          onChange={(e) => { setTableName(e.target.value); setPage(1) }}
+          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+        />
+        <Input
+          placeholder={lt('Action')}
+          value={action}
+          onChange={(e) => { setAction(e.target.value); setPage(1) }}
+          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+        />
+        <Input
+          placeholder={lt('Actor User ID')}
+          value={actorUserId}
+          onChange={(e) => { setActorUserId(e.target.value); setPage(1) }}
+          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+        />
+        <Input
+          placeholder={lt('Entity Type')}
           value={entityType}
           onChange={(e) => { setEntityType(e.target.value); setPage(1) }}
           className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
@@ -149,19 +176,25 @@ export function AuditLogsPage() {
         />
       </div>
 
-      <Card className="overflow-hidden border-[var(--border)] shadow-xl bg-[var(--surface)]">
-        <CardContent>
-          {logsQuery.isLoading ? (
+      <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-xl">
+        {logsQuery.isLoading ? (
+          <div className="p-8">
             <LoadingStateBlock eyebrow={lt('Loading')} title={lt('Loading logs...')} description={lt('Retrieving latest system activities.')} />
-          ) : logsQuery.isError ? (
+          </div>
+        ) : logsQuery.isError ? (
+          <div className="p-8">
             <ErrorStateBlock eyebrow={lt('Error')} title={lt('Failed to load logs')} />
-          ) : logs.length === 0 ? (
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="p-8">
             <EmptyStateBlock 
               eyebrow={lt('Audit Logs')}
               title={lt('No logs found')} 
               description={lt('Adjust your filters or try a different search term.')} 
             />
-          ) : (
+          </div>
+        ) : (
+          <>
             <DataTable
               rows={logs}
               getRowKey={(log) => String(log.id)}
@@ -219,37 +252,37 @@ export function AuditLogsPage() {
                 }
               ]}
             />
-          )}
-        </CardContent>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[var(--border)] bg-black/20 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
-              {lt('Page')} {page} {lt('of')} {totalPages}
-            </p>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                className="rounded-xl h-9"
-              >
-                ← {lt('Prev')}
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={page >= totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-xl h-9"
-              >
-                {lt('Next')} →
-              </Button>
-            </div>
-          </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-[var(--border)] bg-black/20 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
+                  {lt('Page')} {page} {lt('of')} {totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => p - 1)}
+                    className="rounded-xl h-9"
+                  >
+                    ← {lt('Prev')}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="rounded-xl h-9"
+                  >
+                    {lt('Next')} →
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
-      </Card>
+      </div>
 
       {selectedLog && (
         <LogDetailModal log={selectedLog} onClose={() => setSelectedLog(null)} />
@@ -257,3 +290,4 @@ export function AuditLogsPage() {
     </div>
   )
 }
+
