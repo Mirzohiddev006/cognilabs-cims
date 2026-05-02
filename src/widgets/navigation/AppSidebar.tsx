@@ -91,7 +91,6 @@ export function AppSidebar() {
     [user?.permissions],
   )
   const getNavigationLabel = (path: string, fallback: string) => t(`nav.${path}.label`, fallback)
-  const getNavigationGroup = (path: string, fallback: string) => t(`nav.${path}.group`, fallback)
   const projectsQuery = useAsyncData(
     async () => {
       const { projectsService } = await import('../../shared/api/services/projects.service')
