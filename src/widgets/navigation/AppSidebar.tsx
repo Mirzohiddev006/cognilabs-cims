@@ -315,8 +315,6 @@ export function AppSidebar() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                          <div className="min-w-0">
-                          <div className="flex items-center gap-2">
                             <p className="ui-body leading-none truncate font-semibold">{itemLabel}</p>
                             {sidebarProjects.length > 0 && (
                               <Badge
@@ -428,8 +426,6 @@ export function AppSidebar() {
                                       <ProjectDot isActive={isActive || isActiveProject} isLight={isLight} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                      <div className="flex items-center justify-between gap-2">
-                                      <div className="min-w-0 flex-1">
                                       <div className="flex items-center justify-between gap-2">
                                         <p className="ui-body leading-none truncate font-semibold">{project.project_name}</p>
                                         {project.boards_count > 0 && (
