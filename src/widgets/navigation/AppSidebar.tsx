@@ -46,7 +46,8 @@ type MemberProfileFormState = {
 
 function navItemBase() {
   // fixed height to ensure all nav cards keep same size and don't shift when main content changes
-  return 'group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-sm h-[52px] transition-all duration-200'
+  // remove vertical padding and rely on fixed height + items-center for consistent vertical centering
+  return 'group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-0 text-sm h-[52px] transition-all duration-200'
 }
 
 function navItemActive(isLight: boolean) {
@@ -314,7 +315,9 @@ export function AppSidebar() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="ui-body truncate font-semibold">{itemLabel}</p>
+                          <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="ui-body leading-none truncate font-semibold">{itemLabel}</p>
                             {sidebarProjects.length > 0 && (
                               <Badge
                                 size="sm"
@@ -426,7 +429,9 @@ export function AppSidebar() {
                                     </div>
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center justify-between gap-2">
-                                        <p className="ui-body truncate font-semibold">{project.project_name}</p>
+                                      <div className="min-w-0 flex-1">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="ui-body leading-none truncate font-semibold">{project.project_name}</p>
                                         {project.boards_count > 0 && (
                                           <Badge
                                             size="sm"
