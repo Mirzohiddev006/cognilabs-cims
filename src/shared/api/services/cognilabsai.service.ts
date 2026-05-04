@@ -10,9 +10,14 @@ export type ConversationItem = {
   client_external_id: string
   client_username: string | null
   client_full_name: string | null
+  client_display_name: string | null
   client_avatar_url: string | null
   instagram_business_id: string | null
   ai_enabled: boolean
+  unread_count: number
+  telegram_is_online: boolean | null
+  telegram_presence_status: 'online' | 'offline' | 'recently' | 'last_week' | 'last_month' | string | null
+  telegram_last_seen_at: string | null
   pause_reason: string | null
   paused_until: string | null
   last_message_at: string | null
@@ -35,6 +40,8 @@ export type MessageItem = {
   instagram_message_id: string | null
   telegram_message_id: string | null
   text: string
+  is_read: boolean
+  read_at: string | null
   created_at: string
 }
 
@@ -45,6 +52,9 @@ export type TelegramSearchResult = {
   full_name: string | null
   avatar_url: string | null
   existing_conversation_id: number | null
+  is_online: boolean | null
+  presence_status: 'online' | 'offline' | 'recently' | 'last_week' | 'last_month' | string | null
+  last_seen_at: string | null
 }
 
 export type TelegramSearchListResponse = {
@@ -64,6 +74,7 @@ export type IntegrationConfig = {
   telegram_api_hash: string | null
   telegram_session: string | null
   websocket_api_key: string | null
+  frontend_base_url: string | null
   id?: number
   created_at?: string
   updated_at?: string

@@ -446,7 +446,9 @@ html.light .text-gradient-blue {
 /* ─── APP SHELL ───────────────────────────────────────────────── */
 .app-shell-grid {
   display: grid;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   grid-template-columns: var(--app-shell-sidebar-width, 272px) minmax(0, 1fr);
   align-items: start;
 }
@@ -454,6 +456,7 @@ html.light .text-gradient-blue {
 .app-shell-main {
   width: 100%;
   max-width: 100%;
+  min-height: 0;
 }
 
 .shell-scrim {

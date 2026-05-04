@@ -73,6 +73,7 @@ const sections: Section[] = [
       { key: 'telegram_api_id', label: 'API ID', required: true },
       { key: 'telegram_api_hash', label: 'API Hash', type: 'password', required: true },
       { key: 'telegram_session', label: 'Session String', type: 'password', hint: 'Telethon session string for your operator account' },
+      { key: 'frontend_base_url', label: 'Frontend Base URL', hint: 'Lead notify kanalidagi inline button uchun frontend public URL' },
     ],
   },
   {
@@ -102,6 +103,7 @@ const emptyForm: IntegrationConfigPayload = {
   telegram_api_hash: null,
   telegram_session: null,
   websocket_api_key: null,
+  frontend_base_url: null,
 }
 
 function fieldValue(form: IntegrationConfigPayload, key: keyof IntegrationConfigPayload): string {
@@ -134,6 +136,7 @@ export function CognilabsAIIntegrationsPage() {
         telegram_api_hash: data.telegram_api_hash ?? null,
         telegram_session: data.telegram_session ?? null,
         websocket_api_key: data.websocket_api_key ?? null,
+        frontend_base_url: data.frontend_base_url ?? null,
       })
     },
   })

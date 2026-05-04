@@ -25,7 +25,32 @@ import {
 type ChannelTab = 'all' | 'instagram' | 'telegram'
 
 function getClientName(conv: ConversationItem): string {
-  return conv.client_full_name || conv.client_username || `#${conv.id}`
+  return conv.client_display_name || conv.client_full_name || conv.client_username || `#${conv.id}`
+}
+
+function getPresenceTone(status: string | null | undefined) {
+  if (status === 'online') return 'text-emerald-400'
+  if (status === 'recently') return 'text-amber-400'
+  return 'text-[var(--muted)]'
+}
+
+function formatPresenceLabel(
+  status: string | null | undefined,
+  isOnline: boolean | null | undefined,
+  lastSeenAt: string | null | undefined,
+): string | null {
+  if (isOnline === true || status === 'online') return 'Online'
+  if (!status) return null
+  if (status === 'recently') return 'Recently active'
+  if (status === 'last_week') return 'Active this week'
+  if (status === 'last_month') return 'Active this month'
+  if (status === 'offline') {
+    if (!lastSeenAt) return 'Offline'
+    const date = new Date(lastSeenAt)
+    if (Number.isNaN(date.getTime())) return 'Offline'
+    return `Last seen ${date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+  }
+  return status
 }
 
 function formatConvTime(isoString: string | null): string {
@@ -113,6 +138,36 @@ function PauseReasonBadge({ reason }: { reason: string | null }) {
   )
 }
 
+function PresenceBadge({
+  status,
+  isOnline,
+  lastSeenAt,
+}: {
+  status: string | null | undefined
+  isOnline: boolean | null | undefined
+  lastSeenAt: string | null | undefined
+}) {
+  const label = formatPresenceLabel(status, isOnline, lastSeenAt)
+
+  if (!label) return null
+
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-[11px] font-medium', getPresenceTone(status))}>
+      <span
+        className={cn(
+          'h-1.5 w-1.5 rounded-full',
+          isOnline === true || status === 'online'
+            ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.55)]'
+            : status === 'recently'
+              ? 'bg-amber-400'
+              : 'bg-[var(--muted)]',
+        )}
+      />
+      <span className="truncate">{label}</span>
+    </span>
+  )
+}
+
 function ConversationListItem({
   conv,
   isActive,
@@ -124,6 +179,9 @@ function ConversationListItem({
 }) {
   const name = getClientName(conv)
   const timeLabel = formatConvTime(conv.last_message_at)
+  const presenceLabel = conv.channel === 'telegram'
+    ? formatPresenceLabel(conv.telegram_presence_status, conv.telegram_is_online, conv.telegram_last_seen_at)
+    : null
 
   return (
     <button
@@ -152,12 +210,19 @@ function ConversationListItem({
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-1.5">
-          <p className={cn(
-            'truncate text-[13.5px] font-semibold leading-snug',
-            isActive ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'
-          )}>
-            {name}
-          </p>
+          <div className="min-w-0 flex items-center gap-2">
+            <p className={cn(
+              'truncate text-[13.5px] font-semibold leading-snug',
+              isActive ? 'text-[var(--foreground)]' : 'text-[var(--foreground)]'
+            )}>
+              {name}
+            </p>
+            {conv.unread_count > 0 ? (
+              <span className="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-blue-600 px-1.5 text-[10px] font-bold text-white">
+                {conv.unread_count > 99 ? '99+' : conv.unread_count}
+              </span>
+            ) : null}
+          </div>
           {timeLabel && (
             <span className={cn(
               'shrink-0 text-[11px] font-medium',
@@ -169,15 +234,26 @@ function ConversationListItem({
         </div>
 
         <div className="mt-0.5 flex items-center justify-between gap-2">
-          <p className={cn(
-            'truncate text-[12px] leading-snug',
-            isActive ? 'text-[var(--muted)]' : 'text-[var(--caption)]'
-          )}>
-            {conv.last_message_preview || <span className="italic text-[var(--caption)]">Xabar yo'q</span>}
-          </p>
-          {conv.pause_reason && !isActive && (
+          <div className="min-w-0 flex-1">
+            <p className={cn(
+              'truncate text-[12px] leading-snug',
+              isActive ? 'text-[var(--muted)]' : 'text-[var(--caption)]'
+            )}>
+              {conv.last_message_preview || <span className="italic text-[var(--caption)]">Xabar yo'q</span>}
+            </p>
+            {presenceLabel ? (
+              <div className="mt-1">
+                <PresenceBadge
+                  status={conv.telegram_presence_status}
+                  isOnline={conv.telegram_is_online}
+                  lastSeenAt={conv.telegram_last_seen_at}
+                />
+              </div>
+            ) : null}
+          </div>
+          {conv.pause_reason && !isActive ? (
             <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-amber-400" />
-          )}
+          ) : null}
         </div>
       </div>
     </button>
@@ -200,6 +276,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
   }
 
   const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  const isUnreadClientMessage = isClient && msg.is_read === false
 
   return (
     <div className={cn(
@@ -221,6 +298,11 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
+        {isUnreadClientMessage ? (
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-500">
+            New
+          </p>
+        ) : null}
 
         <p className="whitespace-pre-wrap break-words">{msg.text}</p>
 
@@ -380,6 +462,13 @@ function TelegramSearchModal({
                       {item.username && (
                         <p className="truncate text-[12px] text-[var(--muted)]">@{item.username}</p>
                       )}
+                      {item.presence_status || item.is_online === true ? (
+                        <PresenceBadge
+                          status={item.presence_status}
+                          isOnline={item.is_online}
+                          lastSeenAt={item.last_seen_at}
+                        />
+                      ) : null}
                       {item.existing_conversation_id && (
                         <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-md px-1.5 py-0.5">
                           Mavjud chat
@@ -534,7 +623,16 @@ export function CognilabsAIChatPage() {
     setIsLoadingMessages(true)
     cognilabsaiService
       .listMessages(selectedConversationId)
-      .then(setMessages)
+      .then((nextMessages) => {
+        setMessages(nextMessages)
+        setConversations((prev) =>
+          prev.map((conversation) =>
+            conversation.id === selectedConversationId
+              ? { ...conversation, unread_count: 0 }
+              : conversation,
+          ),
+        )
+      })
       .catch(() => setMessages([]))
       .finally(() => setIsLoadingMessages(false))
   }, [selectedConversationId])
@@ -609,6 +707,10 @@ export function CognilabsAIChatPage() {
                       ...c,
                       last_message_at: data.message.created_at,
                       last_message_preview: data.message.text,
+                      unread_count:
+                        data.message.sender_type === 'client' && data.conversation_id !== selectedConversationIdRef.current
+                          ? (c.unread_count ?? 0) + 1
+                          : c.unread_count,
                     }
                   : c,
               ),
@@ -881,15 +983,25 @@ export function CognilabsAIChatPage() {
                       <ChannelIcon channel={selectedConversation.channel} />
                     </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate text-[14px] font-bold text-[var(--foreground)]">{getClientName(selectedConversation)}</h3>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      <span className="text-[11px] text-[var(--muted)] font-medium">
-                        {selectedConversation.channel === 'telegram' ? 'Telegram' : 'Instagram'}
-                      </span>
-                      {selectedConversation.pause_reason && (
-                        <>
-                          <span className="h-1 w-1 rounded-full bg-[var(--border)] shrink-0" />
+                    <div className="min-w-0">
+                      <h3 className="truncate text-[14px] font-bold text-[var(--foreground)]">{getClientName(selectedConversation)}</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <span className="text-[11px] text-[var(--muted)] font-medium">
+                          {selectedConversation.channel === 'telegram' ? 'Telegram' : 'Instagram'}
+                        </span>
+                        {selectedConversation.channel === 'telegram' && (
+                          <>
+                            <span className="h-1 w-1 rounded-full bg-[var(--border)] shrink-0" />
+                            <PresenceBadge
+                              status={selectedConversation.telegram_presence_status}
+                              isOnline={selectedConversation.telegram_is_online}
+                              lastSeenAt={selectedConversation.telegram_last_seen_at}
+                            />
+                          </>
+                        )}
+                        {selectedConversation.pause_reason && (
+                          <>
+                            <span className="h-1 w-1 rounded-full bg-[var(--border)] shrink-0" />
                           <PauseReasonBadge reason={selectedConversation.pause_reason} />
                         </>
                       )}
