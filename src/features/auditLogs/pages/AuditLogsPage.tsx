@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { auditService, type AuditLogItem } from '../../../shared/api/services/audit.service'
+import { ceoService } from '../../../shared/api/services/ceo.service'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
 import { Input } from '../../../shared/ui/input'
@@ -10,6 +11,7 @@ import { PageHeader } from '../../../shared/ui/page-header'
 import { DataTable } from '../../../shared/ui/data-table'
 import { LoadingStateBlock, ErrorStateBlock, EmptyStateBlock } from '../../../shared/ui/state-block'
 import { Dialog } from '../../../shared/ui/dialog'
+import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 
 function LogDetailModal({ log, onClose }: { log: AuditLogItem; onClose: () => void }) {
   const lt = translateCurrentLiteral
@@ -98,6 +100,17 @@ export function AuditLogsPage() {
   const [entityId, setEntityId] = useState(searchParams.get('entity_id') || '')
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
 
+  const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
+  
+  const userOptions = useMemo<SelectFieldOption[]>(() => {
+    const users = dashboardQuery.data?.users ?? []
+    const options = users.map((u) => ({
+      value: String(u.id),
+      label: `${u.name} ${u.surname} (${u.email})`,
+    }))
+    return [{ value: '', label: lt('All Users') }, ...options]
+  }, [dashboardQuery.data?.users, lt])
+
   const logsQuery = useAsyncData(
     () => auditService.list({
       page,
@@ -154,10 +167,11 @@ export function AuditLogsPage() {
           onChange={(e) => { setAction(e.target.value); setPage(1) }}
           className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
         />
-        <Input
-          placeholder={lt('Actor User ID')}
+        <SelectField
+          placeholder={lt('Select User')}
           value={actorUserId}
-          onChange={(e) => { setActorUserId(e.target.value); setPage(1) }}
+          options={userOptions}
+          onValueChange={(val) => { setActorUserId(val); setPage(1) }}
           className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
         />
         <Input

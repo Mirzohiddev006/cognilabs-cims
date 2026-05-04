@@ -1079,6 +1079,10 @@ export function CeoUsersPage() {
                           onSelect: () => openEditUserModal(row),
                         },
                         {
+                          label: 'View Activity Logs',
+                          onSelect: () => navigate(`/audit/logs?actor_user_id=${row.id}`),
+                        },
+                        {
                           label: lt('Permissions'),
                           onSelect: () => openPermissionModal(row),
                         },
