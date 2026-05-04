@@ -768,6 +768,8 @@ export function CognilabsAIChatPage() {
       instagram_message_id: null,
       telegram_message_id: null,
       text,
+      is_read: true,
+      read_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     }
     setMessages((prev) => [...prev, optimistic])
