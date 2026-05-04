@@ -148,6 +148,13 @@ export const attendanceService = {
     })
   },
 
+  getMonthlySummary(year: number, month: number) {
+    return request<unknown>({
+      path: '/attendance/monthly-summary',
+      query: { year, month },
+    })
+  },
+
   getOfficeTimeMe(year: number, month: number) {
     return request<OfficeTimeMe>({
       path: '/attendance/office-time-me',
