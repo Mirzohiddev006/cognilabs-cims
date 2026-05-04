@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ceoService, type CeoMessageRecord } from '../../../shared/api/services/ceo.service'
+import { ceoService, type CeoMessageRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -14,6 +14,7 @@ import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../sh
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
 import { PaymentFormModal, type PaymentFormValues } from '../components/PaymentFormModal'
+import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { crmService } from '../../../shared/api/services/crm.service'
 
 const initialBroadcastMessage: MessageComposerValues = {
@@ -28,8 +29,18 @@ const initialPaymentForm: PaymentFormValues = {
   payment: false,
 }
 
+const initialCompanyPaymentForm: CompanyPaymentFormValues = {
+  title: '',
+  amount: 0,
+  paymentDay: 1,
+  paymentTime: '10:00',
+  note: '',
+  isActive: true,
+}
+
 const emptyPayments: PaymentItem[] = []
 const emptyMessages: CeoMessageRecord[] = []
+const emptyCompanyPayments: CompanyPaymentRecord[] = []
 
 export function CeoDashboardPage() {
   const { t } = useTranslation()
@@ -39,6 +50,7 @@ export function CeoDashboardPage() {
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
   const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
+  const companyPaymentsQuery = useAsyncData(() => ceoService.listCompanyPayments(), [])
   const [chartCustomerType, setChartCustomerType] = useState('')
   const chartsQuery = useAsyncData(
     async () => {
@@ -65,20 +77,27 @@ export function CeoDashboardPage() {
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false)
   const [isBroadcastSubmitting, setIsBroadcastSubmitting] = useState(false)
 
-  const [paymentMode] = useState<'create' | 'edit'>('create')
   const [paymentValues, setPaymentValues] = useState<PaymentFormValues>(initialPaymentForm)
   const [selectedPayment, setSelectedPayment] = useState<PaymentItem | null>(null)
   const [isPaymentOpen, setIsPaymentOpen] = useState(false)
   const [isPaymentSubmitting, setIsPaymentSubmitting] = useState(false)
 
+  const [companyPaymentValues, setCompanyPaymentValues] = useState<CompanyPaymentFormValues>(initialCompanyPaymentForm)
+  const [selectedCompanyPayment, setSelectedCompanyPayment] = useState<CompanyPaymentRecord | null>(null)
+  const [isCompanyPaymentOpen, setIsCompanyPaymentOpen] = useState(false)
+  const [isCompanyPaymentSubmitting, setIsCompanyPaymentSubmitting] = useState(false)
+  const [companyPaymentMode, setCompanyPaymentMode] = useState<'create' | 'edit'>('create')
+
   const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
+  const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
 
   async function refreshAll() {
     await Promise.allSettled([
       dashboardQuery.refetch(),
       messagesQuery.refetch(),
       paymentsQuery.refetch(),
+      companyPaymentsQuery.refetch(),
       chartsQuery.refetch(),
     ])
   }
@@ -132,14 +151,14 @@ export function CeoDashboardPage() {
     setIsPaymentSubmitting(true)
 
     try {
-      if (paymentMode === 'create') {
+      if (!selectedPayment) {
         await ceoService.createPayment({
           project: paymentValues.project.trim(),
           date: paymentValues.date,
           summ: Number(paymentValues.summ),
           payment: paymentValues.payment,
         })
-      } else if (selectedPayment) {
+      } else {
         await ceoService.updatePayment(selectedPayment.id, {
           project: paymentValues.project.trim(),
           date: paymentValues.date || null,
@@ -151,7 +170,7 @@ export function CeoDashboardPage() {
       await paymentsQuery.refetch()
       setIsPaymentOpen(false)
       showToast({
-        title: paymentMode === 'create'
+        title: !selectedPayment
           ? t('ceo.dashboard.toast.payment_created_title')
           : t('ceo.dashboard.toast.payment_updated_title'),
         description: t('ceo.dashboard.toast.payment_saved_description'),
@@ -165,6 +184,54 @@ export function CeoDashboardPage() {
       })
     } finally {
       setIsPaymentSubmitting(false)
+    }
+  }
+
+  async function handleSubmitCompanyPayment() {
+    if (!companyPaymentValues.title.trim()) {
+      showToast({
+        title: t('ceo.dashboard.validation.reminder_title'),
+        description: t('ceo.dashboard.validation.reminder_description'),
+        tone: 'error',
+      })
+      return
+    }
+
+    setIsCompanyPaymentSubmitting(true)
+
+    try {
+      const payload = {
+        title: companyPaymentValues.title.trim(),
+        amount: Number(companyPaymentValues.amount),
+        payment_day: Number(companyPaymentValues.paymentDay),
+        payment_time: companyPaymentValues.paymentTime,
+        note: companyPaymentValues.note.trim() || undefined,
+        is_active: companyPaymentValues.isActive,
+      }
+
+      if (companyPaymentMode === 'create') {
+        await ceoService.createCompanyPayment(payload)
+      } else if (selectedCompanyPayment) {
+        await ceoService.updateCompanyPayment(selectedCompanyPayment.id, payload)
+      }
+
+      await companyPaymentsQuery.refetch()
+      setIsCompanyPaymentOpen(false)
+      showToast({
+        title: companyPaymentMode === 'create'
+          ? t('ceo.dashboard.toast.reminder_created_title')
+          : t('ceo.dashboard.toast.reminder_updated_title'),
+        description: t('ceo.dashboard.toast.reminder_saved_description'),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: t('ceo.dashboard.toast.reminder_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_failed_description'),
+        tone: 'error',
+      })
+    } finally {
+      setIsCompanyPaymentSubmitting(false)
     }
   }
 
@@ -183,6 +250,27 @@ export function CeoDashboardPage() {
         payment: Boolean(payment.payment),
     })
     setIsPaymentOpen(true)
+  }
+
+  function openCreateCompanyPaymentModal() {
+    setCompanyPaymentMode('create')
+    setSelectedCompanyPayment(null)
+    setCompanyPaymentValues(initialCompanyPaymentForm)
+    setIsCompanyPaymentOpen(true)
+  }
+
+  function openEditCompanyPaymentModal(payment: CompanyPaymentRecord) {
+    setCompanyPaymentMode('edit')
+    setSelectedCompanyPayment(payment)
+    setCompanyPaymentValues({
+      title: payment.title,
+      amount: payment.amount,
+      paymentDay: payment.payment_day,
+      paymentTime: payment.payment_time,
+      note: payment.note ?? '',
+      isActive: payment.is_active,
+    })
+    setIsCompanyPaymentOpen(true)
   }
 
   async function handleDeleteMessage(message: CeoMessageRecord) {
@@ -263,6 +351,36 @@ export function CeoDashboardPage() {
     }
   }
 
+  async function handleDeleteCompanyPayment(payment: CompanyPaymentRecord) {
+    const approved = await confirm({
+      title: t('ceo.dashboard.confirm.reminder_delete_title').replace('{{title}}', payment.title),
+      description: t('ceo.dashboard.confirm.reminder_delete_description'),
+      confirmLabel: t('ceo.dashboard.confirm.reminder_delete_confirm'),
+      cancelLabel: t('common.cancel'),
+      tone: 'danger',
+    })
+
+    if (!approved) {
+      return
+    }
+
+    try {
+      await ceoService.deleteCompanyPayment(payment.id)
+      await companyPaymentsQuery.refetch()
+      showToast({
+        title: t('ceo.dashboard.toast.reminder_deleted_title'),
+        description: t('ceo.dashboard.toast.reminder_deleted_description'),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: t('ceo.dashboard.toast.reminder_delete_failed_title'),
+        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.reminder_delete_failed_description'),
+        tone: 'error',
+      })
+    }
+  }
+
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
@@ -329,6 +447,15 @@ export function CeoDashboardPage() {
                   </svg>
                 ),
                 onSelect: openCreatePaymentModal,
+              },
+              {
+                label: t('ceo.dashboard.recurring.create'),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M7.5 0.75C3.77208 0.75 0.75 3.77208 0.75 7.5C0.75 11.2279 3.77208 14.25 7.5 14.25C11.2279 14.25 14.25 11.2279 14.25 7.5C14.25 3.77208 11.2279 0.75 7.5 0.75ZM7.5 1.75C4.32436 1.75 1.75 4.32436 1.75 7.5C1.75 10.6756 4.32436 13.25 7.5 13.25C10.6756 13.25 13.25 10.6756 13.25 7.5C13.25 4.32436 10.6756 1.75 7.5 1.75ZM7.5 4.5C7.77614 4.5 8 4.72386 8 5V7H10C10.2761 7 10.5 7.22386 10.5 7.5C10.5 7.77614 10.2761 8 10 8H8V10C8 10.2761 7.77614 10.5 7.5 10.5C7.22386 10.5 7 10.2761 7 10V8H5C4.72386 8 4.5 7.77614 4.5 7.5C4.5 7.22386 4.72386 7 5 7H7V5C7 4.72386 7.22386 4.5 7.5 4.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: openCreateCompanyPaymentModal,
               },
             ]}
           />
@@ -403,7 +530,7 @@ export function CeoDashboardPage() {
         <Card noPadding>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>{t('ceo.dashboard.payments.title')}</CardTitle>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex wrap gap-2">
               <Badge variant="success" dot>
                 {t('ceo.dashboard.payments.paid_count', { count: payments.filter((row) => row.payment).length })}
               </Badge>
@@ -478,6 +605,89 @@ export function CeoDashboardPage() {
             />
           </CardContent>
         </Card>
+
+        <Card noPadding className="xl:col-span-2">
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+            <div className="space-y-1">
+              <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>
+            </div>
+            <Badge variant="blue" dot>
+              {t('ceo.dashboard.recurring.entries', { count: companyPayments.length })}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <DataTable
+              caption={t('ceo.dashboard.recurring.title')}
+              rows={companyPayments}
+              getRowKey={(row) => String(row.id)}
+              zebra
+              emptyState={
+                <EmptyStateBlock
+                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
+                  title={t('ceo.dashboard.recurring.empty_title')}
+                />
+              }
+              columns={[
+                {
+                  key: 'title',
+                  header: t('ceo.recurring.form.title'),
+                  render: (row) => (
+                    <div>
+                      <p className="font-semibold text-white">{row.title}</p>
+                      {row.note && <p className="mt-1 text-xs text-(--muted) line-clamp-1">{row.note}</p>}
+                    </div>
+                  ),
+                },
+                {
+                  key: 'amount',
+                  header: t('ceo.recurring.form.amount'),
+                  align: 'right',
+                  render: (row) => formatCurrency(row.amount),
+                },
+                {
+                  key: 'day',
+                  header: t('ceo.recurring.form.payment_day'),
+                  align: 'center',
+                  render: (row) => (
+                    <div className="flex flex-col items-center">
+                      <span className="text-sm font-bold text-blue-400">{row.payment_day}</span>
+                      <span className="text-[10px] uppercase text-(--muted)">{row.payment_time}</span>
+                    </div>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: t('common.status'),
+                  render: (row) => (
+                    <Badge variant={row.is_active ? 'success' : 'outline'}>
+                      {row.is_active ? t('status.active') : t('status.inactive')}
+                    </Badge>
+                  ),
+                },
+                {
+                  key: 'actions',
+                  header: t('common.actions'),
+                  render: (row) => (
+                    <ActionsMenu
+                      label={t('ceo.dashboard.actions.open_row', { name: row.title })}
+                      items={[
+                        {
+                          label: t('common.edit'),
+                          onSelect: () => openEditCompanyPaymentModal(row),
+                        },
+                        {
+                          label: t('customers.actions.delete'),
+                          onSelect: () => void handleDeleteCompanyPayment(row),
+                          tone: 'danger',
+                        },
+                      ]}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </CardContent>
+        </Card>
       </div>
 
       <MessageComposerModal
@@ -497,7 +707,7 @@ export function CeoDashboardPage() {
 
       <PaymentFormModal
         open={isPaymentOpen}
-        mode={paymentMode}
+        mode={selectedPayment ? 'edit' : 'create'}
         values={paymentValues}
         onClose={() => setIsPaymentOpen(false)}
         onChange={(field, value) =>
@@ -508,6 +718,21 @@ export function CeoDashboardPage() {
         }
         onSubmit={() => void handleSubmitPayment()}
         isSubmitting={isPaymentSubmitting}
+      />
+
+      <CompanyPaymentFormModal
+        open={isCompanyPaymentOpen}
+        mode={companyPaymentMode}
+        values={companyPaymentValues}
+        onClose={() => setIsCompanyPaymentOpen(false)}
+        onChange={(field, value) =>
+          setCompanyPaymentValues((current) => ({
+            ...current,
+            [field]: value,
+          }))
+        }
+        onSubmit={() => void handleSubmitCompanyPayment()}
+        isSubmitting={isCompanyPaymentSubmitting}
       />
     </section>
   )

@@ -45,7 +45,8 @@ type MemberProfileFormState = {
 // these helpers so borders, radii, padding and colour logic are identical.
 
 function navItemBase() {
-  return 'group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-sm transition-all duration-200'
+  // fixed height to ensure all nav cards keep same size and don't shift when main content changes
+  return 'group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-3 text-sm h-[52px] transition-all duration-200'
 }
 
 function navItemActive(isLight: boolean) {
@@ -475,7 +476,8 @@ export function AppSidebar() {
             type="button"
             onClick={openMemberDialog}
             disabled={!user}
-            className="mt-5 w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
+            // mt-auto pins the profile card to the bottom of the sidebar while keeping spacing
+            className="mt-auto w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
             aria-label={t('profile.member_details')}
           >
             <div className="flex items-start gap-3">
