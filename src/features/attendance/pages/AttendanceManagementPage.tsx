@@ -110,10 +110,10 @@ function SegmentButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-xl border px-3 py-2 text-sm font-semibold transition',
+        'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
         active
           ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
-          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] hover:bg-[var(--accent-soft)]',
+          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
       )}
     >
       {children}
@@ -208,16 +208,6 @@ export function AttendanceManagementPage() {
     [dailyQuery.data, filteredEmployees],
   )
 
-  const monthlyMeta = useMemo(() => {
-    const totalHours = employees.reduce((sum, employee) => sum + employee.totalWorkedHours, 0)
-    const totalPresentDays = employees.reduce((sum, employee) => sum + employee.daysPresent, 0)
-    return {
-      totalHours,
-      totalPresentDays,
-      totalEmployees: employees.length,
-    }
-  }, [employees])
-
   const updateMonth = (year: number, month: number) => {
     setDate({ year, month })
     setSelectedDate(buildInitialDailyDate(year, month))
@@ -246,7 +236,13 @@ export function AttendanceManagementPage() {
         <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">Attendance</h1>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--surface)] p-4 shadow-lg lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-wrap items-center gap-2">
+        <SegmentButton active={view === 'monthly'} onClick={() => setView('monthly')}>Monthly</SegmentButton>
+        <SegmentButton active={view === 'weekly'} onClick={() => setView('weekly')}>Weekly</SegmentButton>
+        <SegmentButton active={view === 'daily'} onClick={() => setView('daily')}>Daily</SegmentButton>
+      </div>
+
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
           <Button variant="secondary" size="sm" onClick={prevMonth}>{'<'}</Button>
           <h2 className="min-w-[160px] text-center text-base font-bold text-[var(--foreground)]">
@@ -255,13 +251,7 @@ export function AttendanceManagementPage() {
           <Button variant="secondary" size="sm" onClick={nextMonth}>{'>'}</Button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 lg:max-w-3xl lg:flex-row lg:items-center lg:justify-end">
-          <div className="flex flex-wrap gap-2">
-            <SegmentButton active={view === 'monthly'} onClick={() => setView('monthly')}>Monthly</SegmentButton>
-            <SegmentButton active={view === 'weekly'} onClick={() => setView('weekly')}>Weekly</SegmentButton>
-            <SegmentButton active={view === 'daily'} onClick={() => setView('daily')}>Daily</SegmentButton>
-          </div>
-
+        <div className="flex flex-1 flex-col gap-3 lg:max-w-xl lg:flex-row lg:items-center lg:justify-end">
           {view === 'daily' ? (
             <Input
               type="date"
@@ -282,21 +272,6 @@ export function AttendanceManagementPage() {
             />
           </div>
         </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="rounded-[22px] px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Employees</p>
-          <p className="mt-2 text-2xl font-black text-[var(--foreground)]">{monthlyMeta.totalEmployees}</p>
-        </Card>
-        <Card className="rounded-[22px] px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Monthly Hours</p>
-          <p className="mt-2 text-2xl font-black text-blue-500">{formatHours(monthlyMeta.totalHours)}</p>
-        </Card>
-        <Card className="rounded-[22px] px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">Present Days</p>
-          <p className="mt-2 text-2xl font-black text-[var(--foreground)]">{monthlyMeta.totalPresentDays}</p>
-        </Card>
       </div>
 
       {monthlyQuery.isLoading ? (
@@ -431,7 +406,6 @@ export function AttendanceManagementPage() {
               <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-lg">
                 <div className="border-b border-[var(--border)] px-6 py-4">
                   <p className="text-sm font-semibold text-[var(--foreground)]">Daily attendance for {selectedDate}</p>
-                  <p className="text-xs text-[var(--muted-strong)]">All employees are listed. Missing rows from API are shown as no record.</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
