@@ -231,11 +231,6 @@ export function AttendanceManagementPage() {
 
   return (
     <div className="page-enter space-y-6">
-      <div className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">CEO / Attendance</p>
-        <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">Attendance</h1>
-      </div>
-
       <div className="flex flex-wrap items-center gap-2">
         <SegmentButton active={view === 'monthly'} onClick={() => setView('monthly')}>Monthly</SegmentButton>
         <SegmentButton active={view === 'weekly'} onClick={() => setView('weekly')}>Weekly</SegmentButton>

@@ -10,7 +10,6 @@ import { Badge } from '../../../shared/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
-import { PageHeader } from '../../../shared/ui/page-header'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
@@ -290,11 +289,18 @@ export function CeoDashboardPage() {
 
   return (
     <section className="space-y-8">
-      <PageHeader
-        title={t('ceo.dashboard.header.title')}
-        actions={
+      <CrmDashboardCharts
+        weekly={chartsQuery.data?.weekly}
+        monthly={chartsQuery.data?.monthly}
+        customerType={chartCustomerType}
+        onCustomerTypeChange={setChartCustomerType}
+        isLoading={chartsQuery.isLoading}
+        isError={chartsQuery.isError}
+        onRetry={() => {
+          void chartsQuery.refetch()
+        }}
+        headerActions={
           <ActionsMenu
-            triggerVariant="button"
             label={t('common.actions')}
             items={[
               {
@@ -327,18 +333,6 @@ export function CeoDashboardPage() {
             ]}
           />
         }
-      />
-
-      <CrmDashboardCharts
-        weekly={chartsQuery.data?.weekly}
-        monthly={chartsQuery.data?.monthly}
-        customerType={chartCustomerType}
-        onCustomerTypeChange={setChartCustomerType}
-        isLoading={chartsQuery.isLoading}
-        isError={chartsQuery.isError}
-        onRetry={() => {
-          void chartsQuery.refetch()
-        }}
       />
 
       <div className="grid gap-6 xl:grid-cols-2">

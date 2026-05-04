@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react'
+import { useId, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   SalesDashboardChartsResponse,
@@ -65,6 +65,7 @@ type CrmDashboardChartsProps = {
   isLoading: boolean
   isError: boolean
   onRetry: () => void
+  headerActions?: ReactNode
 }
 
 function formatPercent(value?: number | null) {
@@ -142,7 +143,7 @@ function TrendChartCard({
   const chartHeight = 220
   const padX = 14
   const padY = 18
-  const trend = payload?.trend ?? []
+  const trend = useMemo(() => payload?.trend ?? [], [payload])
   const totalPoints = trend.length
   const maxValue = Math.max(...trend.map((point) => point.count), 1)
   const points = useMemo(() => {
@@ -305,6 +306,7 @@ export function CrmDashboardCharts({
   isLoading,
   isError,
   onRetry,
+  headerActions,
 }: CrmDashboardChartsProps) {
   const { t } = useTranslation()
   const summary = monthly?.summary ?? weekly?.summary
@@ -329,9 +331,11 @@ export function CrmDashboardCharts({
               onValueChange={onCustomerTypeChange}
             />
           </div>
-          <Button variant="secondary" onClick={onRetry} loading={isLoading}>
-            {t('common.refresh')}
-          </Button>
+          {headerActions ?? (
+            <Button variant="secondary" onClick={onRetry} loading={isLoading}>
+              {t('common.refresh')}
+            </Button>
+          )}
         </div>
       </div>
 
