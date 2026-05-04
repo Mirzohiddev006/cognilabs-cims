@@ -288,7 +288,7 @@ export function AppSidebar() {
           </div>
 
           {/* ── Navigation list ── */}
-          <nav className="mt-3 flex flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
+          <nav className="mt-3 flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto pr-1" style={{overflowY: 'auto'}}>
             {sidebarNavigation.map((item) => {
               const itemLabel = getNavigationLabel(item.to, item.label)
 
@@ -361,7 +361,7 @@ export function AppSidebar() {
                          Only difference: a 14px left-margin indent to signal hierarchy.
                     ──────────────────────────────────────────────────────────────────────── */}
                     {isProjectsExpanded && (
-                      <div className="ml-3.5 flex flex-col gap-1.5 max-h-[34vh] overflow-y-auto pr-0.5">
+                      <div className="ml-3.5 flex flex-col gap-1.5 pr-0.5">
                         {projectsQuery.isLoading ? (
                           // Loading skeletons — same height as real cards
                           Array.from({ length: 4 }).map((_, i) => (
