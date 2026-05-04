@@ -24,6 +24,18 @@ type NormalizedEmployee = {
   days: NormalizedDay[]
 }
 
+function resolveHours(
+  obj: Record<string, unknown>,
+  hourKeys: string[],
+  minuteKeys: string[] = [],
+): number {
+  const hours = resolveNum(obj, ...hourKeys)
+  if (hours > 0) return hours
+
+  const minutes = resolveNum(obj, ...minuteKeys)
+  return minutes > 0 ? minutes / 60 : 0
+}
+
 function resolveNum(obj: Record<string, unknown>, ...keys: string[]): number {
   for (const key of keys) {
     const val = obj[key]
@@ -46,10 +58,11 @@ function resolveStr(obj: Record<string, unknown>, ...keys: string[]): string {
 
 function normalizeDay(raw: unknown): NormalizedDay {
   const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const durationMinutes = resolveNum(d, 'duration_minutes')
-  const workedHours =
-    resolveNum(d, 'worked_hours', 'worked_hours_decimal', 'hours') ||
-    (durationMinutes > 0 ? durationMinutes / 60 : 0)
+  const workedHours = resolveHours(
+    d,
+    ['worked_hours', 'worked_hours_decimal', 'hours'],
+    ['duration_minutes', 'worked_minutes', 'total_minutes'],
+  )
   const checkIn = resolveStr(d, 'check_in_time', 'check_in') || null
   return {
     date: resolveStr(d, 'date', 'attendance_date'),
@@ -78,8 +91,16 @@ function normalizeEmployee(raw: unknown): NormalizedEmployee {
     `Employee #${employeeId || '?'}`
 
   const totalWorkedHours =
-    resolveNum(e, 'total_worked_hours', 'total_hours', 'worked_hours_decimal', 'total_hours_decimal') ||
-    resolveNum(statsObj, 'total_hours')
+    resolveHours(
+      e,
+      ['total_worked_hours', 'total_hours', 'worked_hours_decimal', 'total_hours_decimal'],
+      ['total_minutes', 'worked_minutes'],
+    ) ||
+    resolveHours(
+      statsObj,
+      ['total_hours', 'worked_hours', 'worked_hours_decimal'],
+      ['total_minutes', 'worked_minutes'],
+    )
 
   // Days can be at root, or distributed across weekly_stats entries
   let days: NormalizedDay[] = []
@@ -92,7 +113,19 @@ function normalizeEmployee(raw: unknown): NormalizedEmployee {
     })
   }
 
-  return { employeeId, fullName, totalWorkedHours, days }
+  days.sort((a, b) => {
+    if (!a.date && !b.date) return 0
+    if (!a.date) return 1
+    if (!b.date) return -1
+    return a.date.localeCompare(b.date)
+  })
+
+  return {
+    employeeId,
+    fullName,
+    totalWorkedHours: totalWorkedHours || days.reduce((sum, day) => sum + day.workedHours, 0),
+    days,
+  }
 }
 
 function extractEmployeeList(raw: unknown): NormalizedEmployee[] {
@@ -122,10 +155,7 @@ export function AttendanceManagementPage() {
   const query = useAsyncData(
     async () => {
       const raw = await attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month)
-      console.log('[AttendanceManagement] raw API response:', raw)
-      const list = extractEmployeeList(raw)
-      console.log('[AttendanceManagement] normalized employees:', list)
-      return list
+      return extractEmployeeList(raw)
     },
     [date.year, date.month],
   )

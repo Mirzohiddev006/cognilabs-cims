@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { Card } from '../../../shared/ui/card'
-import { PageHeader } from '../../../shared/ui/page-header'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
 import { Badge } from '../../../shared/ui/badge'
@@ -28,6 +27,18 @@ type NormalizedOfficeTime = {
   weeks: NormalizedWeek[]
 }
 
+function resolveHours(
+  obj: Record<string, unknown>,
+  hourKeys: string[],
+  minuteKeys: string[] = [],
+): number {
+  const hours = resolveNum(obj, ...hourKeys)
+  if (hours > 0) return hours
+
+  const minutes = resolveNum(obj, ...minuteKeys)
+  return minutes > 0 ? minutes / 60 : 0
+}
+
 function resolveNum(obj: Record<string, unknown>, ...keys: string[]): number {
   for (const key of keys) {
     const val = obj[key]
@@ -50,10 +61,11 @@ function resolveStr(obj: Record<string, unknown>, ...keys: string[]): string {
 
 function normalizeDay(raw: unknown): NormalizedDay {
   const d = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
-  const durationMinutes = resolveNum(d, 'duration_minutes')
-  const workedHours =
-    resolveNum(d, 'worked_hours', 'worked_hours_decimal') ||
-    (durationMinutes > 0 ? durationMinutes / 60 : 0)
+  const workedHours = resolveHours(
+    d,
+    ['worked_hours', 'worked_hours_decimal', 'hours'],
+    ['duration_minutes', 'worked_minutes', 'total_minutes'],
+  )
   const checkIn = resolveStr(d, 'check_in_time', 'check_in') || null
   return {
     date: resolveStr(d, 'date', 'attendance_date'),
@@ -74,12 +86,53 @@ function normalizeWeek(raw: unknown, index: number, allDays: NormalizedDay[]): N
       : Array.isArray(w.days)
         ? (w.days as unknown[]).map(normalizeDay)
         : []
-  const totalHours = resolveNum(w, 'total_hours', 'worked_hours', 'worked_hours_decimal')
+  const totalHours = resolveHours(
+    w,
+    ['total_hours', 'worked_hours', 'worked_hours_decimal'],
+    ['total_minutes', 'worked_minutes'],
+  )
   return {
     weekNumber: resolveNum(w, 'week_number', 'week') || index + 1,
     workedHours: totalHours || days.reduce((sum, d) => sum + d.workedHours, 0),
     days,
   }
+}
+
+function sortDays(days: NormalizedDay[]): NormalizedDay[] {
+  return [...days].sort((a, b) => {
+    if (!a.date && !b.date) return 0
+    if (!a.date) return 1
+    if (!b.date) return -1
+    return a.date.localeCompare(b.date)
+  })
+}
+
+function buildWeeksFromDays(days: NormalizedDay[]): NormalizedWeek[] {
+  const sortedDays = sortDays(days)
+  if (sortedDays.length === 0) return []
+
+  const weekMap = new Map<string, NormalizedDay[]>()
+  for (const day of sortedDays) {
+    const parsed = new Date(day.date)
+    if (Number.isNaN(parsed.getTime())) {
+      const fallbackKey = `unknown-${weekMap.size + 1}`
+      weekMap.set(fallbackKey, [...(weekMap.get(fallbackKey) ?? []), day])
+      continue
+    }
+
+    const mondayBased = new Date(parsed)
+    const dayOfWeek = mondayBased.getDay()
+    const delta = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+    mondayBased.setDate(mondayBased.getDate() + delta)
+    const weekKey = mondayBased.toISOString().slice(0, 10)
+    weekMap.set(weekKey, [...(weekMap.get(weekKey) ?? []), day])
+  }
+
+  return Array.from(weekMap.values()).map((weekDays, index) => ({
+    weekNumber: index + 1,
+    workedHours: weekDays.reduce((sum, day) => sum + day.workedHours, 0),
+    days: weekDays,
+  }))
 }
 
 function normalizeOfficeTime(raw: unknown): NormalizedOfficeTime | null {
@@ -89,15 +142,30 @@ function normalizeOfficeTime(raw: unknown): NormalizedOfficeTime | null {
   const period = (obj.period && typeof obj.period === 'object' ? obj.period : {}) as Record<string, unknown>
   const monthlyStats = (obj.monthly_stats && typeof obj.monthly_stats === 'object' ? obj.monthly_stats : {}) as Record<string, unknown>
 
-  const allDays = Array.isArray(obj.days) ? (obj.days as unknown[]).map(normalizeDay) : []
+  const allDays = sortDays(Array.isArray(obj.days) ? (obj.days as unknown[]).map(normalizeDay) : [])
 
   const weeklySource = Array.isArray(obj.weekly_stats) ? obj.weekly_stats : Array.isArray(obj.weeks) ? obj.weeks : []
-  const weeks: NormalizedWeek[] = (weeklySource as unknown[]).map((w, i) => normalizeWeek(w, i, allDays))
+  const weeks: NormalizedWeek[] =
+    (weeklySource as unknown[]).length > 0
+      ? (weeklySource as unknown[]).map((w, i) => normalizeWeek(w, i, allDays))
+      : buildWeeksFromDays(allDays)
+
+  const totalWorkedHours = resolveHours(
+    monthlyStats,
+    ['total_hours', 'worked_hours', 'worked_hours_decimal'],
+    ['total_minutes', 'worked_minutes'],
+  ) ||
+    resolveHours(
+      obj,
+      ['total_worked_hours', 'total_hours', 'worked_hours_decimal'],
+      ['total_minutes', 'worked_minutes'],
+    ) ||
+    allDays.reduce((sum, day) => sum + day.workedHours, 0)
 
   return {
     year: resolveNum(period, 'year') || resolveNum(obj, 'year'),
     month: resolveNum(period, 'month') || resolveNum(obj, 'month'),
-    totalWorkedHours: resolveNum(monthlyStats, 'total_hours') || resolveNum(obj, 'total_worked_hours', 'total_hours'),
+    totalWorkedHours,
     weeks,
   }
 }
@@ -132,11 +200,10 @@ export function PersonalAttendancePage() {
 
   return (
     <div className="page-enter space-y-6">
-      <PageHeader
-        eyebrow="Member / Attendance"
-        title="My Attendance"
-        description="Track your monthly office time and weekly progress."
-      />
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Member / Attendance</p>
+        <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">My Attendance</h1>
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
