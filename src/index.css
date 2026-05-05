@@ -161,10 +161,8 @@ html.light {
   --blue-text:         #2563EB;
   --blue-border:       #BFDBFE;
   --blue-message:      #f9f9fa;
-}
 
-/* Semantic */
-{
+  /* Semantic */
   --success:           #22C55E;
   --success-dim:       rgba(34,197,94,0.10);
   --success-soft:      rgba(34,197,94,0.08);

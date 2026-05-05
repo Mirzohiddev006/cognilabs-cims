@@ -61,7 +61,7 @@ function navItemInactive() {
 }
 
 function navIconBase() {
-  return 'grid shrink-0 place-items-center border text-(--muted-strong) h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg)'
+  return 'grid shrink-0 place-items-center border text-(--shell-icon-text) h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg)'
 }
 
 // Small coloured dot used in the project icon slot to represent a project
