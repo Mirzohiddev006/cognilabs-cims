@@ -466,7 +466,7 @@ export function ProjectDetailPage() {
                                  onClick={() => selectBoard(board.id)}
                                  className={cn(
                                    "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
-                                   canManageProjects ? "pr-7" : "pr-4 sm:pr-5",
+                                   canManageProjects ? "pr-8" : "pr-4 sm:pr-5",
                                    isSelected
                                      ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
                                      : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
@@ -475,21 +475,15 @@ export function ProjectDetailPage() {
                                  {board.name}
                                </button>
                                {canManageProjects && (
-                                 <button
-                                   type="button"
-                                   onClick={(e) => { e.stopPropagation(); void handleDeleteBoard(board.id, board.name) }}
-                                   className={cn(
-                                     "absolute right-1.5 flex h-4 w-4 items-center justify-center rounded transition-all",
-                                     isSelected
-                                       ? "text-white/70 hover:text-white hover:bg-white/20"
-                                       : "opacity-0 group-hover:opacity-100 text-[var(--muted)] hover:text-red-400 hover:bg-red-400/10"
-                                   )}
-                                   title={lt('Delete board')}
-                                 >
-                                   <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                     <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/>
-                                   </svg>
-                                 </button>
+                                 <div className="absolute right-1">
+                                    <ActionsMenu
+                                      label={lt('Board actions')}
+                                      items={[
+                                        { label: lt('Edit'), onSelect: () => {/* Add edit handler logic */} },
+                                        { label: lt('Delete'), tone: 'danger', onSelect: () => void handleDeleteBoard(board.id, board.name) },
+                                      ]}
+                                    />
+                                 </div>
                                )}
                              </div>
                            )
