@@ -237,7 +237,7 @@ export function FaultsPage() {
   const needsMistakeSupportData = mistakeTarget !== null
   const needsDeliveryBonusSupportData = deliveryBonusTarget !== null || activeReportId !== null
   const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
-  const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2035)
+  const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2050)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
   const memberOptionsQuery = useAsyncData(
     () => updateTrackingService.workdayOverrideMemberOptions(),
