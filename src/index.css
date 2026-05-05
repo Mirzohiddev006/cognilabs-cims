@@ -108,6 +108,7 @@
   --shell-collapse-btn-text:         #ffffff;
   --shell-icon-bg:                   #1a1a1a;
   --shell-icon-border:               var(--border);
+  --shell-icon-text:                 #ffffff;
   --shell-nav-inactive-border:       rgba(255,255,255,0.10);
   --shell-nav-inactive-bg:           rgba(255,255,255,0.03);
   --shell-nav-hover-bg:              rgba(255,255,255,0.05);
