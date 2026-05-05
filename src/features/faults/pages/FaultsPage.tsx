@@ -16,6 +16,7 @@ import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { MemberAvatar } from '../../../shared/ui/member-avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select'
 import { SelectField } from '../../../shared/ui/select-field'
 import { AsyncContentLoader } from '../../../shared/ui/async-content-loader'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -202,7 +203,7 @@ function extractEmployeeApiSummary(payload: unknown): EmployeeApiSummary {
 
 export function FaultsPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { user: currentUser } = useAuth()
   const { showToast } = useToast()
   const lt = translateCurrentLiteral
@@ -239,6 +240,18 @@ export function FaultsPage() {
   const needsProjectSupportData = needsMistakeSupportData || needsDeliveryBonusSupportData
   const year = parsePeriodNumber(searchParams.get('year'), defaultYear, 2020, 2050)
   const month = parsePeriodNumber(searchParams.get('month'), defaultMonth, 1, 12)
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, index) => {
+        const monthValue = index + 1
+
+        return {
+          value: String(monthValue),
+          label: getMonthName(monthValue),
+        }
+      }),
+    [locale],
+  )
   const memberOptionsQuery = useAsyncData(
     () => updateTrackingService.workdayOverrideMemberOptions(),
     [],
@@ -421,6 +434,17 @@ export function FaultsPage() {
     },
     [reports, salaryEstimatesQuery.data, statisticsQuery.data],
   )
+
+  function updateMonth(nextMonth: string) {
+    const normalizedMonth = clampNumber(Number(nextMonth) || defaultMonth, 1, 12)
+
+    setSearchParams((current) => {
+      const nextParams = new URLSearchParams(current)
+      nextParams.set('year', String(year))
+      nextParams.set('month', String(normalizedMonth))
+      return nextParams
+    })
+  }
   const activeDrawerReport = useMemo(
     () => reports.find((report) => report.id === activeReportId) ?? null,
     [activeReportId, reports],
@@ -668,17 +692,35 @@ export function FaultsPage() {
 
   return (
     <section className="space-y-6 page-enter">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div />
-        <Button
-          variant="secondary"
-          size="lg"
-          leftIcon={<RefreshIcon />}
-          onClick={() => void handleRefresh()}
-          className="rounded-xl"
-        >
-          {lt('Refresh')}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl border border-(--border) bg-(--surface-elevated) px-3 py-1.5 shadow-(--shadow-sm)">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Month')}</span>
+            <Select value={String(month)} onValueChange={updateMonth}>
+              <SelectTrigger className="h-8 w-45 border-transparent bg-transparent px-2 text-sm font-semibold text-(--foreground) shadow-none hover:border-transparent hover:bg-transparent focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder={lt('Month')} />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            variant="secondary"
+            size="lg"
+            leftIcon={<RefreshIcon />}
+            onClick={() => void handleRefresh()}
+            className="rounded-xl"
+          >
+            {lt('Refresh')}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
