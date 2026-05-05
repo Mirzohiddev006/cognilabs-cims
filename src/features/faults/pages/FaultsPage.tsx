@@ -695,10 +695,10 @@ export function FaultsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div />
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-(--border) bg-(--surface-elevated) px-3 py-1.5 shadow-(--shadow-sm)">
+          <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Month')}</span>
             <Select value={String(month)} onValueChange={updateMonth}>
-              <SelectTrigger className="h-8 w-45 border-transparent bg-transparent px-2 text-sm font-semibold text-(--foreground) shadow-none hover:border-transparent hover:bg-transparent focus:ring-0 focus:ring-offset-0">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder={lt('Month')} />
               </SelectTrigger>
               <SelectContent>
