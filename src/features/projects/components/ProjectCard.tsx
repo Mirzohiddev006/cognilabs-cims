@@ -3,8 +3,6 @@ import { useLocale } from '../../../app/hooks/useLocale'
 import { Badge } from '../../../shared/ui/badge'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ProjectRecord } from '../../../shared/api/services/projects.service'
-import { Avatar, AvatarGroup } from './Avatar'
-import { formatRelativeDate } from '../lib/format'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type ProjectCardProps = {
@@ -20,125 +18,67 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
   const memberCount = (project.members ?? []).length
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.24)] hover:border-[var(--border-hover)]">
-      {/* Image / placeholder */}
-      <div className="relative h-36 w-full overflow-hidden bg-[var(--muted-surface)]">
-        {project.image ? (
-          <img
-            src={resolveMediaUrl(project.image) ?? project.image}
-            alt={project.project_name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center">
-            <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-bold"
-              style={{
-                background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
-                color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
-              }}
-            >
-              {project.project_name.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        )}
-        {/* Gradient overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--surface-elevated)]/60 to-transparent" />
-
-        {/* Actions menu overlay */}
-        {canManage ? (
-          <div className="absolute right-3 top-3 opacity-0 transition-opacity group-hover:opacity-100">
-            <ActionsMenu
-              label={t('projects.project_actions', 'Project actions')}
-              items={[
-                { label: t('projects.edit_project_action', 'Edit project'), onSelect: () => onEdit(project) },
-                { label: t('projects.delete_project_action', 'Delete project'), tone: 'danger', onSelect: () => onDelete(project) },
-              ]}
-            />
-          </div>
-        ) : null}
-      </div>
-
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_1px_4px_rgba(0,0,0,0.06)] transition hover:border-[var(--border-hover)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
       {/* Content */}
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        {/* Title */}
-        <div>
-          <Link
-            to={`/projects/${project.id}`}
-            className="text-sm font-semibold text-[var(--foreground)] hover:text-white transition-colors line-clamp-1"
-          >
-            {project.project_name}
-          </Link>
+      <div className="flex flex-1 flex-col gap-2 p-3">
+        {/* Title + Action */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {project.image ? (
+              <img
+                src={resolveMediaUrl(project.image) ?? project.image}
+                alt={project.project_name}
+                className="h-8 w-8 shrink-0 rounded-lg object-cover"
+              />
+            ) : (
+              <div
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-black"
+                style={{
+                  background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
+                  color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,
+                }}
+              >
+                {project.project_name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <Link
+              to={`/projects/${project.id}`}
+              className="text-xs font-semibold text-[var(--foreground)] hover:text-white transition-colors truncate"
+            >
+              {project.project_name}
+            </Link>
+          </div>
+          
+          {canManage ? (
+            <div className="shrink-0">
+              <ActionsMenu
+                label={t('projects.project_actions', 'Project actions')}
+                items={[
+                  { label: t('common.edit', 'Edit'), onSelect: () => onEdit(project) },
+                  { label: t('common.delete', 'Delete'), tone: 'danger', onSelect: () => onDelete(project) },
+                ]}
+              />
+            </div>
+          ) : null}
         </div>
-
-        {/* URL badge */}
-        {project.project_url && (
-          <a
-            href={project.project_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-[10px] text-blue-400 hover:text-blue-300 transition-colors truncate"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <svg viewBox="0 0 16 16" className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M5 8h6M8 5l3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="truncate">{project.project_url.replace(/^https?:\/\//, '')}</span>
-          </a>
-        )}
 
         {/* Stats row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="secondary" size="sm">
-            {boardCount === 1
-              ? t('projects.board_count_short', '{count} board', { count: boardCount })
-              : t('projects.board_count_plural', '{count} boards', { count: boardCount })}
+        <div className="flex items-center gap-2 mt-1">
+          <Badge variant="secondary" size="sm" className="px-1.5 h-4 text-[9px] uppercase tracking-wider">
+            {boardCount} {t('projects.boards', 'Boards')}
           </Badge>
           {memberCount > 0 && (
-            <Badge variant="outline" size="sm">
-              {memberCount === 1
-                ? t('projects.member_count_short', '{count} member', { count: memberCount })
-                : t('projects.member_count_plural', '{count} members', { count: memberCount })}
+            <Badge variant="outline" size="sm" className="px-1.5 h-4 text-[9px] uppercase tracking-wider">
+              {memberCount} {t('projects.members', 'Members')}
             </Badge>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-auto flex items-center justify-between pt-2 border-t border-[var(--border)]">
-          <div className="flex items-center gap-2">
-            {project.created_by ? (
-              <>
-                <Avatar
-                  name={project.created_by.name}
-                  surname={project.created_by.surname}
-                  imageUrl={project.created_by.profile_image}
-                  size="xs"
-                  title={t('projects.created_by_person', 'Created by {name}', {
-                    name: `${project.created_by.name} ${project.created_by.surname}`,
-                  })}
-                />
-                <span className="text-[10px] text-[var(--muted)] truncate max-w-[100px]">
-                  {project.created_by.name}
-                </span>
-              </>
-            ) : null}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {(project.members ?? []).length > 0 && (
-              <AvatarGroup users={project.members} max={3} size="xs" />
-            )}
-            <span className="text-[10px] text-[var(--muted)]">
-              {project.updated_at ? formatRelativeDate(project.updated_at) : ''}
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Click-to-navigate overlay (behind content) */}
       <Link
         to={`/projects/${project.id}`}
-        className="absolute inset-0"
+        className="absolute inset-0 z-0"
         aria-label={t('projects.open_project', 'Open {name}', { name: project.project_name })}
         tabIndex={-1}
       />
