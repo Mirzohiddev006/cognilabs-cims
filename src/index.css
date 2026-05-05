@@ -159,8 +159,7 @@ html.light {
   --blue-text:         #2563EB;
   --blue-border:       #BFDBFE;
   --blue-message:      #2563eb;
-
-  /* Semantic */
+  }  /* Semantic */
   --success:           #22C55E;
   --success-dim:       rgba(34,197,94,0.10);
   --success-soft:      rgba(34,197,94,0.08);
@@ -211,7 +210,7 @@ html.light {
   --shell-text-primary:              #0F172A;
   --shell-app-name-color:            #0F172A;
   --shell-label-color:               #2563EB;
-  --blue-message:      #2563eb; /* Darker blue for light mode readability */
+  --blue-message:      #3b82f6; /* Darker blue for light mode readability */
 }
 
 /* ─── RESET ──────────────────────────────────────────────────── */
