@@ -16,7 +16,6 @@ import { DataTable } from '../../../shared/ui/data-table'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Input } from '../../../shared/ui/input'
 import { MemberAvatar } from '../../../shared/ui/member-avatar'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../shared/ui/select'
 import { SelectField } from '../../../shared/ui/select-field'
 import { AsyncContentLoader } from '../../../shared/ui/async-content-loader'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
@@ -695,21 +694,13 @@ export function FaultsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div />
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Month')}</span>
-            <Select value={String(month)} onValueChange={updateMonth}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={lt('Month')} />
-              </SelectTrigger>
-              <SelectContent>
-                {monthOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <SelectField
+            value={String(month)}
+            options={monthOptions}
+            onValueChange={updateMonth}
+            placeholder={lt('Month')}
+            className="w-45"
+          />
 
           <Button
             variant="secondary"
