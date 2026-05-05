@@ -289,7 +289,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           'relative max-w-[75%] sm:max-w-[62%] px-3.5 py-2 text-[13.5px] leading-relaxed shadow-sm',
           isClient
             ? 'bg-[var(--surface-elevated)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl rounded-bl-sm'
-            : 'bg-[var(--blue-message)] text-white rounded-2xl rounded-br-sm',
+            : 'bg-[var(--blue-message)] text-white !text-white rounded-2xl rounded-br-sm',
           isNextSameSender && (isClient ? 'rounded-bl-sm' : 'rounded-br-sm')
         )}
       >
