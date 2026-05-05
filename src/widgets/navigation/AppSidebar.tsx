@@ -274,8 +274,8 @@ export function AppSidebar() {
               <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
             </div>
             <div className="min-w-0 flex-1 overflow-hidden">
-              <h2 className="truncate text-[14px] font-bold text-(--shell-text-primary) tracking-tight">{env.appName}</h2>
-              <p className="ui-eyebrow truncate text-[var(--muted)]">{t('shell.management_system')}</p>
+              <h2 className="truncate text-[14px] font-bold text-[var(--shell-text-primary)] tracking-tight">{env.appName}</h2>
+              <p className="ui-eyebrow truncate text-[var(--shell-label-color)]">{t('shell.management_system')}</p>
             </div>
           </button>
 
