@@ -1866,7 +1866,7 @@ export function CeoTeamUpdatesPage() {
                   <Input
                     type="number"
                     min="2020"
-                    max="2035"
+                    max="2050"
                     value={year}
                     onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
                     className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)]"
