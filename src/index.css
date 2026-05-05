@@ -199,8 +199,9 @@ html.light {
   --shell-collapse-btn-hover-bg:     #F8FAFC;
   --shell-collapse-btn-hover-border: #CBD5E1;
   --shell-collapse-btn-text:         #0F172A;
-  --shell-icon-bg:                   #0F172A;
+  --shell-icon-bg:                   #F8FAFC;
   --shell-icon-border:               #E2E8F0;
+  --shell-icon-text:                 #0F172A;
   --shell-nav-inactive-border:       #E2E8F0;
   --shell-nav-inactive-bg:           #FFFFFF;
   --shell-nav-hover-bg:              #F1F5F9;
