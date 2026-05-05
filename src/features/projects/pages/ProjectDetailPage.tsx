@@ -12,6 +12,7 @@ import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
   projectsService,
   type ProjectRecord,
+  type BoardRecord,
   type UserSummary,
   type UserOpenCardRecord,
 } from '../../../shared/api/services/projects.service'
@@ -300,6 +301,24 @@ export function ProjectDetailPage() {
       notifyProjectsNavigationChanged()
     } catch {
       showToast({ title: lt('Failed to create board'), tone: 'error' })
+    } finally {
+      setIsBoardSubmitting(false)
+    }
+  }
+
+  async function handleUpdateBoard(values: { name: string; description?: string }) {
+    if (!canManageProjects || !editingBoard) return
+
+    setIsBoardSubmitting(true)
+    try {
+      await projectsService.updateBoard(editingBoard.id, values)
+      showToast({ title: lt('Board updated'), tone: 'success' })
+      setIsEditBoardOpen(false)
+      setEditingBoard(null)
+      await projectQuery.refetch()
+      notifyProjectsNavigationChanged()
+    } catch {
+      showToast({ title: lt('Failed to update board'), tone: 'error' })
     } finally {
       setIsBoardSubmitting(false)
     }
@@ -720,6 +739,15 @@ export function ProjectDetailPage() {
             onSubmit={handleCreateBoard}
             title={lt('Create board')}
             submitLabel={lt('Create')}
+            isSubmitting={isBoardSubmitting}
+          />
+          <BoardFormModal
+            open={isEditBoardOpen}
+            onClose={() => setIsEditBoardOpen(false)}
+            onSubmit={handleUpdateBoard}
+            initial={editingBoard}
+            title={lt('Edit board')}
+            submitLabel={lt('Save changes')}
             isSubmitting={isBoardSubmitting}
           />
         </>
