@@ -211,7 +211,7 @@ html.light {
   --shell-text-primary:              #0F172A;
   --shell-app-name-color:            #0F172A;
   --shell-label-color:               #2563EB;
-  --blue-message:                    #ffffff;
+  --blue-message:      #2563eb; /* Darker blue for light mode readability */
 }
 
 /* ─── RESET ──────────────────────────────────────────────────── */
