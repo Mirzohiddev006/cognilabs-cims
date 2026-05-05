@@ -77,6 +77,8 @@ export function ProjectDetailPage() {
   )
 
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false)
+  const [isEditBoardOpen, setIsEditBoardOpen] = useState(false)
+  const [editingBoard, setEditingBoard] = useState<BoardRecord | null>(null)
   const [isCreateBoardOpen, setIsCreateBoardOpen] = useState(false)
   const [isProjectSubmitting, setIsProjectSubmitting] = useState(false)
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
