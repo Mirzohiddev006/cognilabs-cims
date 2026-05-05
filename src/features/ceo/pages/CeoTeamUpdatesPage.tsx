@@ -1869,7 +1869,7 @@ export function CeoTeamUpdatesPage() {
                     max="2050"
                     value={year}
                     onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-                    className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default"
+                    className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default hover:border-transparent hover:bg-transparent"
                   />
                 </div>
 
@@ -1879,7 +1879,7 @@ export function CeoTeamUpdatesPage() {
                     value={String(month)}
                     options={monthOptions}
                     onValueChange={(value) => setMonth(Number(value))}
-                    className="h-7 min-w-[100px] border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default"
+                    className="h-7 min-w-[100px] border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default hover:border-transparent hover:bg-transparent"
                   />
                 </div>
 
