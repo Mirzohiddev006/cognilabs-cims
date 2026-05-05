@@ -1861,25 +1861,25 @@ export function CeoTeamUpdatesPage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Year')}</Label>
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10 cursor-default">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted) cursor-default">{lt('Year')}</Label>
                   <Input
                     type="number"
                     min="2020"
                     max="2050"
                     value={year}
                     onChange={(e) => setYear(Number(e.target.value) || now.getFullYear())}
-                    className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)]"
+                    className="h-7 w-16 border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default"
                   />
                 </div>
 
-                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted)">{lt('Month')}</Label>
+                <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-1.5 h-10 cursor-default">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-(--muted) cursor-default">{lt('Month')}</Label>
                   <SelectField
                     value={String(month)}
                     options={monthOptions}
                     onValueChange={(value) => setMonth(Number(value))}
-                    className="h-7 min-w-[100px] border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)]"
+                    className="h-7 min-w-[100px] border-transparent bg-transparent text-sm font-semibold text-[var(--foreground)] cursor-default"
                   />
                 </div>
 
