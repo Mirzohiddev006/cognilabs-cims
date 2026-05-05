@@ -47,21 +47,21 @@ type MemberProfileFormState = {
 function navItemBase() {
   // fixed height to ensure all nav cards keep same size and don't shift when main content changes
   // remove vertical padding and rely on fixed height + items-center for consistent vertical centering
-  return 'group relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-0 text-sm h-[52px] transition-all duration-200'
+  return 'relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-0 text-sm h-[52px]'
 }
 
 function navItemActive(isLight: boolean) {
   return isLight
-    ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700 shadow-[0_10px_24px_rgba(37,99,235,0.10)]'
-    : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white shadow-sm'
+    ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700'
+    : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white'
 }
 
 function navItemInactive() {
-  return 'border-transparent bg-transparent text-(--muted) hover:-translate-y-0.5 hover:border-(--shell-nav-inactive-border) hover:bg-(--shell-nav-hover-bg) hover:text-(--shell-nav-hover-text)'
+  return 'border-transparent bg-transparent text-(--muted)'
 }
 
 function navIconBase() {
-  return 'grid shrink-0 place-items-center border text-(--muted-strong) transition-all duration-150 h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg) group-hover:scale-105'
+  return 'grid shrink-0 place-items-center border text-(--muted-strong) h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg)'
 }
 
 // Small coloured dot used in the project icon slot to represent a project
@@ -69,12 +69,12 @@ function ProjectDot({ isActive, isLight }: { isActive: boolean; isLight: boolean
   return (
     <div
       className={cn(
-        'h-2.5 w-2.5 rounded-full transition-all duration-150',
+        'h-2.5 w-2.5 rounded-full',
         isActive
           ? isLight
             ? 'bg-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.18)]'
             : 'bg-blue-400 shadow-[0_0_0_3px_rgba(96,165,250,0.18)]'
-          : 'bg-[var(--muted)] group-hover:bg-[var(--foreground)]',
+          : 'bg-[var(--muted)]',
       )}
     />
   )
@@ -261,14 +261,14 @@ export function AppSidebar() {
             : 'min-[961px]:opacity-100',
         )}
       >
-        <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-3 py-4 shadow-[0_18px_48px_rgba(15,23,42,0.12)] sm:px-4">
+        <div className="flex h-full flex-col overflow-hidden rounded-[30px] bg-(--surface-elevated) px-3 py-4 sm:px-4">
 
           {/* ── Logo / brand toggle ── */}
           <button
             type="button"
             onClick={handleSidebarToggle}
             aria-label={t('shell.toggle_navigation')}
-            className="flex w-full items-center gap-3 border-b border-[var(--border)] px-2 pb-4 text-left transition-colors hover:bg-[var(--accent-soft)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35"
+            className="flex w-full items-center gap-3 border-b border-[var(--border)] px-2 pb-4 text-left"
           >
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
               <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
@@ -478,7 +478,7 @@ export function AppSidebar() {
             onClick={openMemberDialog}
             disabled={!user}
             // mt-auto pins the profile card to the bottom of the sidebar while keeping spacing
-            className="mt-auto w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.20)] transition duration-200 hover:-translate-y-0.5 hover:border-(--shell-profile-hover-border) hover:bg-(--shell-profile-hover-bg) disabled:cursor-default disabled:opacity-80"
+            className="mt-auto w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left disabled:cursor-default disabled:opacity-80"
             aria-label={t('profile.member_details')}
           >
             <div className="flex items-start gap-3">
