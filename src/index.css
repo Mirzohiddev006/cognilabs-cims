@@ -1,14 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap');
-
 /* ─── FONTS ──────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans", sans-serif;
+  --font-display: "Noto Sans", sans-serif;
+}
 
 /* ─── DESIGN TOKENS ──────────────────────────────────────────── */
 :root {
   color-scheme: dark;
 
-  --font-sans: "DM Sans", "Segoe UI Variable", "Segoe UI", sans-serif;
-  --font-display: "Space Grotesk", "DM Sans", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-sans: "Noto Sans", sans-serif;
+  --font-display: "Noto Sans", sans-serif;
   --font-mono: "DM Mono", "Fira Code", "JetBrains Mono", monospace;
   --tracking-body: -0.012em;
   --tracking-heading: -0.03em;
