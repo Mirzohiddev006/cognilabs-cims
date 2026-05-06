@@ -74,8 +74,9 @@ export function Dialog({
         onClick={onClose}
       />
       <div
+        data-ui-surface="true"
         className={cn(
-          'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-[28px] border shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
+          'dialog-content relative z-10 flex max-h-[calc(100vh-1.5rem)] w-full flex-col overflow-hidden rounded-xl border shadow-[var(--shadow-xl)] sm:max-h-[calc(100vh-3rem)]',
           tone === 'danger' && 'border-red-500/20 shadow-[0_30px_80px_rgba(0,0,0,0.5),0_0_0_1px_rgba(239,68,68,0.06)]',
           sizeClasses[size],
         )}

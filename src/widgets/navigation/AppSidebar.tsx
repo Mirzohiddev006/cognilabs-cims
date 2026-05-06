@@ -49,7 +49,7 @@ type MemberProfileFormState = {
 function navItemBase() {
   // fixed height to ensure all nav cards keep same size and don't shift when main content changes
   // remove vertical padding and rely on fixed height + items-center for consistent vertical centering
-  return 'relative flex min-w-0 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-0 text-sm h-[52px]'
+  return 'relative flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border px-3.5 py-0 text-sm h-[52px]'
 }
 
 function navItemActive(isLight: boolean) {
@@ -263,7 +263,7 @@ export function AppSidebar() {
             : 'min-[961px]:opacity-100',
         )}
       >
-        <div className="flex h-full flex-col overflow-hidden rounded-[30px] bg-(--surface-elevated) px-3 py-4 sm:px-4">
+        <div data-ui-surface="true" className="flex h-full flex-col overflow-hidden rounded-xl bg-(--surface-elevated) px-3 py-4 sm:px-4">
 
           {/* ── Logo / brand toggle ── */}
           <button
@@ -272,7 +272,7 @@ export function AppSidebar() {
             aria-label={t('shell.toggle_navigation')}
             className="flex w-full items-center gap-3 border-b border-[var(--border)] px-2 pb-4 text-left"
           >
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
               <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
             </div>
             <div className="min-w-0 flex-1 overflow-hidden">
@@ -464,7 +464,8 @@ export function AppSidebar() {
             onClick={openMemberDialog}
             disabled={!user}
             // mt-auto pins the profile card to the bottom of the sidebar while keeping spacing
-            className="mt-auto w-full rounded-[26px] border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left disabled:cursor-default disabled:opacity-80"
+            data-ui-control="true"
+            className="mt-auto w-full rounded-xl border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left disabled:cursor-default disabled:opacity-80"
             aria-label={t('profile.member_details')}
           >
             <div className="flex items-start gap-3">
@@ -539,7 +540,7 @@ export function AppSidebar() {
           }}
         />
 
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+        <div data-ui-surface="true" className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] p-5">
           <div className="flex min-w-0 items-center gap-4">
             {profilePreviewUrl ? (
               <img
@@ -578,23 +579,23 @@ export function AppSidebar() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? t('shell.user')}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
@@ -605,15 +606,15 @@ export function AppSidebar() {
           </div>
           {isEditingMember && (
             <>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
                 <Input value={memberForm.name} onChange={(e) => updateMemberForm('name', e.target.value)} className="mt-2" />
               </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
                 <Input value={memberForm.surname} onChange={(e) => updateMemberForm('surname', e.target.value)} className="mt-2" />
               </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.current_password', 'Current password')}
                 </p>
@@ -625,7 +626,7 @@ export function AppSidebar() {
                   placeholder={t('profile.current_password_hint', 'Fill only if changing password')}
                 />
               </div>
-              <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.new_password', 'New password')}
                 </p>
@@ -641,7 +642,7 @@ export function AppSidebar() {
           )}
         </div>
 
-        <div className="mt-4 rounded-[24px] border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+        <div data-ui-surface="true" className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>

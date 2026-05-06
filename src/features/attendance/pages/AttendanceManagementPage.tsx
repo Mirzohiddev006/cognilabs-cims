@@ -108,10 +108,11 @@ function SegmentButton({
 }) {
   return (
     <button
+      data-ui-control="true"
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+        'rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition',
         active
           ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
           : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
@@ -282,7 +283,7 @@ export function AttendanceManagementPage() {
       ) : (
         <>
           {view === 'monthly' ? (
-            <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-lg">
+            <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -337,6 +338,7 @@ export function AttendanceManagementPage() {
               <div className="flex flex-wrap gap-2">
                 {weekOptions.map(week => (
                   <button
+                    data-ui-control="true"
                     key={week.number}
                     type="button"
                     onClick={() => setSelectedWeek(week.number)}
@@ -352,7 +354,7 @@ export function AttendanceManagementPage() {
                 ))}
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-lg">
+              <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -400,7 +402,7 @@ export function AttendanceManagementPage() {
             ) : dailyQuery.isError ? (
               <ErrorStateBlock eyebrow={t('attendance.eyebrow', 'Attendance')} title={t('attendance.failed_load_daily', 'Failed to load daily attendance')} description={t('attendance.api_error_daily', 'The daily records endpoint did not respond.')} />
             ) : (
-              <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-lg">
+              <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
                 <div className="border-b border-[var(--border)] px-6 py-4">
                   <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.daily_attendance_for', 'Daily attendance for {date}', { date: selectedDate })}</p>
                 </div>

@@ -113,12 +113,14 @@ export function Button({
     const child = children as ReactElement<AnchorHTMLAttributes<HTMLAnchorElement>>
 
     return cloneElement(child, {
+      'data-ui-control': 'true',
       className: cn(combinedClassName, child.props.className),
     } as Partial<JSX.IntrinsicElements['a']>)
   }
 
   return (
     <button
+      data-ui-control="true"
       className={combinedClassName}
       disabled={disabled || loading}
       {...props}

@@ -100,6 +100,7 @@ export function SelectField({
     <>
       <button
         ref={triggerRef}
+        data-ui-control="true"
         type="button"
         disabled={disabled}
         aria-haspopup="listbox"
@@ -140,7 +141,8 @@ export function SelectField({
             <>
               <div className="fixed inset-0 z-[90]" onClick={() => setIsOpen(false)} aria-hidden="true" />
               <div
-                className="fixed z-[100] max-h-72 overflow-y-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
+                data-ui-surface="true"
+                className="fixed z-[100] max-h-72 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
                 role="listbox"
               >
@@ -153,6 +155,7 @@ export function SelectField({
                   return (
                     <button
                       key={`${option.value}-${option.label}`}
+                      data-ui-control="true"
                       type="button"
                       role="option"
                       aria-selected={isSelected}

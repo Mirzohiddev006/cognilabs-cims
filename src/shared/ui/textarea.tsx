@@ -6,6 +6,7 @@ type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>
 export function Textarea({ className, ...props }: TextareaProps) {
   return (
     <textarea
+      data-ui-control="true"
       className={cn(
         'min-h-24 w-full rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2.5',
         'ui-body text-[var(--foreground)]',

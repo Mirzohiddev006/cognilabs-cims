@@ -81,6 +81,7 @@ export function Badge({
 
   return (
     <span
+      data-ui-control="true"
       className={cn(
         'inline-flex items-center justify-center border font-medium whitespace-nowrap',
         variants[variant],

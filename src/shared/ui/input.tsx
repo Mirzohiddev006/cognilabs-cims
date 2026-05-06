@@ -6,6 +6,7 @@ type InputProps = InputHTMLAttributes<HTMLInputElement>
 export function Input({ className, ...props }: InputProps) {
   return (
     <input
+      data-ui-control="true"
       className={cn(
         'min-h-[44px] w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3.5 py-2',
         'ui-body text-[var(--foreground)]',

@@ -42,7 +42,7 @@ export function PageHeader({
     <Card
       variant="glass"
       noPadding
-      className={cn('page-header-card page-enter overflow-hidden rounded-[28px]', className)}
+      className={cn('page-header-card page-enter overflow-hidden rounded-xl', className)}
     >
       <div className="relative overflow-hidden px-5 py-6 sm:px-7 sm:py-7">
         <div className="relative z-10 flex flex-col gap-6">
@@ -69,9 +69,10 @@ export function PageHeader({
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {meta.map((item) => (
                 <div
+                  data-ui-surface="true"
                   key={`${item.label}-${item.value}`}
                   className={cn(
-                    'rounded-[22px] border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm',
+                    'rounded-xl border px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-sm',
                     metaToneClassNames[item.tone ?? 'neutral'],
                   )}
                 >

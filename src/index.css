@@ -104,6 +104,8 @@
   --radius-xl:  18px;
   --radius-2xl: 24px;
   --card-radius: 0.75rem;
+  --control-radius: var(--card-radius);
+  --panel-radius: var(--card-radius);
 
   /* Shell / Sidebar specific */
   --shell-collapse-btn-bg:           rgba(0,0,0,0.70);
@@ -607,6 +609,27 @@ html.light .grid-overlay::before {
 
 [data-slot="card"] {
   border-radius: var(--card-radius);
+}
+
+[data-ui-control] {
+  border-radius: var(--control-radius);
+}
+
+[data-ui-surface] {
+  border-radius: var(--panel-radius);
+}
+
+[data-slot="card"] :is(
+  [class*="rounded-["][class*="border"],
+  .rounded-2xl[class*="border"],
+  .rounded-3xl[class*="border"]
+),
+.card-base :is(
+  [class*="rounded-["][class*="border"],
+  .rounded-2xl[class*="border"],
+  .rounded-3xl[class*="border"]
+) {
+  border-radius: var(--panel-radius);
 }
 
 .card-base:hover {
