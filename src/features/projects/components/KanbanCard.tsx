@@ -95,6 +95,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
   if (isDragging && !isOverlay) {
     return (
       <div
+        data-slot="card"
         ref={setNodeRef}
         style={style}
         className="min-h-[112px] w-full rounded-xl border border-dashed border-[var(--border-hover)] bg-[var(--accent-soft)]/70 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
@@ -104,6 +105,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
 
   return (
     <div
+      data-slot="card"
       ref={setNodeRef}
       style={style}
       {...(!readOnly ? attributes : {})}
@@ -112,7 +114,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
       onKeyDown={handleKeyDown}
       tabIndex={readOnly ? 0 : attributes.tabIndex}
       className={cn(
-        'group relative flex cursor-pointer select-none flex-col gap-2.5 overflow-hidden rounded-lg border p-2.5',
+        'group relative flex cursor-pointer select-none flex-col gap-2.5 overflow-hidden rounded-xl border p-2.5',
         'bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] border-[var(--border)] text-[var(--foreground)]',
         'shadow-[var(--shadow-sm)] transition-[transform,border-color,box-shadow,background-color,opacity] duration-150',
         'hover:-translate-y-px hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-md)]',

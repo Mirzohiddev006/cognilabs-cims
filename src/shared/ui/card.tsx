@@ -10,22 +10,22 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm',
+    'border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm',
 
   elevated:
-    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md',
+    'border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md',
 
   glass:
-    'rounded-md border border-[var(--border)] bg-white/5 backdrop-blur-xl text-[var(--foreground)] shadow-lg',
+    'border border-[var(--border)] bg-white/5 backdrop-blur-xl text-[var(--foreground)] shadow-lg',
 
   metric:
-    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm hover:shadow-md transition-shadow',
+    'border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm hover:shadow-md transition-shadow',
 
   glow:
-    'rounded-md border border-blue-500/20 bg-[var(--card)] text-[var(--foreground)] shadow-[0_0_15px_rgba(59,130,246,0.1)]',
+    'border border-blue-500/20 bg-[var(--card)] text-[var(--foreground)] shadow-[0_0_15px_rgba(59,130,246,0.1)]',
 
   inset:
-    'rounded-md border border-[var(--border)] bg-[var(--accent-soft)]/20 text-[var(--foreground)]',
+    'border border-[var(--border)] bg-[var(--accent-soft)]/20 text-[var(--foreground)]',
 }
 
 export function Card({
@@ -36,7 +36,9 @@ export function Card({
 }: CardProps) {
   return (
     <div
+      data-slot="card"
       className={cn(
+        'rounded-xl',
         variantClasses[variant],
         !noPadding && 'p-5',
         className,
@@ -52,7 +54,7 @@ export function CardHeader({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+    <div data-slot="card-header" className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
   )
 }
 
@@ -62,6 +64,7 @@ export function CardTitle({
 }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
+      data-slot="card-title"
       className={cn('text-lg font-semibold leading-none tracking-tight text-(--foreground)', className)}
       {...props}
     />
@@ -74,6 +77,7 @@ export function CardDescription({
 }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
+      data-slot="card-description"
       className={cn('text-sm text-(--muted)', className)}
       {...props}
     />
@@ -84,7 +88,7 @@ export function CardContent({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('p-6 pt-0', className)} {...props} />
+  return <div data-slot="card-content" className={cn('p-6 pt-0', className)} {...props} />
 }
 
 export function CardBody({
@@ -92,7 +96,7 @@ export function CardBody({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn('px-5 py-5', className)} {...props} />
+    <div data-slot="card-body" className={cn('px-5 py-5', className)} {...props} />
   )
 }
 
@@ -102,6 +106,7 @@ export function CardFooter({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
+      data-slot="card-footer"
       className={cn(
         'border-t border-(--border) px-5 py-4',
         className,

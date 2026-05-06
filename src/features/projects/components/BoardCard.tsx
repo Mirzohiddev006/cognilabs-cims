@@ -18,7 +18,7 @@ export function BoardCard({ board, onEdit, onArchive, canManage = true }: BoardC
   const boardUrl = `/projects/${board.project_id}?board=${board.id}`
 
   return (
-    <div className="group relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
+    <div data-slot="card" className="group relative flex flex-col gap-3 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 shadow-[0_1px_4px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
       {/* Gradient accent top */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_72%)]" />
 

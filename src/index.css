@@ -103,6 +103,7 @@
   --radius-lg:  14px;
   --radius-xl:  18px;
   --radius-2xl: 24px;
+  --card-radius: 0.75rem;
 
   /* Shell / Sidebar specific */
   --shell-collapse-btn-bg:           rgba(0,0,0,0.70);
@@ -593,7 +594,7 @@ html.light .grid-overlay::before {
 /* ─── CARD SYSTEM ─────────────────────────────────────────────── */
 .card-base {
   position: relative;
-  border-radius: var(--radius-xl);
+  border-radius: var(--card-radius);
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--foreground);
@@ -602,6 +603,10 @@ html.light .grid-overlay::before {
     box-shadow 200ms ease,
     background-color 200ms ease,
     transform 200ms ease;
+}
+
+[data-slot="card"] {
+  border-radius: var(--card-radius);
 }
 
 .card-base:hover {

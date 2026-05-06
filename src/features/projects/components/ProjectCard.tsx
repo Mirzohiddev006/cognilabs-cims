@@ -20,7 +20,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
   const memberCount = (project.members ?? []).length
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.24)] hover:border-[var(--border-hover)]">
+    <div data-slot="card" className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.24)] hover:border-[var(--border-hover)]">
       {/* Image / placeholder */}
       <div className="relative h-36 w-full overflow-hidden bg-[var(--muted-surface)]">
         {project.image ? (
@@ -149,7 +149,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
 /** Skeleton placeholder while loading */
 export function ProjectCardSkeleton() {
   return (
-    <div className="flex flex-col overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface-elevated)]">
+    <div data-slot="card" className="flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]">
       <div className="h-36 animate-pulse bg-[var(--muted-surface)]" />
       <div className="flex flex-col gap-3 p-4">
         <div className="h-4 w-3/4 animate-pulse rounded-lg bg-[var(--muted-surface)]" />
