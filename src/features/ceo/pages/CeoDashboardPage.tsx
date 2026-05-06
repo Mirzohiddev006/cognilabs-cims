@@ -612,7 +612,7 @@ export function CeoDashboardPage() {
               <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>
             </div>
             <Badge variant="blue" dot>
-              {t('ceo.dashboard.recurring.entries', { count: companyPayments.length })}
+              {formatCurrency(companyPaymentsQuery.data?.totalAmount || 0)}
             </Badge>
           </CardHeader>
           <CardContent>

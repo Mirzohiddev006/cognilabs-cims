@@ -18,7 +18,9 @@ import { Button } from '../../shared/ui/button'
 import { Dialog } from '../../shared/ui/dialog'
 import { Input } from '../../shared/ui/input'
 import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
+// @ts-ignore
 import { NavGlyph } from './NavGlyph'
+// @ts-ignore
 import { getNavigationGlyphName } from './navGlyphMap'
 
 function getInitials(name?: string, surname?: string) {
@@ -60,12 +62,12 @@ function navItemInactive() {
   return 'border-transparent bg-transparent text-(--muted)'
 }
 
-function navIconBase() {
+export function navIconBase() {
   return 'grid shrink-0 place-items-center border text-(--shell-icon-text) h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg)'
 }
 
 // Small coloured dot used in the project icon slot to represent a project
-function ProjectDot({ isActive, isLight }: { isActive: boolean; isLight: boolean }) {
+export function ProjectDot({ isActive, isLight }: { isActive: boolean; isLight: boolean }) {
   return (
     <div
       className={cn(
@@ -288,14 +290,14 @@ export function AppSidebar() {
           </div>
 
           {/* ── Navigation list ── */}
-          <nav className="mt-3 flex-1 min-h-0 flex flex-col gap-1.5 overflow-y-auto pr-1" style={{overflowY: 'auto'}}>
+          <nav className="mt-3 flex-1 min-h-0 flex flex-col gap-1 overflow-y-auto pr-1 scrollbar-stable" style={{overflowY: 'auto'}}>
             {sidebarNavigation.map((item) => {
               const itemLabel = getNavigationLabel(item.to, item.label)
 
               // ── Projects: collapsible with sub-items ──
               if (item.to === '/projects') {
                 return (
-                  <div key={item.to} className="flex flex-col gap-1.5">
+                  <div key={item.to} className="flex flex-col gap-1">
                     {/* Projects parent card */}
                     <div className="relative">
                       <NavLink
@@ -310,9 +312,7 @@ export function AppSidebar() {
                           )
                         }
                       >
-                        <div className={navIconBase()}>
-                          <NavGlyph name={getNavigationGlyphName(item.to)} />
-                        </div>
+                        
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <p className="ui-body leading-none truncate font-semibold">{itemLabel}</p>
@@ -361,13 +361,13 @@ export function AppSidebar() {
                          Only difference: a 14px left-margin indent to signal hierarchy.
                     ──────────────────────────────────────────────────────────────────────── */}
                     {isProjectsExpanded && (
-                      <div className="ml-3.5 flex flex-col gap-1.5 pr-0.5">
+                      <div className="ml-3.5 flex flex-col gap-1 pr-0.5">
                         {projectsQuery.isLoading ? (
                           // Loading skeletons — same height as real cards
                           Array.from({ length: 4 }).map((_, i) => (
                             <div
                               key={i}
-                              className="h-[52px] animate-pulse rounded-2xl border border-transparent bg-[var(--muted-surface)]"
+                              className="h-11 animate-pulse rounded-md border border-transparent bg-[var(--muted-surface)]"
                             />
                           ))
                         ) : projectsQuery.isError ? (
@@ -379,24 +379,14 @@ export function AppSidebar() {
                               'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)] hover:bg-red-500/10',
                             )}
                           >
-                            <div className={cn(navIconBase(), 'text-[var(--danger-text)]')}>
-                              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-                                <circle cx="8" cy="8" r="6" />
-                                <path d="M8 5v3M8 11h.01" strokeLinecap="round" />
-                              </svg>
-                            </div>
+                            
                             <p className="ui-body truncate font-semibold">
                               {t('shell.failed_load_projects')} — {t('shell.retry')}
                             </p>
                           </button>
                         ) : sidebarProjects.length === 0 ? (
                           <div className={cn(navItemBase(), 'border-transparent text-[var(--muted)] cursor-default')}>
-                            <div className={navIconBase()}>
-                              <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
-                                <rect x="2" y="4" width="12" height="9" rx="1.5" />
-                                <path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1" strokeLinecap="round" />
-                              </svg>
-                            </div>
+                            
                             <p className="ui-body truncate font-semibold">{t('shell.no_projects')}</p>
                           </div>
                         ) : (
@@ -422,9 +412,7 @@ export function AppSidebar() {
                                 {/* Icon slot — same dimensions as top-level icons */}
                                 {({ isActive }: { isActive: boolean }) => (
                                   <>
-                                    <div className={navIconBase()}>
-                                      <ProjectDot isActive={isActive || isActiveProject} isLight={isLight} />
-                                    </div>
+                                    
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center justify-between gap-2">
                                         <p className="ui-body leading-none truncate font-semibold">{project.project_name}</p>
@@ -461,9 +449,7 @@ export function AppSidebar() {
                     cn(navItemBase(), isActive ? navItemActive(isLight) : navItemInactive())
                   }
                 >
-                  <div className={navIconBase()}>
-                    <NavGlyph name={getNavigationGlyphName(item.to)} />
-                  </div>
+                  
                   <div className="min-w-0 flex-1">
                     <p className="ui-body truncate font-semibold">{itemLabel}</p>
                   </div>

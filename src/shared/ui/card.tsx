@@ -10,22 +10,22 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 
 const variantClasses: Record<CardVariant, string> = {
   default:
-    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm',
+    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm',
 
   elevated:
-    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md',
+    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-md',
 
   glass:
-    'rounded-xl border border-[var(--border)] bg-white/5 backdrop-blur-xl text-[var(--foreground)] shadow-lg',
+    'rounded-md border border-[var(--border)] bg-white/5 backdrop-blur-xl text-[var(--foreground)] shadow-lg',
 
   metric:
-    'rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm hover:shadow-md transition-shadow',
+    'rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] shadow-sm hover:shadow-md transition-shadow',
 
   glow:
-    'rounded-xl border border-blue-500/20 bg-[var(--card)] text-[var(--foreground)] shadow-[0_0_15px_rgba(59,130,246,0.1)]',
+    'rounded-md border border-blue-500/20 bg-[var(--card)] text-[var(--foreground)] shadow-[0_0_15px_rgba(59,130,246,0.1)]',
 
   inset:
-    'rounded-xl border border-[var(--border)] bg-[var(--accent-soft)]/20 text-[var(--foreground)]',
+    'rounded-md border border-[var(--border)] bg-[var(--accent-soft)]/20 text-[var(--foreground)]',
 }
 
 export function Card({
