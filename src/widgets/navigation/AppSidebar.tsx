@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useAppShell } from '../../app/hooks/useAppShell'
@@ -18,9 +17,7 @@ import { Button } from '../../shared/ui/button'
 import { Dialog } from '../../shared/ui/dialog'
 import { Input } from '../../shared/ui/input'
 import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
-// @ts-ignore
 import { NavGlyph } from './NavGlyph'
-// @ts-ignore
 import { getNavigationGlyphName } from './navGlyphMap'
 
 function getInitials(name?: string, surname?: string) {
@@ -42,45 +39,14 @@ type MemberProfileFormState = {
   new_password: string
 }
 
-// ─── Shared nav-item style helpers ──────────────────────────────────────────
-// Every item in the sidebar — top-level routes AND project sub-entries — uses
-// these helpers so borders, radii, padding and colour logic are identical.
-
-function navItemBase() {
-  // fixed height to ensure all nav cards keep same size and don't shift when main content changes
-  // remove vertical padding and rely on fixed height + items-center for consistent vertical centering
-  return 'relative flex min-w-0 items-center gap-3 overflow-hidden rounded-xl border px-3.5 py-0 text-sm h-[52px]'
-}
-
-function navItemActive(isLight: boolean) {
-  return isLight
-    ? 'nav-active-accent border-blue-200 bg-[linear-gradient(180deg,#EFF6FF,#E7F0FF)] text-blue-700'
-    : 'nav-active-accent border-blue-500/30 bg-blue-600/10 text-white'
-}
-
-function navItemInactive() {
-  return 'border-transparent bg-transparent text-(--muted)'
-}
-
-export function navIconBase() {
-  return 'grid shrink-0 place-items-center border text-(--shell-icon-text) h-9 w-9 rounded-xl border-(--shell-icon-border) bg-(--shell-icon-bg)'
-}
-
-// Small coloured dot used in the project icon slot to represent a project
-export function ProjectDot({ isActive, isLight }: { isActive: boolean; isLight: boolean }) {
-  return (
-    <div
-      className={cn(
-        'h-2.5 w-2.5 rounded-full',
-        isActive
-          ? isLight
-            ? 'bg-blue-500 shadow-[0_0_0_3px_rgba(59,130,246,0.18)]'
-            : 'bg-blue-400 shadow-[0_0_0_3px_rgba(96,165,250,0.18)]'
-          : 'bg-[var(--muted)]',
-      )}
-    />
-  )
-}
+const sidebarItemBase =
+  'group flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium transition-colors'
+const sidebarItemInactive =
+  'text-[var(--sidebar-foreground)]/75 hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]'
+const sidebarItemActive =
+  'bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-[inset_0_0_0_1px_var(--sidebar-border)]'
+const sidebarSectionLabel =
+  'px-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--sidebar-foreground)]/55'
 
 export function AppSidebar() {
   const location = useLocation()
@@ -243,257 +209,210 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* Mobile scrim */}
       <button
         type="button"
         aria-label={t('shell.close_navigation_overlay')}
         onClick={closeSidebar}
         className={cn(
-          'shell-scrim fixed inset-0 z-30 bg-[rgba(15,23,42,0.35)] min-[961px]:hidden',
+          'shell-scrim fixed inset-0 z-30 bg-black/40 min-[961px]:hidden',
           isSidebarOpen ? 'shell-scrim--open pointer-events-auto' : 'shell-scrim--closed pointer-events-none',
         )}
       />
 
       <aside
         className={cn(
-          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,320px)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-auto min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0',
+          'shell-sidebar fixed inset-y-0 left-0 z-40 w-[min(88vw,18rem)] p-4 min-[961px]:inset-auto min-[961px]:sticky min-[961px]:top-0 min-[961px]:h-screen min-[961px]:self-start min-[961px]:w-[16rem] min-[961px]:overflow-hidden min-[961px]:p-4 min-[961px]:pr-0',
           isSidebarOpen ? 'shell-sidebar--open' : 'shell-sidebar--closed',
           isSidebarCollapsed
-            ? 'min-[961px]:pointer-events-none min-[961px]:!w-0 min-[961px]:!p-0 min-[961px]:opacity-0'
+            ? 'min-[961px]:pointer-events-none min-[961px]:w-0! min-[961px]:p-0! min-[961px]:opacity-0'
             : 'min-[961px]:opacity-100',
         )}
       >
-        <div data-ui-surface="true" className="flex h-full flex-col overflow-hidden rounded-xl bg-(--surface-elevated) px-3 py-4 sm:px-4">
-
-          {/* ── Logo / brand toggle ── */}
+        <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-(--sidebar-border) bg-(--sidebar-background) text-(--sidebar-foreground) shadow-(--shadow-md)">
           <button
             type="button"
             onClick={handleSidebarToggle}
             aria-label={t('shell.toggle_navigation')}
-            className="flex w-full items-center gap-3 border-b border-[var(--border)] px-2 pb-4 text-left"
+            className="flex items-center gap-3 border-b border-(--sidebar-border) px-3 py-3 text-left"
           >
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[linear-gradient(180deg,#3B82F6,#1D4ED8)] text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] ring-1 ring-blue-400/25">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-(--sidebar-primary) text-(--sidebar-primary-foreground) shadow-sm">
               <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
             </div>
-            <div className="min-w-0 flex-1 overflow-hidden">
-              <h2 className="truncate text-[14px] font-bold text-[var(--shell-text-primary)] tracking-tight">{env.appName}</h2>
-              <p className="ui-eyebrow truncate text-[var(--shell-label-color)]">{t('shell.management_system')}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold">{env.appName}</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-(--sidebar-foreground)/55">
+                {t('shell.management_system')}
+              </p>
             </div>
           </button>
 
-          {/* ── Menu label + badge ── */}
-          <div className="mt-5 flex items-center justify-between px-2">
-            <p className="ui-eyebrow text-[var(--muted)]">{t('shell.menu')}</p>
-            <Badge className="rounded-full border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1 shadow-sm">
-              {sidebarNavigation.length} {t('shell.modules')}
-            </Badge>
+          <div className="flex-1 overflow-y-auto px-2 py-3">
+            <div className="flex items-center justify-between">
+              <p className={sidebarSectionLabel}>{t('shell.menu')}</p>
+              <Badge className="rounded-full border border-(--sidebar-border) bg-(--sidebar-background) px-2 py-0.5 text-[10px]">
+                {sidebarNavigation.length}
+              </Badge>
+            </div>
+
+            <div className="mt-2 flex flex-col gap-1">
+              {sidebarNavigation.map((item) => {
+                const itemLabel = getNavigationLabel(item.to, item.label)
+
+                if (item.to === '/projects') {
+                  return (
+                    <div key={item.to} className="flex flex-col gap-1">
+                      <div className="relative">
+                        <NavLink
+                          to={item.to}
+                          aria-label={itemLabel}
+                          onClick={() => setIsProjectsExpanded(true)}
+                          className={({ isActive }) =>
+                            cn(
+                              sidebarItemBase,
+                              isActive || isProjectsRoute ? sidebarItemActive : sidebarItemInactive,
+                              'pr-10',
+                            )
+                          }
+                        >
+                          <NavGlyph name={getNavigationGlyphName(item.to)} />
+                          <span className="truncate">{itemLabel}</span>
+                          {sidebarProjects.length > 0 && (
+                            <Badge
+                              size="sm"
+                              variant={isProjectsRoute ? 'blue' : 'secondary'}
+                              className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                            >
+                              {sidebarProjects.length}
+                            </Badge>
+                          )}
+                        </NavLink>
+
+                        <button
+                          type="button"
+                          onClick={toggleProjectsExpanded}
+                          aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
+                          className={cn(
+                            'absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-transparent text-(--sidebar-foreground)/70 transition-colors',
+                            'hover:border-(--sidebar-border) hover:bg-(--sidebar-accent) hover:text-(--sidebar-accent-foreground)',
+                          )}
+                        >
+                          <svg
+                            viewBox="0 0 16 16"
+                            className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                          >
+                            <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {isProjectsExpanded && (
+                        <div className="ml-3.5 flex flex-col gap-1 border-l border-(--sidebar-border) pl-3">
+                          {projectsQuery.isLoading ? (
+                            Array.from({ length: 4 }).map((_, i) => (
+                              <div key={i} className="skeleton h-8" />
+                            ))
+                          ) : projectsQuery.isError ? (
+                            <button
+                              type="button"
+                              onClick={() => void projectsQuery.refetch()}
+                              className={cn(
+                                sidebarItemBase,
+                                'text-(--danger-text) hover:bg-(--danger-dim)',
+                              )}
+                            >
+                              <span className="truncate">
+                                {t('shell.failed_load_projects')} — {t('shell.retry')}
+                              </span>
+                            </button>
+                          ) : sidebarProjects.length === 0 ? (
+                            <div className={cn(sidebarItemBase, 'text-(--sidebar-foreground)/60')}>
+                              <span className="truncate">{t('shell.no_projects')}</span>
+                            </div>
+                          ) : (
+                            sidebarProjects.map((project) => {
+                              const isActiveProject =
+                                location.pathname === `/projects/${project.id}` ||
+                                location.pathname.startsWith(`/projects/${project.id}/`) ||
+                                location.pathname.startsWith(`/boards/`)
+
+                              return (
+                                <NavLink
+                                  key={project.id}
+                                  to={`/projects/${project.id}`}
+                                  className={({ isActive }) =>
+                                    cn(
+                                      sidebarItemBase,
+                                      isActive || isActiveProject ? sidebarItemActive : sidebarItemInactive,
+                                      'pl-3',
+                                    )
+                                  }
+                                >
+                                  <span className="h-1.5 w-1.5 rounded-full bg-(--sidebar-foreground)/50" />
+                                  <span className="truncate">{project.project_name}</span>
+                                  {project.boards_count > 0 && (
+                                    <Badge
+                                      size="sm"
+                                      variant={isActiveProject ? 'blue' : 'secondary'}
+                                      className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                                    >
+                                      {project.boards_count}
+                                    </Badge>
+                                  )}
+                                </NavLink>
+                              )
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    aria-label={itemLabel}
+                    className={({ isActive }) =>
+                      cn(sidebarItemBase, isActive ? sidebarItemActive : sidebarItemInactive)
+                    }
+                  >
+                    <NavGlyph name={getNavigationGlyphName(item.to)} />
+                    <span className="truncate">{itemLabel}</span>
+                  </NavLink>
+                )
+              })}
+            </div>
           </div>
 
-          {/* ── Navigation list ── */}
-          <nav className="mt-3 flex-1 min-h-0 flex flex-col gap-1 overflow-y-auto pr-1 scrollbar-stable" style={{overflowY: 'auto'}}>
-            {sidebarNavigation.map((item) => {
-              const itemLabel = getNavigationLabel(item.to, item.label)
-
-              // ── Projects: collapsible with sub-items ──
-              if (item.to === '/projects') {
-                return (
-                  <div key={item.to} className="flex flex-col gap-1">
-                    {/* Projects parent card */}
-                    <div className="relative">
-                      <NavLink
-                        to={item.to}
-                        aria-label={itemLabel}
-                        onClick={() => setIsProjectsExpanded(true)}
-                        className={({ isActive }) =>
-                          cn(
-                            navItemBase(),
-                            'pr-12',
-                            isActive || isProjectsRoute ? navItemActive(isLight) : navItemInactive(),
-                          )
-                        }
-                      >
-                        
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="ui-body leading-none truncate font-semibold">{itemLabel}</p>
-                            {sidebarProjects.length > 0 && (
-                              <Badge
-                                size="sm"
-                                variant={isProjectsRoute ? 'blue' : 'secondary'}
-                                className="rounded-full px-1.5 py-0 shadow-none"
-                              >
-                                {sidebarProjects.length}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </NavLink>
-
-                      {/* Expand / collapse toggle */}
-                      <button
-                        type="button"
-                        onClick={toggleProjectsExpanded}
-                        aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
-                        className={cn(
-                          'absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl border transition-colors',
-                          isProjectsRoute
-                            ? isLight
-                              ? 'border-blue-200 bg-blue-100/80 text-blue-700'
-                              : 'border-blue-500/30 bg-blue-600/15 text-blue-100'
-                            : 'border-transparent bg-transparent text-[var(--muted)] hover:border-[var(--border)] hover:bg-[var(--accent-soft)] hover:text-[var(--foreground)]',
-                        )}
-                      >
-                        <svg
-                          viewBox="0 0 16 16"
-                          className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                        >
-                          <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* ── Project sub-items ─────────────────────────────────────────────────
-                         Each project uses the exact same card shape as top-level nav items:
-                         rounded-2xl, same border, same px-3.5 py-3, same active colours.
-                         Only difference: a 14px left-margin indent to signal hierarchy.
-                    ──────────────────────────────────────────────────────────────────────── */}
-                    {isProjectsExpanded && (
-                      <div className="ml-3.5 flex flex-col gap-1 pr-0.5">
-                        {projectsQuery.isLoading ? (
-                          // Loading skeletons — same height as real cards
-                          Array.from({ length: 4 }).map((_, i) => (
-                            <div
-                              key={i}
-                              className="h-11 animate-pulse rounded-md border border-transparent bg-[var(--muted-surface)]"
-                            />
-                          ))
-                        ) : projectsQuery.isError ? (
-                          <button
-                            type="button"
-                            onClick={() => void projectsQuery.refetch()}
-                            className={cn(
-                              navItemBase(),
-                              'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)] hover:bg-red-500/10',
-                            )}
-                          >
-                            
-                            <p className="ui-body truncate font-semibold">
-                              {t('shell.failed_load_projects')} — {t('shell.retry')}
-                            </p>
-                          </button>
-                        ) : sidebarProjects.length === 0 ? (
-                          <div className={cn(navItemBase(), 'border-transparent text-[var(--muted)] cursor-default')}>
-                            
-                            <p className="ui-body truncate font-semibold">{t('shell.no_projects')}</p>
-                          </div>
-                        ) : (
-                          sidebarProjects.map((project) => {
-                            const isActiveProject =
-                              location.pathname === `/projects/${project.id}` ||
-                              location.pathname.startsWith(`/projects/${project.id}/`) ||
-                              location.pathname.startsWith(`/boards/`) // board belongs to a project
-
-                            return (
-                              <NavLink
-                                key={project.id}
-                                to={`/projects/${project.id}`}
-                                className={({ isActive }) =>
-                                  cn(
-                                    navItemBase(),
-                                    isActive || isActiveProject
-                                      ? navItemActive(isLight)
-                                      : navItemInactive(),
-                                  )
-                                }
-                              >
-                                {/* Icon slot — same dimensions as top-level icons */}
-                                {({ isActive }: { isActive: boolean }) => (
-                                  <>
-                                    
-                                    <div className="min-w-0 flex-1">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <p className="ui-body leading-none truncate font-semibold">{project.project_name}</p>
-                                        {project.boards_count > 0 && (
-                                          <Badge
-                                            size="sm"
-                                            variant={isActive || isActiveProject ? 'blue' : 'secondary'}
-                                            className="shrink-0 rounded-full px-1.5 py-0 shadow-none"
-                                          >
-                                            {project.boards_count}
-                                          </Badge>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </>
-                                )}
-                              </NavLink>
-                            )
-                          })
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              }
-
-              // ── Standard nav item ──
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  aria-label={itemLabel}
-                  className={({ isActive }) =>
-                    cn(navItemBase(), isActive ? navItemActive(isLight) : navItemInactive())
-                  }
-                >
-                  
-                  <div className="min-w-0 flex-1">
-                    <p className="ui-body truncate font-semibold">{itemLabel}</p>
-                  </div>
-                </NavLink>
-              )
-            })}
-          </nav>
-
-          {/* ── User profile card ── */}
           <button
             type="button"
             onClick={openMemberDialog}
             disabled={!user}
-            // mt-auto pins the profile card to the bottom of the sidebar while keeping spacing
-            data-ui-control="true"
-            className="mt-auto w-full rounded-xl border border-(--shell-profile-border) bg-(--shell-profile-bg) p-4 text-left disabled:cursor-default disabled:opacity-80"
+            className="m-2 flex items-center gap-3 rounded-xl border border-(--sidebar-border) bg-(--sidebar-accent) px-3 py-3 text-left transition-colors hover:bg-(--sidebar-accent)/80 disabled:cursor-default disabled:opacity-80"
             aria-label={t('profile.member_details')}
           >
-            <div className="flex items-start gap-3">
-              {resolvedUserProfileImage ? (
-                <img
-                  src={resolvedUserProfileImage}
-                  alt={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                  className="h-12 w-12 shrink-0 rounded-full border border-blue-400/30 object-cover shadow-lg shadow-blue-900/30"
-                />
-              ) : (
-                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-sm font-bold text-white shadow-lg shadow-blue-900/30">
-                  {getInitials(user?.name, user?.surname)}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p
-                  className="text-xs font-bold leading-4 text-(--shell-text-primary) wrap-anywhere"
-                  title={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                >
-                  {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
-                </p>
-                <p
-                  className="ui-helper mt-1 truncate text-[var(--muted)]"
-                  title={user?.email ?? user?.role ?? t('shell.user')}
-                >
-                  {user?.email ?? user?.role ?? t('shell.user')}
-                </p>
+            {resolvedUserProfileImage ? (
+              <img
+                src={resolvedUserProfileImage}
+                alt={user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
+                className="h-10 w-10 shrink-0 rounded-full border border-(--sidebar-border) object-cover"
+              />
+            ) : (
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-(--sidebar-border) bg-(--sidebar-primary) text-xs font-bold text-(--sidebar-primary-foreground)">
+                {getInitials(user?.name, user?.surname)}
               </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold">
+                {user ? `${user.name} ${user.surname}` : t('shell.authenticated_user')}
+              </p>
+              <p className="truncate text-[11px] text-(--sidebar-foreground)/60">
+                {user?.email ?? user?.role ?? t('shell.user')}
+              </p>
             </div>
           </button>
         </div>
@@ -540,13 +459,13 @@ export function AppSidebar() {
           }}
         />
 
-        <div data-ui-surface="true" className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+        <div data-ui-surface="true" className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-(--border) bg-(--muted-surface) p-5">
           <div className="flex min-w-0 items-center gap-4">
             {profilePreviewUrl ? (
               <img
                 src={profilePreviewUrl}
                 alt={user ? `${user.name} ${user.surname}` : t('profile.member_details')}
-                className="h-20 w-20 shrink-0 rounded-full border border-[var(--border)] object-cover"
+                className="h-20 w-20 shrink-0 rounded-full border border-(--border) object-cover"
               />
             ) : (
               <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-blue-400/30 bg-[linear-gradient(180deg,#3b82f6,#2563eb)] text-xl font-bold text-white shadow-lg shadow-blue-900/30">
@@ -554,10 +473,10 @@ export function AppSidebar() {
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[var(--foreground)]">
+              <p className="text-sm font-semibold text-(--foreground)">
                 {user ? `${user.name} ${user.surname}` : t('profile.member_details')}
               </p>
-              <p className="ui-helper mt-1 text-[var(--muted)]">
+              <p className="ui-helper mt-1 text-(--muted)">
                 {profileImageFile
                   ? profileImageFile.name
                   : t('profile.photo_hint', 'Upload a new profile photo if needed.')}
@@ -579,42 +498,42 @@ export function AppSidebar() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.role')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.role ?? t('shell.user')}</p>
+            <p className="mt-2 text-lg font-semibold text-(--foreground)">{user?.role ?? t('shell.user')}</p>
           </div>
-          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.company_code')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.company_code ?? '-'}</p>
+            <p className="mt-2 text-lg font-semibold text-(--foreground)">{user?.company_code ?? '-'}</p>
           </div>
-          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.job_title')}</p>
-            <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{user?.job_title ?? '-'}</p>
+            <p className="mt-2 text-lg font-semibold text-(--foreground)">{user?.job_title ?? '-'}</p>
           </div>
-          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.email')}</p>
-            <p className="mt-2 text-base font-semibold text-[var(--foreground)] break-all">{user?.email ?? '-'}</p>
+            <p className="mt-2 text-base font-semibold text-(--foreground) break-all">{user?.email ?? '-'}</p>
           </div>
-          <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+          <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
             <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', user?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
-              <p className="text-base font-semibold text-[var(--foreground)]">
+              <p className="text-base font-semibold text-(--foreground)">
                 {user?.is_active ? t('status.active', 'Active') : t('status.inactive', 'Inactive')}
               </p>
             </div>
           </div>
           {isEditingMember && (
             <>
-              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.name')}</p>
                 <Input value={memberForm.name} onChange={(e) => updateMemberForm('name', e.target.value)} className="mt-2" />
               </div>
-              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.surname')}</p>
                 <Input value={memberForm.surname} onChange={(e) => updateMemberForm('surname', e.target.value)} className="mt-2" />
               </div>
-              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.current_password', 'Current password')}
                 </p>
@@ -626,7 +545,7 @@ export function AppSidebar() {
                   placeholder={t('profile.current_password_hint', 'Fill only if changing password')}
                 />
               </div>
-              <div data-ui-surface="true" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4">
+              <div data-ui-surface="true" className="rounded-xl border border-(--border) bg-(--surface) px-5 py-4">
                 <p className={cn('ui-input-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>
                   {t('profile.new_password', 'New password')}
                 </p>
@@ -642,15 +561,15 @@ export function AppSidebar() {
           )}
         </div>
 
-        <div data-ui-surface="true" className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] p-5">
+        <div data-ui-surface="true" className="mt-4 rounded-xl border border-(--border) bg-(--muted-surface) p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className={cn('ui-card-label', isLight ? 'text-blue-700/75' : 'text-blue-300/75')}>{t('profile.permissions')}</p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
+              <p className="mt-2 text-lg font-semibold text-(--foreground)">
                 {activePermissions.length} {t('profile.enabled')}
               </p>
             </div>
-            <Badge className={cn('rounded-full px-2.5 py-1 uppercase tracking-[0.14em]', isLight ? 'border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)]' : 'border-white/15 bg-white/8 text-white')}>
+            <Badge className={cn('rounded-full px-2.5 py-1 uppercase tracking-[0.14em]', isLight ? 'border-(--border) bg-(--surface) text-(--foreground)' : 'border-white/15 bg-white/8 text-white')}>
               {env.appEnv}
             </Badge>
           </div>
@@ -666,7 +585,7 @@ export function AppSidebar() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-sm text-[var(--muted)]">{t('profile.no_active_permissions')}</p>
+            <p className="mt-4 text-sm text-(--muted)">{t('profile.no_active_permissions')}</p>
           )}
         </div>
       </Dialog>

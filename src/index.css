@@ -129,7 +129,14 @@
   --shell-text-primary:              #ffffff;
   --shell-app-name-color:            #ffffff;
   --shell-label-color:               #3b82f6;
-  --sidebar-foreground:              #ffffff;
+  --sidebar-background:              #0f1117;
+  --sidebar-foreground:              #e5e7eb;
+  --sidebar-primary:                 #111827;
+  --sidebar-primary-foreground:      #f8fafc;
+  --sidebar-accent:                  rgba(255,255,255,0.06);
+  --sidebar-accent-foreground:       #ffffff;
+  --sidebar-border:                  rgba(255,255,255,0.08);
+  --sidebar-ring:                    rgba(59,130,246,0.45);
 }
 
 /* ─── LIGHT THEME TOKENS ──────────────────────────────────────── */
@@ -222,7 +229,14 @@ html.light {
   --shell-app-name-color:            #0F172A;
   --shell-label-color:               #2563EB;
   --blue-message:      #3b82f6; /* Darker blue for light mode readability */
-  --sidebar-foreground:              #ffffff;
+  --sidebar-background:              #ffffff;
+  --sidebar-foreground:              #0f172a;
+  --sidebar-primary:                 #0f172a;
+  --sidebar-primary-foreground:      #f8fafc;
+  --sidebar-accent:                  #f1f5f9;
+  --sidebar-accent-foreground:       #0f172a;
+  --sidebar-border:                  #e2e8f0;
+  --sidebar-ring:                    rgba(59,130,246,0.35);
 }
 
 /* ─── RESET ──────────────────────────────────────────────────── */

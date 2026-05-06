@@ -11,7 +11,7 @@ function RootLayoutFrame() {
   const { theme } = useTheme()
   const { isSidebarCollapsed } = useAppShell()
   const shellStyle = {
-    '--app-shell-sidebar-width': isSidebarCollapsed ? '0px' : '272px',
+    '--app-shell-sidebar-width': isSidebarCollapsed ? '0px' : '16rem',
   } as CSSProperties
 
   const isDark = theme === 'dark'
