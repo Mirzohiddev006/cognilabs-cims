@@ -655,12 +655,12 @@ export function MemberMonthlyUpdateCalendarBoard({
             >
               <div
                 className={cn(
-                  'rounded-[24px] border p-5',
+                  'rounded-xl border p-5',
                   getDayFocusClass(selectedDay),
                 )}
               >
                 <div className="flex items-start gap-4">
-                  <div className="grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border border-current/20 bg-white/65 text-[1.75rem] font-semibold tabular-nums dark:bg-black/10 dark:text-white">
+                  <div className="grid h-18 w-18 shrink-0 place-items-center rounded-xl border border-current/20 bg-white/65 text-[1.75rem] font-semibold tabular-nums dark:bg-black/10 dark:text-white">
                     {selectedDay.day}
                   </div>
 
@@ -693,19 +693,19 @@ export function MemberMonthlyUpdateCalendarBoard({
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Status', 'Holat', 'Статус')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {getStatusLabel(selectedDay.status, selectedDay)}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Submission', 'Yuborish', 'Отправка')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {selectedDay.hasUpdate ? tr('Available', 'Mavjud', 'Доступно') : tr('None', "Yo'q", 'Нет')}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Validation', 'Validatsiya', 'Валидация')}</p>
                   <p
                     className={cn(
@@ -720,19 +720,19 @@ export function MemberMonthlyUpdateCalendarBoard({
                     {selectedDay.isValid === false ? lt('Needs review') : selectedDay.isValid === true ? lt('Valid') : lt('N/A')}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Entries', 'Yozuvlar', 'Записи')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {getEntryCount(selectedDay)}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Check in time', 'Kirish vaqti', 'Время входа')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {formatWorkTime(selectedDay.checkInTime)}
                   </p>
                 </div>
-                <div className="rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] px-3 py-3 text-[12px] text-[var(--muted)]">
                   <p>{tr('Check out time', 'Chiqish vaqti', 'Время выхода')}</p>
                   <p className="mt-1 font-medium text-[var(--foreground)]">
                     {formatWorkTime(selectedDay.checkOutTime)}
@@ -741,7 +741,7 @@ export function MemberMonthlyUpdateCalendarBoard({
               </div>
 
               {shouldShowFocusContent ? (
-                <div className="mt-4 rounded-[20px] border border-[var(--border)] bg-[var(--surface)] p-4">
+                <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted)]">
@@ -762,7 +762,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 max-h-[320px] overflow-y-auto rounded-[18px] border border-[var(--border)] bg-[var(--muted-surface)] p-4">
+                  <div className="mt-4 max-h-[320px] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--muted-surface)] p-4">
                     <p className="whitespace-pre-wrap text-[13px] leading-6 text-[var(--foreground)]">
                       {focusDetailText}
                     </p>
@@ -825,7 +825,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                 <div className="flex justify-center lg:justify-self-center">
                   <div
                     className={cn(
-                      'grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border p-1.5',
+                      'grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-xl border p-1.5',
                       isLight
                         ? 'border-[var(--success-border)] bg-white'
                         : 'border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/18',
@@ -836,7 +836,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       size="sm"
                       onClick={() => onMonthShift?.(-1)}
                       disabled={!onMonthShift}
-                      className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                      className="min-h-11 min-w-11 rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                     >
                       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M10 3.5 5.5 8 10 12.5" />
@@ -847,7 +847,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       onClick={() => onJumpToToday?.()}
                       aria-disabled={!canJumpToToday}
                       className={cn(
-                        'inline-flex min-h-11 min-w-[144px] items-center justify-center rounded-[14px] border px-5 text-sm font-bold tracking-[0.01em] transition-none text-[var(--success-text)]',
+                        'inline-flex min-h-11 min-w-[144px] items-center justify-center rounded-xl border px-5 text-sm font-bold tracking-[0.01em] transition-none text-[var(--success-text)]',
                         isLight
                           ? 'border-[var(--success-border)] bg-[var(--success-soft)]'
                           : 'border-[var(--success-border)] bg-[var(--success-dim)]',
@@ -861,7 +861,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                       size="sm"
                       onClick={() => onMonthShift?.(1)}
                       disabled={!onMonthShift}
-                      className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                      className="min-h-11 min-w-11 rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] disabled:opacity-50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                     >
                       <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M6 3.5 10.5 8 6 12.5" />
@@ -870,7 +870,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                   </div>
                 </div>
 
-                <div className="hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:block dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
+                <div className="hidden rounded-xl border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:block dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="ui-card-label text-[var(--success-text)] dark:text-white">
@@ -899,21 +899,21 @@ export function MemberMonthlyUpdateCalendarBoard({
 
               <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(290px,330px)] lg:items-start">
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-                  <Badge variant="success" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                  <Badge variant="success" dot className="w-full justify-start rounded-xl px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                     {counts.submitted} {tr('Updated', 'Yangilangan', 'Обновлено')}
                   </Badge>
-                  <Badge variant="danger" dot className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                  <Badge variant="danger" dot className="w-full justify-start rounded-xl px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                     {counts.missing} {tr('Missed', 'Otib yuborilgan', 'Пропущено')}
                   </Badge>
-                  <Badge variant="secondary" className="w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
+                  <Badge variant="secondary" className="w-full justify-start rounded-xl px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:w-auto">
                     {attentionDays} {tr('Attention', "E'tibor", 'Внимание')}
                   </Badge>
-                  <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-[16px] px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
+                  <Badge variant="secondary" className="col-span-2 w-full justify-start rounded-xl px-3.5 py-2 text-[10px] uppercase tracking-[0.18em] sm:col-span-1 sm:w-auto">
                     <span className="truncate">{tr('Next', 'Keyingi', 'Следующий')}: {nextDayLabel}</span>
                   </Badge>
                 </div>
 
-                <div className="rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:hidden dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
+                <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-3 lg:hidden dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="ui-card-label text-[var(--success-text)] dark:text-white">
@@ -962,7 +962,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                           return (
                             <div
                               key={`empty-${weekIndex}-${dayIndex}`}
-                              className="cal-day-neutral min-h-28.5 rounded-[20px] border border-dashed opacity-40"
+                              className="cal-day-neutral min-h-28.5 rounded-xl border border-dashed opacity-40"
                               aria-hidden="true"
                             />
                           )
@@ -984,7 +984,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                             }}
                             aria-pressed={isSelected}
                             className={cn(
-                              'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200',
+                              'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
                               showTimePanel && 'min-h-[164px]',
                               getDaySurfaceClass(day),
                               isSelected
@@ -1029,7 +1029,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                             {showTimePanel ? (
                               <div className="relative mt-3 w-full max-w-[112px] self-center space-y-1.5 text-center">
                                 <div className="grid grid-cols-2 gap-1.5">
-                                  <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                  <div className="rounded-xl border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="ui-card-label text-[var(--muted)] dark:text-white">
                                       {tr('In', 'Kirish', 'Вход')}
                                     </p>
@@ -1037,7 +1037,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                       {formatWorkTime(day.checkInTime)}
                                     </p>
                                   </div>
-                                  <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                  <div className="rounded-xl border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                     <p className="ui-card-label flex items-center justify-center gap-1 text-[var(--muted)] dark:text-white">
                                       <span>{tr('Out', 'Chiqish', 'Выход')}</span>
                                     </p>

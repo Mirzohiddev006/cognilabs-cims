@@ -374,14 +374,14 @@ export function BoardWorkspace({
   if (boardQuery.isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="h-14 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]" />
+        <div className="h-14 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]" />
         <div className="flex gap-4 overflow-hidden">
           {Array.from({ length: 4 }).map((_, index) => (
             <div
               key={index}
               className={isEmbedded
-                ? 'h-[520px] w-72 shrink-0 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]'
-                : 'h-[calc(100vh-200px)] w-72 shrink-0 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]'}
+                ? 'h-[520px] w-72 shrink-0 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]'
+                : 'h-[calc(100vh-200px)] w-72 shrink-0 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]'}
             />
           ))}
         </div>

@@ -105,7 +105,7 @@ export function CimsTeamPage() {
   }
 
   return (
-    <section className="space-y-6 page-enter">
+    <section className="space-y-4 page-enter">
       <div className="grid gap-4 xl:grid-cols-2">
         {teamLinks.map((link) => {
           const Icon = link.icon
@@ -136,7 +136,7 @@ export function CimsTeamPage() {
             <Card
               key={link.href}
               className={cn(
-                'group relative overflow-hidden rounded-[28px] border p-6 transition-transform duration-200 hover:-translate-y-[2px]',
+                'group relative overflow-hidden rounded-xl border p-6 transition-transform duration-200 hover:-translate-y-[2px]',
               )}
               style={{
                 borderColor: cardBorder,
@@ -149,7 +149,7 @@ export function CimsTeamPage() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className="grid h-12 w-12 place-items-center rounded-[18px] border"
+                    className="grid h-12 w-12 place-items-center rounded-xl border"
                     style={{
                       borderColor: iconBorder,
                       backgroundColor: iconSurface,
@@ -187,7 +187,7 @@ export function CimsTeamPage() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[16px] border px-4 py-2.5 text-sm font-semibold transition hover:-translate-y-[1px]"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition hover:-translate-y-[1px]"
                   style={{
                     color: accentColor,
                     borderColor: actionBorder,
@@ -201,7 +201,7 @@ export function CimsTeamPage() {
                 <Button
                   variant="ghost"
                   size="lg"
-                  className="justify-center rounded-[16px] border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)]"
+                  className="justify-center rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--blue-border)] hover:bg-[var(--surface-elevated)]"
                   leftIcon={<Copy className="h-4 w-4" />}
                   onClick={() => void handleCopyLink(link.href, title)}
                 >

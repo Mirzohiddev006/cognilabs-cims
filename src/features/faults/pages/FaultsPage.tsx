@@ -690,9 +690,8 @@ export function FaultsPage() {
   }
 
   return (
-    <section className="space-y-6 page-enter">
+    <section className="space-y-4 page-enter">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div />
         <div className="flex flex-wrap items-center gap-3">
           <SelectField
             value={String(month)}
@@ -701,7 +700,8 @@ export function FaultsPage() {
             placeholder={lt('Month')}
             className="w-45"
           />
-
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="secondary"
             size="lg"
@@ -723,7 +723,7 @@ export function FaultsPage() {
         <DetailStatTile label={tr('Final salary total', 'Jami yakuniy maosh', 'Итоговая сумма зарплаты')} value={formatAmount(apiSummary.totalFinalSalary ?? apiSummary.totalSalaryAmount ?? 0)} tone="success" />
       </div>
 
-      <Card className="rounded-[24px] border-[var(--border)] p-6">
+      <Card className="rounded-xl border-[var(--border)] p-6">
         <DataTable
           caption={lt('Salary estimate breakdown')}
           rows={reports}
@@ -925,7 +925,7 @@ export function FaultsPage() {
         }
       >
         <div className="grid gap-4">
-          <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+          <div className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
             <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{mistakeTarget?.fullName ?? '-'}</p>
           </div>
@@ -1040,7 +1040,7 @@ export function FaultsPage() {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+            <label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
               <input
                 type="checkbox"
                 checked={mistakeDraft.reachedClient}
@@ -1050,7 +1050,7 @@ export function FaultsPage() {
               {tr('Reached client', 'Mijozga yetib borgan', 'Дошло до клиента')}
             </label>
 
-            <label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+            <label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
               <input
                 type="checkbox"
                 checked={mistakeDraft.unclearTask}
@@ -1096,7 +1096,7 @@ export function FaultsPage() {
         }
       >
         <div className="grid gap-4">
-          <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+          <div className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
             <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{deliveryBonusTarget?.fullName ?? '-'}</p>
           </div>

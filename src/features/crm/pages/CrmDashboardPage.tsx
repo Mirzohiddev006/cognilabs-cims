@@ -771,7 +771,7 @@ export function CrmDashboardPage() {
   const activeFilterCount = [search, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
 
   return (
-    <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-6">
+    <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           {periodOptions.map((option) => {

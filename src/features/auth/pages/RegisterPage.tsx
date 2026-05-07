@@ -85,10 +85,10 @@ export function RegisterPage() {
         { label: t('auth.verify_email', 'Verify email'), to: '/auth/verify-email' },
       ]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <AuthFeedback tone="error" message={submitError} />
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <AuthField
             label={t('auth.email', 'Email')}
             name="email"
@@ -109,7 +109,7 @@ export function RegisterPage() {
           />
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <AuthField
             label={t('auth.register.name', 'Name')}
             name="name"
@@ -140,7 +140,7 @@ export function RegisterPage() {
           onChange={(event) => setValues((current) => ({ ...current, password: event.target.value }))}
         />
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           <AuthField
             label={t('auth.register.telegram_id', 'Telegram ID')}
             name="telegram_id"

@@ -144,7 +144,7 @@ export function AppHeader() {
         </div>
 
         <div className="flex w-full md:w-auto md:justify-end">
-          <div className="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-(--border) bg-(--accent-soft) p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
+          <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-(--border) bg-(--accent-soft) p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
             {user?.job_title?.trim() ? (
               <Badge className={cn(headerMetaChipClassName, 'border-(--border) bg-(--muted-surface) text-(--muted-strong)')}>
                 {user.job_title}

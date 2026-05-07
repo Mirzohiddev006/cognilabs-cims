@@ -28,7 +28,7 @@ function RootLayoutFrame() {
         }}
       >
         <AppHeader />
-        <main className="app-shell-main relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-6 pt-4 sm:px-6 lg:px-8">
+        <main className="app-shell-main relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 pb-4 pt-4 sm:px-4 lg:px-6">
           <div className="mx-auto w-full max-w-[1600px] min-h-0">
             <Outlet />
           </div>

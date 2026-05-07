@@ -40,7 +40,7 @@ export function Card({
       className={cn(
         'rounded-xl',
         variantClasses[variant],
-        !noPadding && 'p-5',
+        !noPadding && 'p-4',
         className,
       )}
       {...props}
@@ -54,7 +54,7 @@ export function CardHeader({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div data-slot="card-header" className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+    <div data-slot="card-header" className={cn('flex flex-col space-y-1 p-4', className)} {...props} />
   )
 }
 
@@ -88,7 +88,7 @@ export function CardContent({
   className,
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
-  return <div data-slot="card-content" className={cn('p-6 pt-0', className)} {...props} />
+  return <div data-slot="card-content" className={cn('p-4 pt-0', className)} {...props} />
 }
 
 export function CardBody({
@@ -96,7 +96,7 @@ export function CardBody({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div data-slot="card-body" className={cn('px-5 py-5', className)} {...props} />
+    <div data-slot="card-body" className={cn('px-4 py-4', className)} {...props} />
   )
 }
 
@@ -108,7 +108,7 @@ export function CardFooter({
     <div
       data-slot="card-footer"
       className={cn(
-        'border-t border-(--border) px-5 py-4',
+        'border-t border-(--border) px-4 py-3',
         className,
       )}
       {...props}
@@ -149,7 +149,7 @@ export function CardSection({
     <section
       className={cn(
         divider && 'border-t border-(--border) first:border-t-0',
-        !bleed && 'px-5 py-5 sm:px-6 sm:py-6',
+        !bleed && 'px-4 py-4 sm:px-5 sm:py-5',
         className,
       )}
       {...props}

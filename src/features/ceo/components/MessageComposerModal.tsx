@@ -55,7 +55,7 @@ export function MessageComposerModal({
       }
     >
       {!isBroadcast ? (
-        <div className="rounded-[20px] border border-blue-500/15 bg-blue-50 px-4 py-3 text-xs text-[var(--muted-strong)] dark:bg-blue-600/10 dark:text-[var(--muted)]">
+        <div className="rounded-xl border border-blue-500/15 bg-blue-50 px-4 py-3 text-xs text-[var(--muted-strong)] dark:bg-blue-600/10 dark:text-[var(--muted)]">
           {t('ceo.messages.receiver')}:
           <span className="ml-2 font-bold text-[var(--foreground)] dark:text-white">{values.receiver_label}</span>
         </div>

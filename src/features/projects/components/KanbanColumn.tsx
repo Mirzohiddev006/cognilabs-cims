@@ -67,7 +67,7 @@ export function KanbanColumn({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'flex w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-2xl overflow-hidden',
+        'flex w-[calc(100vw-64px)] sm:w-[280px] shrink-0 flex-col rounded-xl overflow-hidden',
         'bg-[var(--accent-soft)]/40 backdrop-blur-md',
         'border border-[var(--border)] shadow-sm',
         isDragging && !isOverlay && 'opacity-30 scale-[0.98]',

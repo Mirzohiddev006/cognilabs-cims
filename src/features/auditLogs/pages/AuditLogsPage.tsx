@@ -28,7 +28,7 @@ function LogDetailModal({ log, onClose }: { log: AuditLogItem; onClose: () => vo
         </Button>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Action')}</p>
@@ -59,7 +59,7 @@ function LogDetailModal({ log, onClose }: { log: AuditLogItem; onClose: () => vo
 
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('User')}</p>
-          <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500/20 text-blue-400 font-bold">
               {log.actor_name?.charAt(0) ?? '?'}
             </div>
@@ -73,7 +73,7 @@ function LogDetailModal({ log, onClose }: { log: AuditLogItem; onClose: () => vo
         {(log.after_data || log.before_data) ? (
           <div className="space-y-2">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Data Changes')}</p>
-            <div className="max-h-60 overflow-auto rounded-2xl border border-white/10 bg-black/20 p-4 font-mono text-[11px] leading-relaxed text-blue-300">
+            <div className="max-h-60 overflow-auto rounded-xl border border-white/10 bg-black/20 p-4 font-mono text-[11px] leading-relaxed text-blue-300">
               <pre>{JSON.stringify({ before: log.before_data, after: log.after_data }, null, 2)}</pre>
             </div>
           </div>
@@ -141,7 +141,7 @@ export function AuditLogsPage() {
   const totalPages = Math.ceil(total / 20)
 
   return (
-    <div className="space-y-8 page-enter">
+    <div className="space-y-4 page-enter">
       <PageHeader
         eyebrow={lt('System Administration')}
         title={lt('Audit Logs')}
@@ -153,42 +153,42 @@ export function AuditLogsPage() {
           placeholder={lt('Module')}
           value={module}
           onChange={(e) => { setModule(e.target.value); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
         <Input
           placeholder={lt('Table Name')}
           value={tableName}
           onChange={(e) => { setTableName(e.target.value); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
         <Input
           placeholder={lt('Action')}
           value={action}
           onChange={(e) => { setAction(e.target.value); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
         <SelectField
           placeholder={lt('Select User')}
           value={actorUserId}
           options={userOptions}
           onValueChange={(val) => { setActorUserId(val); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
         <Input
           placeholder={lt('Entity Type')}
           value={entityType}
           onChange={(e) => { setEntityType(e.target.value); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
         <Input
           placeholder={lt('Entity ID')}
           value={entityId}
           onChange={(e) => { setEntityId(e.target.value); setPage(1) }}
-          className="h-12 rounded-2xl bg-[var(--surface-elevated)]"
+          className="h-12 rounded-xl bg-[var(--surface-elevated)]"
         />
       </div>
 
-      <div className="overflow-hidden rounded-[24px] border border-[var(--border)] bg-[var(--surface)] shadow-xl">
+      <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl">
         {logsQuery.isLoading ? (
           <div className="p-8">
             <LoadingStateBlock eyebrow={lt('Loading')} title={lt('Loading logs...')} description={lt('Retrieving latest system activities.')} />

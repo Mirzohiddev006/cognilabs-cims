@@ -29,7 +29,7 @@ function formatMessageTime(createdAt: number) {
 function AiGlyph({ className }: { className?: string }) {
   return (
     <div className={cn(
-      'grid place-items-center rounded-[20px] border border-[var(--blue-border)] bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.26),rgba(15,23,42,0.92))] text-white shadow-[0_16px_48px_rgba(37,99,235,0.18)]',
+      'grid place-items-center rounded-xl border border-[var(--blue-border)] bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.26),rgba(15,23,42,0.92))] text-white shadow-[0_16px_48px_rgba(37,99,235,0.18)]',
       className,
     )}>
       <NavGlyph name="ai" className="h-5 w-5" />
@@ -48,13 +48,13 @@ function ConversationBubble({ message }: { message: CimsAiChatMessage }) {
       )}
     >
       {!isUser ? (
-        <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-2xl" />
+        <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-xl" />
       ) : null}
 
       <div
         data-i18n-skip="true"
         className={cn(
-          'min-w-0 w-fit max-w-[min(100%,720px)] rounded-[28px] border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
+          'min-w-0 w-fit max-w-[min(100%,720px)] rounded-xl border px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]',
           isUser
             ? 'ml-auto border-[var(--blue-border)] bg-[linear-gradient(180deg,var(--blue-soft),var(--blue-dim))] text-[var(--foreground)]'
             : 'border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] text-[var(--foreground)]',
@@ -79,9 +79,9 @@ function LoadingBubble({ stage }: { stage: CimsAiLoadingStage }) {
 
   return (
     <article className="group flex w-full justify-start gap-3" data-i18n-skip="true">
-      <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-2xl" />
+      <AiGlyph className="mt-1 h-9 w-9 shrink-0 rounded-xl" />
 
-      <div className="max-w-[min(100%,780px)] rounded-[28px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-5 py-4 text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <div className="max-w-[min(100%,780px)] rounded-xl border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] px-5 py-4 text-[var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         <div className="flex items-center justify-between gap-3">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
             CIMS AI
@@ -133,7 +133,7 @@ function EmptyConversation({
             key={prompt}
             type="button"
             onClick={() => onPrompt(prompt)}
-            className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
           >
             {translateCurrentLiteral(prompt)}
           </button>
@@ -162,7 +162,7 @@ function Composer({
       'border-t border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))]',
       mode === 'page' ? 'px-6 pb-6 pt-5 lg:px-8' : 'px-4 pb-4 pt-4',
     )}>
-      <div className="rounded-[26px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] p-3 shadow-[var(--shadow-xl)]">
+      <div className="rounded-xl border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] p-3 shadow-[var(--shadow-xl)]">
         <Textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -244,7 +244,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
   }
 
   return (
-    <section className="grid min-h-[calc(100vh-9rem)] gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+    <section className="grid min-h-[calc(100vh-9rem)] gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
       <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
         <div className="px-1">
           <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--blue-text)]">CIMS AI</p>
@@ -256,7 +256,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
           </p>
         </div>
 
-        <Card variant="glass" className="overflow-hidden rounded-[30px] p-0">
+        <Card variant="glass" className="overflow-hidden rounded-xl p-0">
           <div className="border-b border-[var(--border)] px-5 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{translateCurrentLiteral('Prompt library')}</p>
             <p className="mt-2 text-sm text-[var(--muted)]">{translateCurrentLiteral('Fast starts for CEO-level questions.')}</p>
@@ -267,7 +267,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
                 key={prompt}
                 type="button"
                 onClick={() => fillPrompt(prompt)}
-                className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3 text-left text-sm leading-6 text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]"
               >
                 {translateCurrentLiteral(prompt)}
               </button>
@@ -277,7 +277,7 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
 
       </aside>
 
-      <div className="relative flex min-h-[78vh] min-w-0 flex-col overflow-hidden rounded-[34px] border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] shadow-[var(--shadow-xl)]">
+      <div className="relative flex min-h-[78vh] min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[linear-gradient(180deg,var(--surface-elevated),var(--surface))] shadow-[var(--shadow-xl)]">
         <div className="relative flex items-center justify-between gap-4 border-b border-[var(--border)] px-6 py-5 lg:px-8">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">{translateCurrentLiteral('Shared conversation')}</p>
@@ -293,14 +293,14 @@ export function CimsAiWorkspace({ mode }: CimsAiWorkspaceProps) {
 
         <div ref={streamRef} data-chat-stream="true" className="relative min-h-0 flex-1 overflow-y-auto px-6 py-6 lg:px-8">
           {history.length > 0 ? (
-            <div className="space-y-5">
+            <div className="space-y-4">
               {history.map((message) => (
                 <ConversationBubble key={message.id} message={message} />
               ))}
               {isSubmitting ? <LoadingBubble stage={loadingStage} /> : null}
             </div>
           ) : (
-            <div className="space-y-5">
+            <div className="space-y-4">
               <EmptyConversation mode={mode} onPrompt={fillPrompt} />
               {isSubmitting ? <LoadingBubble stage={loadingStage} /> : null}
             </div>

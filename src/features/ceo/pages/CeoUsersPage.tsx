@@ -896,7 +896,7 @@ export function CeoUsersPage() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-4">
       <div className="grid gap-4 md:grid-cols-4 stagger-children">
         <MetricCard label={lt('Users')} value={formatCompactNumber(statistics?.user_count ?? users.length)} accent="blue" sparkBars={[4,5,6,7,7,8]} />
         <MetricCard label={tr('Active', 'Faol', 'Активные')} value={formatCompactNumber(statistics?.active_user_count ?? 0)} accent="success" sparkBars={[5,6,6,7,8,8]} />
@@ -947,7 +947,7 @@ export function CeoUsersPage() {
                       event.stopPropagation()
                       openProfileDialog(row)
                     }}
-                    className="group/user flex w-full items-center gap-3 rounded-[12px] py-1 text-left transition hover:text-[var(--blue-text)] focus-visible:outline-none"
+                    className="group/user flex w-full items-center gap-3 rounded-xl py-1 text-left transition hover:text-[var(--blue-text)] focus-visible:outline-none"
                     aria-label={`${lt('Profile')}: ${row.name} ${row.surname}`}
                   >
                     <UserAvatar user={row} size="sm" />
@@ -1150,8 +1150,8 @@ export function CeoUsersPage() {
         }
         size="xl"
       >
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/8 pb-4">
               <div>
                 <p className="text-sm font-semibold text-white">{lt('Conversation')}</p>
@@ -1171,7 +1171,7 @@ export function CeoUsersPage() {
                     <div
                       key={entry.id}
                       className={cn(
-                        'relative min-w-0 max-w-[90%] overflow-hidden rounded-[24px] border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+                        'relative min-w-0 max-w-[90%] overflow-hidden rounded-xl border px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
                         entry.direction === 'outgoing'
                           ? 'ml-auto border-violet-500/24 bg-[linear-gradient(180deg,rgba(139,92,246,0.16),rgba(139,92,246,0.08))]'
                           : 'border-blue-500/22 bg-[linear-gradient(180deg,rgba(59,130,246,0.14),rgba(59,130,246,0.07))]',
@@ -1211,7 +1211,7 @@ export function CeoUsersPage() {
                   )
                 })
               ) : (
-                <div className="rounded-[20px] border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-zinc-500">
+                <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] px-4 py-6 text-sm text-zinc-500">
                   {t('ceo.users.thread.empty')}
                 </div>
               )}
@@ -1219,7 +1219,7 @@ export function CeoUsersPage() {
           </div>
 
           <div className="space-y-4">
-            <Card variant="glass" className="space-y-4 rounded-[26px] border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <Card variant="glass" className="space-y-4 rounded-xl border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div className="flex items-center gap-3">
                 {messageThreadUser ? <UserAvatar user={messageThreadUser} size="md" /> : null}
                 <div className="min-w-0">
@@ -1233,15 +1233,15 @@ export function CeoUsersPage() {
               </div>
 
               <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(96px,1fr))]">
-                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                <div className="min-w-0 rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="ui-card-label leading-[1.35] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.sent')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.outgoingCount}</p>
                 </div>
-                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                <div className="min-w-0 rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="ui-card-label leading-[1.35] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.incoming')}</p>
                   <p className="mt-2 text-lg font-semibold text-white">{activeConversation.incomingCount}</p>
                 </div>
-                <div className="min-w-0 rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
+                <div className="min-w-0 rounded-xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.015))] px-3 py-3">
                   <p className="ui-card-label leading-[1.35] text-[var(--caption)] [overflow-wrap:anywhere]">{t('ceo.users.thread.latest')}</p>
                   <p className="mt-2 text-sm font-semibold text-white">
                     {activeConversation.entries.length > 0
@@ -1252,7 +1252,7 @@ export function CeoUsersPage() {
               </div>
             </Card>
 
-            <Card className="space-y-4 rounded-[26px] border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <Card className="space-y-4 rounded-xl border-white/10 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
               <div>
                 <p className="text-sm font-semibold text-white">{t('ceo.users.thread.write_title')}</p>
                 <p className="mt-1 text-xs text-zinc-500">
@@ -1359,25 +1359,25 @@ export function CeoUsersPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.role')}</p>
             <p className={cn('mt-2 text-lg font-semibold', getRoleTextClass(profileUser?.role))}>{profileUser?.role ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.company_code')}</p>
             <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{profileUser?.company_code ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.job_title')}</p>
             <p className={cn('mt-2 text-lg font-semibold', profileUser?.job_title ? (isCeoUser(profileUser) ? 'text-[var(--violet-text)]' : 'text-[var(--success-text)]') : 'text-[var(--foreground)]')}>
               {profileUser?.job_title ?? '-'}
             </p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.email')}</p>
             <p className="mt-2 break-all text-base font-semibold text-[var(--foreground)]">{profileUser?.email ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('profile.status')}</p>
             <div className="mt-2 flex items-center gap-2">
               <span className={cn('status-dot', profileUser?.is_active ? 'status-dot-success' : 'status-dot-muted')} />
@@ -1386,11 +1386,11 @@ export function CeoUsersPage() {
               </p>
             </div>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('auth.register.telegram_id')}</p>
             <p className="mt-2 break-all text-base font-semibold text-[var(--foreground)]">{profileUser?.telegram_id ?? '-'}</p>
           </div>
-          <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)]">{t('ceo.users.form.default_salary')}</p>
             <p className="mt-2 text-base font-semibold text-[var(--foreground)]">{formatSalary(profileUser?.default_salary)}</p>
           </div>

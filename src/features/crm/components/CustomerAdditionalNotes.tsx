@@ -71,7 +71,7 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
   }
 
   return (
-    <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+    <Card className="overflow-hidden rounded-xl border-[var(--border)]">
       <div className="border-b border-[var(--border)] px-6 py-5">
         <SectionTitle
           title={t('customers.detail.additional_notes.title', 'Additional Notes')}

@@ -32,7 +32,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-bold"
+              className="flex h-16 w-16 items-center justify-center rounded-xl text-2xl font-bold"
               style={{
                 background: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 45%, 18%)`,
                 color: `hsl(${project.project_name.charCodeAt(0) * 7 % 360}, 65%, 65%)`,

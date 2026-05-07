@@ -119,7 +119,7 @@ function MiniStat({
   value: string
 }) {
   return (
-    <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
       <p className="mt-2 text-xl font-bold tracking-tight text-[var(--foreground)]">{value}</p>
     </div>
@@ -198,7 +198,7 @@ function TrendChartCard({
 
       {payload && trend.length > 0 ? (
         <>
-          <div className="mt-5 overflow-hidden rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-2 py-4">
+          <div className="mt-5 overflow-hidden rounded-xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] px-2 py-4">
             <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="h-56 w-full">
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -290,7 +290,7 @@ function TrendChartCard({
           </div>
         </>
       ) : (
-        <div className="mt-5 rounded-[24px] border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-8 text-sm text-[var(--muted-strong)]">
+        <div className="mt-5 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-8 text-sm text-[var(--muted-strong)]">
           {t('crm.charts.states.trend_empty')}
         </div>
       )}
@@ -361,7 +361,7 @@ export function CrmDashboardCharts({
       ) : null}
 
       {isError && !weekly && !monthly ? (
-        <div className="mt-5 rounded-[24px] border border-dashed border-rose-500/30 bg-rose-50 px-5 py-8 text-sm text-rose-700 dark:bg-rose-500/[0.06] dark:text-rose-100/80">
+        <div className="mt-5 rounded-xl border border-dashed border-rose-500/30 bg-rose-50 px-5 py-8 text-sm text-rose-700 dark:bg-rose-500/[0.06] dark:text-rose-100/80">
           {t('crm.charts.states.load_failed')}
         </div>
       ) : (

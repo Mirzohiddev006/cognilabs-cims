@@ -133,7 +133,7 @@ function SummaryCard({
   } as const
 
   return (
-    <div className={cn('rounded-[22px] border px-5 py-4', accentClassName[accent])}>
+    <div className={cn('rounded-xl border px-5 py-4', accentClassName[accent])}>
       <p className={cn('text-[10px] font-bold uppercase tracking-[0.22em]', accentLabelClassName[accent])}>{label}</p>
       <p className="mt-3 text-[1.75rem] font-semibold tracking-tight text-[var(--foreground)] dark:text-white">{value}</p>
     </div>
@@ -218,7 +218,7 @@ function MemberPicker({
           placeholder={multiple ? lt('Search members to include') : lt('Search member')}
         />
 
-      <div className="max-h-56 overflow-y-auto rounded-[18px] border border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/20">
+      <div className="max-h-56 overflow-y-auto rounded-xl border border-[var(--border)] bg-white dark:border-white/10 dark:bg-black/20">
         {filteredMembers.length > 0 ? filteredMembers.map((member) => {
           const selected = selectedIds.includes(member.id)
 
@@ -498,8 +498,8 @@ export function CeoWorkdayOverridesPage() {
     : tx('ceo.workday.dialog.create_description', 'Create a holiday or short working day for all members or selected members.')
 
   return (
-    <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-[var(--border)]">
+    <section className="space-y-4 page-enter">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-xl border-[var(--border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -587,7 +587,7 @@ export function CeoWorkdayOverridesPage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
         <Card variant="glass" className="p-5">
           <div className="mb-4 flex items-center justify-between gap-3">
             <SectionTitle
@@ -602,7 +602,7 @@ export function CeoWorkdayOverridesPage() {
               {overrides.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[20px] border border-white/8 bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+                  className="rounded-xl border border-white/8 bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -657,7 +657,7 @@ export function CeoWorkdayOverridesPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-[22px] border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-8 text-center">
+            <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-8 text-center">
               <p className="text-base font-semibold text-[var(--foreground)]">
                 {tx('ceo.workday.empty.title', 'No overrides yet for {{month}} {{year}}', { month: getMonthName(month), year })}
               </p>
@@ -678,21 +678,21 @@ export function CeoWorkdayOverridesPage() {
               description={tx('ceo.workday.guide.description', 'Use these rules to control whether updates are expected on a date.')}
             />
 
-            <div className="rounded-[20px] border border-[var(--warning-border)] bg-amber-50/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-amber-500/18 dark:bg-amber-500/[0.06] dark:shadow-none">
+            <div className="rounded-xl border border-[var(--warning-border)] bg-amber-50/90 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-amber-500/18 dark:bg-amber-500/[0.06] dark:shadow-none">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--warning-text)] dark:text-amber-200/82">{lt('Holiday')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
                 {tx('ceo.workday.guide.holiday_description', 'Mark a date as a holiday when no update should be expected. Calendars should treat it as an off day instead of a missing day.')}
               </p>
             </div>
 
-            <div className="rounded-[20px] border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-blue-500/18 dark:bg-blue-500/[0.06] dark:shadow-none">
+            <div className="rounded-xl border border-[var(--blue-border)] bg-[var(--blue-soft)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-blue-500/18 dark:bg-blue-500/[0.06] dark:shadow-none">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{lt('Short Day')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/80">
                 {tx('ceo.workday.guide.short_day_description', 'Use a short day when working hours change. You can still require updates or turn them off for that shortened date.')}
               </p>
             </div>
 
-            <div className="rounded-[20px] border border-[var(--blue-border)] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-[var(--surface-elevated)] dark:shadow-none">
+            <div className="rounded-xl border border-[var(--blue-border)] bg-white px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-white/10 dark:bg-[var(--surface-elevated)] dark:shadow-none">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--blue-text)] dark:text-blue-200/82">{tx('ceo.workday.guide.member_targeting_title', 'Member Targeting')}</p>
               <p className="mt-2 text-sm leading-6 text-[var(--foreground)]/78">
                 {tx('ceo.workday.guide.member_targeting_description', 'Choose all members for company-wide holidays, or select one or more members when the override is specific to a subset of the team.')}
@@ -700,7 +700,7 @@ export function CeoWorkdayOverridesPage() {
             </div>
 
             {memberOptionsQuery.isError ? (
-              <div className="rounded-[18px] border border-amber-500/25 bg-amber-50 px-4 py-4 text-sm text-amber-700 dark:bg-amber-500/8 dark:text-amber-100/80">
+              <div className="rounded-xl border border-amber-500/25 bg-amber-50 px-4 py-4 text-sm text-amber-700 dark:bg-amber-500/8 dark:text-amber-100/80">
                 {tx('ceo.workday.guide.member_options_error', 'Member options could not be loaded. You can still review existing overrides, but creating member-specific entries may fail until this list reloads.')}
               </div>
             ) : null}
@@ -729,7 +729,7 @@ export function CeoWorkdayOverridesPage() {
           </>
         )}
       >
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -791,7 +791,7 @@ export function CeoWorkdayOverridesPage() {
                   type="button"
                   onClick={() => setForm({ updateRequired: false })}
                   className={cn(
-                    'rounded-[18px] border px-4 py-3 text-left transition',
+                    'rounded-xl border px-4 py-3 text-left transition',
                     !formState.updateRequired
                       ? 'border-amber-400/35 bg-amber-500/[0.10] text-white'
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
@@ -804,7 +804,7 @@ export function CeoWorkdayOverridesPage() {
                   type="button"
                   onClick={() => setForm({ updateRequired: true })}
                   className={cn(
-                    'rounded-[18px] border px-4 py-3 text-left transition',
+                    'rounded-xl border px-4 py-3 text-left transition',
                     formState.updateRequired
                       ? 'border-emerald-400/35 bg-emerald-500/[0.10] text-white'
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
@@ -825,7 +825,7 @@ export function CeoWorkdayOverridesPage() {
                   type="button"
                   onClick={() => setForm({ appliesToAll: true, memberIds: [] })}
                   className={cn(
-                    'rounded-[18px] border px-4 py-3 text-left transition',
+                    'rounded-xl border px-4 py-3 text-left transition',
                     formState.appliesToAll
                       ? 'border-blue-400/35 bg-blue-500/[0.10] text-white'
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
@@ -838,7 +838,7 @@ export function CeoWorkdayOverridesPage() {
                   type="button"
                   onClick={() => setForm({ appliesToAll: false })}
                   className={cn(
-                    'rounded-[18px] border px-4 py-3 text-left transition',
+                    'rounded-xl border px-4 py-3 text-left transition',
                     !formState.appliesToAll
                       ? 'border-violet-400/35 bg-violet-500/[0.10] text-white'
                       : 'border-white/8 bg-white/[0.03] text-white/72 hover:border-white/12 hover:bg-white/[0.05]',
@@ -862,7 +862,7 @@ export function CeoWorkdayOverridesPage() {
                 </div>
 
                 {memberOptionsQuery.isLoading && memberOptions.length === 0 ? (
-                  <div className="rounded-[18px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-6 text-sm text-[var(--muted)]">
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-6 text-sm text-[var(--muted)]">
                     {tx('ceo.workday.form.loading_members', 'Loading member options...')}
                   </div>
                 ) : (
@@ -875,12 +875,12 @@ export function CeoWorkdayOverridesPage() {
                 )}
               </div>
             ) : (
-              <div className="rounded-[18px] border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-5 text-sm text-[var(--muted-strong)]">
+              <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-5 text-sm text-[var(--muted-strong)]">
                 {tx('ceo.workday.form.applies_to_all', 'This override will apply to every member in the company.')}
               </div>
             )}
 
-            <div className="rounded-[20px] border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">{tx('common.preview', 'Preview')}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <Badge variant={getTypeBadgeVariant(formState.dayType)}>

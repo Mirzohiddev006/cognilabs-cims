@@ -55,7 +55,7 @@ export function ForgotPasswordPage() {
       description={t('auth.recovery.description', 'Request a reset code or switch to password reset if you already received one.')}
       footerLinks={[{ label: t('auth.back_to_login', 'Back to login'), to: '/auth/login' }]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
           <span className="rounded-md bg-[var(--card)] px-3 py-1.5 text-center text-xs font-medium text-[var(--foreground)]">
             {t('auth.forgot_password_tab', 'Forgot Password')}

@@ -142,7 +142,7 @@ export function CompensationPolicyDrawer({
           <div className={cn('min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6', isLight ? 'bg-white' : 'bg-transparent')}>
             <div
               className={cn(
-                'rounded-[24px] border border-[var(--border)] p-5',
+                'rounded-xl border border-[var(--border)] p-5',
                 isLight
                   ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]'
                   : 'bg-white/[0.03]',
@@ -171,7 +171,7 @@ export function CompensationPolicyDrawer({
               collapsible={false}
               defaultExpanded
               className={cn(
-                'mt-5 rounded-[28px] border-[var(--border)]',
+                'mt-5 rounded-xl border-[var(--border)]',
                 isLight
                   ? 'bg-white'
                   : 'bg-white/[0.03]',

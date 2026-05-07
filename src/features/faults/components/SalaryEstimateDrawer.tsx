@@ -147,7 +147,7 @@ export function SalaryEstimateDrawer({
           <div className={cn('min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6', isLight ? 'bg-white' : 'bg-transparent')}>
             <div
               className={cn(
-                'rounded-[24px] border border-[var(--border)] p-5',
+                'rounded-xl border border-[var(--border)] p-5',
                 isLight
                   ? 'bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(248,250,252,0.98))]'
                   : 'bg-white/[0.03]',
@@ -187,7 +187,7 @@ export function SalaryEstimateDrawer({
             {(report.formulaText || report.calculationBreakdown) && (
               <div className="mt-6 space-y-4">
                 {report.formulaText && (
-                  <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
                     <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[var(--muted-strong)]">Calculation Formula</p>
                     <p className="font-mono text-xs leading-relaxed text-[var(--foreground)] sm:text-sm">{report.formulaText}</p>
                   </div>
@@ -196,7 +196,7 @@ export function SalaryEstimateDrawer({
                 {report.calculationBreakdown && (
                   <div className="grid gap-2.5">
                     {report.calculationBreakdown.bonus_lines.map((line, index) => (
-                      <div key={`bonus-${index}`} className="flex items-center justify-between rounded-[20px] border border-blue-500/18 bg-blue-500/5 p-4">
+                      <div key={`bonus-${index}`} className="flex items-center justify-between rounded-xl border border-blue-500/18 bg-blue-500/5 p-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="shrink-0 rounded-md bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-blue-500">Bonus</span>
@@ -212,7 +212,7 @@ export function SalaryEstimateDrawer({
                     ))}
 
                     {report.calculationBreakdown.deduction_lines.map((line, index) => (
-                      <div key={`deduction-${index}`} className="flex items-center justify-between rounded-[20px] border border-rose-500/18 bg-rose-500/5 p-4">
+                      <div key={`deduction-${index}`} className="flex items-center justify-between rounded-xl border border-rose-500/18 bg-rose-500/5 p-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
                             <span className="shrink-0 rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-500">Deduction</span>
@@ -257,7 +257,7 @@ export function SalaryEstimateDrawer({
             <div className="mt-5 grid gap-4">
               <div
                 className={cn(
-                  'rounded-[22px] border px-5 py-4',
+                  'rounded-xl border px-5 py-4',
                   isLight
                     ? 'border-rose-500/18 bg-rose-50'
                     : 'border-[var(--danger-border)] bg-[var(--danger-dim)]',
@@ -284,7 +284,7 @@ export function SalaryEstimateDrawer({
 
               <div
                 className={cn(
-                  'rounded-[22px] border px-5 py-4 border-[var(--success-border)]',
+                  'rounded-xl border px-5 py-4 border-[var(--success-border)]',
                   isLight
                     ? 'bg-[var(--success-soft)]'
                     : 'bg-[var(--success-dim)]',

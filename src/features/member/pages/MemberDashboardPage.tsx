@@ -219,7 +219,7 @@ function MetricPanel({
   progressTone?: 'violet' | 'success' | 'danger'
 }) {
   return (
-    <div className="card-base rounded-[22px] px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+    <div className="card-base rounded-xl px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
       <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{label}</p>
       <p className="mt-3 text-[1.9rem] font-semibold tracking-tight text-[var(--foreground)]">{value}</p>
       {hint ? (
@@ -423,14 +423,14 @@ export function MemberDashboardPage() {
     : tr('No bonus records returned.', 'Bonus yozuvlari qaytmadi.', 'Записи бонусов не вернулись.')
 
   return (
-    <section className="space-y-6 page-enter" style={memberDashboardSuccessTheme}>
+    <section className="space-y-4 page-enter" style={memberDashboardSuccessTheme}>
       {false ? penaltiesSummary : null}
       {false ? bonusesSummary : null}
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[30px] border-white/10">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-xl border-white/10">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_32%),radial-gradient(circle_at_right,rgba(var(--success-rgb),0.12),transparent_24%)]" />
 
-          <div className="relative z-10 flex flex-col gap-6">
+          <div className="relative z-10 flex flex-col gap-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">{lt('Member Dashboard')}</p>
@@ -507,13 +507,13 @@ export function MemberDashboardPage() {
             </div>
 
             {dashboardQuery.isLoading && !dashboardQuery.data ? (
-              <div className="rounded-[20px] border border-[var(--blue-border)] bg-[var(--blue-dim)] px-4 py-4 text-sm text-[var(--foreground)]">
+              <div className="rounded-xl border border-[var(--blue-border)] bg-[var(--blue-dim)] px-4 py-4 text-sm text-[var(--foreground)]">
                 {lt('Syncing your latest dashboard data...')}
               </div>
             ) : null}
 
             {data?.statsError || detail.estimateError || detail.policyError || detail.mistakesError || detail.deliveryBonusesError || detail.updatesError || detail.calendarError ? (
-              <div className="rounded-[20px] border border-amber-500/25 bg-amber-500/10 px-4 py-4 text-sm text-[var(--foreground)]">
+              <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-4 text-sm text-[var(--foreground)]">
                 {data?.statsError ? <p>{lt('Stats API unavailable:')} {data.statsError}</p> : null}
                 {detail.estimateError ? <p>{lt('Salary estimate API unavailable:')} {detail.estimateError}</p> : null}
                 {detail.policyError ? <p>{tr('Compensation policy API unavailable:', 'Kompensatsiya siyosati API mavjud emas:', 'API политики компенсации недоступен:')} {detail.policyError}</p> : null}
@@ -527,7 +527,7 @@ export function MemberDashboardPage() {
         </div>
       </Card>
 
-      <Card className="rounded-[28px] border-[var(--border)] bg-[var(--card)] p-6">
+      <Card className="rounded-xl border-[var(--border)] bg-[var(--card)] p-6">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-[11px] text-[var(--success-text)]">
@@ -571,7 +571,7 @@ export function MemberDashboardPage() {
               : '-'}
             tone={detail.report.qualifiesProductivityBonus ? 'success' : 'default'}
           />
-          <div className="rounded-[16px] border border-rose-500/30 bg-rose-500/8 px-4 py-3">
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/8 px-4 py-3">
             <p className="text-xs text-[#FF0000]">{tr('Deduction percentage', 'Ayirma foizi', 'Процент удержания')}</p>
             <div className="mt-2 flex items-center justify-between gap-3">
               <p className="text-[1.05rem] font-semibold tracking-tight text-[#FF0000]">
@@ -587,15 +587,15 @@ export function MemberDashboardPage() {
 
         {/* Salary Calculation Formula and Breakdown */}
         {(detail.report.formulaText || detail.report.calculationBreakdown) && (
-          <div className="mt-6 space-y-5">
+          <div className="mt-6 space-y-4">
             <SectionTitle
               title={lt('Calculation breakdown')}
               description={lt('Detailed formula used to compute your final salary.')}
             />
 
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {detail.report.formulaText && (
-                <div className="rounded-[22px] border border-[var(--border)] bg-[var(--surface-elevated)] p-6 shadow-sm">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-6 shadow-sm">
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[var(--muted-strong)]">Formula</p>
                   <p className="font-mono text-sm leading-relaxed text-[var(--foreground)]">{detail.report.formulaText}</p>
                 </div>
@@ -604,7 +604,7 @@ export function MemberDashboardPage() {
               {detail.report.calculationBreakdown && (
                 <div className="grid gap-3">
                   {detail.report.calculationBreakdown.bonus_lines.map((line, index) => (
-                    <div key={`bonus-${index}`} className="flex items-center justify-between rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 transition hover:bg-blue-500/8">
+                    <div key={`bonus-${index}`} className="flex items-center justify-between rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 transition hover:bg-blue-500/8">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="shrink-0 rounded-md bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-blue-500">Bonus</span>
@@ -620,7 +620,7 @@ export function MemberDashboardPage() {
                   ))}
 
                   {detail.report.calculationBreakdown.deduction_lines.map((line, index) => (
-                    <div key={`deduction-${index}`} className="flex items-center justify-between rounded-2xl border border-rose-500/20 bg-rose-500/5 p-4 transition hover:bg-rose-500/8">
+                    <div key={`deduction-${index}`} className="flex items-center justify-between rounded-xl border border-rose-500/20 bg-rose-500/5 p-4 transition hover:bg-rose-500/8">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="shrink-0 rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-500">Deduction</span>
@@ -641,7 +641,7 @@ export function MemberDashboardPage() {
         )}
 
         <div className="mt-5 grid gap-4 xl:grid-cols-2">
-          <div className="rounded-[22px] border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
+          <div className="rounded-xl border border-rose-500/20 bg-rose-50/90 p-4 dark:bg-black/18">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#FF0000]">{tr('Deduction history', 'Ayirma tarixi', 'История удержаний')}</p>
@@ -656,7 +656,7 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.penalties.length > 0 ? detail.penalties.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-rose-500/16 bg-white px-4 py-3 dark:bg-black/20">
+                <div key={item.id} className="rounded-xl border border-rose-500/16 bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-rose-600 dark:text-rose-200">{item.title}</p>
@@ -669,14 +669,14 @@ export function MemberDashboardPage() {
                   </div>
                 </div>
               )) : (
-                <div className="rounded-[16px] border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+                <div className="rounded-xl border border-dashed border-rose-500/18 bg-rose-500/5 px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                   {tr('No deduction line-items were returned for the selected month.', 'Tanlangan oy uchun ayirma yozuvlari qaytmadi.', 'За выбранный месяц не вернулись записи удержаний.')}
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[22px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:bg-[var(--success-dim)]">
+          <div className="rounded-xl border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:bg-[var(--success-dim)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--success-text)]">{tr('Bonus history', 'Bonus tarixi', 'История бонусов')}</p>
@@ -691,7 +691,7 @@ export function MemberDashboardPage() {
 
             <div className="mt-4 space-y-3">
               {detail.bonuses.length > 0 ? detail.bonuses.map((item) => (
-                <div key={item.id} className="rounded-[16px] border border-[var(--success-border)] bg-white px-4 py-3 dark:bg-black/20">
+                <div key={item.id} className="rounded-xl border border-[var(--success-border)] bg-white px-4 py-3 dark:bg-black/20">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-[var(--success-text)]">{item.title}</p>
@@ -704,7 +704,7 @@ export function MemberDashboardPage() {
                   </div>
                 </div>
               )) : (
-                <div className="rounded-[16px] border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
+                <div className="rounded-xl border border-dashed border-[var(--success-border)] bg-[var(--success-soft)] px-4 py-5 text-sm text-[var(--muted-strong)] dark:bg-black/10">
                   {tr('No bonus line-items were returned for the selected month.', 'Tanlangan oy uchun bonus yozuvlari qaytmadi.', 'За выбранный месяц не вернулись записи бонусов.')}
                 </div>
               )}
@@ -715,7 +715,7 @@ export function MemberDashboardPage() {
 
       <CompensationPolicyPanel policy={detail.compensationPolicy} />
 
-      <Card noPadding className="overflow-hidden rounded-[28px]">
+      <Card noPadding className="overflow-hidden rounded-xl">
         <MistakeIncidentSection items={detail.mistakes} />
         <DeliveryBonusSection items={detail.deliveryBonuses} />
       </Card>

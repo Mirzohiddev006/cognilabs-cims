@@ -293,7 +293,7 @@ function SnapshotCard({
   } as const
 
   return (
-    <div className={cn('relative flex flex-col gap-4 rounded-[24px] border p-5 shadow-sm transition-all hover:shadow-md', accentClasses[accent])}>
+    <div className={cn('relative flex flex-col gap-4 rounded-xl border p-5 shadow-sm transition-all hover:shadow-md', accentClasses[accent])}>
       <div className="flex items-start justify-between">
         <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', iconWrapperClasses[accent])}>
           {icon || (
@@ -963,7 +963,7 @@ export function FaultsMemberDetailPage({
       : updatesSummary?.completionPercentage
 
   return (
-    <section className="page-enter space-y-6 px-4 pb-6 sm:px-6 lg:px-8">
+    <section className="page-enter space-y-4 px-4 pb-6 sm:px-6 lg:px-8">
       {!isMemberUpdatesMode ? (
         <div className="flex items-center">
           <Button
@@ -980,11 +980,11 @@ export function FaultsMemberDetailPage({
         </div>
       ) : null}
 
-      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px] border-[var(--blue-border)]">
+      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-xl border-[var(--blue-border)]">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_38%),radial-gradient(circle_at_right,rgba(34,211,238,0.12),transparent_26%)]" />
 
-          <div className="relative z-10 flex flex-col gap-5">
+          <div className="relative z-10 flex flex-col gap-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-[11px] font-semibold tracking-[0.02em] text-[var(--blue-text)]">
@@ -1107,7 +1107,7 @@ export function FaultsMemberDetailPage({
         </div>
       </Card>
 
-      <Card noPadding className="overflow-hidden rounded-[28px] border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]">
+      <Card noPadding className="overflow-hidden rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]">
         <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <SnapshotCard
@@ -1153,7 +1153,7 @@ export function FaultsMemberDetailPage({
           </div>
         </CardSection>
 
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="overflow-hidden rounded-xl">
               <CardSection
                 title={tr('Salary details breakdown', 'Maosh tafsilotlari taqsimoti', 'Распределение деталей зарплаты')}
                 headerAction={
@@ -1178,7 +1178,7 @@ export function FaultsMemberDetailPage({
                   </>
                 }
               >
-                <div className="space-y-8">
+                <div className="space-y-4">
                   {/* Salary Composition Group */}
                   <div>
                     <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-(--muted)">
@@ -1249,7 +1249,7 @@ export function FaultsMemberDetailPage({
                     </div>
                     
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                      <div className="flex items-center gap-3 rounded-[20px] border border-white/5 bg-white/[0.02] px-4 py-3">
+                      <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
                         <div className="text-(--muted)">
                           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
                         </div>
@@ -1260,7 +1260,7 @@ export function FaultsMemberDetailPage({
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 rounded-[20px] border border-white/5 bg-white/[0.02] px-4 py-3">
+                      <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
                         <div className="text-(--muted)">
                           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
                         </div>
@@ -1275,7 +1275,7 @@ export function FaultsMemberDetailPage({
                   </div>
 
                   {updatesSummary?.note ? (
-                    <div className="rounded-[24px] bg-[var(--blue-surface)]/5 px-6 py-5 border border-[var(--blue-border)]/20">
+                    <div className="rounded-xl bg-[var(--blue-surface)]/5 px-6 py-5 border border-[var(--blue-border)]/20">
                       <div className="flex items-center gap-2 mb-3">
                          <div className="text-[var(--blue-text)]">
                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -1342,9 +1342,9 @@ export function FaultsMemberDetailPage({
             </Card>
 
         <CardSection bleed>
-          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6">
+          <div className="grid gap-4 px-5 py-5 sm:px-6 sm:py-6">
 
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="overflow-hidden rounded-xl">
               <CardSection
           title={tr('Deduction records for this month', 'Bu oy uchun ayirma yozuvlari', 'Записи удержаний за этот месяц')}
           headerAction={
@@ -1397,7 +1397,7 @@ export function FaultsMemberDetailPage({
               </CardSection>
             </Card>
 
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="overflow-hidden rounded-xl">
               <CardSection
           title={tr('Bonuses for this month', 'Bu oy uchun bonuslar', 'Бонусы за этот месяц')}
           headerAction={
@@ -1445,7 +1445,7 @@ export function FaultsMemberDetailPage({
               </CardSection>
             </Card>
 
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="overflow-hidden rounded-xl">
               <MistakeIncidentSection
           items={detail.mistakes}
           editable={showCompensationActions}
@@ -1454,7 +1454,7 @@ export function FaultsMemberDetailPage({
           onDelete={showCompensationActions ? (item) => setDeleteTarget({ kind: 'mistake', record: item }) : undefined}
               />
             </Card>
-            <Card noPadding className="overflow-hidden rounded-[24px]">
+            <Card noPadding className="overflow-hidden rounded-xl">
               <DeliveryBonusSection
           items={detail.deliveryBonuses}
           editable={showCompensationActions}
@@ -1464,7 +1464,7 @@ export function FaultsMemberDetailPage({
               />
             </Card>
             {showCompensationActions ? (
-              <Card noPadding className="overflow-hidden rounded-[24px]">
+              <Card noPadding className="overflow-hidden rounded-xl">
                 <SimpleBonusSection
                   items={simpleBonuses}
                   editable
@@ -1474,7 +1474,7 @@ export function FaultsMemberDetailPage({
               </Card>
             ) : null}
             {showCompensationActions ? (
-              <Card noPadding className="overflow-hidden rounded-[24px]">
+              <Card noPadding className="overflow-hidden rounded-xl">
                 <SimplePenaltySection
                   items={simplePenalties}
                   editable
@@ -1488,7 +1488,7 @@ export function FaultsMemberDetailPage({
       </Card>
 
       {detail.updateCalendar ? (
-        <Card noPadding className="overflow-hidden rounded-[28px]">
+        <Card noPadding className="overflow-hidden rounded-xl">
           <CardSection bleed>
             <div className="px-4 py-4 sm:px-5 sm:py-5">
               <MemberMonthlyUpdateCalendarBoard
@@ -1500,7 +1500,7 @@ export function FaultsMemberDetailPage({
           </CardSection>
         </Card>
       ) : detail.calendarError ? (
-        <Card noPadding className="overflow-hidden rounded-[28px]">
+        <Card noPadding className="overflow-hidden rounded-xl">
           <CardSection>
             <p className="text-sm text-amber-600 dark:text-amber-300">
               {lt('Monthly calendar could not be loaded from the CEO employee updates endpoint.')}
@@ -1545,7 +1545,7 @@ export function FaultsMemberDetailPage({
           }
         >
           <div className="grid gap-4">
-            <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
@@ -1660,7 +1660,7 @@ export function FaultsMemberDetailPage({
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <Label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+              <Label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.reachedClient}
@@ -1670,7 +1670,7 @@ export function FaultsMemberDetailPage({
                 {tr('Reached client', 'Mijozga yetib borgan', 'Дошло до клиента')}
               </Label>
 
-              <Label className="flex items-center gap-3 rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
+              <Label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--foreground)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white/84">
                 <input
                   type="checkbox"
                   checked={mistakeDraft.unclearTask}
@@ -1707,7 +1707,7 @@ export function FaultsMemberDetailPage({
           }
         >
           <div className="grid gap-4">
-            <div className="rounded-[18px] border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
+            <div className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
               <p className="text-xs text-[var(--muted-strong)]">{tr('Employee', 'Xodim', 'Сотрудник')}</p>
               <p className="mt-2 text-base font-semibold text-[var(--foreground)] dark:text-white">{detail.report.fullName}</p>
             </div>
@@ -1805,7 +1805,7 @@ export function FaultsMemberDetailPage({
             </>
           }
         >
-          <div className="rounded-[18px] border border-red-500/20 bg-red-50 px-4 py-4 text-sm text-[var(--muted-strong)] dark:bg-red-500/8 dark:text-white/84">
+          <div className="rounded-xl border border-red-500/20 bg-red-50 px-4 py-4 text-sm text-[var(--muted-strong)] dark:bg-red-500/8 dark:text-white/84">
             <p className="font-semibold text-[var(--foreground)] dark:text-white">
               {'title' in (deleteTarget?.record ?? {}) ? (deleteTarget?.record as { title: string }).title : (deleteTarget?.record as { reason: string } | undefined)?.reason}
             </p>

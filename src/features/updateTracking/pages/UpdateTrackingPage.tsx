@@ -1456,8 +1456,8 @@ export function UpdateTrackingPage() {
   )
 
   return (
-    <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-[28px]">
+    <section className="space-y-4 page-enter">
+      <Card variant="glass" noPadding className="page-header-card overflow-hidden rounded-xl">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.22),transparent_72%)]" />
           <div className="page-header-decor pointer-events-none absolute -left-12 top-1/2 h-32 w-32 -translate-y-1/2 rounded-full bg-blue-500/10 blur-3xl" />
@@ -1524,7 +1524,7 @@ export function UpdateTrackingPage() {
           </div>
 
           {pageQuery.data?.errors.stats ? (
-            <div className="relative z-10 mt-4 rounded-[18px] border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/82">
+            <div className="relative z-10 mt-4 rounded-xl border border-amber-500/25 bg-amber-500/8 px-4 py-3 text-sm text-amber-100/82">
               {tr(
                 'Stats API unavailable. Calendar and other sections continue loading independently.',
                 'Stats API mavjud emas. Kalendar va boshqa bolimlar mustaqil yuklanishda davom etadi.',
@@ -1608,8 +1608,8 @@ export function UpdateTrackingPage() {
         </Card>
       )}
 
-      <div className="grid items-stretch gap-6">
-        <div className="flex min-h-full flex-col gap-6">
+      <div className="grid items-stretch gap-4">
+        <div className="flex min-h-full flex-col gap-4">
           <Card variant="glass" className="overflow-hidden p-0">
           <div className="border-b border-(--border) px-4 py-4 sm:px-5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -1646,8 +1646,8 @@ export function UpdateTrackingPage() {
               <div className="py-10 text-center text-sm text-(--muted)">{tr('No calendar data for this period.', 'Bu davr uchun kalendar malumoti yoq.', 'Dlya etogo perioda net dannykh kalendarya.')}</div>
             ) : (
               <>
-                <div className="cal-container rounded-[28px] border p-2.5 sm:p-4">
-                  <div className="cal-inner overflow-hidden rounded-[28px] border p-3.5 sm:p-5">
+                <div className="cal-container rounded-xl border p-2.5 sm:p-4">
+                  <div className="cal-inner overflow-hidden rounded-xl border p-3.5 sm:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                       <div className="max-w-xl">
                         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#3D9460] dark:text-emerald-300/72">
@@ -1673,12 +1673,12 @@ export function UpdateTrackingPage() {
                         </p>
                       </div>
 
-                      <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-[20px] border border-[var(--border)] bg-white p-1.5 shadow-[0_10px_24px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+                      <div className="grid w-fit grid-cols-[44px_auto_44px] items-center gap-2 rounded-xl border border-[var(--border)] bg-white p-1.5 shadow-[0_10px_24px_rgba(148,163,184,0.14)] dark:border-white/10 dark:bg-black/18 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
                         <Button
                           variant="secondary"
                           size="sm"
                           onClick={() => handleMonthShift(-1)}
-                          className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                          className="min-h-11 min-w-11 rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         >
                           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M10 3.5 5.5 8 10 12.5" />
@@ -1696,7 +1696,7 @@ export function UpdateTrackingPage() {
                             background: 'linear-gradient(180deg, #ECFDF3, #DDF7E8)',
                             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85), 0 8px 20px rgba(22,101,52,0.08)',
                           }}
-                          className="min-h-11 rounded-[14px] px-5 hover:border-[#79C797] hover:bg-[linear-gradient(180deg,#E1FAEB,#CEF2DE)] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
+                          className="min-h-11 rounded-xl px-5 hover:border-[#79C797] hover:bg-[linear-gradient(180deg,#E1FAEB,#CEF2DE)] dark:border-emerald-400/18 dark:bg-emerald-400/10 dark:text-emerald-50 dark:hover:border-emerald-300/30 dark:hover:bg-emerald-400/14"
                         >
                           <span
                             className="relative z-[1] font-semibold tracking-[0.01em]"
@@ -1709,7 +1709,7 @@ export function UpdateTrackingPage() {
                           variant="secondary"
                           size="sm"
                           onClick={() => handleMonthShift(1)}
-                          className="min-h-11 min-w-11 rounded-[14px] border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
+                          className="min-h-11 min-w-11 rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] px-0 text-[var(--foreground)] hover:border-[var(--border-hover)] hover:bg-[var(--card-hover)] dark:border-white/10 dark:bg-white/[0.03] dark:text-white"
                         >
                           <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M6 3.5 10.5 8 6 12.5" />
@@ -1740,7 +1740,7 @@ export function UpdateTrackingPage() {
                         </span>
                       </Badge>
                       </div>
-                      <div className="flex w-full items-center gap-3 rounded-[20px] border border-emerald-500/18 bg-emerald-50 px-3 py-2 sm:min-w-[250px] dark:border-white/8 dark:bg-white/[0.04]">
+                      <div className="flex w-full items-center gap-3 rounded-xl border border-emerald-500/18 bg-emerald-50 px-3 py-2 sm:min-w-[250px] dark:border-white/8 dark:bg-white/[0.04]">
                         <div className="min-w-0 flex-1">
                           <p className="ui-card-label text-emerald-700/70 dark:text-white/36">
                             {tr('Completion To Date', 'Shu kungacha bajarilish', 'Vypolnenie na segodnyashniy den')}
@@ -1783,7 +1783,7 @@ export function UpdateTrackingPage() {
                                 return (
                                   <div
                                     key={`empty-${weekIndex}-${dayIndex}`}
-                                    className="cal-day-neutral min-h-28.5 rounded-[20px] border border-dashed opacity-40"
+                                    className="cal-day-neutral min-h-28.5 rounded-xl border border-dashed opacity-40"
                                     aria-hidden="true"
                                   />
                                 )
@@ -1800,7 +1800,7 @@ export function UpdateTrackingPage() {
                                   onClick={() => setSelectedDate(day.date ?? null)}
                                   aria-pressed={isSelected}
                                   className={cn(
-                                    'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200',
+                                    'group relative flex min-h-[152px] min-w-0 flex-col overflow-hidden rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
                                     getCalendarDaySurfaceClass(day),
                                     isSelected
                                       ? 'border-violet-400/65 ring-2 ring-violet-400/55 ring-offset-2 ring-offset-[var(--background)] shadow-[0_0_0_1px_rgba(167,139,250,0.20),0_18px_40px_rgba(8,8,12,0.34)]'
@@ -1844,7 +1844,7 @@ export function UpdateTrackingPage() {
                                   {shouldShowCalendarTimePanel(day) ? (
                                     <div className="relative mt-2.5 space-y-1.5">
                                       <div className="grid grid-cols-2 gap-1.5">
-                                        <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                        <div className="rounded-xl border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                           <p className="ui-card-label text-[var(--muted)] dark:text-white/44">
                                             {tr('In', 'Kirish', 'Vkhod')}
                                           </p>
@@ -1852,7 +1852,7 @@ export function UpdateTrackingPage() {
                                             {formatCalendarWorkTime(day.checkInTime)}
                                           </p>
                                         </div>
-                                        <div className="rounded-[12px] border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
+                                        <div className="rounded-xl border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
                                           <p className="ui-card-label text-[var(--muted)] dark:text-white/44">
                                             {tr('Out', 'Chiqish', 'Vykhod')}
                                           </p>
@@ -1911,12 +1911,12 @@ export function UpdateTrackingPage() {
                     </span>
                   </div>
 
-                  <div className="mt-5 rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 sm:p-5">
+                  <div className="mt-5 rounded-xl border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-4 sm:p-5">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="flex items-start gap-4">
                         <div
                           className={cn(
-                            'grid h-18 w-18 shrink-0 place-items-center rounded-[22px] border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
+                            'grid h-18 w-18 shrink-0 place-items-center rounded-xl border text-[1.75rem] font-semibold tabular-nums shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]',
                             getCalendarDayFocusClass(selectedCalendarDay),
                           )}
                         >
@@ -1956,19 +1956,19 @@ export function UpdateTrackingPage() {
                       </div>
 
                       <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[420px] xl:max-w-[480px]">
-                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                        <div className="rounded-xl border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                           <p>{tr('Status', 'Holat', 'Status')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
                             {selectedCalendarDay ? getCalendarStatusLabel(selectedCalendarDay.status, selectedCalendarDay) : tr('N/A', 'Mavjud emas', 'N/A')}
                           </p>
                         </div>
-                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                        <div className="rounded-xl border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                           <p>{tr('Submission', 'Yuborish', 'Otpravka')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
                             {selectedCalendarDay?.hasUpdate ? tr('Available', 'Mavjud', 'Dostupno') : tr('None', 'Yoq', 'Net')}
                           </p>
                         </div>
-                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                        <div className="rounded-xl border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                           <p>{tr('Validation', 'Validatsiya', 'Validatsiya')}</p>
                           <p className={cn(
                             'mt-1 font-medium',
@@ -1981,7 +1981,7 @@ export function UpdateTrackingPage() {
                             {selectedCalendarDay?.isValid === false ? tr('Needs review', 'Korib chiqish kerak', 'Trebuet proverki') : selectedCalendarDay?.isValid === true ? tr('Valid', 'Valid', 'Validno') : tr('N/A', 'Mavjud emas', 'N/A')}
                           </p>
                         </div>
-                        <div className="rounded-[18px] border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
+                        <div className="rounded-xl border border-(--border) bg-(--muted-surface) px-3 py-3 text-[12px] text-(--muted)">
                           <p>{tr('Entries', 'Yozuvlar', 'Zapisi')}</p>
                           <p className="mt-1 font-medium text-(--foreground)">
                             {selectedCalendarDay ? getCalendarEntryCount(selectedCalendarDay) : 0}
@@ -1991,7 +1991,7 @@ export function UpdateTrackingPage() {
                     </div>
 
                     {shouldShowFocusContent ? (
-                      <div className="mt-4 rounded-[20px] border border-(--border) bg-(--surface) p-4">
+                      <div className="mt-4 rounded-xl border border-(--border) bg-(--surface) p-4">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-(--muted)">
@@ -2014,7 +2014,7 @@ export function UpdateTrackingPage() {
                           ) : null}
                         </div>
 
-                        <div className="mt-4 max-h-[320px] overflow-y-auto rounded-[18px] border border-(--border) bg-(--muted-surface) p-4">
+                        <div className="mt-4 max-h-[320px] overflow-y-auto rounded-xl border border-(--border) bg-(--muted-surface) p-4">
                           <p className="whitespace-pre-wrap text-[13px] leading-6 text-(--foreground)">
                             {getCalendarDetailText(selectedCalendarDay)}
                           </p>

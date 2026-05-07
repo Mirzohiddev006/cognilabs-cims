@@ -1845,8 +1845,8 @@ export function CeoTeamUpdatesPage() {
   const selectedMonthName = getMonthName(month)
 
   return (
-    <section className="space-y-6 page-enter">
-      <Card variant="glass" noPadding className="overflow-hidden rounded-[28px] border-white/8">
+    <section className="space-y-4 page-enter">
+      <Card variant="glass" noPadding className="overflow-hidden rounded-xl border-white/8">
         <div className="relative overflow-hidden px-6 py-6 sm:px-8 sm:py-7">
           <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

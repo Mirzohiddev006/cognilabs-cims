@@ -228,21 +228,15 @@ export function AppSidebar() {
             : 'min-[961px]:opacity-100',
         )}
       >
-        <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-(--sidebar-border) bg-(--sidebar-background) text-(--sidebar-foreground) shadow-(--shadow-md)">
+        <div className="flex h-full flex-col overflow-hidden rounded-xl border border-(--sidebar-border) bg-(--sidebar-background) text-(--sidebar-foreground) shadow-(--shadow-md)">
           <button
             type="button"
             onClick={handleSidebarToggle}
             aria-label={t('shell.toggle_navigation')}
-            className="flex items-center gap-3 border-b border-(--sidebar-border) px-3 py-3 text-left"
+            className="flex items-center border-b border-(--sidebar-border) px-5 py-4 text-left"
           >
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-(--sidebar-primary) text-(--sidebar-primary-foreground) shadow-sm">
-              <span className="text-[11px] font-extrabold tracking-[0.18em]">CI</span>
-            </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{env.appName}</p>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-(--sidebar-foreground)/55">
-                {t('shell.management_system')}
-              </p>
+              <p className="truncate text-xl font-black tracking-tight">CIMS</p>
             </div>
           </button>
 

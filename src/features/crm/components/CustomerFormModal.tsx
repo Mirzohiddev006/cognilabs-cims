@@ -162,7 +162,7 @@ export function CustomerFormModal({
         <Textarea value={values.notes} onChange={(event) => onChange('notes', event.target.value)} />
       </label>
 
-      <label className="mt-4 flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
+      <label className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
         <input
           type="checkbox"
           checked={values.clear_recall_time}

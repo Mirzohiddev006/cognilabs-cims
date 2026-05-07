@@ -70,7 +70,7 @@ export function PermissionEditorModal({
         </Badge>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="grid gap-3">
           {availablePermissions.map((permissionKey) => {
             const meta = getPermissionMeta(permissionKey)
@@ -78,7 +78,7 @@ export function PermissionEditorModal({
             return (
               <Label
                 key={permissionKey}
-                className="flex cursor-pointer items-start gap-4 rounded-2xl border border-[var(--border)] bg-white px-4 py-4 transition-colors hover:bg-[var(--card-hover)] dark:bg-white/5 dark:hover:bg-white/10"
+                className="flex cursor-pointer items-start gap-4 rounded-xl border border-[var(--border)] bg-white px-4 py-4 transition-colors hover:bg-[var(--card-hover)] dark:bg-white/5 dark:hover:bg-white/10"
               >
                 <input
                   type="checkbox"
@@ -96,7 +96,7 @@ export function PermissionEditorModal({
           })}
         </div>
 
-        <div className="sticky top-0 h-fit rounded-2xl border border-[var(--border)] bg-white p-6 dark:bg-white/5">
+        <div className="sticky top-0 h-fit rounded-xl border border-[var(--border)] bg-white p-6 dark:bg-white/5">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">{t('ceo.permissions.active_now')}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {activePermissionKeys.length > 0 ? (

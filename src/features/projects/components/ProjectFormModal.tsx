@@ -163,14 +163,14 @@ export function ProjectFormModal({
         </>
       )}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
             {t('projects.project_image', 'Project Image')}
           </label>
           <div className="flex items-center gap-4">
             <div
-              className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] transition hover:border-[var(--border-hover)]"
+              className="relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--input-surface)] transition hover:border-[var(--border-hover)]"
               onClick={() => fileRef.current?.click()}
             >
               {previewUrl ? (

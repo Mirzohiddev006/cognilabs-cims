@@ -101,11 +101,11 @@ export function CompanyPaymentFormModal({
             value={values.note}
             onChange={(event) => onChange('note', event.target.value)}
             rows={4}
-            className="min-h-24 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition focus:border-[var(--border-hover)] focus:bg-[var(--input-surface-hover)]"
+            className="min-h-24 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 text-sm text-[var(--foreground)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] outline-none transition focus:border-[var(--border-hover)] focus:bg-[var(--input-surface-hover)]"
           />
         </Label>
 
-        <Label className="flex items-center gap-3 rounded-[20px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
+        <Label className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
           <input
             type="checkbox"
             checked={values.isActive}

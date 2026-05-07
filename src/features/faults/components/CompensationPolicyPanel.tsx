@@ -49,7 +49,7 @@ export function CompensationPolicyPanel({
 
   if (!policy) {
     return (
-      <Card className={className ? `rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'rounded-[24px] border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)]'}>
+      <Card className={className ? `rounded-xl border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'rounded-xl border-[var(--border)] bg-white p-6 dark:border-white/10 dark:bg-[var(--card)]'}>
         <div className="flex flex-col gap-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             {lt('Compensation policy')}
@@ -134,7 +134,7 @@ export function CompensationPolicyPanel({
   )
 
   return (
-    <Card className={className ? `relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-[24px] border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
+    <Card className={className ? `relative overflow-hidden rounded-xl border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)] ${className}` : 'relative overflow-hidden rounded-xl border-[var(--border)] bg-white dark:border-white/10 dark:bg-[var(--card)]'}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--blue-text),rgba(37,99,235,0.42),transparent_76%)] dark:bg-[linear-gradient(90deg,rgba(191,219,254,0.9),rgba(96,165,250,0.34),transparent_76%)]" />
       {collapsible ? (
         <button
@@ -164,7 +164,7 @@ export function CompensationPolicyPanel({
 
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             <div
-              className="relative overflow-hidden rounded-[20px] border border-[var(--danger-border)] bg-rose-50/55 p-4 dark:border-rose-500/18 dark:bg-rose-950/15"
+              className="relative overflow-hidden rounded-xl border border-[var(--danger-border)] bg-rose-50/55 p-4 dark:border-rose-500/18 dark:bg-rose-950/15"
               style={deductionPanelStyle}
             >
               <div
@@ -191,7 +191,7 @@ export function CompensationPolicyPanel({
 
               <div className="mt-4 space-y-3">
                 {policy.deductionRates.map((rate) => (
-                  <div key={rate.severity} className="rounded-[16px] border border-[var(--danger-border)] bg-rose-50/88 px-4 py-3 dark:border-rose-500/18 dark:bg-black/18">
+                  <div key={rate.severity} className="rounded-xl border border-[var(--danger-border)] bg-rose-50/88 px-4 py-3 dark:border-rose-500/18 dark:bg-black/18">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.severity)}</p>
                       <div className="flex flex-wrap items-center gap-2">
@@ -205,7 +205,7 @@ export function CompensationPolicyPanel({
             </div>
 
             <div
-              className="relative overflow-hidden rounded-[20px] border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]"
+              className="relative overflow-hidden rounded-xl border border-[var(--success-border)] bg-[var(--success-soft)] p-4 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]"
               style={bonusPanelStyle}
             >
               <div
@@ -236,7 +236,7 @@ export function CompensationPolicyPanel({
 
               <div className="mt-4 space-y-3">
                 {policy.bonusRates.map((rate) => (
-                  <div key={rate.key} className="rounded-[16px] border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-3 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
+                  <div key={rate.key} className="rounded-xl border border-[var(--success-border)] bg-[var(--success-strong)] px-4 py-3 dark:border-[var(--success-border)] dark:bg-[var(--success-dim)]">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[var(--foreground)]">{lt(rate.label)}</p>
                       <Badge variant="success">{formatPercent(rate.percent)}</Badge>
@@ -248,7 +248,7 @@ export function CompensationPolicyPanel({
           </div>
 
           <div className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-            <div className="rounded-[20px] border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Mistake taxonomy')}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {policy.mistakeCategories.map((category) => (
@@ -264,11 +264,11 @@ export function CompensationPolicyPanel({
               </div>
             </div>
 
-            <div className="rounded-[20px] border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
+            <div className="rounded-xl border border-[var(--border)] bg-white p-4 dark:bg-[var(--surface-elevated)]">
               <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{lt('Decision tree')}</p>
               <div className="mt-4 space-y-3">
                 {policy.decisionTree.map((step) => (
-                  <div key={`${step.step}-${step.question}`} className="rounded-[16px] border border-[var(--border)] bg-white px-4 py-3 dark:bg-[var(--card)]">
+                  <div key={`${step.step}-${step.question}`} className="rounded-xl border border-[var(--border)] bg-white px-4 py-3 dark:bg-[var(--card)]">
                     <p className="text-xs font-semibold tracking-[0.18em] text-[var(--blue-text)]">
                       {lt('Step')} {step.step}
                     </p>

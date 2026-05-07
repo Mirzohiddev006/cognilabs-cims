@@ -133,7 +133,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
               return (
                 <div
                   key={toast.id}
-                  className={`pointer-events-auto relative overflow-hidden rounded-2xl border px-4 py-4 backdrop-blur-xl ${toneStyle.shell}`}
+                  className={`pointer-events-auto relative overflow-hidden rounded-xl border px-4 py-4 backdrop-blur-xl ${toneStyle.shell}`}
                 >
                   <span className={`absolute inset-y-0 left-0 w-1 ${toneStyle.rail}`} aria-hidden="true" />
                   <div className="flex items-start gap-3">

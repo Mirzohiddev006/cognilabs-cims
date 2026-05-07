@@ -107,7 +107,7 @@ export function VerifyEmailPage() {
       description={t('auth.verify.description', 'We sent a verification code to your email. Enter it below before the timer expires.')}
       footerLinks={[{ label: t('auth.verify.login_link', 'Login'), to: '/auth/login' }]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <AuthFeedback tone="success" message={statusMessage} />
         <AuthFeedback tone="error" message={submitError} />
 

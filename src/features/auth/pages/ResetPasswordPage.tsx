@@ -82,7 +82,7 @@ export function ResetPasswordPage() {
       description={t('auth.reset.description', 'Enter the verification code from your email and set a new password.')}
       footerLinks={[{ label: t('auth.back_to_login', 'Back to login'), to: '/auth/login' }]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <div className="grid grid-cols-2 gap-2 rounded-md border border-[var(--border)] bg-[var(--muted-surface)] p-1">
           <Link
             to="/auth/forgot-password"
@@ -117,7 +117,7 @@ export function ResetPasswordPage() {
           onChange={(event) => setValues((current) => ({ ...current, code: event.target.value }))}
         />
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <PasswordField
             label={t('auth.reset.new_password', 'New password')}
             name="new_password"

@@ -69,7 +69,7 @@ export function LoginPage() {
       description={t('auth.login.description', 'Enter your email below to login to your account.')}
       footerLinks={[]}
     >
-      <form className="grid gap-5" onSubmit={handleSubmit}>
+      <form className="grid gap-4" onSubmit={handleSubmit}>
         <AuthFeedback tone="success" message={statusMessage} />
         <AuthFeedback tone="error" message={submitError} />
 

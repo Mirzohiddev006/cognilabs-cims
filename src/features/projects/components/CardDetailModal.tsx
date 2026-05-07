@@ -124,14 +124,14 @@ export function CardDetailModal({
       />
 
       {/* Main Container */}
-      <div className="relative z-10 flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)] boards-section">
+      <div className="relative z-10 flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-xl)] boards-section">
         
         {/* Top Header Decor - Neutralized blue gradient for all priorities */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[var(--blue-dim)] via-[var(--blue-dim)]/30 to-transparent opacity-60" />
 
         {/* Header Section */}
-        <div className="relative z-10 flex flex-col gap-6 border-b border-[var(--border)] p-6 sm:px-10 sm:py-8">
-          <div className="flex items-start justify-between gap-6">
+        <div className="relative z-10 flex flex-col gap-4 border-b border-[var(--border)] p-6 sm:px-10 sm:py-8">
+          <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-4">
                 {projectName && (
@@ -154,10 +154,10 @@ export function CardDetailModal({
             <div className="flex items-center gap-3 shrink-0">
               {canManage && (
                 <div className="hidden sm:flex items-center gap-2.5">
-                  <Button variant="ghost" size="sm" className="rounded-2xl h-11 px-5 bg-[var(--accent-soft)] hover:bg-[var(--accent-hover)] border border-[var(--border)] text-[var(--foreground)]" onClick={onEdit}>
+                  <Button variant="ghost" size="sm" className="rounded-xl h-11 px-5 bg-[var(--accent-soft)] hover:bg-[var(--accent-hover)] border border-[var(--border)] text-[var(--foreground)]" onClick={onEdit}>
                     {lt('Edit')}
                   </Button>
-                  <Button variant="danger" size="sm" className="rounded-2xl h-11 px-5 border border-[var(--danger-border)]" onClick={onDelete}>
+                  <Button variant="danger" size="sm" className="rounded-xl h-11 px-5 border border-[var(--danger-border)]" onClick={onDelete}>
                     {lt('Delete')}
                   </Button>
                 </div>
@@ -165,7 +165,7 @@ export function CardDetailModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--accent-soft)] text-[var(--muted)] transition hover:bg-[var(--accent-hover)] hover:text-[var(--foreground)]"
+                className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--accent-soft)] text-[var(--muted)] transition hover:bg-[var(--accent-hover)] hover:text-[var(--foreground)]"
               >
                 <svg viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
@@ -176,7 +176,7 @@ export function CardDetailModal({
 
           {/* Quick Metrics */}
           <div className="flex flex-wrap items-center gap-4">
-             <div className={cn("flex items-center gap-2.5 px-4 py-2 rounded-2xl border transition-all duration-300", 
+             <div className={cn("flex items-center gap-2.5 px-4 py-2 rounded-xl border transition-all duration-300", 
                 "bg-[var(--accent-soft)]", priorityTheme.border
              )}>
                 <div className={cn("h-2.5 w-2.5 rounded-full", priorityTheme.accent, priorityTheme.glow)} />
@@ -187,7 +187,7 @@ export function CardDetailModal({
 
              {card.due_date && (
                 <div className={cn(
-                   "flex items-center gap-2.5 px-4 py-2 rounded-2xl border transition-all duration-300",
+                   "flex items-center gap-2.5 px-4 py-2 rounded-xl border transition-all duration-300",
                    overdue ? "bg-[var(--danger-dim)] border-[var(--danger-border)] text-[var(--danger-text)] shadow-[0_0_15px_var(--danger-dim)]" :
                    soon ? "bg-[var(--warning-dim)] border-[var(--warning-border)] text-[var(--warning-text)] shadow-[0_0_15px_var(--warning-dim)]" :
                    "bg-[var(--accent-soft)] border-[var(--border)] text-[var(--muted-strong)]"
@@ -208,12 +208,12 @@ export function CardDetailModal({
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px]">
             
             {/* Main Column */}
-            <div className="p-6 sm:p-10 space-y-12">
+            <div className="p-6 sm:p-10 space-y-6">
               
               {/* Media Viewer */}
               {selectedImage && (
-                <div className="space-y-6">
-                   <div className="relative group overflow-hidden rounded-[32px] border border-[var(--border)] bg-black/5 shadow-inner">
+                <div className="space-y-4">
+                   <div className="relative group overflow-hidden rounded-xl border border-[var(--border)] bg-black/5 shadow-inner">
                       <img
                         src={getCardImageUrl(selectedImage)}
                         alt={selectedImage.filename}
@@ -240,7 +240,7 @@ export function CardDetailModal({
                                key={img.id}
                                onClick={() => setSelectedImageIndex(idx)}
                                className={cn(
-                                  "relative shrink-0 w-24 h-24 rounded-2xl border-2 transition-all duration-300 overflow-hidden",
+                                  "relative shrink-0 w-24 h-24 rounded-xl border-2 transition-all duration-300 overflow-hidden",
                                   idx === selectedImageIndex ? "border-[var(--blue-text)] scale-105 shadow-[var(--shadow-md)]" : "border-[var(--border)] opacity-60 hover:opacity-100 hover:scale-105"
                                )}
                             >
@@ -253,13 +253,13 @@ export function CardDetailModal({
               )}
 
               {/* Description Section */}
-              <div className="space-y-6">
+              <div className="space-y-4">
                  <div className="flex items-center gap-3">
                     <div className={cn("h-4 w-1 rounded-full", priorityTheme.accent)} />
                     <h3 className="text-xs font-black uppercase tracking-[0.25em] text-[var(--muted)]">{lt('Description')}</h3>
                  </div>
                  <div className={cn(
-                    "rounded-[24px] p-8 bg-[var(--accent-soft)] border border-[var(--border)] shadow-sm leading-relaxed",
+                    "rounded-xl p-8 bg-[var(--accent-soft)] border border-[var(--border)] shadow-sm leading-relaxed",
                     !card.description && "bg-transparent border-dashed border-[var(--border)] py-12"
                  )}>
                     {card.description ? (
@@ -277,14 +277,14 @@ export function CardDetailModal({
             </div>
 
             {/* Sidebar metadata */}
-            <div className="lg:border-l border-[var(--border)] bg-[var(--background)]/30 p-6 sm:p-10 space-y-10">
+            <div className="lg:border-l border-[var(--border)] bg-[var(--background)]/30 p-6 sm:p-10 space-y-4">
               
               {/* Assignment Card */}
-              <div className="space-y-8">
+              <div className="space-y-4">
                  <div>
                     <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] mb-5">{lt('Assignee')}</h4>
                     {card.assignee ? (
-                      <div className="flex items-center gap-4 p-5 rounded-[24px] bg-[var(--accent-soft)] border border-[var(--border)] shadow-sm transition-transform hover:scale-[1.01] duration-300">
+                      <div className="flex items-center gap-4 p-5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] shadow-sm transition-transform hover:scale-[1.01] duration-300">
                         <Avatar
                           name={card.assignee.name}
                           surname={card.assignee.surname}
@@ -300,7 +300,7 @@ export function CardDetailModal({
                         </div>
                       </div>
                     ) : (
-                      <div className="p-6 rounded-[24px] border border-dashed border-[var(--border)] flex flex-col items-center justify-center gap-3 group hover:border-[var(--border-hover)] transition-colors duration-300">
+                      <div className="p-6 rounded-xl border border-dashed border-[var(--border)] flex flex-col items-center justify-center gap-3 group hover:border-[var(--border-hover)] transition-colors duration-300">
                          <div className="h-10 w-10 rounded-full bg-[var(--accent-soft)] border border-[var(--border)] flex items-center justify-center text-[var(--muted)] group-hover:text-[var(--foreground)] transition-colors">
                             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                          </div>
@@ -328,9 +328,9 @@ export function CardDetailModal({
               </div>
 
               {/* Timeline Info */}
-              <div className="space-y-6 pt-10 border-t border-[var(--border)]">
+              <div className="space-y-4 pt-10 border-t border-[var(--border)]">
                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">{lt('Task Timeline')}</h4>
-                 <div className="grid gap-6">
+                 <div className="grid gap-4">
                     <DetailInfoBlock 
                        label={lt('Created')} 
                        icon={<svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
@@ -365,8 +365,8 @@ export function CardDetailModal({
               {/* Mobile Actions */}
               {canManage && (
                  <div className="sm:hidden pt-8 border-t border-[var(--border)] flex gap-3">
-                    <Button variant="secondary" className="flex-1 rounded-[18px] h-12 font-bold" onClick={onEdit}>{lt('Edit')}</Button>
-                    <Button variant="danger" className="flex-1 rounded-[18px] h-12 font-bold" onClick={onDelete}>{lt('Delete')}</Button>
+                    <Button variant="secondary" className="flex-1 rounded-xl h-12 font-bold" onClick={onEdit}>{lt('Edit')}</Button>
+                    <Button variant="danger" className="flex-1 rounded-xl h-12 font-bold" onClick={onDelete}>{lt('Delete')}</Button>
                  </div>
               )}
             </div>

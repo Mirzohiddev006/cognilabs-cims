@@ -60,7 +60,7 @@ export function CustomerDetailPage() {
   }
 
   return (
-    <section className="space-y-6 page-enter">
+    <section className="space-y-4 page-enter">
       <div className="flex items-center">
         <Button
           variant="ghost"

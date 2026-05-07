@@ -44,9 +44,9 @@ export function PageHeader({
       noPadding
       className={cn('page-header-card page-enter overflow-hidden rounded-xl', className)}
     >
-      <div className="relative overflow-hidden px-5 py-6 sm:px-7 sm:py-7">
-        <div className="relative z-10 flex flex-col gap-6">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+      <div className="relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5">
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-3xl">
               {eyebrow ? (
                 <p className="page-header-label ui-eyebrow">

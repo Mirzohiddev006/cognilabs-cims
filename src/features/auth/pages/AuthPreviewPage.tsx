@@ -21,7 +21,7 @@ export function AuthPreviewPage() {
   ]
 
   return (
-    <div className="flex h-full flex-col justify-between gap-8">
+    <div className="flex h-full flex-col justify-between gap-6">
       <div>
         <p className="text-xs font-medium uppercase tracking-[0.28em] text-[var(--muted)]">{t('ceo.auth_preview.eyebrow')}</p>
         <h2 className="mt-3 max-w-lg text-2xl font-semibold text-[var(--foreground)]">

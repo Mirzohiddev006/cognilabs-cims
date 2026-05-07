@@ -97,7 +97,7 @@ export function AuthLayout() {
             <div className="auth-preview-card">
               <div className="auth-preview-card__grid" />
 
-              <div className="relative z-10 space-y-6">
+              <div className="relative z-10 space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="ui-eyebrow text-cyan-300/75">{badgeText}</p>
@@ -112,7 +112,7 @@ export function AuthLayout() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   {previewStats.map((item) => (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
+                    <div key={item.label} className="rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
                       <p className="ui-card-label text-[var(--muted)]">{tl(item.label)}</p>
                       <p className="ui-body mt-2 font-semibold text-[var(--foreground)]">
                         {item.value === 'Realtime token guard'

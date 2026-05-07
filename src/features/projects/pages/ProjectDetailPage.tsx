@@ -326,13 +326,13 @@ export function ProjectDetailPage() {
 
   if (projectQuery.isLoading) {
     return (
-      <div className="flex flex-col gap-6 page-enter">
-        <div className="h-48 animate-pulse rounded-[28px] border border-[var(--border)] bg-[var(--surface-elevated)]" />
+      <div className="flex flex-col gap-4 page-enter">
+        <div className="h-48 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
-              className="h-28 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--surface-elevated)]"
+              className="h-28 animate-pulse rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)]"
             />
           ))}
         </div>
@@ -355,14 +355,14 @@ export function ProjectDetailPage() {
 
   return (
     <>
-      <div className="relative flex flex-col gap-4 sm:gap-6 page-enter h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)] overflow-hidden">
+      <div className="relative flex flex-col gap-4 sm:gap-4 page-enter h-[calc(100vh-100px)] sm:h-[calc(100vh-120px)] overflow-hidden">
         {/* Background Project Header (Jira Style) - More compact on mobile */}
-        <div className="relative shrink-0 overflow-hidden rounded-[24px] sm:rounded-[32px] border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-6 shadow-sm">
+        <div className="relative shrink-0 overflow-hidden rounded-xl sm:rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4 sm:p-6 shadow-sm">
           <div className="page-header-decor pointer-events-none absolute inset-x-0 top-0 h-32 sm:h-40 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_72%)]" />
 
           <div className="relative z-10 flex flex-col gap-4 sm:gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div className="flex min-w-0 items-start gap-3 sm:gap-5">
+              <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                 {projectImage ? (
                   <img
                     src={projectImage}
@@ -429,7 +429,7 @@ export function ProjectDetailPage() {
             </div>
 
             {/* Stats row - Hidden/compact on mobile */}
-            <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t border-[var(--border)]/30 pt-3 sm:pt-2 sm:border-t-0 sm:mt-0">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-4 border-t border-[var(--border)]/30 pt-3 sm:pt-2 sm:border-t-0 sm:mt-0">
               <div className="flex items-center gap-2 sm:gap-3">
                 <Avatar
                   name={project.created_by.name}
@@ -475,9 +475,9 @@ export function ProjectDetailPage() {
               {/* Board Header & Filters Area - Highly scrollable on mobile */}
               <div className="flex flex-col border-b border-[var(--border)] bg-[var(--blue-dim)]/30 px-4 sm:px-8 py-3 sm:py-4 backdrop-blur-md">
                  <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
-                    <div className="flex items-center gap-3 sm:gap-6 overflow-hidden flex-1">
+                    <div className="flex items-center gap-3 sm:gap-4 overflow-hidden flex-1">
                        {/* Board Tabs - Horizontal Scroll on mobile */}
-                       <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
+                       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
                          {activeBoards.map((board) => {
                            const isSelected = selectedBoard?.id === board.id
                            return (
@@ -647,16 +647,16 @@ export function ProjectDetailPage() {
               />
               
               {/* Center Modal */}
-              <Card variant="glass" className="relative z-10 w-full max-w-5xl rounded-[32px] shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
+              <Card variant="glass" className="relative z-10 w-full max-w-5xl rounded-xl shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
                  <div className="flex items-center justify-between p-6 sm:p-8 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
-                    <div className="flex items-center gap-5">
+                    <div className="flex items-center gap-4">
                        <Avatar name={expandedMember.name} surname={expandedMember.surname} imageUrl={expandedMember.profile_image} size="lg" className="ring-4 ring-blue-500/20" />
                        <div>
                           <p className="text-xl font-black text-[var(--foreground)] tracking-tight">{expandedMember.name} {expandedMember.surname}</p>
                           <p className="text-xs font-bold text-blue-400 uppercase tracking-[0.2em] mt-1">{expandedMember.job_title || lt('Member')}</p>
                        </div>
                     </div>
-                    <button onClick={() => setExpandedMemberId(null)} className="h-12 w-12 rounded-2xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
+                    <button onClick={() => setExpandedMemberId(null)} className="h-12 w-12 rounded-xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
                        <svg viewBox="0 0 16 16" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
                     </button>
                  </div>
@@ -668,7 +668,7 @@ export function ProjectDetailPage() {
                     </div>
 
                     {isExpandedMemberTasksLoading ? (
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {[1,2,3,4].map(i => <div key={i} className="h-32 animate-pulse rounded-3xl bg-white/5 border border-white/5" />)}
                        </div>
                     ) : expandedMemberTasks.length === 0 ? (
@@ -677,7 +677,7 @@ export function ProjectDetailPage() {
                           <p className="text-base font-black tracking-widest text-[var(--muted)] uppercase">{lt('No active tasks')}</p>
                        </div>
                     ) : (
-                       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {expandedMemberTasks.map(task => (
                              <Link 
                                 key={task.id} 

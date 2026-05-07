@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ceoService, type CeoMessageRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
+import { ceoService, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -39,7 +39,6 @@ const initialCompanyPaymentForm: CompanyPaymentFormValues = {
 }
 
 const emptyPayments: PaymentItem[] = []
-const emptyMessages: CeoMessageRecord[] = []
 const emptyCompanyPayments: CompanyPaymentRecord[] = []
 
 export function CeoDashboardPage() {
@@ -48,7 +47,6 @@ export function CeoDashboardPage() {
   const { confirm } = useConfirm()
 
   const dashboardQuery = useAsyncData(() => ceoService.getDashboard(), [])
-  const messagesQuery = useAsyncData(() => ceoService.listMessages(), [])
   const paymentsQuery = useAsyncData(() => ceoService.listPayments(), [])
   const companyPaymentsQuery = useAsyncData(() => ceoService.listCompanyPayments(), [])
   const [chartCustomerType, setChartCustomerType] = useState('')
@@ -88,14 +86,12 @@ export function CeoDashboardPage() {
   const [isCompanyPaymentSubmitting, setIsCompanyPaymentSubmitting] = useState(false)
   const [companyPaymentMode, setCompanyPaymentMode] = useState<'create' | 'edit'>('create')
 
-  const messages = messagesQuery.data?.messages ?? emptyMessages
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
 
   async function refreshAll() {
     await Promise.allSettled([
       dashboardQuery.refetch(),
-      messagesQuery.refetch(),
       paymentsQuery.refetch(),
       companyPaymentsQuery.refetch(),
       chartsQuery.refetch(),
@@ -119,7 +115,7 @@ export function CeoDashboardPage() {
         subject: broadcastValues.subject.trim(),
         body: broadcastValues.body.trim(),
       })
-      await Promise.all([messagesQuery.refetch(), dashboardQuery.refetch()])
+      await dashboardQuery.refetch()
       setBroadcastValues(initialBroadcastMessage)
       setIsBroadcastOpen(false)
       showToast({
@@ -273,36 +269,6 @@ export function CeoDashboardPage() {
     setIsCompanyPaymentOpen(true)
   }
 
-  async function handleDeleteMessage(message: CeoMessageRecord) {
-    const approved = await confirm({
-      title: t('ceo.dashboard.confirm.message_delete_title'),
-      description: t('ceo.dashboard.confirm.message_delete_description', { email: message.receiver_email }),
-      confirmLabel: t('ceo.dashboard.confirm.message_delete_confirm'),
-      cancelLabel: t('common.cancel'),
-      tone: 'danger',
-    })
-
-    if (!approved) {
-      return
-    }
-
-    try {
-      await ceoService.deleteMessage(message.id)
-      await Promise.all([messagesQuery.refetch(), dashboardQuery.refetch()])
-      showToast({
-        title: t('ceo.dashboard.toast.message_deleted_title'),
-        description: t('ceo.dashboard.toast.message_deleted_description'),
-        tone: 'success',
-      })
-    } catch (error) {
-      showToast({
-        title: t('ceo.dashboard.toast.message_delete_failed_title'),
-        description: error instanceof Error ? error.message : t('ceo.dashboard.toast.message_delete_failed_description'),
-        tone: 'error',
-      })
-    }
-  }
-
   async function handleTogglePayment(payment: PaymentItem) {
     try {
       await ceoService.togglePayment(payment.id)
@@ -406,7 +372,7 @@ export function CeoDashboardPage() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-4">
       <CrmDashboardCharts
         weekly={chartsQuery.data?.weekly}
         monthly={chartsQuery.data?.monthly}
@@ -462,71 +428,7 @@ export function CeoDashboardPage() {
         }
       />
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card noPadding>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>{t('ceo.dashboard.messages.title')}</CardTitle>
-            <Badge variant="violet" dot>
-              {t('ceo.dashboard.messages.entries', { count: messages.length })}
-            </Badge>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              caption={t('ceo.dashboard.messages.title')}
-              rows={messages}
-              getRowKey={(row) => String(row.id)}
-              zebra
-              emptyState={
-                <EmptyStateBlock
-                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
-                  title={t('ceo.dashboard.messages.empty_title')}
-                />
-              }
-              columns={[
-                {
-                  key: 'receiver',
-                  header: t('ceo.dashboard.table.receiver'),
-                render: (row) => (
-                  <div>
-                    <p className="font-semibold text-(--foreground)">{row.receiver_name}</p>
-                  </div>
-                ),
-              },
-                {
-                  key: 'subject',
-                  header: t('ceo.dashboard.table.subject'),
-                  render: (row) => (
-                    <div className="max-w-[260px]">
-                      <p className="truncate font-medium text-white">{row.subject}</p>
-                    </div>
-                  ),
-                },
-                {
-                  key: 'sent_at',
-                  header: t('ceo.dashboard.table.sent_at'),
-                  render: (row) => formatShortDate(row.sent_at),
-                },
-                {
-                  key: 'actions',
-                  header: t('common.actions'),
-                  render: (row) => (
-                    <ActionsMenu
-                      label={t('ceo.dashboard.actions.open_row', { name: row.receiver_email })}
-                      items={[
-                        {
-                          label: t('customers.actions.delete'),
-                          onSelect: () => void handleDeleteMessage(row),
-                          tone: 'danger',
-                        },
-                      ]}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-4 xl:grid-cols-2">
         <Card noPadding>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>{t('ceo.dashboard.payments.title')}</CardTitle>
@@ -606,7 +508,7 @@ export function CeoDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card noPadding className="xl:col-span-2">
+        <Card noPadding>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-1">
               <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>

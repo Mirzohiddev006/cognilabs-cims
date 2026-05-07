@@ -76,7 +76,7 @@ function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
   const { t } = useTranslation()
 
   return (
-    <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+    <Card className="overflow-hidden rounded-xl border-[var(--border)]">
       <div className="border-b border-[var(--border)] px-6 py-5">
         <SectionTitle
           title={t('customers.detail.audio.title', 'Audio')}
@@ -84,7 +84,7 @@ function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
         />
       </div>
       <div className="px-6 py-5">
-        <div className="rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-4">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-4">
           <audio controls preload="none" src={audioSource} className="w-full">
             {t('customers.detail.audio.unsupported', 'Your browser does not support the audio element.')}
           </audio>
@@ -123,12 +123,12 @@ export function CustomerDetailContent({
   const formattedNotes = formatCustomerNotes(customer.notes)
 
   return (
-    <section className="space-y-5">
-      <Card noPadding className="overflow-hidden rounded-[28px] border-[var(--border)] bg-[var(--surface-elevated)] shadow-none">
+    <section className="space-y-4">
+      <Card noPadding className="overflow-hidden rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] shadow-none">
         <div className="relative overflow-hidden px-6 py-6 sm:px-7">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.16),transparent_34%),radial-gradient(circle_at_right,rgba(168,85,247,0.12),transparent_28%)]" />
 
-          <div className="relative z-10 flex flex-col gap-5">
+          <div className="relative z-10 flex flex-col gap-4">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--blue-text)]">
@@ -174,19 +174,19 @@ export function CustomerDetailContent({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-[20px] border border-blue-500/16 bg-blue-500/[0.08] px-4 py-4">
+              <div className="rounded-xl border border-blue-500/16 bg-blue-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.platform', 'Platform')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{getCustomerDisplayPlatform(customer) || '-'}</p>
               </div>
-              <div className="rounded-[20px] border border-violet-500/16 bg-violet-500/[0.08] px-4 py-4">
+              <div className="rounded-xl border border-violet-500/16 bg-violet-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.username', 'Username')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatUsernameHandle(customer.username) || '-'}</p>
               </div>
-              <div className="rounded-[20px] border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
+              <div className="rounded-xl border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('customers.table.recall', 'Recall time')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatNumericDateTime(customer.recall_time)}</p>
               </div>
-              <div className="rounded-[20px] border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
+              <div className="rounded-xl border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.created', 'Created')}</p>
                 <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatNumericDate(customer.created_at)}</p>
               </div>
@@ -195,9 +195,9 @@ export function CustomerDetailContent({
         </div>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* 1. Profile Card */}
-        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
           <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle
               title={t('customers.detail.profile.title', 'Profile')}
@@ -216,7 +216,7 @@ export function CustomerDetailContent({
               ],
               [t('common.recall_time', 'Recall time'), formatNumericDateTime(customer.recall_time)],
             ].map(([label, value]) => (
-              <div key={label} className="flex items-start justify-between gap-4 rounded-[18px] border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <div key={label} className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
                 <span className="text-sm text-[var(--muted-strong)]">{label}</span>
                 <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
               </div>
@@ -225,7 +225,7 @@ export function CustomerDetailContent({
         </Card>
 
         {/* 2. Operator Notes Card */}
-        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
           <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle
               title={t('customers.detail.notes.title', 'Notes')}
@@ -252,7 +252,7 @@ export function CustomerDetailContent({
         </Card>
 
         {/* 3. AI Summary Card */}
-        <Card className="overflow-hidden rounded-[24px] border-[var(--border)]">
+        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
           <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle
               title={t('customers.detail.ai_summary.title', 'AI summary')}

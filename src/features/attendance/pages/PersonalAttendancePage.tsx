@@ -199,7 +199,7 @@ export function PersonalAttendancePage() {
   )
 
   return (
-    <div className="page-enter space-y-6">
+    <div className="page-enter space-y-4">
       <div className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted)]">Member / Attendance</p>
         <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">My Attendance</h1>
@@ -225,7 +225,7 @@ export function PersonalAttendancePage() {
         </div>
 
         {data && (
-          <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 px-6 py-3 text-center">
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-6 py-3 text-center">
             <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400">Total Hours</p>
             <p className="text-2xl font-black text-blue-500">{data.totalWorkedHours.toFixed(1)}h</p>
           </div>
@@ -241,9 +241,9 @@ export function PersonalAttendancePage() {
           No attendance data found for this period.
         </Card>
       ) : (
-        <div className="grid gap-6">
+        <div className="grid gap-4">
           {data.weeks.map(week => (
-            <Card key={week.weekNumber} className="overflow-hidden rounded-[24px] border-[var(--border)]">
+            <Card key={week.weekNumber} className="overflow-hidden rounded-xl border-[var(--border)]">
               <div className="flex items-center justify-between border-b border-[var(--border)] bg-[var(--muted-surface)]/30 px-6 py-4">
                 <SectionTitle
                   title={`Week ${week.weekNumber}`}

@@ -233,7 +233,7 @@ export function AttendanceManagementPage() {
   }
 
   return (
-    <div className="page-enter space-y-6">
+    <div className="page-enter space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <SegmentButton active={view === 'monthly'} onClick={() => setView('monthly')}>{t('attendance.view.monthly', 'Monthly')}</SegmentButton>
         <SegmentButton active={view === 'weekly'} onClick={() => setView('weekly')}>{t('attendance.view.weekly', 'Weekly')}</SegmentButton>
@@ -455,17 +455,17 @@ export function AttendanceManagementPage() {
           description={t('attendance.modal.description', '{month} {year} - Weekly and daily breakdown', { month: MONTHS[date.month - 1], year: date.year })}
           size="xl"
         >
-          <div className="space-y-5">
+          <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-3">
-              <Card className="rounded-[18px] px-4 py-3">
+              <Card className="rounded-xl px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.monthly_hours', 'Monthly Hours')}</p>
                 <p className="mt-2 text-xl font-black text-blue-500">{formatHours(selectedEmployee.totalWorkedHours)}</p>
               </Card>
-              <Card className="rounded-[18px] px-4 py-3">
+              <Card className="rounded-xl px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.days_present', 'Days Present')}</p>
                 <p className="mt-2 text-xl font-black text-[var(--foreground)]">{selectedEmployee.daysPresent}</p>
               </Card>
-              <Card className="rounded-[18px] px-4 py-3">
+              <Card className="rounded-xl px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.days_complete', 'Days Complete')}</p>
                 <p className="mt-2 text-xl font-black text-[var(--foreground)]">{selectedEmployee.daysComplete}</p>
               </Card>
@@ -478,7 +478,7 @@ export function AttendanceManagementPage() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {selectedEmployee.weeks.map(week => (
-                    <Card key={`${week.weekNumber}-${week.dateFrom}`} className="rounded-[20px] px-4 py-4">
+                    <Card key={`${week.weekNumber}-${week.dateFrom}`} className="rounded-xl px-4 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-[var(--foreground)]">{week.label || t('attendance.week', 'Week {number}', { number: week.weekNumber })}</p>

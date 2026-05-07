@@ -181,7 +181,7 @@ export function WebsiteStatsPage() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-4">
       <PageHeader
         eyebrow="CEO / Web"
         title={t('ceo.website.header.title')}
@@ -266,7 +266,7 @@ export function WebsiteStatsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <Card noPadding>
           <CardHeader>
             <CardTitle>{t('ceo.website.top_pages_title')}</CardTitle>
@@ -377,7 +377,7 @@ export function WebsiteStatsPage() {
                 {realtimeRows.map((row) => (
                   <div
                     key={row.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-white/10 bg-black/10 px-4 py-4"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/10 px-4 py-4"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold text-(--foreground)">{row.label}</p>

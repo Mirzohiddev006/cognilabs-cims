@@ -32,7 +32,7 @@ export function SummaryMetricCard({
   return (
     <div
       className={cn(
-        'card-base min-h-[110px] rounded-[22px] px-6 py-5',
+        'card-base min-h-[110px] rounded-xl px-6 py-5',
         tone === 'success' ? 'bg-white dark:bg-[var(--card)]' : toneClassName[tone],
       )}
       style={tone === 'success' ? { borderColor: salaryEstimateSuccessTone.border } : undefined}
@@ -144,7 +144,7 @@ export function DetailStatTile({
   return (
     <div
       className={cn(
-        'rounded-[16px] border px-4 py-3',
+        'rounded-xl border px-4 py-3',
         tone === 'success' ? '' : toneClassName[tone],
       )}
       style={tone === 'success' ? successStyle : undefined}
