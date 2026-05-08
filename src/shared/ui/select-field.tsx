@@ -12,6 +12,9 @@ type SelectFieldProps = {
   options: SelectFieldOption[]
   onValueChange: (value: string) => void
   placeholder?: string
+  searchable?: boolean
+  searchPlaceholder?: string
+  emptyMessage?: string
   className?: string
   disabled?: boolean
   children?: ReactNode
@@ -50,11 +53,15 @@ export function SelectField({
   options,
   onValueChange,
   placeholder = 'Select option',
+  searchable = false,
+  searchPlaceholder = 'Search...',
+  emptyMessage = 'No options found',
   className,
   disabled = false,
 }: SelectFieldProps) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setIsOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0, width: 0 })
 
   const normalizedValue = normalizeOptionValue(value)
@@ -64,6 +71,16 @@ export function SelectField({
       normalizeOptionValue(option.value) === normalizedValue ||
       normalizeOptionValue(option.label) === normalizedValue,
     )
+
+  const normalizedSearchQuery = normalizeOptionValue(searchQuery)
+  const visibleOptions = searchable && normalizedSearchQuery
+    ? options.filter((option) => {
+        const normalizedOptionLabel = normalizeOptionValue(option.label)
+        const normalizedOptionValue = normalizeOptionValue(option.value)
+
+        return normalizedOptionLabel.includes(normalizedSearchQuery) || normalizedOptionValue.includes(normalizedSearchQuery)
+      })
+    : options
 
   useEffect(() => {
     if (!isOpen || !triggerRef.current) {
@@ -75,7 +92,7 @@ export function SelectField({
         return
       }
 
-      setPosition(getMenuPosition(triggerRef.current, options.length))
+      setPosition(getMenuPosition(triggerRef.current, visibleOptions.length))
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -94,7 +111,13 @@ export function SelectField({
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, options.length])
+  }, [isOpen, visibleOptions.length])
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery('')
+    }
+  }, [isOpen])
 
   return (
     <>
@@ -146,7 +169,23 @@ export function SelectField({
                 style={position}
                 role="listbox"
               >
-                {options.map((option) => {
+                {searchable ? (
+                  <div className="sticky top-0 z-10 bg-[var(--surface-elevated)] p-1 pb-2">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder={searchPlaceholder}
+                      className="w-full rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow] focus-visible:border-[var(--border-focus)] focus-visible:shadow-[0_0_0_3px_rgba(59,130,246,0.12)]"
+                    />
+                  </div>
+                ) : null}
+
+                {visibleOptions.length === 0 ? (
+                  <div className="px-3 py-2 text-sm text-[var(--muted)]">{emptyMessage}</div>
+                ) : null}
+
+                {visibleOptions.map((option) => {
                   const isSelected =
                     option.value === value ||
                     normalizeOptionValue(option.value) === normalizedValue ||

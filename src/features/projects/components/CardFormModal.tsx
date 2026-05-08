@@ -269,6 +269,9 @@ export function CardFormModal({
               options={memberOptions}
               onValueChange={(value) => set('assignee_id', value)}
               placeholder={t('projects.unassigned', 'Unassigned')}
+              searchable
+              searchPlaceholder={t('projects.search_assignee', 'Search assignee...')}
+              emptyMessage={t('projects.no_assignee_found', 'No assignee found')}
             />
           </div>
         </div>
