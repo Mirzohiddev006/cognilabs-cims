@@ -34,6 +34,7 @@ import {
   SimplePenaltySection,
 } from '../components/CompensationRecordPanels'
 import { MemberMonthlyUpdateCalendarBoard } from '../components/MemberMonthlyUpdateCalendar'
+import SalaryAttendanceDonut from '../components/SalaryAttendanceDonut'
 import { RefreshIcon } from '../components/SalaryEstimatePrimitives'
 import {
   buildEmployeeSalaryDetail,
@@ -1496,6 +1497,10 @@ export function FaultsMemberDetailPage({
                 onMonthShift={handleCalendarMonthShift}
                 onJumpToToday={handleCalendarTodayJump}
               />
+              {/* Salary attendance donut and recent 7-day stats */}
+              <div className="mt-4">
+                <SalaryAttendanceDonut employeeId={detail.report.id} year={year} month={month} />
+              </div>
             </div>
           </CardSection>
         </Card>
