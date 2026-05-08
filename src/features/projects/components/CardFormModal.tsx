@@ -165,6 +165,14 @@ export function CardFormModal({
     setImagePreviews((prev) => prev.filter((_, itemIndex) => itemIndex !== index))
   }
 
+  function openImagePreview(url: string) {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
 
@@ -304,11 +312,22 @@ export function CardFormModal({
                   />
                   <button
                     type="button"
+                    onClick={() => openImagePreview(url)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-opacity group-hover:bg-black/35 group-hover:opacity-100"
+                    aria-label={t('projects.preview_image', 'Preview image')}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5 text-white drop-shadow" fill="none" stroke="currentColor" strokeWidth="1.8">
+                      <path d="M2.25 12c1.9-4.82 6.07-8 9.75-8s7.85 3.18 9.75 8c-1.9 4.82-6.07 8-9.75 8s-7.85-3.18-9.75-8Z" />
+                      <circle cx="12" cy="12" r="3.5" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+                    className="absolute right-1 top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-black/65 text-white opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:bg-rose-500"
                     aria-label={t('projects.remove', 'Remove')}
                   >
-                    <svg viewBox="0 0 16 16" className="h-4 w-4 text-white" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
                     </svg>
                   </button>
