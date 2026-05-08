@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary } from '../../../shared/api/types'
@@ -13,9 +13,11 @@ import {
 import { formatNumericDate, formatNumericDateTime } from '../../../shared/lib/format'
 import { Badge, StatusBadge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
+import { Input } from '../../../shared/ui/input'
 import { Card } from '../../../shared/ui/card'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { useToast } from '../../../shared/toast/useToast'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
 
 function formatCustomerNotes(notes?: string | null) {
@@ -118,8 +120,50 @@ export function CustomerDetailContent({
   hideActions?: boolean
 }) {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
+
+  // Additional notes from API
+  const notesQuery = useAsyncData(() => crmService.getAdditionalNotes(customer.id), [customer.id], { enabled: Boolean(customer.id) })
+  const [showAddInput, setShowAddInput] = useState(false)
+  const [newNote, setNewNote] = useState('')
+  const [isAdding, setIsAdding] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState<number | string | null>(null)
+  const [editingContent, setEditingContent] = useState('')
+  const [editingEnabled, setEditingEnabled] = useState(false)
+
+  const aiNotes = formattedNotes.map((text, idx) => ({ id: `ai-${idx}`, note: text, created_by_full_name: 'Cognilabs AI', created_at: null, isAi: true }))
+  const additionalNotes = notesQuery.data?.items ?? []
+  const mergedNotes = [...aiNotes, ...additionalNotes]
+
+  async function handleAddNote() {
+    if (!newNote.trim() || !customer.id) return
+    setIsAdding(true)
+    try {
+      await crmService.addAdditionalNote(customer.id, newNote.trim())
+      setNewNote('')
+      setShowAddInput(false)
+      void notesQuery.refetch()
+      showToast({ title: t('common.added', 'Added'), tone: 'success' })
+    } catch (error) {
+      showToast({ title: t('common.error', 'Error'), tone: 'error' })
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
+  async function handleUpdateNote(noteId: number) {
+    if (!editingContent.trim() || !customer.id) return
+    try {
+      await crmService.updateAdditionalNote(customer.id, Number(noteId), editingContent.trim())
+      setEditingNoteId(null)
+      void notesQuery.refetch()
+      showToast({ title: t('common.updated', 'Updated'), tone: 'success' })
+    } catch (error) {
+      showToast({ title: t('common.error', 'Error'), tone: 'error' })
+    }
+  }
 
   return (
     <section className="space-y-4">
@@ -246,19 +290,89 @@ export function CustomerDetailContent({
 
         {/* 3. Notes Card (Operator + Additional Notes combined) */}
         <Card className="overflow-hidden rounded-xl border-[var(--border)] lg:col-span-2">
-          <div className="border-b border-[var(--border)] px-6 py-5">
+          <div className="border-b border-[var(--border)] px-6 py-5 flex items-center justify-between gap-4">
             <SectionTitle
               title={t('customers.detail.notes.title', 'Notes')}
               description={t('customers.detail.notes.description', 'All notes and communications.')}
             />
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant={editingEnabled ? 'secondary' : 'ghost'} onClick={() => setEditingEnabled((s) => !s)}>
+                {editingEnabled ? t('common.done', 'Done') : t('common.edit', 'Edit')}
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setShowAddInput((s) => !s)}>
+                {t('customers.notes.add_short', 'Add')}
+              </Button>
+            </div>
           </div>
+
           <div className="px-6 py-5">
-            {formattedNotes.length > 0 ? (
-              <div className="space-y-4">
-                {formattedNotes.map((note, index) => (
-                  <p key={`${customer.id}-note-${index}`} className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">
-                    {note}
-                  </p>
+            {showAddInput ? (
+              <div className="mb-4 flex gap-2">
+                <Input
+                  value={newNote}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewNote(e.target.value)}
+                  placeholder={t('customers.notes.add_placeholder', 'Add a new note...')}
+                  className="flex-1"
+                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter') handleAddNote() }}
+                />
+                <Button size="sm" onClick={handleAddNote} disabled={isAdding || !newNote.trim()}>
+                  {isAdding ? '...' : t('common.add', 'Add')}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => { setShowAddInput(false); setNewNote('') }}>
+                  {t('common.cancel', 'Cancel')}
+                </Button>
+              </div>
+            ) : null}
+
+            {notesQuery.isLoading ? (
+              <LoadingStateBlock eyebrow={t('customers.detail.notes.title', 'Notes')} title={t('common.loading', 'Loading...')} />
+            ) : mergedNotes.length > 0 ? (
+              <div className="space-y-3">
+                {mergedNotes.map((note: any) => (
+                  <div key={String(note.id)} className="group relative rounded-xl border border-[var(--border)] bg-[var(--input-surface)] p-3 transition hover:border-[var(--border-hover)]">
+                    {editingNoteId === note.id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={editingContent}
+                          onChange={(e) => setEditingContent(e.target.value)}
+                          className="w-full rounded-lg border border-[var(--border)] bg-transparent p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          rows={3}
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="secondary" onClick={() => setEditingNoteId(null)}>
+                            {t('common.cancel', 'Cancel')}
+                          </Button>
+                          <Button size="sm" onClick={() => handleUpdateNote(note.id)}>
+                            {t('common.save', 'Save')}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{note.note}</p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <p className="text-[10px] text-[var(--muted-strong)]">
+                            {note.created_by_full_name} {note.created_at ? `• ${formatNumericDateTime(note.created_at)}` : ''}
+                          </p>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                            {note.isAi ? null : editingEnabled ? (
+                              <button
+                                onClick={() => { setEditingNoteId(note.id); setEditingContent(note.note) }}
+                                className="p-1 text-[var(--muted-strong)] hover:text-blue-500"
+                                title={t('common.edit', 'Edit')}
+                              >
+                                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              </button>
+                            ) : null}
+                            {/* Delete intentionally omitted per requirements (keep comments only) */}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
