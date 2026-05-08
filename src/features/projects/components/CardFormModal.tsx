@@ -66,6 +66,7 @@ export function CardFormModal({
   const [values, setValues] = useState<CardFormValues>(empty)
   const [titleError, setTitleError] = useState('')
   const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   const priorityOptions: SelectFieldOption[] = [
@@ -108,6 +109,7 @@ export function CardFormModal({
       }
 
       setTitleError('')
+      setPreviewImageUrl(null)
     }
   }, [open, initial])
 
@@ -166,11 +168,11 @@ export function CardFormModal({
   }
 
   function openImagePreview(url: string) {
-    if (typeof window === 'undefined') {
-      return
-    }
+    setPreviewImageUrl(url)
+  }
 
-    window.open(url, '_blank', 'noopener,noreferrer')
+  function closeImagePreview() {
+    setPreviewImageUrl(null)
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -375,6 +377,35 @@ export function CardFormModal({
           ))}
         </div>
       </form>
+
+      {previewImageUrl ? (
+        <div
+          className="fixed inset-0 z-220 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={closeImagePreview}
+          aria-hidden="true"
+        >
+          <div
+            className="relative max-h-[90vh] max-w-[92vw] overflow-hidden rounded-2xl border border-white/10 bg-(--surface-elevated) shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeImagePreview}
+              className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+              aria-label={t('projects.close_preview', 'Close preview')}
+            >
+              <svg viewBox="0 0 16 16" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round" />
+              </svg>
+            </button>
+            <img
+              src={previewImageUrl}
+              alt={t('projects.preview_image', 'Preview image')}
+              className="max-h-[90vh] max-w-[92vw] object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
     </Dialog>
   )
 }
