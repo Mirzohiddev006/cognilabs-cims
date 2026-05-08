@@ -73,40 +73,34 @@ function LogDetailModal({ log, onClose }: { log: AuditLogItem; onClose: () => vo
         {(log.after_data || log.before_data) ? (
           <div className="space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Data Changes')}</p>
-            <div className="grid gap-3 max-h-80 overflow-auto">
-              {Object.entries(log.after_data || {}).map(([key, afterValue]) => {
-                const beforeValue = log.before_data?.[key]
-                const hasChanged = beforeValue !== afterValue
-                
-                return (
-                  <div 
-                    key={key} 
-                    className={`rounded-xl border p-4 transition-colors ${
-                      hasChanged 
-                        ? 'border-amber-500/30 bg-amber-500/5' 
-                        : 'border-white/10 bg-white/5'
-                    }`}
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] mb-3">{key}</p>
-                    
-                    {hasChanged ? (
-                      <div className="space-y-2">
-                        <div>
-                          <p className="text-[9px] uppercase tracking-wide text-red-400/70 mb-1">{lt('Before')}</p>
-                          <p className="text-sm text-white/60 break-all">{String(beforeValue || '-')}</p>
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 max-h-80 overflow-auto">
+              <div className="space-y-4">
+                {Object.entries(log.after_data || {}).map(([key, afterValue]) => {
+                  const beforeValue = log.before_data?.[key]
+                  const hasChanged = beforeValue !== afterValue
+                  
+                  return (
+                    <div key={key} className="pb-4 border-b border-white/10 last:pb-0 last:border-0">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 mb-3">{key}</p>
+                      
+                      {hasChanged ? (
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-[9px] uppercase tracking-wide text-red-400/70 mb-1">{lt('Before')}</p>
+                            <p className="text-sm text-white/60 break-all">{String(beforeValue || '-')}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] uppercase tracking-wide text-green-400/70 mb-1">{lt('After')}</p>
+                            <p className="text-sm text-white font-medium break-all">{String(afterValue || '-')}</p>
+                          </div>
                         </div>
-                        <div className="h-px bg-white/10"></div>
-                        <div>
-                          <p className="text-[9px] uppercase tracking-wide text-green-400/70 mb-1">{lt('After')}</p>
-                          <p className="text-sm text-white font-medium break-all">{String(afterValue || '-')}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-white/70">{String(afterValue || '-')}</p>
-                    )}
-                  </div>
-                )
-              })}
+                      ) : (
+                        <p className="text-sm text-white/70">{String(afterValue || '-')}</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         ) : (
