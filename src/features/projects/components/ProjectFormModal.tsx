@@ -16,6 +16,7 @@ type ProjectFormValues = {
   project_url: string
   member_ids: number[]
   image: File | null
+  clear_existing_image: boolean
 }
 
 type ProjectFormModalProps = {
@@ -34,6 +35,7 @@ const empty: ProjectFormValues = {
   project_url: '',
   member_ids: [],
   image: null,
+  clear_existing_image: false,
 }
 
 export function ProjectFormModal({
@@ -66,6 +68,7 @@ export function ProjectFormModal({
           project_url: initial.project_url ?? '',
           member_ids: initial.members.map((member) => member.id),
           image: null,
+          clear_existing_image: false,
         })
         setPreviewUrl(resolveMediaUrl(initial.image) ?? initial.image ?? null)
       } else {
@@ -98,6 +101,7 @@ export function ProjectFormModal({
     }
 
     set('image', file)
+    set('clear_existing_image', false)
     const url = URL.createObjectURL(file)
 
     setPreviewUrl((oldValue) => {
@@ -134,6 +138,10 @@ export function ProjectFormModal({
       member_ids: values.member_ids,
       image: values.image ?? undefined,
     })
+
+    if (initial && values.clear_existing_image && !values.image) {
+      fd.append('clear_existing_image', 'true')
+    }
 
     await onSubmit(fd)
   }
@@ -201,6 +209,7 @@ export function ProjectFormModal({
                   size="sm"
                   onClick={() => {
                     set('image', null)
+                    set('clear_existing_image', true)
                     setPreviewUrl(null)
 
                     if (fileRef.current) {
