@@ -204,6 +204,13 @@ export const cognilabsaiService = {
     if (avatarPath.startsWith('http')) return avatarPath
     return `${env.apiBaseUrl.replace(/\/$/, '')}${avatarPath}`
   },
+
+  deleteConversation(conversationId: number) {
+    return request<SuccessResponse>({
+      path: `/cognilabsai/chat/conversations/${conversationId}`,
+      method: 'DELETE',
+    })
+  },
 }
 
 export function getWsKeyFromStorage(): string | null {

@@ -284,4 +284,32 @@ export const crmService = {
       query: params,
     })
   },
+
+  archivedCustomers() {
+    return request<CustomerSummary[]>({
+      path: '/crm/customers/archived',
+    })
+  },
+
+  restoreCustomer(customerId: number) {
+    return request<SuccessResponse>({
+      path: `/crm/customers/${customerId}/restore`,
+      method: 'POST',
+    })
+  },
+
+  hardDeleteCustomer(customerId: number) {
+    return request<SuccessResponse>({
+      path: `/crm/customers/${customerId}/hard`,
+      method: 'DELETE',
+    })
+  },
+
+  bulkHardDelete(customerIds: number[]) {
+    return request<SuccessResponse>({
+      path: '/crm/customers/bulk-hard-delete',
+      method: 'DELETE',
+      body: { customer_ids: customerIds },
+    })
+  },
 }
