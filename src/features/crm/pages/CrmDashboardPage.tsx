@@ -1087,6 +1087,13 @@ export function CrmDashboardPage() {
           setDetailCustomer(null)
           navigate(`/cognilabsai/chat?conversation_id=${id}`)
         }}
+        onEdit={(customer) => {
+          setDetailCustomer(null)
+          setSelectedCustomer(customer)
+          setFormValues(toFormValues(customer))
+          setModalMode('edit')
+          setIsFormOpen(true)
+        }}
       />
 
 

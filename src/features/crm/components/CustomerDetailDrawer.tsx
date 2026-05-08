@@ -17,7 +17,6 @@ import { Card } from '../../../shared/ui/card'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
-import { CustomerAdditionalNotes } from './CustomerAdditionalNotes'
 
 function formatCustomerNotes(notes?: string | null) {
   if (!notes) {
@@ -196,7 +195,28 @@ export function CustomerDetailContent({
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* 1. Profile Card */}
+        {/* 1. AI Summary Card */}
+        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
+          <div className="border-b border-[var(--border)] px-6 py-5">
+            <SectionTitle
+              title={t('customers.detail.ai_summary.title', 'AI summary')}
+              description={t('customers.detail.ai_summary.description', 'CRM-generated summary.')}
+            />
+          </div>
+          <div className="px-6 py-5">
+            {customer.aisummary ? (
+              <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.aisummary}</p>
+            ) : (
+              <EmptyStateBlock
+                eyebrow={t('customers.detail.ai_summary.title', 'AI summary')}
+                title={t('customers.detail.ai_summary.empty_title', 'No AI summary')}
+                description={t('customers.detail.ai_summary.empty_description', 'AI summary is not available.')}
+              />
+            )}
+          </div>
+        </Card>
+
+        {/* 2. Profile Card */}
         <Card className="overflow-hidden rounded-xl border-[var(--border)]">
           <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle
@@ -224,12 +244,12 @@ export function CustomerDetailContent({
           </div>
         </Card>
 
-        {/* 2. Operator Notes Card */}
-        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
+        {/* 3. Notes Card (Operator + Additional Notes combined) */}
+        <Card className="overflow-hidden rounded-xl border-[var(--border)] lg:col-span-2">
           <div className="border-b border-[var(--border)] px-6 py-5">
             <SectionTitle
               title={t('customers.detail.notes.title', 'Notes')}
-              description={t('customers.detail.notes.description', 'Operator notes.')}
+              description={t('customers.detail.notes.description', 'All notes and communications.')}
             />
           </div>
           <div className="px-6 py-5">
@@ -251,31 +271,7 @@ export function CustomerDetailContent({
           </div>
         </Card>
 
-        {/* 3. AI Summary Card */}
-        <Card className="overflow-hidden rounded-xl border-[var(--border)]">
-          <div className="border-b border-[var(--border)] px-6 py-5">
-            <SectionTitle
-              title={t('customers.detail.ai_summary.title', 'AI summary')}
-              description={t('customers.detail.ai_summary.description', 'CRM-generated summary.')}
-            />
-          </div>
-          <div className="px-6 py-5">
-            {customer.aisummary ? (
-              <p className="whitespace-pre-wrap text-sm leading-6 text-[var(--muted-strong)]">{customer.aisummary}</p>
-            ) : (
-              <EmptyStateBlock
-                eyebrow={t('customers.detail.ai_summary.title', 'AI summary')}
-                title={t('customers.detail.ai_summary.empty_title', 'No AI summary')}
-                description={t('customers.detail.ai_summary.empty_description', 'AI summary is not available.')}
-              />
-            )}
-          </div>
-        </Card>
-
-        {/* 4. Additional Notes Card */}
-        <CustomerAdditionalNotes customerId={customer.id} />
-
-        {/* Audio Panel (Separated or as an extra row) */}
+        {/* Audio Panel */}
         {audioSource ? (
           <div className="lg:col-span-2">
             <CustomerAudioPanel audioSource={audioSource} />
@@ -292,12 +288,14 @@ export function CustomerDetailDrawer({
   initialCustomer,
   onClose,
   onOpenChat,
+  onEdit,
 }: {
   open: boolean
   customerId?: number | null
   initialCustomer?: CustomerSummary | null
   onClose: () => void
   onOpenChat?: (conversationId: number) => void
+  onEdit?: (customer: CustomerSummary) => void
 }) {
   const { t } = useTranslation()
   const detailQuery = useAsyncData(
@@ -360,6 +358,19 @@ export function CustomerDetailDrawer({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {customer && onEdit ? (
+                <button
+                  type="button"
+                  title={t('customers.detail.edit', 'Edit customer')}
+                  onClick={() => onEdit(customer)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-blue-500/30 bg-blue-500/10 px-3 text-xs font-semibold text-blue-400 transition hover:bg-blue-500/20"
+                >
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <path d="M11.33 2.67L13.33 4.67M2 14h3.33l8-8V3.67A1.33 1.33 0 0 0 12 2.33H3.33A1.33 1.33 0 0 0 2 3.67z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {t('customers.detail.edit', 'Edit')}
+                </button>
+              ) : null}
               {customer?.chat_url && onOpenChat ? (() => {
                 const match = customer.chat_url?.match(/conversation_id=(\d+)/)
                 const convId = match ? Number(match[1]) : null
