@@ -1,6 +1,7 @@
 import { request } from '../http'
 import { getAccessToken } from '../../lib/session'
 import { env } from '../../config/env'
+import type { SuccessResponse } from '../types'
 
 export type ConversationItem = {
   id: number
