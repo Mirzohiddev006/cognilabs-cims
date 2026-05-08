@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../shared/ui/card'
 
 const lt = translateCurrentLiteral
 
@@ -63,40 +64,48 @@ export default function SalaryAttendanceDonut({ employeeId, year, month }: { emp
   const dash = (counts.progressPct / 100) * circumference
 
   return (
-    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-      <div className="col-span-1 flex items-center justify-center">
-        <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
-          <g transform="translate(70,70)">
-            <circle r={radius} fill="transparent" stroke="var(--muted-surface)" strokeWidth="12" />
-            <circle r={radius} fill="transparent" stroke="#60a5fa" strokeWidth="12" strokeLinecap="round"
-              strokeDasharray={`${dash} ${circumference - dash}`} transform="rotate(-90)" />
-            <text x="0" y="6" textAnchor="middle" className="text-[14px] font-semibold" fill="var(--foreground)">{`${counts.progressPct}%`}</text>
-          </g>
-        </svg>
-      </div>
+    <Card className="mt-4 rounded-xl border-(--border) bg-(--surface-elevated)">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-bold text-(--foreground)">{lt('Office time progress')}</CardTitle>
+        <CardDescription className="text-xs text-(--muted)">
+          {lt('Planned')} {counts.plannedHours}h • {lt('Worked')} {counts.workedHours}h
+        </CardDescription>
+      </CardHeader>
 
-      <div className="md:col-span-2">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-sm font-bold text-white">{lt('Office time progress')}</p>
-              <p className="text-xs text-[var(--muted)]">{lt('Planned')} {counts.plannedHours}h • {lt('Worked')} {counts.workedHours}h</p>
+      <CardContent className="pt-1">
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-3">
+          <div className="col-span-1 flex items-center justify-center">
+            <svg width="140" height="140" viewBox="0 0 140 140" aria-hidden="true">
+              <g transform="translate(70,70)">
+                <circle r={radius} fill="transparent" stroke="var(--muted-surface)" strokeWidth="12" />
+                <circle
+                  r={radius}
+                  fill="transparent"
+                  stroke="#60a5fa"
+                  strokeWidth="12"
+                  strokeLinecap="round"
+                  strokeDasharray={`${dash} ${circumference - dash}`}
+                  transform="rotate(-90)"
+                />
+                <text x="0" y="6" textAnchor="middle" className="text-[14px] font-semibold" fill="var(--foreground)">{`${counts.progressPct}%`}</text>
+              </g>
+            </svg>
+          </div>
+
+          <div className="md:col-span-2">
+            <div className="grid grid-cols-7 gap-2">
+              {last7.map((rec) => (
+                <div key={rec.attendance_date} className="flex flex-col items-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-(--input-surface) text-sm font-medium">
+                    {new Date(rec.attendance_date).getDate()}
+                  </div>
+                  <div className="mt-1 text-[11px] text-(--muted)">{rec.worked_minutes ? `${Math.round(rec.worked_minutes / 60)}h` : '-'}</div>
+                </div>
+              ))}
             </div>
           </div>
-
-          <div className="grid grid-cols-7 gap-2 mt-2">
-            {last7.map((rec) => (
-              <div key={rec.attendance_date} className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-md bg-[var(--input-surface)] flex items-center justify-center text-sm font-medium">
-                  {new Date(rec.attendance_date).getDate()}
-                </div>
-                <div className="text-[11px] text-[var(--muted)] mt-1">{rec.worked_minutes ? `${Math.round(rec.worked_minutes/60)}h` : '-'}</div>
-              </div>
-            ))}
-          </div>
-
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }
