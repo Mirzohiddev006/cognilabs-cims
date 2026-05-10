@@ -14,6 +14,8 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
+import { ActionsMenu } from '../../../shared/ui/actions-menu'
+import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
   cognilabsaiService,
   type ConversationItem,
@@ -172,10 +174,12 @@ function ConversationListItem({
   conv,
   isActive,
   onSelect,
+  onDelete,
 }: {
   conv: ConversationItem
   isActive: boolean
   onSelect: () => void
+  onDelete: () => void
 }) {
   const name = getClientName(conv)
   const timeLabel = formatConvTime(conv.last_message_at)
@@ -255,6 +259,17 @@ function ConversationListItem({
             <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-amber-400" />
           ) : null}
         </div>
+      </div>
+      <div
+        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <ActionsMenu
+          label={`Actions for ${getClientName(conv)}`}
+          items={[
+            { label: "O'chirish", onSelect: onDelete, tone: 'danger' },
+          ]}
+        />
       </div>
     </button>
   )
@@ -556,6 +571,7 @@ function TelegramSearchModal({
 export function CognilabsAIChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { showToast } = useToast()
+  const { confirm } = useConfirm()
   const { user } = useAuth()
 
   const [activeTab, setActiveTab] = useState<ChannelTab>('all')
@@ -752,6 +768,28 @@ export function CognilabsAIChatPage() {
     setPauseUntilDate('')
   }, [])
 
+  async function handleDeleteConversation(conv: ConversationItem) {
+    const name = getClientName(conv)
+    const approved = await confirm({
+      title: `Suhbatni o'chirish?`,
+      description: `${name} bilan suhbat butunlay o'chiriladi.`,
+      tone: 'danger',
+      confirmLabel: `O'chirish`,
+    })
+    if (!approved) return
+    try {
+      await cognilabsaiService.deleteConversation(conv.id)
+      setConversations((prev) => prev.filter((c) => c.id !== conv.id))
+      if (selectedConversationId === conv.id) {
+        setSelectedConversationId(null)
+        setMessages([])
+      }
+      showToast({ title: `Suhbat o'chirildi`, tone: 'success' })
+    } catch (error) {
+      showToast({ title: `O'chirishda xato`, description: getApiErrorMessage(error), tone: 'error' })
+    }
+  }
+
   async function handleSend() {
     if (!selectedConversationId || !messageText.trim() || isSending) return
     const text = messageText.trim()
@@ -936,6 +974,7 @@ export function CognilabsAIChatPage() {
                     conv={conv}
                     isActive={selectedConversationId === conv.id}
                     onSelect={() => handleSelectConversation(conv.id)}
+                    onDelete={() => void handleDeleteConversation(conv)}
                   />
                 ))}
               </div>
