@@ -806,6 +806,9 @@ export function CrmDashboardPage() {
           <Button variant="secondary" onClick={() => void refreshAll()}>
             {t('customers.actions.refresh', 'Refresh')}
           </Button>
+          <Button variant="secondary" onClick={() => navigate('/crm/archived')}>
+            Arxiv
+          </Button>
           <Button onClick={openCreateModal}>{t('customers.actions.add', 'Add customer')}</Button>
         </div>
       </div>

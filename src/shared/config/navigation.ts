@@ -74,7 +74,7 @@ export const navigationItems: readonly NavigationItem[] = [
     description: 'Arxivlangan mijozlar. Tiklash yoki butunlay o\'chirish.',
     group: 'Sales',
     permissionKey: 'crm',
-    sidebar: true,
+    sidebar: false,
     defaultRedirect: false,
   },
   {
