@@ -174,7 +174,7 @@ html.light {
   --blue-glow:         rgba(37,99,235,0.18);
   --blue-text:         #2563EB;
   --blue-border:       #BFDBFE;
-  --blue-message:      #f9f9fa;
+  --blue-message:      #2563eb;
 
   /* Semantic */
   --success:           #22C55E;
@@ -228,7 +228,6 @@ html.light {
   --shell-text-primary:              #0F172A;
   --shell-app-name-color:            #0F172A;
   --shell-label-color:               #2563EB;
-  --blue-message:      #3b82f6; /* Darker blue for light mode readability */
   --sidebar-background:              #ffffff;
   --sidebar-foreground:              #0f172a;
   --sidebar-primary:                 #0f172a;
