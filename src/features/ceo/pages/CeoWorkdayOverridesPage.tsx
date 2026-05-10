@@ -15,6 +15,9 @@ import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
+import { Input } from '../../../shared/ui/input'
+import { Label } from '../../../shared/ui/label'
+import { SelectField } from '../../../shared/ui/select-field'
 import { SectionTitle } from '../../../shared/ui/section-title'
 import { ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import {
@@ -410,7 +413,7 @@ export function CeoWorkdayOverridesPage() {
         open={isCreateDialogOpen || editingOverride !== null}
         onClose={closeDialog}
         editingOverride={editingOverride}
-        onSuccess={() => overridesQuery.refetch()}
+        onSuccess={() => void overridesQuery.refetch()}
         defaultMonth={month}
         defaultYear={year}
       />
