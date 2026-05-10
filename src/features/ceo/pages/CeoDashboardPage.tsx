@@ -15,6 +15,7 @@ import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
 import { PaymentFormModal, type PaymentFormValues } from '../components/PaymentFormModal'
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
+import { WorkdayOverrideFormDialog } from '../components/WorkdayOverrideFormDialog'
 import { crmService } from '../../../shared/api/services/crm.service'
 
 const initialBroadcastMessage: MessageComposerValues = {
@@ -85,6 +86,7 @@ export function CeoDashboardPage() {
   const [isCompanyPaymentOpen, setIsCompanyPaymentOpen] = useState(false)
   const [isCompanyPaymentSubmitting, setIsCompanyPaymentSubmitting] = useState(false)
   const [companyPaymentMode, setCompanyPaymentMode] = useState<'create' | 'edit'>('create')
+  const [isOverrideOpen, setIsOverrideOpen] = useState(false)
 
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
@@ -423,6 +425,15 @@ export function CeoDashboardPage() {
                 ),
                 onSelect: openCreateCompanyPaymentModal,
               },
+              {
+                label: t('ceo.workday.dialog.create_action', { defaultValue: 'Create Override' }),
+                icon: (
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5">
+                    <path d="M4.5 1C4.22386 1 4 1.22386 4 1.5C4 1.77614 4.22386 2 4.5 2H7V7H2V4.5C2 4.22386 1.77614 4 1.5 4C1.22386 4 1 4.22386 1 4.5V7.5C1 7.63807 1.05268 7.76321 1.14645 7.85355C1.23679 7.94732 1.36193 8 1.5 8H7V13.5C7 13.7761 7.22386 14 7.5 14C7.77614 14 8 13.7761 8 13.5V8H13.5C13.7761 8 14 7.77614 14 7.5C14 7.22386 13.7761 7 13.5 7H8V2H10.5C10.7761 2 11 1.77614 11 1.5C11 1.22386 10.7761 1 10.5 1H4.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd" />
+                  </svg>
+                ),
+                onSelect: () => setIsOverrideOpen(true),
+              },
             ]}
           />
         }
@@ -635,6 +646,10 @@ export function CeoDashboardPage() {
         }
         onSubmit={() => void handleSubmitCompanyPayment()}
         isSubmitting={isCompanyPaymentSubmitting}
+      />
+      <WorkdayOverrideFormDialog
+        open={isOverrideOpen}
+        onClose={() => setIsOverrideOpen(false)}
       />
     </section>
   )
