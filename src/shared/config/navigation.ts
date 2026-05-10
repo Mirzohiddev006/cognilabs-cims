@@ -69,6 +69,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: true,
   },
   {
+    to: '/crm/archived',
+    label: 'CRM Arxiv',
+    description: 'Arxivlangan mijozlar. Tiklash yoki butunlay o\'chirish.',
+    group: 'Sales',
+    permissionKey: 'crm',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/ceo/users',
     label: 'Users & Permissions',
     description: 'User management, role access, and permission oversight.',

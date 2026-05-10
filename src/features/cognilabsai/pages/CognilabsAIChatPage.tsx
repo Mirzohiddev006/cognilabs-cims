@@ -229,12 +229,23 @@ function ConversationListItem({
           </div>
           {timeLabel && (
             <span className={cn(
-              'shrink-0 text-[11px] font-medium',
+              'shrink-0 text-[11px] font-medium group-hover:hidden',
               isActive ? 'text-[var(--muted)]' : 'text-[var(--caption)]'
             )}>
               {timeLabel}
             </span>
           )}
+          <div
+            className="hidden group-hover:block shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ActionsMenu
+              label={`Actions for ${getClientName(conv)}`}
+              items={[
+                { label: "O'chirish", onSelect: onDelete, tone: 'danger' },
+              ]}
+            />
+          </div>
         </div>
 
         <div className="mt-0.5 flex items-center justify-between gap-2">
@@ -259,17 +270,6 @@ function ConversationListItem({
             <span className="shrink-0 h-1.5 w-1.5 rounded-full bg-amber-400" />
           ) : null}
         </div>
-      </div>
-      <div
-        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ActionsMenu
-          label={`Actions for ${getClientName(conv)}`}
-          items={[
-            { label: "O'chirish", onSelect: onDelete, tone: 'danger' },
-          ]}
-        />
       </div>
     </button>
   )
