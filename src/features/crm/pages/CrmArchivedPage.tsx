@@ -83,7 +83,7 @@ export function CrmArchivedPage() {
     if (!approved) return
     setIsBulkDeleting(true)
     try {
-      await crmService.bulkHardDelete(selectedIds)
+      await crmService.bulkHardDelete(selectedIds.map(Number))
       await archivedQuery.refetch()
       setSelectedIds([])
       showToast({ title: `${selectedIds.length} ta mijoz o'chirildi`, tone: 'success' })
@@ -95,14 +95,15 @@ export function CrmArchivedPage() {
   }
 
   function toggleSelect(id: number) {
+    const numId = Number(id)
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      prev.includes(numId) ? prev.filter((x) => x !== numId) : [...prev, numId],
     )
   }
 
   function toggleAll() {
     setSelectedIds((prev) =>
-      prev.length === customers.length ? [] : customers.map((c) => c.id),
+      prev.length === customers.length ? [] : customers.map((c) => Number(c.id)),
     )
   }
 
