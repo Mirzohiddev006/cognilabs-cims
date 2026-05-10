@@ -309,7 +309,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
         )}
       >
         {(isAi || msg.sender_type === 'operator') && (
-          <p className="mb-0.5 text-[10.5px] font-bold tracking-wide uppercase opacity-70">
+          <p className="mb-0.5 text-[10.5px] font-bold tracking-wide uppercase text-white/90">
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
@@ -322,7 +322,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
         <p className="whitespace-pre-wrap break-words">{msg.text}</p>
 
         <div className={cn(
-          'flex items-center gap-1 mt-1 opacity-55',
+          'flex items-center gap-1 mt-1 opacity-70',
           isClient ? 'justify-start' : 'justify-end'
         )}>
           <span className="text-[10px] font-medium">{timeStr}</span>
