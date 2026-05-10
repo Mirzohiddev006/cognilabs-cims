@@ -81,13 +81,15 @@ export function CrmArchivedPage() {
       confirmLabel: `Butunlay o'chirish`,
     })
     if (!approved) return
+    const countToDelete = selectedIds.length
     setIsBulkDeleting(true)
     try {
-      await crmService.bulkHardDelete(selectedIds.map(Number))
+      await Promise.all(selectedIds.map((id) => crmService.hardDeleteCustomer(Number(id))))
       await archivedQuery.refetch()
       setSelectedIds([])
-      showToast({ title: `${selectedIds.length} ta mijoz o'chirildi`, tone: 'success' })
+      showToast({ title: `${countToDelete} ta mijoz o'chirildi`, tone: 'success' })
     } catch (error) {
+      await archivedQuery.refetch()
       showToast({ title: "O'chirishda xato", description: getApiErrorMessage(error), tone: 'error' })
     } finally {
       setIsBulkDeleting(false)
