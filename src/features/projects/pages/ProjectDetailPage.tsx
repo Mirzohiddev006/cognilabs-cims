@@ -477,7 +477,7 @@ export function ProjectDetailPage() {
                  <div className="flex items-center justify-between gap-4 mb-3 sm:mb-0">
                     <div className="flex items-center gap-3 sm:gap-4 overflow-hidden flex-1">
                        {/* Board Tabs - Horizontal Scroll on mobile */}
-                       <div className="flex items-center gap-1.5 p-1 rounded-xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
+                       <div className="flex items-center gap-2.5 p-1 rounded-xl bg-black/20 dark:bg-white/5 border border-[var(--border)] overflow-x-auto custom-scrollbar-none scroll-smooth">
                          {activeBoards.map((board) => {
                            const isSelected = selectedBoard?.id === board.id
                            return (
