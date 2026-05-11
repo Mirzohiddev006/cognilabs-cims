@@ -486,8 +486,8 @@ export function ProjectDetailPage() {
                                type="button"
                                onClick={() => selectBoard(board.id)}
                                className={cn(
-                                 "whitespace-nowrap pl-4 sm:pl-5 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
-                                 canManageProjects ? "pr-10" : "pr-4 sm:pr-5",
+                                 "whitespace-nowrap pl-5 sm:pl-6 py-2 sm:py-2.5 rounded-xl text-[9px] sm:text-[11px] font-black uppercase tracking-widest transition-all",
+                                 canManageProjects ? "pr-14" : "pr-5 sm:pr-6",
                                  isSelected
                                    ? "bg-blue-600 text-white shadow-[0_4px_12px_rgba(37,99,235,0.3)] scale-105"
                                    : "text-[var(--muted-strong)] hover:text-[var(--foreground)] hover:bg-white/5"
