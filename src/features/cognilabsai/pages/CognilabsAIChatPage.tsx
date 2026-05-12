@@ -335,14 +335,15 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
             : 'bg-[var(--blue-message)] text-white rounded-xl rounded-br-sm',
           isNextSameSender && (isClient ? 'rounded-bl-sm' : 'rounded-br-sm')
         )}
+        style={!isClient ? { color: '#ffffff' } : undefined}
       >
         {(isAi || msg.sender_type === 'operator') && (
-          <p className="mb-0.5 text-[10.5px] font-bold tracking-wide uppercase text-white/90">
+          <p className="mb-0.5 text-[10.5px] font-bold tracking-wide uppercase text-white">
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
         {isUnreadClientMessage ? (
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/90">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
             New
           </p>
         ) : null}
@@ -350,12 +351,12 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
         <p className="whitespace-pre-wrap wrap-break-word" style={{ color: isClient ? 'var(--foreground)' : '#ffffff' }}>{msg.text}</p>
 
         <div className={cn(
-          'flex items-center gap-1 mt-1 opacity-70',
+          'flex items-center gap-1 mt-1',
           isClient ? 'justify-start' : 'justify-end'
         )}>
-          <span className={cn('text-[10px] font-medium', !isClient && 'text-white/80')}>{timeStr}</span>
+          <span className={cn('text-[10px] font-medium', !isClient && 'text-white')}>{timeStr}</span>
           {!isClient && (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5 text-white">
               <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
