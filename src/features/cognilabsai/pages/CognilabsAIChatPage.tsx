@@ -414,7 +414,7 @@ function TelegramSearchModal({
               </svg>
             </div>
             <div>
-              <h3 className="text-[14px] font-semibold text-[var(--foreground)]">Yangi Telegram Chat</h3>
+              <h3 className="text-[14px] font-semibold text-white">Yangi Telegram Chat</h3>
               <p className="text-[11px] text-[var(--muted)]">Username, @handle yoki link qidiring</p>
             </div>
           </div>
