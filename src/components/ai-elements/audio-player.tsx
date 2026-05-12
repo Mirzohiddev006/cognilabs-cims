@@ -17,7 +17,6 @@ export type AudioPlayerProps = ComponentProps<typeof MediaController> & { audio?
 
 export const AudioPlayer = ({ children, style, className, ...props }: AudioPlayerProps) => (
   <MediaController
-    // @ts-expect-error -- audio is a valid boolean attribute on MediaController
     audio
     data-slot="audio-player"
     className={cn('w-full', className)}
