@@ -342,7 +342,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           </p>
         )}
         {isUnreadClientMessage ? (
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-500">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/90">
             New
           </p>
         ) : null}
@@ -353,7 +353,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           'flex items-center gap-1 mt-1 opacity-70',
           isClient ? 'justify-start' : 'justify-end'
         )}>
-          <span className="text-[10px] font-medium">{timeStr}</span>
+          <span className={cn('text-[10px] font-medium', !isClient && 'text-white/80')}>{timeStr}</span>
           {!isClient && (
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5">
               <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
