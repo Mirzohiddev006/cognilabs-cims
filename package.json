@@ -23,6 +23,7 @@
     "clsx": "^2.1.1",
     "i18next": "^26.0.2",
     "lucide-react": "^0.577.0",
+    "media-chrome": "^4.19.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-i18next": "^17.0.1",
