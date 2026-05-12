@@ -81,17 +81,16 @@ export const AudioPlayerPlayButton = ({ className, ...props }: AudioPlayerPlayBu
   />
 )
 
-export type AudioPlayerSeekBackwardButtonProps = ComponentProps<typeof MediaSeekBackwardButton>
+export type AudioPlayerSeekBackwardButtonProps = ComponentProps<typeof MediaSeekBackwardButton> & { seekOffset?: number }
 
 export const AudioPlayerSeekBackwardButton = ({
   seekOffset = 10,
   className,
   ...props
-}: AudioPlayerSeekBackwardButtonProps & { seekOffset?: number }) => (
+}: AudioPlayerSeekBackwardButtonProps) => (
   <MediaSeekBackwardButton
     data-slot="audio-player-seek-backward-button"
-    // @ts-expect-error -- seekOffset is a valid attribute
-    seekoffset={seekOffset}
+    seekOffset={seekOffset}
     className={cn(
       'flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[var(--muted-surface)]',
       className,
@@ -100,17 +99,16 @@ export const AudioPlayerSeekBackwardButton = ({
   />
 )
 
-export type AudioPlayerSeekForwardButtonProps = ComponentProps<typeof MediaSeekForwardButton>
+export type AudioPlayerSeekForwardButtonProps = ComponentProps<typeof MediaSeekForwardButton> & { seekOffset?: number }
 
 export const AudioPlayerSeekForwardButton = ({
   seekOffset = 10,
   className,
   ...props
-}: AudioPlayerSeekForwardButtonProps & { seekOffset?: number }) => (
+}: AudioPlayerSeekForwardButtonProps) => (
   <MediaSeekForwardButton
     data-slot="audio-player-seek-forward-button"
-    // @ts-expect-error -- seekOffset is a valid attribute
-    seekoffset={seekOffset}
+    seekOffset={seekOffset}
     className={cn(
       'flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[var(--muted-surface)]',
       className,
