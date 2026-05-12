@@ -319,7 +319,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           </p>
         ) : null}
 
-        <p className={cn('whitespace-pre-wrap break-words', isClient ? 'text-[var(--foreground)]' : 'text-white')}>{msg.text}</p>
+        <p className="whitespace-pre-wrap break-words" style={{ color: isClient ? 'var(--foreground)' : '#ffffff' }}>{msg.text}</p>
 
         <div className={cn(
           'flex items-center gap-1 mt-1 opacity-70',
