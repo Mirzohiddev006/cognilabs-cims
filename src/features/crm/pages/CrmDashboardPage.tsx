@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
@@ -27,6 +27,7 @@ import { Input } from '../../../shared/ui/input'
 import { Label } from '../../../shared/ui/label'
 import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
+import { AudioPlayerModal } from '../components/AudioPlayerModal'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 const emptyCustomers: CustomerSummary[] = []
@@ -353,151 +354,6 @@ function TableAudioControl({
         </span>
         {t('common.play', 'Play')}
       </button>
-    </div>
-  )
-}
-
-function AudioPlayerModal({ src, name, onClose }: { src: string; name: string; onClose: () => void }) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-
-  useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
-
-    const handlePlay = () => setIsPlaying(true)
-    const handlePause = () => setIsPlaying(false)
-    const handleEnded = () => setIsPlaying(false)
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const handleLoadedMetadata = () => setDuration(audio.duration)
-
-    audio.addEventListener('play', handlePlay)
-    audio.addEventListener('pause', handlePause)
-    audio.addEventListener('ended', handleEnded)
-    audio.addEventListener('timeupdate', handleTimeUpdate)
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata)
-    void audio.play()
-
-    return () => {
-      audio.pause()
-      audio.removeEventListener('play', handlePlay)
-      audio.removeEventListener('pause', handlePause)
-      audio.removeEventListener('ended', handleEnded)
-      audio.removeEventListener('timeupdate', handleTimeUpdate)
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
-    }
-  }, [])
-
-  function togglePlayback() {
-    const audio = audioRef.current
-    if (!audio) return
-    if (audio.paused) void audio.play()
-    else audio.pause()
-  }
-
-  function handleSeek(event: React.MouseEvent<HTMLDivElement>) {
-    const audio = audioRef.current
-    if (!audio || !duration) return
-    const rect = event.currentTarget.getBoundingClientRect()
-    audio.currentTime = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * duration
-  }
-
-  function skip(seconds: number) {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = Math.max(0, Math.min(duration, audio.currentTime + seconds))
-  }
-
-  function formatTime(s: number) {
-    if (!Number.isFinite(s)) return '0:00'
-    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
-  }
-
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0
-
-  return (
-    <div className="fixed right-6 bottom-6 z-[200] w-80 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/60 backdrop-blur-xl">
-      <audio ref={audioRef} src={src} preload="metadata" className="hidden" />
-
-      <div className="h-0.5 w-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-600" />
-
-      <div className="flex items-start justify-between px-4 pt-3 pb-2">
-        <div className="min-w-0 flex-1 pr-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-amber-400/70">Now playing</p>
-          <p className="mt-0.5 truncate text-sm font-semibold text-white" title={name}>{name}</p>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md text-zinc-500 transition hover:bg-white/10 hover:text-white"
-          aria-label="Close player"
-        >
-          <svg viewBox="0 0 16 16" className="h-3 w-3 fill-current">
-            <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
-          </svg>
-        </button>
-      </div>
-
-      <div className="px-4 pb-2">
-        <div
-          className="group relative h-1.5 cursor-pointer rounded-full bg-white/10"
-          onClick={handleSeek}
-          role="slider"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progress)}
-          aria-label="Audio seek"
-        >
-          <div className="h-full rounded-full bg-amber-400 transition-[width]" style={{ width: `${progress}%` }} />
-          <div
-            className="pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-amber-400 opacity-0 shadow-md shadow-amber-400/50 transition-opacity group-hover:opacity-100"
-            style={{ left: `calc(${progress}% - 6px)` }}
-          />
-        </div>
-        <div className="mt-1 flex justify-between text-[10px] tabular-nums text-zinc-500">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-4 px-4 pb-4">
-        <button
-          type="button"
-          onClick={() => skip(-10)}
-          className="flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-zinc-400 transition hover:bg-white/10 hover:text-white"
-          aria-label="Rewind 10 seconds"
-        >
-          −10s
-        </button>
-
-        <button
-          type="button"
-          onClick={togglePlayback}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-400 text-black shadow-lg shadow-amber-400/25 transition hover:bg-amber-300 active:scale-95"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
-        >
-          {isPlaying ? (
-            <svg viewBox="0 0 16 16" className="h-5 w-5 fill-current" aria-hidden="true">
-              <path d="M4.5 3.5h2v9h-2zm5 0h2v9h-2z" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 16 16" className="ml-0.5 h-5 w-5 fill-current" aria-hidden="true">
-              <path d="M5 3.8v8.4a.6.6 0 0 0 .93.5l6.2-4.2a.6.6 0 0 0 0-1L5.93 3.3A.6.6 0 0 0 5 3.8Z" />
-            </svg>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => skip(10)}
-          className="flex h-8 items-center justify-center rounded-lg px-2.5 text-xs font-semibold text-zinc-400 transition hover:bg-white/10 hover:text-white"
-          aria-label="Forward 10 seconds"
-        >
-          +10s
-        </button>
-      </div>
     </div>
   )
 }
