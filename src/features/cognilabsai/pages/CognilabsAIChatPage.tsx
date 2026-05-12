@@ -332,31 +332,30 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           'relative max-w-[75%] sm:max-w-[62%] px-3.5 py-2 text-[13.5px] leading-relaxed shadow-sm',
           isClient
             ? 'bg-[var(--surface-elevated)] text-[var(--foreground)] border border-[var(--border)] rounded-xl rounded-bl-sm'
-            : 'bg-[var(--blue-message)] text-white rounded-xl rounded-br-sm',
+            : 'bg-white text-[var(--foreground)] border border-[var(--border)] rounded-xl rounded-br-sm',
           isNextSameSender && (isClient ? 'rounded-bl-sm' : 'rounded-br-sm')
         )}
-        style={!isClient ? { color: '#ffffff' } : undefined}
       >
         {(isAi || msg.sender_type === 'operator') && (
-          <p className="mb-0.5 text-[10.5px] font-bold tracking-wide uppercase text-white">
+          <p className={cn('mb-0.5 text-[10.5px] font-bold tracking-wide uppercase', !isClient ? 'text-[var(--foreground)]' : 'text-(--foreground)')}>
             {isAi ? 'AI' : msg.operator_name_snapshot || 'Operator'}
           </p>
         )}
         {isUnreadClientMessage ? (
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
+          <p className={cn('mb-1 text-[10px] font-bold uppercase tracking-[0.18em]', !isClient ? 'text-[var(--foreground)]' : 'text-(--foreground)')}>
             New
           </p>
         ) : null}
 
-        <p className="whitespace-pre-wrap wrap-break-word" style={{ color: isClient ? 'var(--foreground)' : '#ffffff' }}>{msg.text}</p>
+        <p className="whitespace-pre-wrap wrap-break-word text-(--foreground)">{msg.text}</p>
 
         <div className={cn(
           'flex items-center gap-1 mt-1',
           isClient ? 'justify-start' : 'justify-end'
         )}>
-          <span className={cn('text-[10px] font-medium', !isClient && 'text-white')}>{timeStr}</span>
+          <span className={cn('text-[10px] font-medium', !isClient ? 'text-[#2AABEE]' : 'text-(--muted)')}>{timeStr}</span>
           {!isClient && (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5 text-white">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5 text-[#2AABEE]">
               <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
