@@ -96,6 +96,18 @@ const sections: Section[] = [
       { key: 'websocket_api_key', label: 'WebSocket API Key', type: 'password', hint: 'Used by the frontend to authenticate the real-time WebSocket connection' },
     ],
   },
+  {
+    id: 'follow-up',
+    title: 'Follow-up',
+    description: 'Automatic messages after user delay',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+    fields: [],
+  },
 ]
 
 const emptyForm: IntegrationConfigPayload = {
@@ -366,167 +378,161 @@ export function CognilabsAIIntegrationsPage() {
 
             {/* Fields */}
             <div className="flex-1 min-h-0 overflow-y-auto space-y-3 px-6 py-4">
-              {currentSection.fields.map((field) => {
-                const value = fieldValue(form, field.key)
-                const isSecret = field.type === 'password'
-                const isRevealed = revealedKeys.has(field.key)
-                const hasContent = Boolean(value)
+              {activeSection === 'follow-up' ? (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {(['instagram', 'telegram'] as const).map((channel) => {
+                    const channelState = followUp[channel]
+                    const label = channel === 'instagram' ? 'Instagram' : 'Telegram'
 
-                return (
-                  <div key={field.key}>
-                    <div className="mb-1 flex items-center gap-2">
-                      <label className="text-xs font-semibold text-(--foreground)">
-                        {field.label}
-                      </label>
-                      {field.required ? (
-                        <span className="rounded-md border border-(--blue-border) bg-(--blue-dim) px-1.5 py-0.5 text-[10px] font-semibold text-(--blue-text)">
-                          Required
-                        </span>
-                      ) : null}
-                      {hasContent && !isSecret ? (
-                        <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
-                          Set
-                        </span>
-                      ) : hasContent && isSecret ? (
-                        <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
-                          Configured
-                        </span>
+                    return (
+                      <div key={channel} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-sm font-semibold text-(--foreground)">{label} follow-up</h3>
+                            <p className="mt-0.5 text-xs text-(--muted)">One-time static reminder message.</p>
+                          </div>
+                          <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--muted-strong)">
+                            Enabled
+                            <input
+                              type="checkbox"
+                              checked={channelState.enabled}
+                              onChange={(e) => updateFollowUpField(channel, 'enabled', e.target.checked)}
+                              className="h-4 w-4 rounded border-(--border) bg-(--surface) text-blue-600 focus:ring-blue-500/30 transition-all"
+                            />
+                          </label>
+                        </div>
+
+                        <div className={cn('mt-4 space-y-3 transition-opacity duration-200', !channelState.enabled && 'opacity-40 pointer-events-none')}>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-(--muted-strong)">
+                              Delay (minutes)
+                            </label>
+                            <Input
+                              type="number"
+                              value={channelState.delay_minutes}
+                              onChange={(e) => updateFollowUpField(channel, 'delay_minutes', e.target.value)}
+                              placeholder="e.g. 1440"
+                              className="h-9 w-24 text-sm"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-xs font-semibold text-(--muted-strong)">
+                              Follow-up message
+                            </label>
+                            <Textarea
+                              value={channelState.message}
+                              onChange={(e) => updateFollowUpField(channel, 'message', e.target.value)}
+                              placeholder="Hello! Let us know if you have any questions..."
+                              className="min-h-[100px] text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                currentSection.fields.map((field) => {
+                  const value = fieldValue(form, field.key)
+                  const isSecret = field.type === 'password'
+                  const isRevealed = revealedKeys.has(field.key)
+                  const hasContent = Boolean(value)
+
+                  return (
+                    <div key={field.key}>
+                      <div className="mb-1 flex items-center gap-2">
+                        <label className="text-xs font-semibold text-(--foreground)">
+                          {field.label}
+                        </label>
+                        {field.required ? (
+                          <span className="rounded-md border border-(--blue-border) bg-(--blue-dim) px-1.5 py-0.5 text-[10px] font-semibold text-(--blue-text)">
+                            Required
+                          </span>
+                        ) : null}
+                        {hasContent && !isSecret ? (
+                          <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                            Set
+                          </span>
+                        ) : hasContent && isSecret ? (
+                          <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                            Configured
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {field.type === 'textarea' ? (
+                        <textarea
+                          value={value}
+                          onChange={(e) => updateField(field.key, e.target.value)}
+                          placeholder={field.placeholder}
+                          rows={8}
+                          className="w-full resize-y rounded-xl border border-(--border) bg-(--surface) px-3 py-2.5 text-sm text-(--foreground) placeholder:text-(--muted) focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-shadow"
+                        />
+                      ) : isSecret ? (
+                        <div className="flex gap-2">
+                          <div className="relative flex-1">
+                            <Input
+                              type={isRevealed ? 'text' : 'password'}
+                              value={value}
+                              onChange={(e) => updateField(field.key, e.target.value)}
+                              placeholder={field.placeholder ?? '••••••••••••••••'}
+                              className="w-full font-mono text-sm"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleReveal(field.key)}
+                            className="shrink-0 rounded-xl border border-(--border) bg-(--surface) px-3 text-xs font-semibold text-(--muted) transition hover:bg-(--accent-soft) hover:text-(--foreground)"
+                          >
+                            {isRevealed ? (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" strokeLinecap="round" strokeLinejoin="round" />
+                                <line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round" />
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <Input
+                          value={value}
+                          onChange={(e) => updateField(field.key, e.target.value)}
+                          placeholder={field.placeholder}
+                          className="font-mono text-sm"
+                        />
+                      )}
+
+                      {field.hint ? (
+                        <p className="mt-1.5 flex items-start gap-1 text-xs text-(--muted)">
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60">
+                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                          </svg>
+                          {field.hint}
+                        </p>
                       ) : null}
                     </div>
-
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        value={value}
-                        onChange={(e) => updateField(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        rows={8}
-                        className="w-full resize-y rounded-xl border border-(--border) bg-(--surface) px-3 py-2.5 text-sm text-(--foreground) placeholder:text-(--muted) focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-shadow"
-                      />
-                    ) : isSecret ? (
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Input
-                            type={isRevealed ? 'text' : 'password'}
-                            value={value}
-                            onChange={(e) => updateField(field.key, e.target.value)}
-                            placeholder={field.placeholder ?? '••••••••••••••••'}
-                            className="w-full font-mono text-sm"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => toggleReveal(field.key)}
-                          className="shrink-0 rounded-xl border border-(--border) bg-(--surface) px-3 text-xs font-semibold text-(--muted) transition hover:bg-(--accent-soft) hover:text-(--foreground)"
-                        >
-                          {isRevealed ? (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" strokeLinecap="round" strokeLinejoin="round" />
-                              <line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round" />
-                            </svg>
-                          ) : (
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          )}
-                        </button>
-                      </div>
-                    ) : (
-                      <Input
-                        value={value}
-                        onChange={(e) => updateField(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="font-mono text-sm"
-                      />
-                    )}
-
-                    {field.hint ? (
-                      <p className="mt-1.5 flex items-start gap-1 text-xs text-(--muted)">
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                        </svg>
-                        {field.hint}
-                      </p>
-                    ) : null}
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
 
             {/* Section footer */}
             <div className="flex items-center justify-between border-t border-(--border) bg-(--muted-surface)/40 px-6 py-4 shrink-0">
               <p className="text-xs text-(--muted)">
-                {currentSection.fields.filter((f) => Boolean(fieldValue(form, f.key))).length} of {currentSection.fields.length} fields configured
+                {activeSection === 'follow-up'
+                  ? `${(Object.values(followUp) as FollowUpChannelState[]).filter(s => s.enabled).length} channels enabled`
+                  : `${currentSection.fields.filter((f) => Boolean(fieldValue(form, f.key))).length} of ${currentSection.fields.length} fields configured`
+                }
               </p>
               <Button onClick={() => void handleSave()} disabled={isSaving} size="sm">
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Follow-up */}
-      <div className="mt-6 rounded-xl border border-(--border) bg-(--surface-elevated) overflow-hidden">
-        <div className="border-b border-(--border) px-6 py-5">
-          <h2 className="text-base font-semibold text-(--foreground)">Follow-up</h2>
-          <p className="text-xs text-(--muted)">Global follow-up settings for Instagram and Telegram chats.</p>
-        </div>
-
-        <div className="grid gap-4 px-6 py-5 lg:grid-cols-2">
-          {(['instagram', 'telegram'] as const).map((channel) => {
-            const channelState = followUp[channel]
-            const label = channel === 'instagram' ? 'Instagram' : 'Telegram'
-
-            return (
-              <div key={channel} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-(--foreground)">{label} follow-up</h3>
-                    <p className="mt-0.5 text-xs text-(--muted)">One-time static reminder message.</p>
-                  </div>
-                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--muted-strong)">
-                    <input
-                      type="checkbox"
-                      checked={channelState.enabled}
-                      onChange={(e) => updateFollowUpField(channel, 'enabled', e.target.checked)}
-                      className="h-4 w-4 rounded border-(--border) bg-(--input-surface) text-(--blue-text) focus:ring-(--blue-border)"
-                    />
-                    Enabled
-                  </label>
-                </div>
-
-                <div className={channelState.enabled ? 'mt-4 space-y-4' : 'mt-4 space-y-4 opacity-60'}>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-(--foreground)">Delay in minutes</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      disabled={!channelState.enabled}
-                      value={channelState.delay_minutes}
-                      onChange={(e) => updateFollowUpField(channel, 'delay_minutes', e.target.value)}
-                      placeholder="60"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-(--foreground)">Follow-up message</label>
-                    <Textarea
-                      disabled={!channelState.enabled}
-                      value={channelState.message}
-                      onChange={(e) => updateFollowUpField(channel, 'message', e.target.value)}
-                      placeholder="Assalomu alaykum, yozishganimiz bo'yicha sizga eslatma yuboryapmiz."
-                      rows={5}
-                    />
-                  </div>
-
-                  <p className="text-[11px] leading-5 text-(--muted)">
-                    If enabled, the reminder is sent once after the last non-system message.
-                  </p>
-                </div>
-              </div>
-            )
-          })}
         </div>
       </div>
     </div>
