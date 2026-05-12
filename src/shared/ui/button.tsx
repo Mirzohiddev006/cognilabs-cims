@@ -23,10 +23,10 @@ type ButtonProps = SharedButtonProps & Omit<ButtonHTMLAttributes<HTMLButtonEleme
 
 const variants = {
   primary:
-    'btn-shimmer border border-white/10 bg-white text-black ' +
-    'shadow-[0_1px_2px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.15)] ' +
-    'hover:bg-zinc-100 hover:shadow-[0_4px_12px_rgba(255,255,255,0.10)] ' +
-    'active:bg-zinc-200',
+    'btn-shimmer border border-blue-500/30 bg-blue-600 text-[rgb(255,255,255)] ' +
+    'shadow-[0_1px_2px_rgba(0,0,0,0.20),inset_0_1px_0_rgba(255,255,255,0.12)] ' +
+    'hover:bg-blue-500 hover:shadow-[0_4px_12px_rgba(59,130,246,0.25)] ' +
+    'active:bg-blue-700',
 
   secondary:
     'border border-(--border) bg-(--surface) text-(--foreground) ' +

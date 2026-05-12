@@ -926,6 +926,7 @@ export function CognilabsAIChatPage() {
 
   async function handleSaveFollowUp() {
     if (!selectedConversationId || isSavingFollowUp) return
+    if (!followUpDraft.enabled) return
 
     if (followUpDraft.enabled && followUpDraft.mode === 'custom') {
       const delay = Number(followUpDraft.delay_minutes)
@@ -1199,7 +1200,7 @@ export function CognilabsAIChatPage() {
                     <Button
                       size="sm"
                       onClick={() => void handleSaveFollowUp()}
-                      disabled={isSavingFollowUp}
+                      disabled={isSavingFollowUp || !followUpDraft.enabled}
                       className="h-8 px-3"
                     >
                       {isSavingFollowUp ? 'Saving...' : 'Save follow-up'}
