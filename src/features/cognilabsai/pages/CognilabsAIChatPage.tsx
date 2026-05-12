@@ -45,19 +45,6 @@ function createFollowUpDraft(conv: ConversationItem | null): FollowUpDraft {
   }
 }
 
-function formatDateTime(value: string | null | undefined) {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return date.toLocaleString([], {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 function getFollowUpModeLabel(mode: FollowUpMode | null | undefined) {
   if (mode === 'custom') return 'Custom'
   if (mode === 'global') return 'Global'
@@ -1196,15 +1183,6 @@ export function CognilabsAIChatPage() {
                       <span className="rounded-full border border-(--border) bg-(--card) px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-(--muted)">
                         {followUpStatusLabel}
                       </span>
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-(--muted)">
-                      <span>Enabled: {followUpDraft.enabled ? 'Yes' : 'No'}</span>
-                      <span className="h-1 w-1 rounded-full bg-(--border)" />
-                      <span>Mode: {followUpDraft.enabled ? getFollowUpModeLabel(followUpDraft.mode) : '—'}</span>
-                      <span className="h-1 w-1 rounded-full bg-(--border)" />
-                      <span>Due at: {formatDateTime(selectedConversation?.follow_up_due_at)}</span>
-                      <span className="h-1 w-1 rounded-full bg-(--border)" />
-                      <span>Sent at: {formatDateTime(selectedConversation?.follow_up_sent_at)}</span>
                     </div>
                   </div>
 
