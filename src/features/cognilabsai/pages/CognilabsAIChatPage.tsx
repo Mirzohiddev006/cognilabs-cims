@@ -14,6 +14,7 @@ import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
+import { Textarea } from '../../../shared/ui/textarea'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -25,6 +26,43 @@ import {
 } from '../../../shared/api/services/cognilabsai.service'
 
 type ChannelTab = 'all' | 'instagram' | 'telegram'
+
+type FollowUpMode = 'global' | 'custom'
+
+type FollowUpDraft = {
+  enabled: boolean
+  mode: FollowUpMode
+  delay_minutes: string
+  message: string
+}
+
+function createFollowUpDraft(conv: ConversationItem | null): FollowUpDraft {
+  return {
+    enabled: Boolean(conv?.follow_up_enabled),
+    mode: conv?.follow_up_mode === 'custom' ? 'custom' : 'global',
+    delay_minutes: conv?.follow_up_delay_minutes != null ? String(conv.follow_up_delay_minutes) : '',
+    message: conv?.follow_up_message ?? '',
+  }
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString([], {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function getFollowUpModeLabel(mode: FollowUpMode | null | undefined) {
+  if (mode === 'custom') return 'Custom'
+  if (mode === 'global') return 'Global'
+  return '—'
+}
 
 function getClientName(conv: ConversationItem): string {
   return conv.client_display_name || conv.client_full_name || conv.client_username || `#${conv.id}`
@@ -283,9 +321,12 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
   if (isSystem) {
     return (
       <div className="flex justify-center my-3">
-        <span className="rounded-full bg-[var(--accent-soft)] border border-[var(--border)] px-4 py-1.5 text-[11px] font-medium text-[var(--muted)]">
-          {msg.text}
-        </span>
+        <div className="max-w-[78%] rounded-2xl border border-(--border) bg-(--muted-surface) px-4 py-2 text-center shadow-sm">
+          <div className="mb-1 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-(--caption)">
+            <span className="rounded-full bg-(--accent-soft) px-2 py-0.5 text-[10px] font-bold text-(--muted-strong)">Auto follow-up</span>
+          </div>
+          <p className="whitespace-pre-wrap wrap-break-word text-[12.5px] text-(--foreground)">{msg.text}</p>
+        </div>
       </div>
     )
   }
@@ -319,7 +360,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           </p>
         ) : null}
 
-        <p className="whitespace-pre-wrap break-words" style={{ color: isClient ? 'var(--foreground)' : '#ffffff' }}>{msg.text}</p>
+        <p className="whitespace-pre-wrap wrap-break-word" style={{ color: isClient ? 'var(--foreground)' : '#ffffff' }}>{msg.text}</p>
 
         <div className={cn(
           'flex items-center gap-1 mt-1 opacity-70',
@@ -587,11 +628,13 @@ export function CognilabsAIChatPage() {
   const [messageText, setMessageText] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isTogglingAi, setIsTogglingAi] = useState(false)
+  const [isSavingFollowUp, setIsSavingFollowUp] = useState(false)
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [showNewTelegramModal, setShowNewTelegramModal] = useState(false)
   const [wsKey, setWsKey] = useState<string | null>(null)
   const [showPauseUntil, setShowPauseUntil] = useState(false)
   const [pauseUntilDate, setPauseUntilDate] = useState('')
+  const [followUpDraft, setFollowUpDraft] = useState<FollowUpDraft>(() => createFollowUpDraft(null))
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -651,6 +694,25 @@ export function CognilabsAIChatPage() {
       })
       .catch(() => setMessages([]))
       .finally(() => setIsLoadingMessages(false))
+  }, [selectedConversationId])
+
+  useEffect(() => {
+    if (!selectedConversationId) return
+    let cancelled = false
+
+    cognilabsaiService.getConversation(selectedConversationId)
+      .then((detail) => {
+        if (cancelled) return
+        setConversations((prev) => prev.map((conversation) => (conversation.id === detail.id ? detail : conversation)))
+        setFollowUpDraft(createFollowUpDraft(detail))
+      })
+      .catch(() => {
+        if (!cancelled) setFollowUpDraft(createFollowUpDraft(selectedConversation))
+      })
+
+    return () => {
+      cancelled = true
+    }
   }, [selectedConversationId])
 
   useEffect(() => {
@@ -735,6 +797,9 @@ export function CognilabsAIChatPage() {
             setConversations((prev) =>
               prev.map((c) => (c.id === data.conversation_id ? data.conversation : c)),
             )
+            if (data.conversation_id === selectedConversationIdRef.current) {
+              setFollowUpDraft(createFollowUpDraft(data.conversation))
+            }
           }
         } catch {
           // ignore
@@ -766,7 +831,8 @@ export function CognilabsAIChatPage() {
     setMessageText('')
     setShowPauseUntil(false)
     setPauseUntilDate('')
-  }, [])
+    setFollowUpDraft(createFollowUpDraft(conversations.find((c) => c.id === id) ?? null))
+  }, [conversations])
 
   async function handleDeleteConversation(conv: ConversationItem) {
     const name = getClientName(conv)
@@ -871,10 +937,55 @@ export function CognilabsAIChatPage() {
     }
   }
 
+  async function handleSaveFollowUp() {
+    if (!selectedConversationId || isSavingFollowUp) return
+
+    if (followUpDraft.enabled && followUpDraft.mode === 'custom') {
+      const delay = Number(followUpDraft.delay_minutes)
+      if (!Number.isFinite(delay) || delay <= 0) {
+        showToast({ title: 'Xatolik', description: 'Custom mode uchun delay_minutes 0 dan katta bo‘lishi kerak.', tone: 'error' })
+        return
+      }
+      if (!followUpDraft.message.trim()) {
+        showToast({ title: 'Xatolik', description: 'Custom mode uchun message bo‘sh bo‘lmasligi kerak.', tone: 'error' })
+        return
+      }
+    }
+
+    setIsSavingFollowUp(true)
+    try {
+      const updated = await cognilabsaiService.updateConversationFollowUp(
+        selectedConversationId,
+        followUpDraft.enabled
+          ? followUpDraft.mode === 'custom'
+            ? {
+                enabled: true,
+                mode: 'custom',
+                delay_minutes: Number(followUpDraft.delay_minutes),
+                message: followUpDraft.message.trim(),
+              }
+            : { enabled: true, mode: 'global' }
+          : { enabled: false },
+      )
+
+      setConversations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      setFollowUpDraft(createFollowUpDraft(updated))
+      showToast({ title: 'Follow-up saqlandi', tone: 'success' })
+    } catch (err) {
+      showToast({ title: 'Xatolik', description: getApiErrorMessage(err), tone: 'error' })
+    } finally {
+      setIsSavingFollowUp(false)
+    }
+  }
+
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
   const showChat = selectedConversationId !== null
   const supportsAi = selectedConversation?.supports_ai ?? false
   const aiPaused = selectedConversation?.chat_mode !== 'instagram_ai' || Boolean(selectedConversation?.pause_reason)
+  const followUpModeLabel = getFollowUpModeLabel(selectedConversation?.follow_up_mode as FollowUpMode | null | undefined)
+  const followUpStatusLabel = selectedConversation?.follow_up_enabled
+    ? `${followUpModeLabel}${selectedConversation?.follow_up_sent_at ? ' · Sent' : selectedConversation?.follow_up_due_at ? ' · Pending' : ''}`
+    : 'Disabled'
 
   const tabItems: Array<{ key: ChannelTab; label: string }> = [
     { key: 'all', label: 'Barchasi' },
@@ -1074,6 +1185,90 @@ export function CognilabsAIChatPage() {
                     </Button>
                   )}
                 </div>
+              </div>
+
+              {/* Follow-up */}
+              <div className="shrink-0 px-4 sm:px-6 py-3 bg-(--surface) border-b border-(--border)">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border) bg-(--muted-surface) px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="text-[12px] font-semibold text-(--foreground)">Follow-up</h4>
+                      <span className="rounded-full border border-(--border) bg-(--card) px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-(--muted)">
+                        {followUpStatusLabel}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-(--muted)">
+                      <span>Enabled: {followUpDraft.enabled ? 'Yes' : 'No'}</span>
+                      <span className="h-1 w-1 rounded-full bg-(--border)" />
+                      <span>Mode: {followUpDraft.enabled ? getFollowUpModeLabel(followUpDraft.mode) : '—'}</span>
+                      <span className="h-1 w-1 rounded-full bg-(--border)" />
+                      <span>Due at: {formatDateTime(selectedConversation?.follow_up_due_at)}</span>
+                      <span className="h-1 w-1 rounded-full bg-(--border)" />
+                      <span>Sent at: {formatDateTime(selectedConversation?.follow_up_sent_at)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-2 text-[11px] font-semibold text-(--muted-strong)">
+                      <input
+                        type="checkbox"
+                        checked={followUpDraft.enabled}
+                        onChange={(e) => setFollowUpDraft((prev) => ({ ...prev, enabled: e.target.checked }))}
+                        className="h-4 w-4 rounded border-(--border) bg-(--input-surface) text-blue-600 focus:ring-blue-500/30"
+                      />
+                      Enabled
+                    </label>
+                    <Button
+                      size="sm"
+                      onClick={() => void handleSaveFollowUp()}
+                      disabled={isSavingFollowUp}
+                      className="h-8 px-3"
+                    >
+                      {isSavingFollowUp ? 'Saving...' : 'Save follow-up'}
+                    </Button>
+                  </div>
+                </div>
+
+                {followUpDraft.enabled ? (
+                  <div className="mt-3 grid gap-3 lg:grid-cols-[170px_1fr]">
+                    <div>
+                      <label className="mb-1 block text-[11px] font-semibold text-(--foreground)">Mode</label>
+                      <select
+                        value={followUpDraft.mode}
+                        onChange={(e) => setFollowUpDraft((prev) => ({ ...prev, mode: e.target.value as FollowUpMode }))}
+                        className="h-10 w-full rounded-xl border border-(--border) bg-(--input-surface) px-3 text-[13px] text-(--foreground) outline-none focus:border-blue-500/40"
+                      >
+                        <option value="global">Global</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className={followUpDraft.mode === 'global' ? 'opacity-60' : ''}>
+                        <label className="mb-1 block text-[11px] font-semibold text-(--foreground)">Delay (minutes)</label>
+                        <Input
+                          type="number"
+                          min={1}
+                          disabled={followUpDraft.mode !== 'custom'}
+                          value={followUpDraft.mode === 'custom' ? followUpDraft.delay_minutes : ''}
+                          onChange={(e) => setFollowUpDraft((prev) => ({ ...prev, delay_minutes: e.target.value }))}
+                          placeholder="60"
+                        />
+                      </div>
+
+                      <div className={followUpDraft.mode === 'global' ? 'opacity-60 sm:col-span-2' : 'sm:col-span-2'}>
+                        <label className="mb-1 block text-[11px] font-semibold text-(--foreground)">Message</label>
+                        <Textarea
+                          disabled={followUpDraft.mode !== 'custom'}
+                          value={followUpDraft.mode === 'custom' ? followUpDraft.message : ''}
+                          onChange={(e) => setFollowUpDraft((prev) => ({ ...prev, message: e.target.value }))}
+                          placeholder="Assalomu alaykum, yozishganingiz bo'yicha yana eslatib o'tmoqchi edik."
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </div>
 
               {/* Messages */}

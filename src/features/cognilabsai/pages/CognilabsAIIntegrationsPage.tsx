@@ -6,6 +6,7 @@ import { cn } from '../../../shared/lib/cn'
 import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
+import { Textarea } from '../../../shared/ui/textarea'
 import {
   cognilabsaiService,
   type IntegrationConfigPayload,
@@ -26,6 +27,12 @@ type Section = {
   description: string
   icon: React.ReactNode
   fields: FieldConfig[]
+}
+
+type FollowUpChannelState = {
+  enabled: boolean
+  delay_minutes: string
+  message: string
 }
 
 const sections: Section[] = [
@@ -106,8 +113,14 @@ const emptyForm: IntegrationConfigPayload = {
   frontend_base_url: null,
 }
 
+const emptyFollowUp: Record<'instagram' | 'telegram', FollowUpChannelState> = {
+  instagram: { enabled: false, delay_minutes: '', message: '' },
+  telegram: { enabled: false, delay_minutes: '', message: '' },
+}
+
 function fieldValue(form: IntegrationConfigPayload, key: keyof IntegrationConfigPayload): string {
-  return form[key] ?? ''
+  const value = form[key]
+  return value == null ? '' : String(value)
 }
 
 function hasValue(form: IntegrationConfigPayload, sectionFields: FieldConfig[]) {
@@ -121,6 +134,7 @@ export function CognilabsAIIntegrationsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [activeSection, setActiveSection] = useState(sections[0].id)
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set())
+  const [followUp, setFollowUp] = useState(emptyFollowUp)
 
   const query = useAsyncData(() => cognilabsaiService.getIntegrations(), [], {
     onSuccess: (data) => {
@@ -137,6 +151,18 @@ export function CognilabsAIIntegrationsPage() {
         telegram_session: data.telegram_session ?? null,
         websocket_api_key: data.websocket_api_key ?? null,
         frontend_base_url: data.frontend_base_url ?? null,
+      })
+      setFollowUp({
+        instagram: {
+          enabled: Boolean(data.instagram_followup_enabled),
+          delay_minutes: data.instagram_followup_delay_minutes != null ? String(data.instagram_followup_delay_minutes) : '',
+          message: data.instagram_followup_message ?? '',
+        },
+        telegram: {
+          enabled: Boolean(data.telegram_followup_enabled),
+          delay_minutes: data.telegram_followup_delay_minutes != null ? String(data.telegram_followup_delay_minutes) : '',
+          message: data.telegram_followup_message ?? '',
+        },
       })
     },
   })
@@ -158,7 +184,19 @@ export function CognilabsAIIntegrationsPage() {
     setIsSaving(true)
     setSaveSuccess(false)
     try {
-      await cognilabsaiService.updateIntegrations(form)
+      await cognilabsaiService.updateIntegrations({
+        ...form,
+        instagram_followup_enabled: followUp.instagram.enabled,
+        instagram_followup_delay_minutes: followUp.instagram.enabled && followUp.instagram.delay_minutes.trim()
+          ? Number(followUp.instagram.delay_minutes)
+          : null,
+        instagram_followup_message: followUp.instagram.enabled ? followUp.instagram.message.trim() || null : null,
+        telegram_followup_enabled: followUp.telegram.enabled,
+        telegram_followup_delay_minutes: followUp.telegram.enabled && followUp.telegram.delay_minutes.trim()
+          ? Number(followUp.telegram.delay_minutes)
+          : null,
+        telegram_followup_message: followUp.telegram.enabled ? followUp.telegram.message.trim() || null : null,
+      })
       setSaveSuccess(true)
       showToast({ title: 'Integrations saved', tone: 'success' })
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -167,6 +205,16 @@ export function CognilabsAIIntegrationsPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  function updateFollowUpField(channel: 'instagram' | 'telegram', key: keyof FollowUpChannelState, value: string | boolean) {
+    setFollowUp((prev) => ({
+      ...prev,
+      [channel]: {
+        ...prev[channel],
+        [key]: value,
+      },
+    }))
   }
 
   if (query.isLoading) return <LoadingStateBlock eyebrow="Integrations" title="Loading integration settings..." />
@@ -415,6 +463,70 @@ export function CognilabsAIIntegrationsPage() {
               </Button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Follow-up */}
+      <div className="mt-6 rounded-xl border border-(--border) bg-(--surface-elevated) overflow-hidden">
+        <div className="border-b border-(--border) px-6 py-5">
+          <h2 className="text-base font-semibold text-(--foreground)">Follow-up</h2>
+          <p className="text-xs text-(--muted)">Global follow-up settings for Instagram and Telegram chats.</p>
+        </div>
+
+        <div className="grid gap-4 px-6 py-5 lg:grid-cols-2">
+          {(['instagram', 'telegram'] as const).map((channel) => {
+            const channelState = followUp[channel]
+            const label = channel === 'instagram' ? 'Instagram' : 'Telegram'
+
+            return (
+              <div key={channel} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-(--foreground)">{label} follow-up</h3>
+                    <p className="mt-0.5 text-xs text-(--muted)">One-time static reminder message.</p>
+                  </div>
+                  <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--muted-strong)">
+                    <input
+                      type="checkbox"
+                      checked={channelState.enabled}
+                      onChange={(e) => updateFollowUpField(channel, 'enabled', e.target.checked)}
+                      className="h-4 w-4 rounded border-(--border) bg-(--input-surface) text-(--blue-text) focus:ring-(--blue-border)"
+                    />
+                    Enabled
+                  </label>
+                </div>
+
+                <div className={channelState.enabled ? 'mt-4 space-y-4' : 'mt-4 space-y-4 opacity-60'}>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-(--foreground)">Delay in minutes</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      disabled={!channelState.enabled}
+                      value={channelState.delay_minutes}
+                      onChange={(e) => updateFollowUpField(channel, 'delay_minutes', e.target.value)}
+                      placeholder="60"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-(--foreground)">Follow-up message</label>
+                    <Textarea
+                      disabled={!channelState.enabled}
+                      value={channelState.message}
+                      onChange={(e) => updateFollowUpField(channel, 'message', e.target.value)}
+                      placeholder="Assalomu alaykum, yozishganimiz bo'yicha sizga eslatma yuboryapmiz."
+                      rows={5}
+                    />
+                  </div>
+
+                  <p className="text-[11px] leading-5 text-(--muted)">
+                    If enabled, the reminder is sent once after the last non-system message.
+                  </p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>

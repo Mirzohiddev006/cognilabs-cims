@@ -25,6 +25,12 @@ export type ConversationItem = {
   last_message_preview: string | null
   last_operator_user_id: number | null
   last_operator_name: string | null
+  follow_up_enabled: boolean | null
+  follow_up_mode: 'global' | 'custom' | string | null
+  follow_up_delay_minutes: number | null
+  follow_up_message: string | null
+  follow_up_due_at: string | null
+  follow_up_sent_at: string | null
   is_imported: boolean
   created_at: string
   updated_at: string
@@ -76,12 +82,27 @@ export type IntegrationConfig = {
   telegram_session: string | null
   websocket_api_key: string | null
   frontend_base_url: string | null
+  instagram_followup_enabled?: boolean | null
+  instagram_followup_delay_minutes?: number | null
+  instagram_followup_message?: string | null
+  telegram_followup_enabled?: boolean | null
+  telegram_followup_delay_minutes?: number | null
+  telegram_followup_message?: string | null
   id?: number
   created_at?: string
   updated_at?: string
 }
 
 export type IntegrationConfigPayload = Omit<IntegrationConfig, 'id' | 'created_at' | 'updated_at'>
+
+export type FollowUpMode = 'global' | 'custom'
+
+export type ConversationFollowUpPayload = {
+  enabled: boolean
+  mode?: FollowUpMode
+  delay_minutes?: number | null
+  message?: string | null
+}
 
 export type ImportConversationsResponse = {
   imported_files: number
@@ -152,6 +173,14 @@ export const cognilabsaiService = {
     return request<{ message: string }>({
       path: `/cognilabsai/chat/conversations/${conversationId}/retry-ai`,
       method: 'POST',
+    })
+  },
+
+  updateConversationFollowUp(conversationId: number, payload: ConversationFollowUpPayload) {
+    return request<ConversationItem>({
+      path: `/cognilabsai/chat/conversations/${conversationId}/follow-up`,
+      method: 'PUT',
+      body: payload,
     })
   },
 
