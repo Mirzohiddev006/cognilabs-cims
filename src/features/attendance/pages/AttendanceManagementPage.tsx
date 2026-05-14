@@ -14,6 +14,7 @@ import {
   formatHours,
   formatIsoDate,
   formatTime,
+  mergeEmployeeAttendances,
   type NormalizedEmployeeAttendance,
   statusVariant,
 } from '../lib/attendance-normalizers'
@@ -86,22 +87,51 @@ export function AttendanceManagementPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<NormalizedEmployeeAttendance | null>(null)
 
   const monthlyQuery = useAsyncData(
-    () => attendanceService.getPublicUsers({
-      year: date.year,
-      month: date.month,
-      page_size: 200,
-      include_empty: true,
-    }).then(extractEmployeeAttendances),
+    async () => {
+      try {
+        const result = await attendanceService.getPublicUsers({
+          year: date.year,
+          month: date.month,
+          page_size: 200,
+          include_empty: true,
+        })
+        return extractEmployeeAttendances(result)
+      } catch {
+        // fallback: internal API (port 8000)
+        const [summaryResult, officeTimeResult] = await Promise.allSettled([
+          attendanceService.getMonthlySummary(date.year, date.month),
+          attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month),
+        ])
+        if (summaryResult.status === 'rejected' && officeTimeResult.status === 'rejected') {
+          throw summaryResult.reason ?? officeTimeResult.reason
+        }
+        const summaryItems = summaryResult.status === 'fulfilled' ? extractEmployeeAttendances(summaryResult.value) : []
+        const officeItems = officeTimeResult.status === 'fulfilled' ? extractEmployeeAttendances(officeTimeResult.value) : []
+        return mergeEmployeeAttendances(summaryItems, officeItems)
+      }
+    },
     [date.year, date.month],
   )
 
   const dailyQuery = useAsyncData(
-    () => attendanceService.getPublicUsers({
-      date_from: selectedDate,
-      date_to: selectedDate,
-      page_size: 200,
-      include_empty: true,
-    }),
+    async () => {
+      try {
+        return await attendanceService.getPublicUsers({
+          date_from: selectedDate,
+          date_to: selectedDate,
+          page_size: 200,
+          include_empty: true,
+        })
+      } catch {
+        // fallback: internal daily-records API
+        return attendanceService.getDailyRecords({
+          date_from: selectedDate,
+          date_to: selectedDate,
+          page: 1,
+          page_size: 200,
+        })
+      }
+    },
     [selectedDate, view],
     { enabled: view === 'daily' },
   )
