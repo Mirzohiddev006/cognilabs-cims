@@ -1,6 +1,6 @@
 const fallbackApiBaseUrl = 'https://api.project.cims.cognilabs.org/'
 const fallbackWebsiteStatsApiBaseUrl = fallbackApiBaseUrl
-const fallbackAttendancePublicApiUrl = 'http://127.0.0.1:8008/api'
+const fallbackAttendancePublicApiUrl = 'https://dedicatedly-preliterate-jose.ngrok-free.app/api'
 
 export const env = {
   appName: import.meta.env.VITE_APP_NAME || 'Cognilabs CIMS',
