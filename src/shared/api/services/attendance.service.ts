@@ -1,3 +1,4 @@
+import { env } from '../../config/env'
 import { request } from '../http'
 
 export type AttendanceRecord = {
@@ -183,4 +184,106 @@ export const attendanceService = {
       body: data,
     })
   },
+
+  // --- Public Attendance API (port 8008) ---
+
+  getPublicUsers(params: {
+    date_from?: string
+    date_to?: string
+    year?: number
+    month?: number
+    day?: number
+    status?: string
+    department?: string
+    search?: string
+    is_active?: boolean
+    include_empty?: boolean
+    page?: number
+    page_size?: number
+  }) {
+    return request<PublicAttendanceResponse>({
+      path: `${env.attendancePublicApiUrl}/attendance/users/`,
+      query: params as Record<string, string | number | boolean | undefined | null>,
+      auth: false,
+      headers: { 'X-Attendance-Key': env.attendanceApiKey },
+    })
+  },
+
+  getPublicUser(
+    userId: string | number,
+    params: {
+      date_from?: string
+      date_to?: string
+      year?: number
+      month?: number
+      day?: number
+      status?: string
+      page?: number
+      page_size?: number
+    },
+  ) {
+    return request<PublicAttendanceResponse>({
+      path: `${env.attendancePublicApiUrl}/attendance/users/${userId}/`,
+      query: params as Record<string, string | number | boolean | undefined | null>,
+      auth: false,
+      headers: { 'X-Attendance-Key': env.attendanceApiKey },
+    })
+  },
+}
+
+export type PublicAttendanceRecord = {
+  session_id: number
+  session_date: string
+  shift_name: string | null
+  status: string
+  came_at: string | null
+  gone_at: string | null
+  came_event_id: number | null
+  gone_event_id: number | null
+  worked_minutes: number
+  worked_hours_decimal: number
+  worked_hours_display: string
+  is_sent_to_api: boolean
+  sent_at: string | null
+  send_error: string | null
+}
+
+export type PublicAttendanceSummary = {
+  session_count: number
+  worked_days: number
+  complete_days: number
+  total_work_minutes: number
+  total_work_hours_decimal: number
+  total_work_hours_display: string
+}
+
+export type PublicAttendanceEmployee = {
+  user_id: string
+  attendance_user_id: number
+  name: string
+  email: string
+  department: string
+  position: string
+  is_active: boolean
+  summary: PublicAttendanceSummary
+  attendance_records: PublicAttendanceRecord[]
+}
+
+export type PublicAttendanceMeta = {
+  timezone: string
+  filters: Record<string, unknown>
+  employee_count: number
+  session_count: number
+  total_work_minutes: number
+  total_work_hours_decimal: number
+  total_work_hours_display: string
+  page: number
+  page_size: number
+  total_count: number
+  total_pages: number
+}
+
+export type PublicAttendanceResponse = {
+  meta: PublicAttendanceMeta
+  employees: PublicAttendanceEmployee[]
 }

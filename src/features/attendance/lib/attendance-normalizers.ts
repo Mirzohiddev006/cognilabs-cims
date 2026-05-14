@@ -106,8 +106,8 @@ export function normalizeDay(raw: unknown): NormalizedDay {
       ['worked_hours', 'worked_hours_decimal', 'hours', 'total_hours'],
       ['duration_minutes', 'worked_minutes', 'total_minutes'],
     ) || workedMinutes / 60
-  const checkIn = resolveStr(day, 'check_in_time', 'check_in') || null
-  const checkOut = resolveStr(day, 'check_out_time', 'check_out') || null
+  const checkIn = resolveStr(day, 'check_in_time', 'check_in', 'came_at') || null
+  const checkOut = resolveStr(day, 'check_out_time', 'check_out', 'gone_at') || null
   const status = (checkIn ? 'present' : resolveStr(day, 'status')) || 'absent'
   const isComplete =
     Boolean(day.is_complete) ||
@@ -115,7 +115,7 @@ export function normalizeDay(raw: unknown): NormalizedDay {
     status === 'complete'
 
   return {
-    date: resolveStr(day, 'date', 'attendance_date'),
+    date: resolveStr(day, 'date', 'attendance_date', 'session_date'),
     weekday: resolveStr(day, 'weekday') || weekdayFromDate(resolveStr(day, 'date', 'attendance_date')),
     checkIn,
     checkOut,
@@ -213,10 +213,12 @@ export function normalizeEmployeeAttendance(raw: unknown): NormalizedEmployeeAtt
   const monthlyStats =
     (employee.monthly_stats && typeof employee.monthly_stats === 'object'
       ? employee.monthly_stats
-      : {}) as Record<string, unknown>
+      : employee.summary && typeof employee.summary === 'object'
+        ? employee.summary
+        : {}) as Record<string, unknown>
 
   const employeeId =
-    resolveNum(employee, 'employee_id', 'id', 'user_id') ||
+    resolveNum(employee, 'employee_id', 'attendance_user_id', 'id', 'user_id') ||
     resolveNum(employeeInfo, 'id', 'employee_id')
 
   const fullName =
@@ -226,10 +228,14 @@ export function normalizeEmployeeAttendance(raw: unknown): NormalizedEmployeeAtt
     `Employee #${employeeId || '?'}`
 
   const role =
-    resolveStr(employee, 'role', 'role_name', 'job_title') ||
-    resolveStr(employeeInfo, 'role', 'role_name', 'job_title')
+    resolveStr(employee, 'role', 'role_name', 'job_title', 'position') ||
+    resolveStr(employeeInfo, 'role', 'role_name', 'job_title', 'position')
 
-  const rootDays = Array.isArray(employee.days) ? (employee.days as unknown[]).map(normalizeDay) : []
+  const rootDays = Array.isArray(employee.days)
+    ? (employee.days as unknown[]).map(normalizeDay)
+    : Array.isArray(employee.attendance_records)
+      ? (employee.attendance_records as unknown[]).map(normalizeDay)
+      : []
   const weeklyStats = Array.isArray(employee.weekly_stats) ? (employee.weekly_stats as unknown[]) : []
   const days = sortDays(
     rootDays.length > 0
@@ -246,19 +252,19 @@ export function normalizeEmployeeAttendance(raw: unknown): NormalizedEmployeeAtt
       : buildWeeksFromDays(days)
 
   const totalWorkedMinutes =
-    resolveMinutes(monthlyStats, ['total_minutes', 'worked_minutes'], ['total_hours', 'worked_hours', 'worked_hours_decimal']) ||
+    resolveMinutes(monthlyStats, ['total_minutes', 'worked_minutes', 'total_work_minutes'], ['total_hours', 'worked_hours', 'worked_hours_decimal', 'total_work_hours_decimal']) ||
     resolveMinutes(employee, ['total_minutes', 'worked_minutes'], ['total_worked_hours', 'total_hours', 'worked_hours_decimal']) ||
     days.reduce((sum, day) => sum + day.workedMinutes, 0)
   const totalWorkedHours =
-    resolveHours(monthlyStats, ['total_hours', 'worked_hours', 'worked_hours_decimal'], ['total_minutes', 'worked_minutes']) ||
+    resolveHours(monthlyStats, ['total_hours', 'worked_hours', 'worked_hours_decimal', 'total_work_hours_decimal'], ['total_minutes', 'worked_minutes', 'total_work_minutes']) ||
     resolveHours(employee, ['total_worked_hours', 'total_hours', 'worked_hours_decimal'], ['total_minutes', 'worked_minutes']) ||
     totalWorkedMinutes / 60
   const daysPresent =
-    resolveNum(monthlyStats, 'days_present') ||
+    resolveNum(monthlyStats, 'days_present', 'worked_days') ||
     resolveNum(employee, 'days_present') ||
     days.filter(day => day.status.toLowerCase() === 'present' || day.workedMinutes > 0).length
   const daysComplete =
-    resolveNum(monthlyStats, 'days_complete') ||
+    resolveNum(monthlyStats, 'days_complete', 'complete_days') ||
     resolveNum(employee, 'days_complete') ||
     days.filter(day => day.isComplete).length
   const latestDay = days.length > 0 ? days[days.length - 1] : null

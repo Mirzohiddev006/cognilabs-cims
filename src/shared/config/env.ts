@@ -1,6 +1,6 @@
 const fallbackApiBaseUrl = 'https://api.project.cims.cognilabs.org/'
 const fallbackWebsiteStatsApiBaseUrl = fallbackApiBaseUrl
-
+const fallbackAttendancePublicApiUrl = 'http://127.0.0.1:8008/api'
 
 export const env = {
   appName: import.meta.env.VITE_APP_NAME || 'Cognilabs CIMS',
@@ -10,4 +10,6 @@ export const env = {
     import.meta.env.VITE_API_BASE_URL ||
     fallbackWebsiteStatsApiBaseUrl,
   appEnv: import.meta.env.VITE_APP_ENV || 'development',
+  attendancePublicApiUrl: import.meta.env.VITE_ATTENDANCE_PUBLIC_API_URL || fallbackAttendancePublicApiUrl,
+  attendanceApiKey: import.meta.env.VITE_ATTENDANCE_API_KEY || '',
 } as const

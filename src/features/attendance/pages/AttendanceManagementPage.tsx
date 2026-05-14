@@ -14,7 +14,6 @@ import {
   formatHours,
   formatIsoDate,
   formatTime,
-  mergeEmployeeAttendances,
   type NormalizedEmployeeAttendance,
   statusVariant,
 } from '../lib/attendance-normalizers'
@@ -56,46 +55,6 @@ function buildInitialDailyDate(year: number, month: number) {
   return buildMonthDate(year, month, 1)
 }
 
-function mergeDailyRows(
-  employees: NormalizedEmployeeAttendance[],
-  items: unknown,
-): DailyListItem[] {
-  const records = Array.isArray((items as { items?: unknown[] } | null)?.items)
-    ? ((items as { items: unknown[] }).items)
-    : []
-
-  const recordMap = new Map<number, DailyListItem>()
-
-  for (const record of records) {
-    const employee = extractEmployeeAttendances([{ days: [record], ...(record as Record<string, unknown>) }])[0]
-    if (!employee) continue
-
-    const day = employee.days[0]
-    recordMap.set(employee.employeeId, {
-      employeeId: employee.employeeId,
-      fullName: employee.fullName,
-      role: employee.role,
-      status: day?.status ?? employee.latestStatus,
-      checkIn: day?.checkIn ?? null,
-      checkOut: day?.checkOut ?? null,
-      workedHours: day?.workedHours ?? 0,
-    })
-  }
-
-  return employees
-    .map(employee => {
-      const record = recordMap.get(employee.employeeId)
-      return {
-        employeeId: employee.employeeId,
-        fullName: employee.fullName,
-        role: employee.role,
-        status: record?.status ?? 'no_record',
-        checkIn: record?.checkIn ?? null,
-        checkOut: record?.checkOut ?? null,
-        workedHours: record?.workedHours ?? 0,
-      }
-    })
-}
 
 function SegmentButton({
   active,
@@ -136,34 +95,21 @@ export function AttendanceManagementPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<NormalizedEmployeeAttendance | null>(null)
 
   const monthlyQuery = useAsyncData(
-    async () => {
-      const [summaryResult, officeTimeResult] = await Promise.allSettled([
-        attendanceService.getMonthlySummary(date.year, date.month),
-        attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month),
-      ])
-
-      const summaryItems = summaryResult.status === 'fulfilled'
-        ? extractEmployeeAttendances(summaryResult.value)
-        : []
-      const officeItems = officeTimeResult.status === 'fulfilled'
-        ? extractEmployeeAttendances(officeTimeResult.value)
-        : []
-
-      if (summaryResult.status === 'rejected' && officeTimeResult.status === 'rejected') {
-        throw summaryResult.reason ?? officeTimeResult.reason
-      }
-
-      return mergeEmployeeAttendances(summaryItems, officeItems)
-    },
+    () => attendanceService.getPublicUsers({
+      year: date.year,
+      month: date.month,
+      page_size: 200,
+      include_empty: true,
+    }).then(extractEmployeeAttendances),
     [date.year, date.month],
   )
 
   const dailyQuery = useAsyncData(
-    () => attendanceService.getDailyRecords({
+    () => attendanceService.getPublicUsers({
       date_from: selectedDate,
       date_to: selectedDate,
-      page: 1,
       page_size: 200,
+      include_empty: true,
     }),
     [selectedDate, view],
     { enabled: view === 'daily' },
@@ -206,10 +152,23 @@ export function AttendanceManagementPage() {
       .sort((a, b) => (b.week?.workedHours ?? 0) - (a.week?.workedHours ?? 0))
   }, [effectiveSelectedWeek, filteredEmployees])
 
-  const dailyRows = useMemo(
-    () => mergeDailyRows(filteredEmployees, dailyQuery.data),
-    [dailyQuery.data, filteredEmployees],
-  )
+  const dailyRows = useMemo(() => {
+    const source = dailyQuery.data
+      ? extractEmployeeAttendances(dailyQuery.data).filter(emp =>
+          emp.fullName.toLowerCase().includes(search.toLowerCase()),
+        )
+      : filteredEmployees
+
+    return source.map(emp => ({
+      employeeId: emp.employeeId,
+      fullName: emp.fullName,
+      role: emp.role,
+      status: emp.latestStatus,
+      checkIn: emp.latestCheckIn,
+      checkOut: emp.latestCheckOut,
+      workedHours: emp.totalWorkedHours,
+    }))
+  }, [dailyQuery.data, filteredEmployees, search])
 
   const updateMonth = (year: number, month: number) => {
     setDate({ year, month })
