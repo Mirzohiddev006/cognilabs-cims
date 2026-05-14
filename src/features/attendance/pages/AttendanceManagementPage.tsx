@@ -20,15 +20,6 @@ import {
 
 type ViewMode = 'monthly' | 'weekly' | 'daily'
 
-type DailyListItem = {
-  employeeId: number
-  fullName: string
-  role: string
-  status: string
-  checkIn: string | null
-  checkOut: string | null
-  workedHours: number
-}
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
