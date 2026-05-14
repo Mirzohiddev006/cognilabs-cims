@@ -15,6 +15,7 @@ import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
+import { SelectField } from '../../../shared/ui/select-field'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import {
@@ -332,7 +333,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           'relative max-w-[75%] sm:max-w-[62%] px-3.5 py-2 text-[13.5px] leading-relaxed shadow-sm',
           isClient
             ? 'bg-[var(--surface-elevated)] text-[var(--foreground)] border border-[var(--border)] rounded-xl rounded-bl-sm'
-            : 'bg-white text-[var(--foreground)] border border-[var(--border)] rounded-xl rounded-br-sm',
+            : 'bg-[var(--surface-elevated)] text-[var(--foreground)] border border-[var(--border)] rounded-xl rounded-br-sm',
           isNextSameSender && (isClient ? 'rounded-bl-sm' : 'rounded-br-sm')
         )}
       >
@@ -1212,14 +1213,15 @@ export function CognilabsAIChatPage() {
                   <div className="mt-3 grid gap-3 lg:grid-cols-[170px_1fr]">
                     <div>
                       <label className="mb-1 block text-[11px] font-semibold text-(--foreground)">Mode</label>
-                      <select
+                      <SelectField
                         value={followUpDraft.mode}
-                        onChange={(e) => setFollowUpDraft((prev) => ({ ...prev, mode: e.target.value as FollowUpMode }))}
-                        className="h-10 w-full rounded-xl border border-(--border) bg-(--input-surface) px-3 text-[13px] text-(--foreground) outline-none focus:border-blue-500/40"
-                      >
-                        <option value="global">Global</option>
-                        <option value="custom">Custom</option>
-                      </select>
+                        onValueChange={(value) => setFollowUpDraft((prev) => ({ ...prev, mode: value as FollowUpMode }))}
+                        options={[
+                          { value: 'global', label: 'Global' },
+                          { value: 'custom', label: 'Custom' },
+                        ]}
+                        className="h-10"
+                      />
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">

@@ -181,7 +181,7 @@ export function AttendanceManagementPage() {
     for (const employee of employees) {
       for (const week of employee.weeks) {
         if (!map.has(week.weekNumber)) {
-          map.set(week.weekNumber, { number: week.weekNumber, label: week.label || t('attendance.week', 'Week {number}', { number: week.weekNumber }) })
+          map.set(week.weekNumber, { number: week.weekNumber, label: week.label || t('attendance.week', 'Week {{number}}', { number: week.weekNumber }) })
         }
       }
     }
@@ -404,7 +404,7 @@ export function AttendanceManagementPage() {
             ) : (
               <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
                 <div className="border-b border-[var(--border)] px-6 py-4">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.daily_attendance_for', 'Daily attendance for {date}', { date: selectedDate })}</p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.daily_attendance_for', 'Daily attendance for {{date}}', { date: selectedDate })}</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
@@ -451,8 +451,8 @@ export function AttendanceManagementPage() {
         <Modal
           open
           onClose={() => setSelectedEmployee(null)}
-          title={t('attendance.modal.title', '{name} - Attendance', { name: selectedEmployee.fullName })}
-          description={t('attendance.modal.description', '{month} {year} - Weekly and daily breakdown', { month: MONTHS[date.month - 1], year: date.year })}
+          title={t('attendance.modal.title', '{{name}} - Attendance', { name: selectedEmployee.fullName })}
+          description={t('attendance.modal.description', '{{month}} {{year}} - Weekly and daily breakdown', { month: MONTHS[date.month - 1], year: date.year })}
           size="xl"
         >
           <div className="space-y-4">
@@ -481,7 +481,7 @@ export function AttendanceManagementPage() {
                     <Card key={`${week.weekNumber}-${week.dateFrom}`} className="rounded-xl px-4 py-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-[var(--foreground)]">{week.label || t('attendance.week', 'Week {number}', { number: week.weekNumber })}</p>
+                          <p className="text-sm font-semibold text-[var(--foreground)]">{week.label || t('attendance.week', 'Week {{number}}', { number: week.weekNumber })}</p>
                           <p className="text-xs text-[var(--muted-strong)]">{week.dateFrom && week.dateTo ? `${week.dateFrom} - ${week.dateTo}` : t('attendance.weekly_summary', 'Weekly summary')}</p>
                         </div>
                         <Badge variant="blue">{formatHours(week.workedHours)}</Badge>
