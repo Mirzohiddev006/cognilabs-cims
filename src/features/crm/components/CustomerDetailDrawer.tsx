@@ -11,6 +11,7 @@ import {
   getCustomerDisplayPlatform,
 } from '../../../shared/lib/customer-display'
 import { formatNumericDate, formatNumericDateTime } from '../../../shared/lib/format'
+import { useAuth } from '../../auth/hooks/useAuth'
 import { Badge, StatusBadge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
@@ -121,6 +122,7 @@ export function CustomerDetailContent({
 }) {
   const { t } = useTranslation()
   const { showToast } = useToast()
+  const { user: currentUser } = useAuth()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
 
@@ -352,7 +354,7 @@ export function CustomerDetailContent({
                         <p className="whitespace-pre-wrap text-sm text-[var(--foreground)]">{note.note}</p>
                         <div className="mt-2 flex items-center justify-between">
                           <p className="text-[10px] text-[var(--muted-strong)]">
-                            {note.created_by_full_name} {note.created_at ? `• ${formatNumericDateTime(note.created_at)}` : ''}
+                            {note.isAi ? note.created_by_full_name : (currentUser && note.created_by === currentUser.id ? `${currentUser.name} ${currentUser.surname}` : note.created_by_full_name)} {note.created_at ? `• ${formatNumericDateTime(note.created_at)}` : ''}
                           </p>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                             {note.isAi ? null : editingEnabled ? (
