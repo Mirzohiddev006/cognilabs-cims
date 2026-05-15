@@ -375,7 +375,7 @@ export function CustomerDetailContent({
                             {note.isAi ? note.created_by_full_name : (currentUser && note.created_by === currentUser.id ? `${currentUser.name} ${currentUser.surname}` : note.created_by_full_name)} {note.created_at ? `• ${formatNumericDateTime(note.created_at)}` : ''}
                           </p>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
-                            {note.isAi ? null : editingEnabled ? (
+                            {note.isAi ? null : (
                               <>
                                 <button
                                   onClick={() => handleDeleteNote(note.id as number)}
@@ -397,7 +397,7 @@ export function CustomerDetailContent({
                                   </svg>
                                 </button>
                               </>
-                            ) : null}
+                            )}
                           </div>
                         </div>
                       </>

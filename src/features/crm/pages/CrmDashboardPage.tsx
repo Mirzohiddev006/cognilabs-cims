@@ -1088,7 +1088,6 @@ export function CrmDashboardPage() {
         mode={modalMode}
         values={formValues}
         statusOptions={statusOptions.map((item) => ({ value: item.value, label: item.label }))}
-        audioFileName={audioFile?.name ?? selectedCustomer?.audio_file_id ?? null}
         onClose={() => setIsFormOpen(false)}
         onChange={(field, value) =>
           setFormValues((current: CustomerFormValues) => ({

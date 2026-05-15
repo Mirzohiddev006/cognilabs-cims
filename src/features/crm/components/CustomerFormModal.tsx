@@ -28,7 +28,6 @@ type CustomerFormModalProps = {
   mode: 'create' | 'edit'
   values: CustomerFormValues
   statusOptions: StatusOption[]
-  audioFileName?: string | null
   onClose: () => void
   onChange: (field: keyof CustomerFormValues, value: string | boolean) => void
   onFileChange: (file: File | null) => void
@@ -41,7 +40,6 @@ export function CustomerFormModal({
   mode,
   values,
   statusOptions,
-  audioFileName,
   onClose,
   onChange,
   onFileChange,
