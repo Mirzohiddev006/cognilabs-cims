@@ -3,7 +3,6 @@ import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Modal } from '../../../shared/ui/modal'
 import { SelectField } from '../../../shared/ui/select-field'
-import { Textarea } from '../../../shared/ui/textarea'
 
 export type CustomerFormValues = {
   full_name: string
@@ -156,11 +155,6 @@ export function CustomerFormModal({
           ) : null}
         </label>
       </div>
-
-      <label className="mt-4 grid gap-2">
-        <span className="text-xs font-medium text-[var(--foreground)]">{t('common.notes', 'Notes')}</span>
-        <Textarea value={values.notes} onChange={(event) => onChange('notes', event.target.value)} />
-      </label>
 
       <label className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]">
         <input
