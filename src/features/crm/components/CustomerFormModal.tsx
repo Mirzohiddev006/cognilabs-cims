@@ -148,11 +148,6 @@ export function CustomerFormModal({
             className="block min-h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-3 py-2 text-xs text-[var(--muted-strong)] shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]"
             onChange={(event) => onFileChange(event.target.files?.[0] ?? null)}
           />
-          {audioFileName ? (
-            <span className="text-xs text-[var(--muted)]">
-              {t('customers.form.audio_current', 'Current file: {{name}}', { name: audioFileName })}
-            </span>
-          ) : null}
         </label>
       </div>
 

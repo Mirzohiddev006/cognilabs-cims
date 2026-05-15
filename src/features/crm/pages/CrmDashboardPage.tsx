@@ -439,8 +439,18 @@ export function CrmDashboardPage() {
     { enabled: Boolean(periodReportPeriodKey) },
   )
 
+  const statusFilterQuery = useAsyncData(
+    () => crmService.filterByStatus(statusFilter),
+    [statusFilter],
+    { enabled: Boolean(statusFilter) && !selectedPeriod },
+  )
+
   const periodCustomers = periodReportQuery.data?.customers
-  const customers = selectedPeriod && periodCustomers ? periodCustomers : (dashboardQuery.data?.customers ?? emptyCustomers)
+  const customers = selectedPeriod && periodCustomers
+    ? periodCustomers
+    : statusFilter && statusFilterQuery.data
+      ? statusFilterQuery.data
+      : (dashboardQuery.data?.customers ?? emptyCustomers)
   const statusOptions = statusesQuery.data ?? emptyStatuses
 
   const periodSummaryBucket = useMemo(() => {
@@ -525,6 +535,7 @@ export function CrmDashboardPage() {
       summaryQuery.refetch(),
       statusSummaryQuery.refetch(),
       ...(selectedPeriod ? [periodReportQuery.refetch()] : []),
+      ...(statusFilter && !selectedPeriod ? [statusFilterQuery.refetch()] : []),
     ])
   }
 
@@ -921,6 +932,13 @@ export function CrmDashboardPage() {
             isSidebarCollapsed ? 'px-2 xl:px-3' : 'px-0',
           )}
         >
+          {statusFilterQuery.isLoading ? (
+            <LoadingStateBlock
+              eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+              title={t('customers.loading.dashboard.title', 'CRM dashboard loading')}
+              description={t('customers.loading.dashboard.description', 'Retrieving customers and summary statistics.')}
+            />
+          ) : null}
           <DataTable
             key={`crm-table-${pageSizeValue}`}
             caption={t('customers.table.caption', 'CRM customers table')}
