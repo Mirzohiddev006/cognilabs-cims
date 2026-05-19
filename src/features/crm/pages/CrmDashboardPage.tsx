@@ -1087,7 +1087,14 @@ export function CrmDashboardPage() {
         open={isFormOpen}
         mode={modalMode}
         values={formValues}
-        statusOptions={statusOptions.map((item) => ({ value: item.value, label: item.label }))}
+        statusOptions={[
+          { value: 'contacted', label: t('status.contacted', 'Contacted') },
+          { value: 'project_started', label: t('status.project_started', 'Project Started') },
+          { value: 'continuing', label: t('status.continuing', 'Continuing') },
+          { value: 'finished', label: t('status.finished', 'Finished') },
+          { value: 'rejected', label: t('status.rejected', 'Rejected') },
+          { value: 'need_to_call', label: t('status.need_to_call', 'Need to Call') },
+        ]}
         onClose={() => setIsFormOpen(false)}
         onChange={(field, value) =>
           setFormValues((current: CustomerFormValues) => ({
