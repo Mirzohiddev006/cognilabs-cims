@@ -120,7 +120,7 @@ async function performRequest<T>(
     })
   }
 
-  if (method === 'GET') {
+  if (method === 'GET' && auth !== false) {
     requestHeaders.set('Cache-Control', 'no-cache, no-store, must-revalidate')
     requestHeaders.set('Pragma', 'no-cache')
     requestHeaders.set('Expires', '0')
