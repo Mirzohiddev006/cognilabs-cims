@@ -260,14 +260,15 @@ function buildStatusFilterOptions(
 
   const registerOption = (rawValue?: string | null, rawLabel?: string | null) => {
     const label = (rawLabel ?? rawValue ?? '').trim()
-    const normalizedValue = normalizeStatusKey(rawValue ?? rawLabel ?? '')
+    const originalValue = (rawValue ?? '').trim()
+    const normalizedKey = normalizeStatusKey(originalValue || rawLabel || '')
 
-    if (!label || !normalizedValue || optionsByKey.has(normalizedValue)) {
+    if (!label || !normalizedKey || optionsByKey.has(normalizedKey)) {
       return
     }
 
-    optionsByKey.set(normalizedValue, {
-      value: normalizedValue,
+    optionsByKey.set(normalizedKey, {
+      value: originalValue || normalizedKey,
       label,
     })
   }
