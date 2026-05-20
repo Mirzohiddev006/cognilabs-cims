@@ -35,6 +35,6 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['uncanonical-chantelle-winningly.ngrok-free.dev'],
+    allowedHosts: ['essentially-stop-bunny-miami.trycloudflare.com'],
   },
 })
