@@ -205,6 +205,7 @@ export const attendanceService = {
       path: `${env.attendancePublicApiUrl}/attendance/users/`,
       query: params as Record<string, string | number | boolean | undefined | null>,
       auth: false,
+      headers: { 'X-Attendance-Key': env.attendanceApiKey },
     })
   },
 
@@ -225,6 +226,7 @@ export const attendanceService = {
       path: `${env.attendancePublicApiUrl}/attendance/users/${userId}/`,
       query: params as Record<string, string | number | boolean | undefined | null>,
       auth: false,
+      headers: { 'X-Attendance-Key': env.attendanceApiKey },
     })
   },
 }
