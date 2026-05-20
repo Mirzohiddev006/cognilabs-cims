@@ -35,6 +35,13 @@ type FollowUpChannelState = {
   message: string
 }
 
+type DefaultFollowUpStep = {
+  delay_minutes: string
+  message: string
+}
+
+const emptyDefaultStep: DefaultFollowUpStep = { delay_minutes: '', message: '' }
+
 const sections: Section[] = [
   {
     id: 'openai',
@@ -147,6 +154,11 @@ export function CognilabsAIIntegrationsPage() {
   const [activeSection, setActiveSection] = useState(sections[0].id)
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set())
   const [followUp, setFollowUp] = useState(emptyFollowUp)
+  const [instagramDefaultSteps, setInstagramDefaultSteps] = useState<[DefaultFollowUpStep, DefaultFollowUpStep, DefaultFollowUpStep]>([
+    { ...emptyDefaultStep },
+    { ...emptyDefaultStep },
+    { ...emptyDefaultStep },
+  ])
 
   const query = useAsyncData(() => cognilabsaiService.getIntegrations(), [], {
     onSuccess: (data) => {
@@ -176,6 +188,20 @@ export function CognilabsAIIntegrationsPage() {
           message: data.telegram_followup_message ?? '',
         },
       })
+      setInstagramDefaultSteps([
+        {
+          delay_minutes: data.instagram_default_followup_step1_delay_minutes != null ? String(data.instagram_default_followup_step1_delay_minutes) : '',
+          message: data.instagram_default_followup_step1_message ?? '',
+        },
+        {
+          delay_minutes: data.instagram_default_followup_step2_delay_minutes != null ? String(data.instagram_default_followup_step2_delay_minutes) : '',
+          message: data.instagram_default_followup_step2_message ?? '',
+        },
+        {
+          delay_minutes: data.instagram_default_followup_step3_delay_minutes != null ? String(data.instagram_default_followup_step3_delay_minutes) : '',
+          message: data.instagram_default_followup_step3_message ?? '',
+        },
+      ])
     },
   })
 
@@ -208,6 +234,12 @@ export function CognilabsAIIntegrationsPage() {
           ? Number(followUp.telegram.delay_minutes)
           : null,
         telegram_followup_message: followUp.telegram.enabled ? followUp.telegram.message.trim() || null : null,
+        instagram_default_followup_step1_delay_minutes: instagramDefaultSteps[0].delay_minutes.trim() ? Number(instagramDefaultSteps[0].delay_minutes) : null,
+        instagram_default_followup_step1_message: instagramDefaultSteps[0].message.trim() || null,
+        instagram_default_followup_step2_delay_minutes: instagramDefaultSteps[1].delay_minutes.trim() ? Number(instagramDefaultSteps[1].delay_minutes) : null,
+        instagram_default_followup_step2_message: instagramDefaultSteps[1].message.trim() || null,
+        instagram_default_followup_step3_delay_minutes: instagramDefaultSteps[2].delay_minutes.trim() ? Number(instagramDefaultSteps[2].delay_minutes) : null,
+        instagram_default_followup_step3_message: instagramDefaultSteps[2].message.trim() || null,
       })
       setSaveSuccess(true)
       showToast({ title: 'Integrations saved', tone: 'success' })
@@ -217,6 +249,14 @@ export function CognilabsAIIntegrationsPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  function updateDefaultStep(index: 0 | 1 | 2, key: keyof DefaultFollowUpStep, value: string) {
+    setInstagramDefaultSteps((prev) => {
+      const next = [...prev] as [DefaultFollowUpStep, DefaultFollowUpStep, DefaultFollowUpStep]
+      next[index] = { ...next[index], [key]: value }
+      return next
+    })
   }
 
   function updateFollowUpField(channel: 'instagram' | 'telegram', key: keyof FollowUpChannelState, value: string | boolean) {
@@ -379,7 +419,8 @@ export function CognilabsAIIntegrationsPage() {
             {/* Fields */}
             <div className="flex-1 min-h-0 overflow-y-auto space-y-3 px-6 py-4">
               {activeSection === 'follow-up' ? (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="flex flex-col gap-6">
+                  <div className="grid gap-4 lg:grid-cols-2">
                   {(['instagram', 'telegram'] as const).map((channel) => {
                     const channelState = followUp[channel]
                     const label = channel === 'instagram' ? 'Instagram' : 'Telegram'
@@ -430,6 +471,39 @@ export function CognilabsAIIntegrationsPage() {
                       </div>
                     )
                   })}
+                  </div>
+
+                  <div>
+                    <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-(--muted)">Instagram Default Follow-up Sequence</p>
+                    <div className="grid gap-4 lg:grid-cols-3">
+                      {([0, 1, 2] as const).map((i) => (
+                        <div key={i} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
+                          <p className="mb-3 text-sm font-semibold text-(--foreground)">Step {i + 1}</p>
+                          <div className="space-y-3">
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold text-(--muted-strong)">Delay (minutes)</label>
+                              <Input
+                                type="number"
+                                value={instagramDefaultSteps[i].delay_minutes}
+                                onChange={(e) => updateDefaultStep(i, 'delay_minutes', e.target.value)}
+                                placeholder="e.g. 180"
+                                className="h-9 w-24 text-sm"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-1 block text-xs font-semibold text-(--muted-strong)">Message</label>
+                              <Textarea
+                                value={instagramDefaultSteps[i].message}
+                                onChange={(e) => updateDefaultStep(i, 'message', e.target.value)}
+                                placeholder="Follow-up message..."
+                                className="min-h-[90px] text-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 currentSection.fields.map((field) => {

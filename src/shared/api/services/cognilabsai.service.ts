@@ -88,6 +88,12 @@ export type IntegrationConfig = {
   telegram_followup_enabled?: boolean | null
   telegram_followup_delay_minutes?: number | null
   telegram_followup_message?: string | null
+  instagram_default_followup_step1_delay_minutes?: number | null
+  instagram_default_followup_step1_message?: string | null
+  instagram_default_followup_step2_delay_minutes?: number | null
+  instagram_default_followup_step2_message?: string | null
+  instagram_default_followup_step3_delay_minutes?: number | null
+  instagram_default_followup_step3_message?: string | null
   id?: number
   created_at?: string
   updated_at?: string
