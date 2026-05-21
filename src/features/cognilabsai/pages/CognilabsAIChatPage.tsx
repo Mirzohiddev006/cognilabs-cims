@@ -643,6 +643,11 @@ export function CognilabsAIChatPage() {
     refetchConversationsRef.current = conversationsQuery.refetch
   }, [conversationsQuery.refetch])
 
+  const conversationsRef = useRef<ConversationItem[]>([])
+  useEffect(() => {
+    conversationsRef.current = conversations
+  }, [conversations])
+
   useAsyncData(
     () => cognilabsaiService.getIntegrations(),
     [],
@@ -774,34 +779,35 @@ export function CognilabsAIChatPage() {
                 return [...prev, data.message]
               })
             }
-            setConversations((prev) => {
-              const exists = prev.some((c) => c.id === data.conversation_id)
-              if (!exists) {
-                refetchConversationsRef.current()
-                return prev
-              }
-              return prev.map((c) =>
-                c.id === data.conversation_id
-                  ? {
-                      ...c,
-                      last_message_at: data.message.created_at,
-                      last_message_preview: data.message.text,
-                      unread_count:
-                        data.message.sender_type === 'client' && data.conversation_id !== selectedConversationIdRef.current
-                          ? (c.unread_count ?? 0) + 1
-                          : c.unread_count,
-                    }
-                  : c,
+            const convId = data.conversation_id
+            if (!conversationsRef.current.some((c) => c.id === convId)) {
+              refetchConversationsRef.current()
+            } else {
+              setConversations((prev) =>
+                prev.map((c) =>
+                  c.id === convId
+                    ? {
+                        ...c,
+                        last_message_at: data.message.created_at,
+                        last_message_preview: data.message.text,
+                        unread_count:
+                          data.message.sender_type === 'client' && convId !== selectedConversationIdRef.current
+                            ? (c.unread_count ?? 0) + 1
+                            : c.unread_count,
+                      }
+                    : c,
+                )
               )
-            })
+            }
           } else if (data.type === 'conversation.updated') {
-            setConversations((prev) => {
-              const exists = prev.some((c) => c.id === data.conversation_id)
-              if (!exists) {
-                return [data.conversation, ...prev]
-              }
-              return prev.map((c) => (c.id === data.conversation_id ? data.conversation : c))
-            })
+            const convId = data.conversation_id
+            if (!conversationsRef.current.some((c) => c.id === convId)) {
+              refetchConversationsRef.current()
+            } else {
+              setConversations((prev) =>
+                prev.map((c) => (c.id === convId ? data.conversation : c))
+              )
+            }
             if (data.conversation_id === selectedConversationIdRef.current) {
               setFollowUpDraft(createFollowUpDraft(data.conversation))
             }
