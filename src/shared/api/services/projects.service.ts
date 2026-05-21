@@ -1,6 +1,28 @@
 import { request } from '../http'
 import type { CreateResponse, SuccessResponse } from '../types'
 
+export type AttachmentType = 'tz' | 'kp' | 'contracts'
+
+export type ProjectAttachment = {
+  id: number
+  project_id: number
+  attachment_type: AttachmentType
+  file_name: string
+  url_path: string
+  mime_type: string
+  file_size: number
+  description: string | null
+  created_by: number
+  created_at: string
+  updated_at: string
+  created_by_user: {
+    id: number
+    name: string
+    surname: string
+    email: string
+  }
+}
+
 // ─── Shared domain types ─────────────────────────────────────────────────────
 
 export type UserSummary = {
@@ -907,6 +929,42 @@ export const projectsService = {
       path: `/cards/${cardId}/move`,
       method: 'PATCH',
       body: { column_id: columnId, order },
+    })
+  },
+
+  uploadAttachment(projectId: number, formData: FormData) {
+    return request<ProjectAttachment>({
+      path: `/projects/${projectId}/attachments`,
+      method: 'POST',
+      body: formData,
+    })
+  },
+
+  listAttachments(projectId: number, attachmentType?: AttachmentType) {
+    return request<ProjectAttachment[]>({
+      path: `/projects/${projectId}/attachments`,
+      query: attachmentType ? { attachment_type: attachmentType } : undefined,
+    })
+  },
+
+  getAttachment(attachmentId: number) {
+    return request<ProjectAttachment>({
+      path: `/projects/attachments/${attachmentId}`,
+    })
+  },
+
+  updateAttachment(attachmentId: number, formData: FormData) {
+    return request<ProjectAttachment>({
+      path: `/projects/attachments/${attachmentId}`,
+      method: 'PATCH',
+      body: formData,
+    })
+  },
+
+  deleteAttachment(attachmentId: number) {
+    return request<{ message: string }>({
+      path: `/projects/attachments/${attachmentId}`,
+      method: 'DELETE',
     })
   },
 }

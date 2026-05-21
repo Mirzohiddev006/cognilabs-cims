@@ -13,6 +13,65 @@ import type {
   SuccessResponse,
 } from '../types'
 
+export type SalesManagerSummary = {
+  id: number
+  email: string
+  name: string
+  surname: string
+}
+
+export type SalesManagerLead = {
+  id: number
+  full_name: string
+  phone_number: string | null
+  platform: string | null
+  username: string | null
+  status: string
+  status_name: string
+  priority_level: 'low' | 'medium' | 'high' | 'critical' | null
+  priority_score: number | null
+  importance_score: number | null
+  industry: string | null
+  is_archived: boolean
+  created_at: string
+  assigned_at: string | null
+}
+
+export type SalesManagerLeadsResponse = {
+  sales_manager: SalesManagerSummary
+  total_count: number
+  page: number
+  limit: number
+  items: SalesManagerLead[]
+}
+
+export type SalesManagerStatusStat = {
+  status: string
+  count: number
+}
+
+export type SalesManagerStatsSummary = {
+  total_assigned: number
+  active_leads: number
+  archived_leads: number
+  counted_leads: number
+}
+
+export type SalesManagerStatsResponse = {
+  sales_manager: SalesManagerSummary
+  summary: SalesManagerStatsSummary
+  status_stats: SalesManagerStatusStat[]
+}
+
+export type SalesManagerLeadsParams = {
+  page?: number
+  limit?: number
+  search?: string
+  status?: string
+  priority_level?: 'low' | 'medium' | 'high' | 'critical'
+  include_archived?: boolean
+}
+
 export type CustomerPeriodReportParams = {
   period?: string
   search?: string
@@ -310,6 +369,34 @@ export const crmService = {
       path: '/crm/customers/bulk-hard-delete',
       method: 'DELETE',
       body: { customer_ids: customerIds },
+    })
+  },
+
+  salesManagerCustomers(salesManagerId: number, params?: SalesManagerLeadsParams) {
+    return request<SalesManagerLeadsResponse>({
+      path: `/crm/sales-managers/${salesManagerId}/customers`,
+      query: params as Record<string, string | number | boolean | undefined | null>,
+    })
+  },
+
+  salesManagerCustomerStats(salesManagerId: number, params?: { include_archived?: boolean }) {
+    return request<SalesManagerStatsResponse>({
+      path: `/crm/sales-managers/${salesManagerId}/stats`,
+      query: params,
+    })
+  },
+
+  myCustomers(params?: SalesManagerLeadsParams) {
+    return request<SalesManagerLeadsResponse>({
+      path: '/crm/my-customers',
+      query: params as Record<string, string | number | boolean | undefined | null>,
+    })
+  },
+
+  myCustomerStats(params?: { include_archived?: boolean }) {
+    return request<SalesManagerStatsResponse>({
+      path: '/crm/my-customers/stats',
+      query: params,
     })
   },
 }

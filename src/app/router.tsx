@@ -153,6 +153,10 @@ const CrmArchivedPage = lazyPage(
   () => import('../features/crm/pages/CrmArchivedPage'),
   'CrmArchivedPage',
 )
+const MyLeadsPage = lazyPage(
+  () => import('../features/crm/pages/MyLeadsPage'),
+  'MyLeadsPage',
+)
 const CustomerDetailPage = lazyPage(
   () => import('../features/crm/pages/CustomerDetailPage'),
   'CustomerDetailPage',
@@ -356,6 +360,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="crm">
                     {withPageLoader(<CrmArchivedPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'crm/my-leads',
+                element: (
+                  <ProtectedRoute permissionKey="crm">
+                    {withPageLoader(<MyLeadsPage />)}
                   </ProtectedRoute>
                 ),
               },

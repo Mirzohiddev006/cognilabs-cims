@@ -379,9 +379,11 @@ function DateSeparator({ date }: { date: string }) {
 function TelegramSearchModal({
   onClose,
   onStartChat,
+  onNewChatStarted,
 }: {
   onClose: () => void
   onStartChat: (conversationId: number) => void
+  onNewChatStarted?: () => void
 }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<TelegramSearchResult[]>([])
@@ -422,6 +424,7 @@ function TelegramSearchModal({
       }
       await cognilabsaiService.telegramStart(selectedPeer.peer, messageText.trim(), selectedPeer.full_name ?? undefined)
       showToast({ title: 'Chat boshlandi', tone: 'success' })
+      onNewChatStarted?.()
       onClose()
     } catch (err) {
       showToast({ title: 'Xatolik', description: getApiErrorMessage(err), tone: 'error' })
@@ -635,6 +638,11 @@ export function CognilabsAIChatPage() {
     },
   )
 
+  const refetchConversationsRef = useRef(conversationsQuery.refetch)
+  useEffect(() => {
+    refetchConversationsRef.current = conversationsQuery.refetch
+  }, [conversationsQuery.refetch])
+
   useAsyncData(
     () => cognilabsaiService.getIntegrations(),
     [],
@@ -766,8 +774,13 @@ export function CognilabsAIChatPage() {
                 return [...prev, data.message]
               })
             }
-            setConversations((prev) =>
-              prev.map((c) =>
+            setConversations((prev) => {
+              const exists = prev.some((c) => c.id === data.conversation_id)
+              if (!exists) {
+                refetchConversationsRef.current()
+                return prev
+              }
+              return prev.map((c) =>
                 c.id === data.conversation_id
                   ? {
                       ...c,
@@ -779,12 +792,16 @@ export function CognilabsAIChatPage() {
                           : c.unread_count,
                     }
                   : c,
-              ),
-            )
+              )
+            })
           } else if (data.type === 'conversation.updated') {
-            setConversations((prev) =>
-              prev.map((c) => (c.id === data.conversation_id ? data.conversation : c)),
-            )
+            setConversations((prev) => {
+              const exists = prev.some((c) => c.id === data.conversation_id)
+              if (!exists) {
+                return [data.conversation, ...prev]
+              }
+              return prev.map((c) => (c.id === data.conversation_id ? data.conversation : c))
+            })
             if (data.conversation_id === selectedConversationIdRef.current) {
               setFollowUpDraft(createFollowUpDraft(data.conversation))
             }
@@ -1430,6 +1447,7 @@ export function CognilabsAIChatPage() {
             handleSelectConversation(id)
             setShowNewTelegramModal(false)
           }}
+          onNewChatStarted={() => void conversationsQuery.refetch()}
         />
       ) : null}
     </div>

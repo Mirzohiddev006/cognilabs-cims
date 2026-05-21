@@ -69,6 +69,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: true,
   },
   {
+    to: '/crm/my-leads',
+    label: 'My Leads',
+    description: 'Sales manager sifatida o\'zingizga biriktirilgan leadlar va statistika.',
+    group: 'Sales',
+    permissionKey: 'crm',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/crm/archived',
     label: 'CRM Arxiv',
     description: 'Arxivlangan mijozlar. Tiklash yoki butunlay o\'chirish.',
