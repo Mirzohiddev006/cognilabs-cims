@@ -366,7 +366,7 @@ export const router = createBrowserRouter([
               {
                 path: 'crm/my-leads',
                 element: (
-                  <ProtectedRoute permissionKey="crm">
+                  <ProtectedRoute permissionKey="crm" audience="sales_manager">
                     {withPageLoader(<MyLeadsPage />)}
                   </ProtectedRoute>
                 ),

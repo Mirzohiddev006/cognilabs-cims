@@ -38,6 +38,10 @@ export function hasAudienceAccess(user: CurrentUser | null, audience?: Navigatio
     return user.role !== 'CEO' && user.role !== 'Customer'
   }
 
+  if (audience === 'sales_manager') {
+    return user.role === 'SalesManager'
+  }
+
   return true
 }
 

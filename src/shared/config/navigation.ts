@@ -1,4 +1,4 @@
-export type NavigationAudience = 'member'
+export type NavigationAudience = 'member' | 'sales_manager'
 
 export type NavigationItem = {
   to: string
@@ -76,6 +76,7 @@ export const navigationItems: readonly NavigationItem[] = [
     permissionKey: 'crm',
     sidebar: true,
     defaultRedirect: false,
+    audience: 'sales_manager',
   },
   {
     to: '/crm/archived',
