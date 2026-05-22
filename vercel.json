@@ -20,6 +20,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api.project.cims.cognilabs.org/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

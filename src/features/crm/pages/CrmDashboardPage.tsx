@@ -189,7 +189,7 @@ function resolveAudioUrl(customer: CustomerSummary) {
     return null
   }
 
-  return new URL(`/crm/customers/audio/${customer.audio_file_id}`, env.apiBaseUrl).toString()
+  return `${env.apiBaseUrl.replace(/\/$/, '')}/crm/customers/audio/${customer.audio_file_id}`
 }
 
 function normalizeDateValue(value?: string | null) {

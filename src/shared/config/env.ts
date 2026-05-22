@@ -1,4 +1,4 @@
-const fallbackApiBaseUrl = 'https://api.project.cims.cognilabs.org/'
+const fallbackApiBaseUrl = '/api'
 const fallbackWebsiteStatsApiBaseUrl = fallbackApiBaseUrl
 const fallbackAttendancePublicApiUrl = 'https://essentially-stop-bunny-miami.trycloudflare.com/api'
 

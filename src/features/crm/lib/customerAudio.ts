@@ -9,5 +9,5 @@ export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: 
     return null
   }
 
-  return new URL(`/crm/customers/audio/${audioFileId}`, env.apiBaseUrl).toString()
+  return `${env.apiBaseUrl.replace(/\/$/, '')}/crm/customers/audio/${audioFileId}`
 }

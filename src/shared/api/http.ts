@@ -7,7 +7,10 @@ const defaultHeaders: HeadersInit = {
 }
 
 function buildUrl(path: string, query?: Record<string, string | number | boolean | undefined | null>) {
-  const url = new URL(path, env.apiBaseUrl)
+  const apiBase = env.apiBaseUrl.replace(/\/$/, '')
+  const urlBase = apiBase.startsWith('http') ? apiBase : window.location.origin
+  const fullPath = apiBase.startsWith('http') ? path : `${apiBase}${path}`
+  const url = new URL(fullPath, urlBase)
 
   if (!query) {
     return url.toString()

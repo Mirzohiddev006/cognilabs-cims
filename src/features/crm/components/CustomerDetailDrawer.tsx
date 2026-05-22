@@ -21,6 +21,7 @@ import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../sh
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
+import { AudioPlayerCard } from './AudioPlayerCard'
 
 function formatCustomerNotes(notes?: string | null) {
   if (!notes) {
@@ -75,38 +76,26 @@ function formatConversationLanguageLabel(
   return value || '-'
 }
 
-function CustomerAudioPanel({ audioSource }: { audioSource: string }) {
+function CustomerAudioPanel({ audioSource, customerName }: { audioSource: string; customerName: string }) {
   const { t } = useTranslation()
 
   return (
-    <Card className="overflow-hidden rounded-xl border-[var(--border)]">
-      <div className="border-b border-[var(--border)] px-6 py-5">
-        <SectionTitle
-          title={t('customers.detail.audio.title', 'Audio')}
-          description={t('customers.detail.audio.description', 'Listen to the audio attached to this customer record.')}
-        />
-      </div>
-      <div className="px-6 py-5">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-4">
-          <audio controls preload="none" src={audioSource} className="w-full">
-            {t('customers.detail.audio.unsupported', 'Your browser does not support the audio element.')}
-          </audio>
-        </div>
+    <div className="flex flex-col gap-3">
+      <AudioPlayerCard src={audioSource} name={customerName} />
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Button variant="secondary" size="sm" asChild>
-            <a href={audioSource} target="_blank" rel="noreferrer">
-              {t('common.open_audio', 'Open audio')}
-            </a>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <a href={audioSource} download>
-              {t('common.download', 'Download')}
-            </a>
-          </Button>
-        </div>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" size="sm" asChild>
+          <a href={audioSource} target="_blank" rel="noreferrer">
+            {t('common.open_audio', 'Open audio')}
+          </a>
+        </Button>
+        <Button variant="ghost" size="sm" asChild>
+          <a href={audioSource} download>
+            {t('common.download', 'Download')}
+          </a>
+        </Button>
       </div>
-    </Card>
+    </div>
   )
 }
 
@@ -418,7 +407,7 @@ export function CustomerDetailContent({
         {/* Audio Panel */}
         {audioSource ? (
           <div className="lg:col-span-2">
-            <CustomerAudioPanel audioSource={audioSource} />
+            <CustomerAudioPanel audioSource={audioSource} customerName={customerName} />
           </div>
         ) : null}
       </div>

@@ -36,5 +36,12 @@ export default defineConfig({
   },
   server: {
     allowedHosts: ['essentially-stop-bunny-miami.trycloudflare.com'],
+    proxy: {
+      '/api': {
+        target: 'https://api.project.cims.cognilabs.org',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
 })
