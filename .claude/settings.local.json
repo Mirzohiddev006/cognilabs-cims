@@ -7,11 +7,7 @@
       "Bash(findstr /i \"recharts chart\")",
       "Bash(npm install *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Mirzohid\\\\Downloads\\\\cognilabs-cims\" -Recurse -Directory -Name)",
-      "Bash(Select-Object -First 30)",
-      "Bash(xargs grep -l \"AudioPlayer\\\\|useAudio\\\\|useAudioProvider\")",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(Select-Object -First 30)"
     ]
   }
 }
