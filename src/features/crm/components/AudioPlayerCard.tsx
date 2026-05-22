@@ -12,6 +12,7 @@ import {
   AudioPlayerVolumeRange,
 } from '@/components/ai-elements/audio-player'
 import { cn } from '@/shared/lib/cn'
+import { getAccessToken } from '@/shared/lib/session'
 
 interface AudioPlayerCardProps {
   src: string
@@ -19,39 +20,64 @@ interface AudioPlayerCardProps {
 }
 
 const seekBtnClass =
-  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-(--muted-strong) transition hover:bg-(--muted-surface) hover:text-(--foreground) active:scale-95'
+  'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-(--muted-strong) transition hover:bg-(--muted-surface) hover:text-(--foreground) active:scale-95 disabled:opacity-40 disabled:pointer-events-none'
 
 export function AudioPlayerCard({ src, name }: AudioPlayerCardProps) {
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [bufferedPct, setBufferedPct] = useState(0)
-  const [isBuffering, setIsBuffering] = useState(false)
+  const [blobUrl, setBlobUrl] = useState<string | null>(null)
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
-    const audio = audioRef.current
-    if (!audio) return
+    let cancelled = false
+    let objectUrl: string | null = null
+    const controller = new AbortController()
 
-    const updateBuffered = () => {
-      if (audio.buffered.length > 0 && audio.duration > 0) {
-        setBufferedPct(Math.round((audio.buffered.end(audio.buffered.length - 1) / audio.duration) * 100))
-      }
-    }
-    const onWaiting = () => setIsBuffering(true)
-    const onResume = () => setIsBuffering(false)
+    setIsLoading(true)
+    setLoadProgress(0)
+    setBlobUrl(null)
+    setLoadError(null)
 
-    audio.addEventListener('progress', updateBuffered)
-    audio.addEventListener('waiting', onWaiting)
-    audio.addEventListener('playing', onResume)
-    audio.addEventListener('canplay', onResume)
-    audio.addEventListener('seeked', onResume)
+    const token = getAccessToken()
+    const headers: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {}
+
+    fetch(src, { signal: controller.signal, headers })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`${res.status}`)
+        const total = Number(res.headers.get('content-length') || 0)
+        const reader = res.body!.getReader()
+        const chunks: Uint8Array[] = []
+        let loaded = 0
+
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          if (cancelled) return
+          chunks.push(value)
+          loaded += value.byteLength
+          if (total > 0) setLoadProgress(Math.round((loaded / total) * 100))
+        }
+
+        if (!cancelled) {
+          objectUrl = URL.createObjectURL(new Blob(chunks))
+          setBlobUrl(objectUrl)
+          setIsLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (!cancelled && err.name !== 'AbortError') {
+          setLoadError("Audio yuklab bo'lmadi")
+          setIsLoading(false)
+        }
+      })
 
     return () => {
-      audio.removeEventListener('progress', updateBuffered)
-      audio.removeEventListener('waiting', onWaiting)
-      audio.removeEventListener('playing', onResume)
-      audio.removeEventListener('canplay', onResume)
-      audio.removeEventListener('seeked', onResume)
+      cancelled = true
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
-  }, [])
+  }, [src])
 
   function seek(delta: number) {
     const audio = audioRef.current
@@ -76,51 +102,63 @@ export function AudioPlayerCard({ src, name }: AudioPlayerCardProps) {
 
       {/* Player */}
       <div className="px-4 py-4">
-        <AudioPlayer>
-          <AudioPlayerElement src={src} ref={audioRef} preload="auto" />
-          <AudioPlayerControlBar>
-            <AudioPlayerPlayButton />
+        {isLoading ? (
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-(--muted-surface)">
+              <div
+                className={cn(
+                  'h-full rounded-full bg-(--foreground) transition-all duration-200',
+                  loadProgress === 0 && 'animate-pulse',
+                )}
+                style={{ width: `${Math.max(4, loadProgress)}%` }}
+              />
+            </div>
+            <span className="min-w-10 text-right text-[11px] tabular-nums text-(--muted)">
+              {loadProgress > 0 ? `${loadProgress}%` : '…'}
+            </span>
+          </div>
+        ) : loadError ? (
+          <p className="py-2 text-[13px] text-(--danger-text)">{loadError}</p>
+        ) : (
+          <AudioPlayer>
+            <AudioPlayerElement src={blobUrl!} ref={audioRef} preload="auto" />
+            <AudioPlayerControlBar>
+              <AudioPlayerPlayButton />
 
-            <button
-              type="button"
-              onClick={() => seek(-10)}
-              className={seekBtnClass}
-              aria-label="10 soniya orqaga"
-              title="-10s"
-            >
-              <span className="relative flex items-center justify-center">
-                <ArrowCounterClockwiseIcon className="h-5 w-5" weight="bold" />
-                <span className="absolute text-[8px] font-bold leading-none" style={{ marginTop: 1 }}>10</span>
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => seek(-10)}
+                className={seekBtnClass}
+                aria-label="10 soniya orqaga"
+                title="-10s"
+              >
+                <span className="relative flex items-center justify-center">
+                  <ArrowCounterClockwiseIcon className="h-5 w-5" weight="bold" />
+                  <span className="absolute text-[8px] font-bold leading-none" style={{ marginTop: 1 }}>10</span>
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => seek(10)}
-              className={seekBtnClass}
-              aria-label="10 soniya oldinga"
-              title="+10s"
-            >
-              <span className="relative flex items-center justify-center">
-                <ArrowClockwiseIcon className="h-5 w-5" weight="bold" />
-                <span className="absolute text-[8px] font-bold leading-none" style={{ marginTop: 1 }}>10</span>
-              </span>
-            </button>
+              <button
+                type="button"
+                onClick={() => seek(10)}
+                className={seekBtnClass}
+                aria-label="10 soniya oldinga"
+                title="+10s"
+              >
+                <span className="relative flex items-center justify-center">
+                  <ArrowClockwiseIcon className="h-5 w-5" weight="bold" />
+                  <span className="absolute text-[8px] font-bold leading-none" style={{ marginTop: 1 }}>10</span>
+                </span>
+              </button>
 
-            <AudioPlayerTimeDisplay />
-            <AudioPlayerTimeRange />
-            <AudioPlayerDurationDisplay />
-            <AudioPlayerMuteButton />
-
-            {isBuffering && (
-              <span className={cn('min-w-7.5 text-right text-[10px] tabular-nums text-(--muted)', bufferedPct < 100 && 'animate-pulse')}>
-                {bufferedPct}%
-              </span>
-            )}
-
-            <AudioPlayerVolumeRange />
-          </AudioPlayerControlBar>
-        </AudioPlayer>
+              <AudioPlayerTimeDisplay />
+              <AudioPlayerTimeRange />
+              <AudioPlayerDurationDisplay />
+              <AudioPlayerMuteButton />
+              <AudioPlayerVolumeRange />
+            </AudioPlayerControlBar>
+          </AudioPlayer>
+        )}
       </div>
     </div>
   )
