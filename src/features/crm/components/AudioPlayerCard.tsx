@@ -47,7 +47,7 @@ export function AudioPlayerCard({ src, name }: AudioPlayerCardProps) {
         if (!res.ok) throw new Error(`${res.status}`)
         const total = Number(res.headers.get('content-length') || 0)
         const reader = res.body!.getReader()
-        const chunks: Uint8Array[] = []
+        const chunks: Uint8Array<ArrayBuffer>[] = []
         let loaded = 0
 
         for (;;) {
