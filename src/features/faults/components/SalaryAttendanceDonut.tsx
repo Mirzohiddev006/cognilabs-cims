@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { DailyRecord } from '../../../shared/api/services/attendance.service'
 import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
@@ -24,11 +25,17 @@ function clamp(v: number, min = 0, max = 100) {
   return Math.max(min, Math.min(max, v))
 }
 
-export default function SalaryAttendanceDonut({ employeeId, year, month }: { employeeId: number; year: number; month: number }) {
-  const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
-  const monthEnd = `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth(year, month)).padStart(2, '0')}`
-
-  const monthRecordsQuery = useAsyncData(() => attendanceService.getDailyRecords({ employee_id: employeeId, date_from: monthStart, date_to: monthEnd }), [employeeId, year, month])
+export default function SalaryAttendanceDonut({
+  employeeId,
+  year,
+  month,
+  monthRecords,
+}: {
+  employeeId: number
+  year: number
+  month: number
+  monthRecords?: DailyRecord[]
+}) {
 
   const today = new Date()
   const last7From = new Date(today)
@@ -39,7 +46,7 @@ export default function SalaryAttendanceDonut({ employeeId, year, month }: { emp
   const last7Query = useAsyncData(() => attendanceService.getDailyRecords({ employee_id: employeeId, date_from: last7FromStr, date_to: todayStr }), [employeeId, todayStr])
 
   const counts = useMemo(() => {
-    const days = monthRecordsQuery.data?.items ?? []
+    const days = monthRecords ?? []
     const totalWorkedMinutes = days.reduce((s, d) => s + (d.worked_minutes || 0), 0)
     const sundays = countSundaysInMonth(year, month)
     const totalDays = daysInMonth(year, month)
@@ -55,7 +62,7 @@ export default function SalaryAttendanceDonut({ employeeId, year, month }: { emp
       plannedHours,
       progressPct: clamp(Math.round(progressPct * 100) / 100, 0, 100),
     }
-  }, [monthRecordsQuery.data, year, month])
+  }, [monthRecords, year, month])
 
   const last7 = (last7Query.data?.items ?? []).sort((a, b) => a.attendance_date.localeCompare(b.attendance_date))
 

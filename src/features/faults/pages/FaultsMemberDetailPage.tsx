@@ -10,6 +10,7 @@ import type {
   SimpleBonusRecord,
   SimplePenaltyRecord,
 } from '../../../shared/api/types'
+import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { membersService } from '../../../shared/api/services/members.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -559,6 +560,14 @@ export function FaultsMemberDetailPage({
 
   const simpleBonuses = simpleBonusesQuery.data ?? []
   const simplePenalties = simplePenaltiesQuery.data ?? []
+
+  const attendanceMonthStart = `${year}-${String(month).padStart(2, '0')}-01`
+  const attendanceMonthEnd = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
+  const attendanceQuery = useAsyncData(
+    () => attendanceService.getDailyRecords({ employee_id: memberId, date_from: attendanceMonthStart, date_to: attendanceMonthEnd, page_size: 100 }),
+    [memberId, year, month],
+    { enabled: Number.isFinite(memberId) && memberId > 0 },
+  )
 
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
@@ -1496,10 +1505,11 @@ export function FaultsMemberDetailPage({
                 calendar={detail.updateCalendar}
                 onMonthShift={handleCalendarMonthShift}
                 onJumpToToday={handleCalendarTodayJump}
+                attendanceRecords={attendanceQuery.data?.items}
               />
               {/* Salary attendance donut and recent 7-day stats */}
               <div className="mt-4">
-                <SalaryAttendanceDonut employeeId={detail.report.id} year={year} month={month} />
+                <SalaryAttendanceDonut employeeId={detail.report.id} year={year} month={month} monthRecords={attendanceQuery.data?.items} />
               </div>
             </div>
           </CardSection>

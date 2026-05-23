@@ -7,6 +7,7 @@ import { cn } from '../../../shared/lib/cn'
 import { formatShortMonthDayTime, getLocalizedMonthName } from '../../../shared/lib/format'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
+import type { DailyRecord } from '../../../shared/api/services/attendance.service'
 import type {
   MemberMonthlyUpdateCalendar,
   MemberMonthlyUpdateDay,
@@ -427,6 +428,14 @@ function getFocusDetailText(day: MemberMonthlyUpdateDay | null) {
   return tr('No update content was returned by the API for this date.', 'API bu sana uchun update kontentini qaytarmadi.', 'API не вернул содержимое обновления для этой даты.')
 }
 
+function formatWorkedTime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60)
+  const mins = totalMinutes % 60
+  if (hours === 0) return `${mins}m`
+  if (mins === 0) return `${hours}h`
+  return `${hours}h ${mins}m`
+}
+
 function CompletionBar({ pct }: { pct: number }) {
   const color = pct >= 90 ? 'bg-emerald-500' : pct >= 75 ? 'bg-amber-400' : 'bg-rose-500'
 
@@ -442,6 +451,7 @@ type MemberMonthlyUpdateCalendarBoardProps = {
   className?: string
   onMonthShift?: (delta: number) => void
   onJumpToToday?: () => void
+  attendanceRecords?: DailyRecord[]
 }
 
 function getTodayKey() {
@@ -458,6 +468,7 @@ export function MemberMonthlyUpdateCalendarBoard({
   className,
   onMonthShift,
   onJumpToToday,
+  attendanceRecords,
 }: MemberMonthlyUpdateCalendarBoardProps) {
   const { theme } = useTheme()
   const isLight = theme === 'light'
@@ -582,6 +593,20 @@ export function MemberMonthlyUpdateCalendarBoard({
     ? `${counts.submitted} ${tr('of', 'dan', 'из')} ${elapsedWorkingDays} ${tr('completed workdays updated.', 'bajarilgan ish kunlari yangilandi.', 'завершённых рабочих дней обновлено.')}`
     : tr('No completed workdays yet.', 'Hali bajarilgan ish kunlari yoq.', 'Завершённых рабочих дней пока нет.')
   const canJumpToToday = Boolean(onJumpToToday)
+
+  const attendanceByDate = useMemo(() => {
+    const map = new Map<string, DailyRecord>()
+    for (const rec of attendanceRecords ?? []) {
+      map.set(rec.attendance_date, rec)
+    }
+    return map
+  }, [attendanceRecords])
+
+  const totalWorkedMinutes = useMemo(
+    () => (attendanceRecords ?? []).reduce((s, r) => s + (r.worked_minutes ?? 0), 0),
+    [attendanceRecords],
+  )
+
   const selectedDayDrawer = isFocusPanelOpen && selectedDay && typeof document !== 'undefined'
     ? createPortal(
       <div
@@ -798,6 +823,9 @@ export function MemberMonthlyUpdateCalendarBoard({
               {counts.holiday > 0 ? <Badge variant="blue" dot>{counts.holiday} {tr('Holidays', 'Bayramlar', 'Праздники')}</Badge> : null}
               <Badge variant="warning" dot>{counts.offDay} {tr('Off days', 'Dam olish kunlari', 'Выходные')}</Badge>
               {counts.upcoming > 0 ? <Badge variant="secondary">{counts.upcoming} {tr('Upcoming', 'Yaqinlashmoqda', 'Скоро')}</Badge> : null}
+              {totalWorkedMinutes > 0 ? (
+                <Badge variant="secondary" dot>{formatWorkedTime(totalWorkedMinutes)} {tr('Worked', 'Ishlangan', 'Отработано')}</Badge>
+              ) : null}
             </div>
           </div>
 
@@ -971,8 +999,14 @@ export function MemberMonthlyUpdateCalendarBoard({
                         const entryCount = getEntryCount(day)
                         const isSelected = selectedKey === day.date
                         const isToday = day.date === todayKey
-                        const showTimePanel = shouldShowTimePanel(day)
-                        const isCheckoutMissing = Boolean(day.checkInTime) && !day.checkOutTime
+                        const attendanceRec = attendanceByDate.get(day.date)
+                        const effectiveCheckIn = day.checkInTime ?? attendanceRec?.check_in_time ?? null
+                        const effectiveCheckOut = day.checkOutTime ?? attendanceRec?.check_out_time ?? null
+                        const effectiveDay = (effectiveCheckIn !== day.checkInTime || effectiveCheckOut !== day.checkOutTime)
+                          ? { ...day, checkInTime: effectiveCheckIn, checkOutTime: effectiveCheckOut }
+                          : day
+                        const showTimePanel = shouldShowTimePanel(effectiveDay)
+                        const isCheckoutMissing = Boolean(effectiveCheckIn) && !effectiveCheckOut
 
                         return (
                           <button
@@ -1034,7 +1068,7 @@ export function MemberMonthlyUpdateCalendarBoard({
                                       {tr('In', 'Kirish', 'Вход')}
                                     </p>
                                     <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
-                                      {formatWorkTime(day.checkInTime)}
+                                      {formatWorkTime(effectiveCheckIn)}
                                     </p>
                                   </div>
                                   <div className="rounded-xl border border-[var(--border)] bg-white/85 px-2 py-1.5 dark:border-white/10 dark:bg-white/[0.04]">
@@ -1051,13 +1085,13 @@ export function MemberMonthlyUpdateCalendarBoard({
                                       </p>
                                     ) : (
                                       <p className="mt-1 text-[11px] font-semibold tabular-nums text-[var(--foreground)] dark:text-white">
-                                        {formatWorkTime(day.checkOutTime)}
+                                        {formatWorkTime(effectiveCheckOut)}
                                       </p>
                                     )}
                                   </div>
                                 </div>
                                 <p className="ui-helper font-medium uppercase tracking-[0.12em] text-[var(--muted-strong)] dark:text-white">
-                                  {getWorkedDurationLabel(day)}
+                                  {getWorkedDurationLabel(effectiveDay)}
                                 </p>
                               </div>
                             ) : null}
