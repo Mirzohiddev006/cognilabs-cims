@@ -561,13 +561,42 @@ export function FaultsMemberDetailPage({
   const simpleBonuses = simpleBonusesQuery.data ?? []
   const simplePenalties = simplePenaltiesQuery.data ?? []
 
-  const attendanceMonthStart = `${year}-${String(month).padStart(2, '0')}-01`
-  const attendanceMonthEnd = `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`
   const attendanceQuery = useAsyncData(
-    () => attendanceService.getDailyRecords({ employee_id: memberId, date_from: attendanceMonthStart, date_to: attendanceMonthEnd, page_size: 100 }),
+    () => attendanceService.getPublicUser(memberId, { year, month, page_size: 100 }),
     [memberId, year, month],
     { enabled: Number.isFinite(memberId) && memberId > 0 },
   )
+
+  const attendanceRecords = useMemo(() => {
+    const sessions = attendanceQuery.data?.employees?.[0]?.attendance_records ?? []
+    const byDate = new Map<string, { checkIn: string | null; checkOut: string | null; workedMinutes: number }>()
+    for (const s of sessions) {
+      const date = s.session_date
+      const existing = byDate.get(date)
+      if (existing) {
+        if (s.came_at && (!existing.checkIn || s.came_at < existing.checkIn)) existing.checkIn = s.came_at
+        if (s.gone_at && (!existing.checkOut || s.gone_at > existing.checkOut)) existing.checkOut = s.gone_at
+        existing.workedMinutes += s.worked_minutes
+      } else {
+        byDate.set(date, { checkIn: s.came_at, checkOut: s.gone_at, workedMinutes: s.worked_minutes })
+      }
+    }
+    return Array.from(byDate.entries()).map(([date, d]) => ({
+      employee_id: memberId,
+      attendance_date: date,
+      check_in_time: d.checkIn,
+      check_out_time: d.checkOut,
+      worked_minutes: d.workedMinutes,
+      worked_hours_decimal: d.workedMinutes / 60,
+      status: d.checkIn ? 'present' : 'absent',
+      shift_name: null,
+      source_system: 'cloudflare' as const,
+      source_session_id: null,
+      is_manual: false,
+      note: null,
+      source_updated_at: null,
+    }))
+  }, [attendanceQuery.data, memberId])
 
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
@@ -1505,11 +1534,11 @@ export function FaultsMemberDetailPage({
                 calendar={detail.updateCalendar}
                 onMonthShift={handleCalendarMonthShift}
                 onJumpToToday={handleCalendarTodayJump}
-                attendanceRecords={attendanceQuery.data?.items}
+                attendanceRecords={attendanceRecords}
               />
               {/* Salary attendance donut and recent 7-day stats */}
               <div className="mt-4">
-                <SalaryAttendanceDonut employeeId={detail.report.id} year={year} month={month} monthRecords={attendanceQuery.data?.items} />
+                <SalaryAttendanceDonut employeeId={detail.report.id} year={year} month={month} monthRecords={attendanceRecords} />
               </div>
             </div>
           </CardSection>
