@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ceoService, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
+import { ceoService, type CeoUserRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
+import { projectsService, type UserOpenCardRecord } from '../../../shared/api/services/projects.service'
 import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -10,6 +11,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { DataTable } from '../../../shared/ui/data-table'
+import { Dialog } from '../../../shared/ui/dialog'
 import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../shared/ui/state-block'
 import { CrmDashboardCharts } from '../../crm/components/CrmDashboardCharts'
 import { MessageComposerModal, type MessageComposerValues } from '../components/MessageComposerModal'
@@ -17,6 +19,8 @@ import { PaymentFormModal, type PaymentFormValues } from '../components/PaymentF
 import { CompanyPaymentFormModal, type CompanyPaymentFormValues } from '../components/CompanyPaymentFormModal'
 import { WorkdayOverrideFormDialog } from '../components/WorkdayOverrideFormDialog'
 import { crmService } from '../../../shared/api/services/crm.service'
+import { Avatar } from '../../projects/components/Avatar'
+import { isDueDateOverdue } from '../../projects/lib/format'
 
 const initialBroadcastMessage: MessageComposerValues = {
   subject: '',
@@ -41,6 +45,8 @@ const initialCompanyPaymentForm: CompanyPaymentFormValues = {
 
 const emptyPayments: PaymentItem[] = []
 const emptyCompanyPayments: CompanyPaymentRecord[] = []
+const emptyUsers: CeoUserRecord[] = []
+const emptyUserTasks: UserOpenCardRecord[] = []
 
 export function CeoDashboardPage() {
   const { t } = useTranslation()
@@ -88,8 +94,63 @@ export function CeoDashboardPage() {
   const [companyPaymentMode, setCompanyPaymentMode] = useState<'create' | 'edit'>('create')
   const [isOverrideOpen, setIsOverrideOpen] = useState(false)
 
+  // Task overview state
+  const [userTaskCounts, setUserTaskCounts] = useState<Record<number, number>>({})
+  const [isLoadingTaskCounts, setIsLoadingTaskCounts] = useState(false)
+  const [selectedTaskUserId, setSelectedTaskUserId] = useState<number | null>(null)
+  const [userTasksData, setUserTasksData] = useState<UserOpenCardRecord[]>(emptyUserTasks)
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [isLoadingUserTasks, setIsLoadingUserTasks] = useState(false)
+
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
+  const users = dashboardQuery.data?.users ?? emptyUsers
+
+  // Load task counts for all users when dashboard data loads
+  useEffect(() => {
+    if (users.length === 0) return
+
+    setIsLoadingTaskCounts(true)
+
+    const userIds = users.map((u) => u.id)
+
+    void Promise.allSettled(
+      users.map((user) => projectsService.listUserOpenCards(user.id)),
+    ).then((results) => {
+      const counts: Record<number, number> = {}
+      results.forEach((result, idx) => {
+        if (result.status === 'fulfilled') {
+          counts[userIds[idx]] = result.value.total_count
+        }
+      })
+      setUserTaskCounts(counts)
+      setIsLoadingTaskCounts(false)
+    })
+  }, [users])
+
+  async function handleOpenUserTasks(userId: number) {
+    setSelectedTaskUserId(userId)
+    setIsTaskDialogOpen(true)
+    setIsLoadingUserTasks(true)
+    setUserTasksData(emptyUserTasks)
+
+    try {
+      const result = await projectsService.listUserOpenCards(userId)
+      setUserTasksData(result.cards)
+    } catch {
+      setUserTasksData(emptyUserTasks)
+    } finally {
+      setIsLoadingUserTasks(false)
+    }
+  }
+
+  function handleCloseTaskDialog() {
+    setIsTaskDialogOpen(false)
+    setSelectedTaskUserId(null)
+    setUserTasksData(emptyUserTasks)
+  }
+
+  const selectedUser = users.find((u) => u.id === selectedTaskUserId)
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -440,168 +501,295 @@ export function CeoDashboardPage() {
       />
 
       <div className="grid gap-4 xl:grid-cols-2">
+        {/* Task Overview */}
         <Card noPadding>
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>{t('ceo.dashboard.payments.title')}</CardTitle>
-            <div className="flex wrap gap-2">
-              <Badge variant="success" dot>
-                {t('ceo.dashboard.payments.paid_count', { count: payments.filter((row) => row.payment).length })}
-              </Badge>
-              <Badge variant="warning" dot pulse={payments.some((row) => !row.payment)}>
-                {t('ceo.dashboard.payments.pending_count', { count: payments.filter((row) => !row.payment).length })}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              caption={t('ceo.dashboard.payments.title')}
-              rows={payments}
-              getRowKey={(row) => String(row.id)}
-              zebra
-              emptyState={
-                <EmptyStateBlock
-                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
-                  title={t('ceo.dashboard.payments.empty_title')}
-                />
-              }
-              columns={[
-                {
-                  key: 'project',
-                  header: t('ceo.dashboard.table.project'),
-                  render: (row) => row.project,
-                },
-                {
-                  key: 'date',
-                  header: t('ceo.dashboard.table.date'),
-                  render: (row) => (row.date ? formatShortDate(row.date) : '-'),
-                },
-                {
-                  key: 'amount',
-                  header: t('ceo.dashboard.table.amount'),
-                  align: 'right',
-                  render: (row) => formatCurrency(Number(row.summ ?? 0)),
-                },
-                {
-                  key: 'status',
-                  header: t('common.status'),
-                  render: (row) => (
-                    <Badge variant={row.payment ? 'success' : 'warning'} dot pulse={!row.payment}>
-                      {row.payment ? t('status.paid') : t('status.pending')}
-                    </Badge>
-                  ),
-                },
-                {
-                  key: 'actions',
-                  header: t('common.actions'),
-                  render: (row) => (
-                    <ActionsMenu
-                      label={t('ceo.dashboard.actions.open_row', { name: row.project })}
-                      items={[
-                        {
-                          label: t('common.edit'),
-                          onSelect: () => openEditPaymentModal(row),
-                        },
-                        {
-                          label: t('ceo.dashboard.actions.toggle'),
-                          onSelect: () => void handleTogglePayment(row),
-                        },
-                        {
-                          label: t('customers.actions.delete'),
-                          onSelect: () => void handleDeletePayment(row),
-                          tone: 'danger',
-                        },
-                      ]}
-                    />
-                  ),
-                },
-              ]}
-            />
-          </CardContent>
-        </Card>
-
-        <Card noPadding>
-          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-            <div className="space-y-1">
-              <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>
-            </div>
+            <CardTitle>{t('ceo.dashboard.tasks.title', 'Task Overview')}</CardTitle>
             <Badge variant="blue" dot>
-              {formatCurrency(companyPaymentsQuery.data?.totalAmount || 0)}
+              {t('ceo.dashboard.tasks.user_count', { count: users.filter((u) => u.is_active).length, defaultValue: '{{count}} users' })}
             </Badge>
           </CardHeader>
           <CardContent>
-            <DataTable
-              caption={t('ceo.dashboard.recurring.title')}
-              rows={companyPayments}
-              getRowKey={(row) => String(row.id)}
-              zebra
-              emptyState={
-                <EmptyStateBlock
-                  eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
-                  title={t('ceo.dashboard.recurring.empty_title')}
-                />
-              }
-              columns={[
-                {
-                  key: 'title',
-                  header: t('ceo.recurring.form.title'),
-                  render: (row) => (
-                    <div>
-                      <p className="font-semibold text-white">{row.title}</p>
-                      {row.note && <p className="mt-1 text-xs text-(--muted) line-clamp-1">{row.note}</p>}
-                    </div>
-                  ),
-                },
-                {
-                  key: 'amount',
-                  header: t('ceo.recurring.form.amount'),
-                  align: 'right',
-                  render: (row) => formatCurrency(row.amount),
-                },
-                {
-                  key: 'day',
-                  header: t('ceo.recurring.form.payment_day'),
-                  align: 'center',
-                  render: (row) => (
-                    <div className="flex flex-col items-center">
-                      <span className="text-sm font-bold text-blue-400">{row.payment_day}</span>
-                      <span className="text-[10px] uppercase text-(--muted)">{row.payment_time}</span>
-                    </div>
-                  ),
-                },
-                {
-                  key: 'status',
-                  header: t('common.status'),
-                  render: (row) => (
-                    <Badge variant={row.is_active ? 'success' : 'outline'}>
-                      {row.is_active ? t('status.active') : t('status.inactive')}
-                    </Badge>
-                  ),
-                },
-                {
-                  key: 'actions',
-                  header: t('common.actions'),
-                  render: (row) => (
-                    <ActionsMenu
-                      label={t('ceo.dashboard.actions.open_row', { name: row.title })}
-                      items={[
-                        {
-                          label: t('common.edit'),
-                          onSelect: () => openEditCompanyPaymentModal(row),
-                        },
-                        {
-                          label: t('customers.actions.delete'),
-                          onSelect: () => void handleDeleteCompanyPayment(row),
-                          tone: 'danger',
-                        },
-                      ]}
+            {users.length === 0 ? (
+              <EmptyStateBlock
+                eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
+                title={t('ceo.dashboard.tasks.empty_users', 'No users found')}
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2 py-1 sm:grid-cols-3">
+                {users.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    onClick={() => void handleOpenUserTasks(user.id)}
+                    className="flex flex-col items-center gap-2 rounded-xl border border-(--border) bg-(--accent-soft)/20 p-3 text-center transition-colors hover:border-(--border-active,var(--border)) hover:bg-(--accent-soft)"
+                  >
+                    <Avatar
+                      name={user.name}
+                      surname={user.surname}
+                      imageUrl={(user.profile_image as string | null | undefined) ?? null}
+                      size="lg"
                     />
-                  ),
-                },
-              ]}
-            />
+                    <div className="w-full min-w-0">
+                      <p className="truncate text-sm font-semibold leading-snug">
+                        {user.name} {user.surname}
+                      </p>
+                      {user.job_title && (
+                        <p className="mt-0.5 truncate text-xs text-(--muted)">{user.job_title as string}</p>
+                      )}
+                      <div className="mt-1.5 flex justify-center">
+                        {isLoadingTaskCounts ? (
+                          <Badge variant="outline" size="sm">...</Badge>
+                        ) : (
+                          <Badge
+                            variant={userTaskCounts[user.id] ? 'warning' : 'outline'}
+                            dot={Boolean(userTaskCounts[user.id])}
+                            size="sm"
+                          >
+                            {userTaskCounts[user.id] ?? 0} {t('ceo.dashboard.tasks.task_label', 'task')}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        {/* Right column: Company Payment Reminders + CEO Payment List */}
+        <div className="flex flex-col gap-4">
+          <Card noPadding>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle>{t('ceo.dashboard.recurring.title')}</CardTitle>
+              </div>
+              <Badge variant="blue" dot>
+                {formatCurrency(companyPaymentsQuery.data?.totalAmount || 0)}
+              </Badge>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                caption={t('ceo.dashboard.recurring.title')}
+                rows={companyPayments}
+                getRowKey={(row) => String(row.id)}
+                zebra
+                emptyState={
+                  <EmptyStateBlock
+                    eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
+                    title={t('ceo.dashboard.recurring.empty_title')}
+                  />
+                }
+                columns={[
+                  {
+                    key: 'title',
+                    header: t('ceo.recurring.form.title'),
+                    render: (row) => (
+                      <div>
+                        <p className="font-semibold text-white">{row.title}</p>
+                        {row.note && <p className="mt-1 text-xs text-(--muted) line-clamp-1">{row.note}</p>}
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'amount',
+                    header: t('ceo.recurring.form.amount'),
+                    align: 'right',
+                    render: (row) => formatCurrency(row.amount),
+                  },
+                  {
+                    key: 'day',
+                    header: t('ceo.recurring.form.payment_day'),
+                    align: 'center',
+                    render: (row) => (
+                      <div className="flex flex-col items-center">
+                        <span className="text-sm font-bold text-blue-400">{row.payment_day}</span>
+                        <span className="text-[10px] uppercase text-(--muted)">{row.payment_time}</span>
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'status',
+                    header: t('common.status'),
+                    render: (row) => (
+                      <Badge variant={row.is_active ? 'success' : 'outline'}>
+                        {row.is_active ? t('status.active') : t('status.inactive')}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: t('common.actions'),
+                    render: (row) => (
+                      <ActionsMenu
+                        label={t('ceo.dashboard.actions.open_row', { name: row.title })}
+                        items={[
+                          {
+                            label: t('common.edit'),
+                            onSelect: () => openEditCompanyPaymentModal(row),
+                          },
+                          {
+                            label: t('customers.actions.delete'),
+                            onSelect: () => void handleDeleteCompanyPayment(row),
+                            tone: 'danger',
+                          },
+                        ]}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
+
+          <Card noPadding>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>{t('ceo.dashboard.payments.title')}</CardTitle>
+              <div className="flex wrap gap-2">
+                <Badge variant="success" dot>
+                  {t('ceo.dashboard.payments.paid_count', { count: payments.filter((row) => row.payment).length })}
+                </Badge>
+                <Badge variant="warning" dot pulse={payments.some((row) => !row.payment)}>
+                  {t('ceo.dashboard.payments.pending_count', { count: payments.filter((row) => !row.payment).length })}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <DataTable
+                caption={t('ceo.dashboard.payments.title')}
+                rows={payments}
+                getRowKey={(row) => String(row.id)}
+                zebra
+                emptyState={
+                  <EmptyStateBlock
+                    eyebrow={t('ceo.dashboard.header.eyebrow', 'CEO Workspace')}
+                    title={t('ceo.dashboard.payments.empty_title')}
+                  />
+                }
+                columns={[
+                  {
+                    key: 'project',
+                    header: t('ceo.dashboard.table.project'),
+                    render: (row) => row.project,
+                  },
+                  {
+                    key: 'date',
+                    header: t('ceo.dashboard.table.date'),
+                    render: (row) => (row.date ? formatShortDate(row.date) : '-'),
+                  },
+                  {
+                    key: 'amount',
+                    header: t('ceo.dashboard.table.amount'),
+                    align: 'right',
+                    render: (row) => formatCurrency(Number(row.summ ?? 0)),
+                  },
+                  {
+                    key: 'status',
+                    header: t('common.status'),
+                    render: (row) => (
+                      <Badge variant={row.payment ? 'success' : 'warning'} dot pulse={!row.payment}>
+                        {row.payment ? t('status.paid') : t('status.pending')}
+                      </Badge>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: t('common.actions'),
+                    render: (row) => (
+                      <ActionsMenu
+                        label={t('ceo.dashboard.actions.open_row', { name: row.project })}
+                        items={[
+                          {
+                            label: t('common.edit'),
+                            onSelect: () => openEditPaymentModal(row),
+                          },
+                          {
+                            label: t('ceo.dashboard.actions.toggle'),
+                            onSelect: () => void handleTogglePayment(row),
+                          },
+                          {
+                            label: t('customers.actions.delete'),
+                            onSelect: () => void handleDeletePayment(row),
+                            tone: 'danger',
+                          },
+                        ]}
+                      />
+                    ),
+                  },
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {/* Task list dialog */}
+      <Dialog
+        open={isTaskDialogOpen}
+        onClose={handleCloseTaskDialog}
+        title={
+          selectedUser
+            ? `${selectedUser.name} ${selectedUser.surname}`
+            : t('ceo.dashboard.tasks.dialog_title', 'Tasks')
+        }
+        description={t('ceo.dashboard.tasks.dialog_desc', 'Open tasks (To-Do list)')}
+        size="lg"
+      >
+        {isLoadingUserTasks ? (
+          <div className="flex items-center justify-center py-10 text-sm text-(--muted)">
+            {t('common.loading', 'Loading...')}
+          </div>
+        ) : userTasksData.length === 0 ? (
+          <div className="py-10 text-center text-sm text-(--muted)">
+            {t('ceo.dashboard.tasks.no_tasks', 'No open tasks')}
+          </div>
+        ) : (
+          <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+            {userTasksData.map((task) => {
+              const isOverdue = isDueDateOverdue(task.due_date)
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-start gap-3 rounded-lg border border-(--border) p-3 transition-colors hover:bg-(--accent-soft)/30"
+                >
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-(--border)" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold leading-snug">{task.title}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-(--muted)">
+                      <span>{task.project_name}</span>
+                      <span>·</span>
+                      <span>{task.column_name}</span>
+                      {task.due_date && (
+                        <>
+                          <span>·</span>
+                          <span className={isOverdue ? 'text-red-400' : ''}>
+                            {formatShortDate(task.due_date)}
+                            {isOverdue ? ` (${t('ceo.dashboard.tasks.overdue', 'overdue')})` : ''}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {task.priority && (
+                    <Badge
+                      variant={
+                        task.priority === 'urgent' ? 'danger' :
+                        task.priority === 'high' ? 'warning' :
+                        'outline'
+                      }
+                      size="sm"
+                      className="shrink-0"
+                    >
+                      {task.priority}
+                    </Badge>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Dialog>
 
       <MessageComposerModal
         open={isBroadcastOpen}
