@@ -1087,6 +1087,7 @@ export function CrmDashboardPage() {
       <CustomerFormModal
         open={isFormOpen}
         mode={modalMode}
+        customerId={modalMode === 'edit' ? (selectedCustomer?.id ?? undefined) : undefined}
         values={formValues}
         statusOptions={[
           { value: 'contacted', label: t('status.contacted', 'Contacted') },
