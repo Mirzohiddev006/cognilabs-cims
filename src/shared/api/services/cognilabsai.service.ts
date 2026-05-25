@@ -82,6 +82,8 @@ export type IntegrationConfig = {
   telegram_session: string | null
   websocket_api_key: string | null
   frontend_base_url: string | null
+  cognilabs_telegram_token?: string | null
+  cognilabs_channel_id?: string | null
   instagram_followup_enabled?: boolean | null
   instagram_followup_delay_minutes?: number | null
   instagram_followup_message?: string | null

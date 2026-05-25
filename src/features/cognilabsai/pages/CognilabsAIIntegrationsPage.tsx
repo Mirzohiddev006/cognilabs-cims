@@ -36,11 +36,12 @@ type FollowUpChannelState = {
 }
 
 type DefaultFollowUpStep = {
+  enabled: boolean
   delay_minutes: string
   message: string
 }
 
-const emptyDefaultStep: DefaultFollowUpStep = { delay_minutes: '', message: '' }
+const emptyDefaultStep: DefaultFollowUpStep = { enabled: false, delay_minutes: '', message: '' }
 
 const sections: Section[] = [
   {
@@ -130,6 +131,8 @@ const emptyForm: IntegrationConfigPayload = {
   telegram_session: null,
   websocket_api_key: null,
   frontend_base_url: null,
+  cognilabs_telegram_token: null,
+  cognilabs_channel_id: null,
 }
 
 const emptyFollowUp: Record<'instagram' | 'telegram', FollowUpChannelState> = {
@@ -153,6 +156,7 @@ export function CognilabsAIIntegrationsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [activeSection, setActiveSection] = useState(sections[0].id)
   const [revealedKeys, setRevealedKeys] = useState<Set<string>>(new Set())
+  const [telegramTab, setTelegramTab] = useState<'telegram' | 'lead-bot'>('telegram')
   const [followUp, setFollowUp] = useState(emptyFollowUp)
   const [instagramDefaultSteps, setInstagramDefaultSteps] = useState<[DefaultFollowUpStep, DefaultFollowUpStep, DefaultFollowUpStep]>([
     { ...emptyDefaultStep },
@@ -175,6 +179,8 @@ export function CognilabsAIIntegrationsPage() {
         telegram_session: data.telegram_session ?? null,
         websocket_api_key: data.websocket_api_key ?? null,
         frontend_base_url: data.frontend_base_url ?? null,
+        cognilabs_telegram_token: data.cognilabs_telegram_token ?? null,
+        cognilabs_channel_id: data.cognilabs_channel_id ?? null,
       })
       setFollowUp({
         instagram: {
@@ -190,14 +196,17 @@ export function CognilabsAIIntegrationsPage() {
       })
       setInstagramDefaultSteps([
         {
+          enabled: Boolean(data.instagram_default_followup_step1_message || data.instagram_default_followup_step1_delay_minutes),
           delay_minutes: data.instagram_default_followup_step1_delay_minutes != null ? String(data.instagram_default_followup_step1_delay_minutes) : '',
           message: data.instagram_default_followup_step1_message ?? '',
         },
         {
+          enabled: Boolean(data.instagram_default_followup_step2_message || data.instagram_default_followup_step2_delay_minutes),
           delay_minutes: data.instagram_default_followup_step2_delay_minutes != null ? String(data.instagram_default_followup_step2_delay_minutes) : '',
           message: data.instagram_default_followup_step2_message ?? '',
         },
         {
+          enabled: Boolean(data.instagram_default_followup_step3_message || data.instagram_default_followup_step3_delay_minutes),
           delay_minutes: data.instagram_default_followup_step3_delay_minutes != null ? String(data.instagram_default_followup_step3_delay_minutes) : '',
           message: data.instagram_default_followup_step3_message ?? '',
         },
@@ -234,12 +243,12 @@ export function CognilabsAIIntegrationsPage() {
           ? Number(followUp.telegram.delay_minutes)
           : null,
         telegram_followup_message: followUp.telegram.enabled ? followUp.telegram.message.trim() || null : null,
-        instagram_default_followup_step1_delay_minutes: instagramDefaultSteps[0].delay_minutes.trim() ? Number(instagramDefaultSteps[0].delay_minutes) : null,
-        instagram_default_followup_step1_message: instagramDefaultSteps[0].message.trim() || null,
-        instagram_default_followup_step2_delay_minutes: instagramDefaultSteps[1].delay_minutes.trim() ? Number(instagramDefaultSteps[1].delay_minutes) : null,
-        instagram_default_followup_step2_message: instagramDefaultSteps[1].message.trim() || null,
-        instagram_default_followup_step3_delay_minutes: instagramDefaultSteps[2].delay_minutes.trim() ? Number(instagramDefaultSteps[2].delay_minutes) : null,
-        instagram_default_followup_step3_message: instagramDefaultSteps[2].message.trim() || null,
+        instagram_default_followup_step1_delay_minutes: instagramDefaultSteps[0].enabled && instagramDefaultSteps[0].delay_minutes.trim() ? Number(instagramDefaultSteps[0].delay_minutes) : null,
+        instagram_default_followup_step1_message: instagramDefaultSteps[0].enabled ? instagramDefaultSteps[0].message.trim() || null : null,
+        instagram_default_followup_step2_delay_minutes: instagramDefaultSteps[1].enabled && instagramDefaultSteps[1].delay_minutes.trim() ? Number(instagramDefaultSteps[1].delay_minutes) : null,
+        instagram_default_followup_step2_message: instagramDefaultSteps[1].enabled ? instagramDefaultSteps[1].message.trim() || null : null,
+        instagram_default_followup_step3_delay_minutes: instagramDefaultSteps[2].enabled && instagramDefaultSteps[2].delay_minutes.trim() ? Number(instagramDefaultSteps[2].delay_minutes) : null,
+        instagram_default_followup_step3_message: instagramDefaultSteps[2].enabled ? instagramDefaultSteps[2].message.trim() || null : null,
       })
       setSaveSuccess(true)
       showToast({ title: 'Integrations saved', tone: 'success' })
@@ -251,7 +260,7 @@ export function CognilabsAIIntegrationsPage() {
     }
   }
 
-  function updateDefaultStep(index: 0 | 1 | 2, key: keyof DefaultFollowUpStep, value: string) {
+  function updateDefaultStep(index: 0 | 1 | 2, key: keyof DefaultFollowUpStep, value: string | boolean) {
     setInstagramDefaultSteps((prev) => {
       const next = [...prev] as [DefaultFollowUpStep, DefaultFollowUpStep, DefaultFollowUpStep]
       next[index] = { ...next[index], [key]: value }
@@ -427,20 +436,26 @@ export function CognilabsAIIntegrationsPage() {
 
                     return (
                       <div key={channel} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center justify-between gap-3">
                           <div>
                             <h3 className="text-sm font-semibold text-(--foreground)">{label} follow-up</h3>
                             <p className="mt-0.5 text-xs text-(--muted)">One-time static reminder message.</p>
                           </div>
-                          <label className="inline-flex items-center gap-2 text-xs font-semibold text-(--muted-strong)">
-                            Enabled
-                            <input
-                              type="checkbox"
-                              checked={channelState.enabled}
-                              onChange={(e) => updateFollowUpField(channel, 'enabled', e.target.checked)}
-                              className="h-4 w-4 rounded border-(--border) bg-(--surface) text-blue-600 focus:ring-blue-500/30 transition-all"
-                            />
-                          </label>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={channelState.enabled}
+                            onClick={() => updateFollowUpField(channel, 'enabled', !channelState.enabled)}
+                            className={cn(
+                              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30',
+                              channelState.enabled ? 'bg-blue-600' : 'bg-(--border)',
+                            )}
+                          >
+                            <span className={cn(
+                              'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition duration-200',
+                              channelState.enabled ? 'translate-x-4' : 'translate-x-0',
+                            )} />
+                          </button>
                         </div>
 
                         <div className={cn('mt-4 space-y-3 transition-opacity duration-200', !channelState.enabled && 'opacity-40 pointer-events-none')}>
@@ -478,8 +493,25 @@ export function CognilabsAIIntegrationsPage() {
                     <div className="grid gap-4 lg:grid-cols-3">
                       {([0, 1, 2] as const).map((i) => (
                         <div key={i} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
-                          <p className="mb-3 text-sm font-semibold text-(--foreground)">Step {i + 1}</p>
-                          <div className="space-y-3">
+                          <div className="mb-3 flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold text-(--foreground)">Step {i + 1}</p>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={instagramDefaultSteps[i].enabled}
+                              onClick={() => updateDefaultStep(i, 'enabled', !instagramDefaultSteps[i].enabled)}
+                              className={cn(
+                                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30',
+                                instagramDefaultSteps[i].enabled ? 'bg-blue-600' : 'bg-(--border)',
+                              )}
+                            >
+                              <span className={cn(
+                                'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition duration-200',
+                                instagramDefaultSteps[i].enabled ? 'translate-x-4' : 'translate-x-0',
+                              )} />
+                            </button>
+                          </div>
+                          <div className={cn('space-y-3 transition-opacity duration-200', !instagramDefaultSteps[i].enabled && 'opacity-40 pointer-events-none')}>
                             <div>
                               <label className="mb-1 block text-xs font-semibold text-(--muted-strong)">Delay (minutes)</label>
                               <Input
@@ -504,6 +536,161 @@ export function CognilabsAIIntegrationsPage() {
                       ))}
                     </div>
                   </div>
+                </div>
+              ) : activeSection === 'telegram' ? (
+                <div className="flex flex-col gap-4">
+                  {/* Tab switcher */}
+                  <div className="flex gap-1 rounded-xl border border-(--border) bg-(--surface) p-1 w-fit">
+                    <button
+                      type="button"
+                      onClick={() => setTelegramTab('telegram')}
+                      className={cn(
+                        'rounded-lg px-4 py-1.5 text-xs font-semibold transition-all',
+                        telegramTab === 'telegram'
+                          ? 'bg-(--blue-soft) text-(--blue-text) shadow-sm'
+                          : 'text-(--muted) hover:text-(--foreground)',
+                      )}
+                    >
+                      Telegram
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTelegramTab('lead-bot')}
+                      className={cn(
+                        'rounded-lg px-4 py-1.5 text-xs font-semibold transition-all',
+                        telegramTab === 'lead-bot'
+                          ? 'bg-(--blue-soft) text-(--blue-text) shadow-sm'
+                          : 'text-(--muted) hover:text-(--foreground)',
+                      )}
+                    >
+                      Lead Bot
+                    </button>
+                  </div>
+
+                  {/* Tab content */}
+                  {telegramTab === 'telegram'
+                    ? sections.find((s) => s.id === 'telegram')!.fields.map((field) => {
+                        const value = fieldValue(form, field.key)
+                        const isSecret = field.type === 'password'
+                        const isRevealed = revealedKeys.has(field.key)
+                        const hasContent = Boolean(value)
+
+                        return (
+                          <div key={field.key}>
+                            <div className="mb-1 flex items-center gap-2">
+                              <label className="text-xs font-semibold text-(--foreground)">{field.label}</label>
+                              {field.required ? (
+                                <span className="rounded-md border border-(--blue-border) bg-(--blue-dim) px-1.5 py-0.5 text-[10px] font-semibold text-(--blue-text)">Required</span>
+                              ) : null}
+                              {hasContent && !isSecret ? (
+                                <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">Set</span>
+                              ) : hasContent && isSecret ? (
+                                <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">Configured</span>
+                              ) : null}
+                            </div>
+                            {isSecret ? (
+                              <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                  <Input
+                                    type={isRevealed ? 'text' : 'password'}
+                                    value={value}
+                                    onChange={(e) => updateField(field.key, e.target.value)}
+                                    placeholder={field.placeholder ?? '••••••••••••••••'}
+                                    className="w-full font-mono text-sm"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleReveal(field.key)}
+                                  className="shrink-0 rounded-xl border border-(--border) bg-(--surface) px-3 text-xs font-semibold text-(--muted) transition hover:bg-(--accent-soft) hover:text-(--foreground)"
+                                >
+                                  {isRevealed ? (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" strokeLinecap="round" strokeLinejoin="round" />
+                                      <line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round" />
+                                    </svg>
+                                  ) : (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                  )}
+                                </button>
+                              </div>
+                            ) : (
+                              <Input
+                                value={value}
+                                onChange={(e) => updateField(field.key, e.target.value)}
+                                placeholder={field.placeholder}
+                                className="font-mono text-sm"
+                              />
+                            )}
+                            {field.hint ? (
+                              <p className="mt-1.5 flex items-start gap-1 text-xs text-(--muted)">
+                                <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-3.5 w-3.5 shrink-0 opacity-60">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                </svg>
+                                {field.hint}
+                              </p>
+                            ) : null}
+                          </div>
+                        )
+                      })
+                    : (
+                      <>
+                        <div>
+                          <div className="mb-1 flex items-center gap-2">
+                            <label className="text-xs font-semibold text-(--foreground)">Bot Token</label>
+                            {form.cognilabs_telegram_token ? (
+                              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">Configured</span>
+                            ) : null}
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Input
+                                type={revealedKeys.has('cognilabs_telegram_token') ? 'text' : 'password'}
+                                value={form.cognilabs_telegram_token ?? ''}
+                                onChange={(e) => updateField('cognilabs_telegram_token', e.target.value)}
+                                placeholder="••••••••••••••••"
+                                className="w-full font-mono text-sm"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleReveal('cognilabs_telegram_token')}
+                              className="shrink-0 rounded-xl border border-(--border) bg-(--surface) px-3 text-xs font-semibold text-(--muted) transition hover:bg-(--accent-soft) hover:text-(--foreground)"
+                            >
+                              {revealedKeys.has('cognilabs_telegram_token') ? (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                  <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" strokeLinecap="round" strokeLinejoin="round" />
+                                  <line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round" />
+                                </svg>
+                              ) : (
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-1 flex items-center gap-2">
+                            <label className="text-xs font-semibold text-(--foreground)">Channel ID</label>
+                            {form.cognilabs_channel_id ? (
+                              <span className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">Set</span>
+                            ) : null}
+                          </div>
+                          <Input
+                            value={form.cognilabs_channel_id ?? ''}
+                            onChange={(e) => updateField('cognilabs_channel_id', e.target.value)}
+                            placeholder="e.g. -1001234567890"
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                      </>
+                    )
+                  }
                 </div>
               ) : (
                 currentSection.fields.map((field) => {
@@ -599,6 +786,10 @@ export function CognilabsAIIntegrationsPage() {
               <p className="text-xs text-(--muted)">
                 {activeSection === 'follow-up'
                   ? `${(Object.values(followUp) as FollowUpChannelState[]).filter(s => s.enabled).length} channels enabled`
+                  : activeSection === 'telegram'
+                  ? telegramTab === 'telegram'
+                    ? `${currentSection.fields.filter((f) => Boolean(fieldValue(form, f.key))).length} of ${currentSection.fields.length} fields configured`
+                    : `${[form.cognilabs_telegram_token, form.cognilabs_channel_id].filter(Boolean).length} of 2 fields configured`
                   : `${currentSection.fields.filter((f) => Boolean(fieldValue(form, f.key))).length} of ${currentSection.fields.length} fields configured`
                 }
               </p>
