@@ -278,43 +278,43 @@ function SnapshotCard({
   secondaryValue,
   icon,
 }: SnapshotCardProps) {
-  const accentClasses = {
-    default: 'border-[var(--border)] bg-[var(--accent-soft)]',
-    danger: 'border-[var(--danger-border)] bg-[var(--danger-dim)]',
-    blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)]',
-    success: 'border-[var(--success-border)] bg-[var(--success-dim)]',
-    warning: 'border-[var(--warning-border)] bg-[var(--warning-dim)]',
+  const iconClasses = {
+    default: 'border-(--border) bg-(--muted-surface) text-(--muted-strong)',
+    danger: 'border-(--danger-border) bg-(--danger-dim) text-(--danger-text)',
+    blue: 'border-(--blue-border) bg-(--blue-dim) text-(--blue-text)',
+    success: 'border-(--success-border) bg-(--success-dim) text-(--success-text)',
+    warning: 'border-(--warning-border) bg-(--warning-dim) text-(--warning-text)',
   } as const
 
-  const iconWrapperClasses = {
-    default: 'border-[var(--border)] bg-[var(--accent-soft)] text-[var(--muted-strong)]',
-    danger: 'border-[var(--danger-border)] bg-[var(--danger-dim)] text-[var(--danger-text)]',
-    blue: 'border-[var(--blue-border)] bg-[var(--blue-dim)] text-[var(--blue-text)]',
-    success: 'border-[var(--success-border)] bg-[var(--success-dim)] text-[var(--success-text)]',
-    warning: 'border-[var(--warning-border)] bg-[var(--warning-dim)] text-[var(--warning-text)]',
+  const valueClasses = {
+    default: 'text-(--foreground)',
+    danger: 'text-(--danger-text)',
+    blue: 'text-(--blue-text)',
+    success: 'text-(--success-text)',
+    warning: 'text-(--warning-text)',
   } as const
 
   return (
-    <div className={cn('relative flex flex-col gap-4 rounded-xl border p-5 shadow-sm transition-all hover:shadow-md', accentClasses[accent])}>
-      <div className="flex items-start justify-between">
-        <div className={cn('grid h-10 w-10 shrink-0 place-items-center rounded-xl border', iconWrapperClasses[accent])}>
+    <div className="group flex flex-col gap-3 rounded-xl border border-(--border) bg-(--surface-elevated) p-4 shadow-sm transition-all hover:border-(--blue-border) hover:shadow-md">
+      <div className="flex items-center justify-between">
+        <div className={cn('grid h-8 w-8 shrink-0 place-items-center rounded-lg border transition-colors', iconClasses[accent])}>
           {icon || (
-            <svg viewBox="0 0 16 16" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 3v10M3 8h10" />
             </svg>
           )}
         </div>
         {secondaryValue ? (
-          <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[11px] font-bold tabular-nums text-[var(--muted-strong)]">
+          <span className="rounded-full border border-(--border) bg-(--muted-surface) px-2 py-0.5 text-[10px] font-bold tabular-nums text-(--muted-strong)">
             {secondaryValue}
           </span>
         ) : null}
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[var(--muted)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-(--muted)">
           {label}
         </p>
-        <p className={cn('mt-2 text-xl font-bold tabular-nums tracking-tight text-[var(--foreground)]')}>
+        <p className={cn('mt-1.5 text-lg font-bold tabular-nums tracking-tight', valueClasses[accent])}>
           {value}
         </p>
       </div>
@@ -1148,23 +1148,11 @@ export function FaultsMemberDetailPage({
 
       <Card noPadding className="overflow-hidden rounded-xl border-[var(--border)] bg-[var(--surface-elevated)] shadow-[var(--shadow-lg)]">
         <CardSection eyebrow={lt('Snapshot')} title={tr('Salary at a glance', 'Maosh umumiy ko\'rinishi', 'Зарплата кратко')}>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <SnapshotCard
               label={tr('Final salary', 'Yakuniy maosh', 'Итоговая зарплата')}
               value={formatAmount(detail.report.finalSalary)}
               icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>}
-            />
-            <SnapshotCard
-              label={tr('Estimated salary', 'Taxminiy maosh', 'Оценочная зарплата')}
-              value={formatAmount(detail.report.estimatedSalary)}
-              accent="warning"
-              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="8" x2="16" y1="10" y2="10"/><line x1="8" x2="8" y1="14" y2="18"/><line x1="12" x2="12" y1="14" y2="18"/><line x1="16" x2="16" y1="14" y2="18"/></svg>}
-            />
-            <SnapshotCard
-              label={tr('Difference', 'Ayirma', 'Разница')}
-              value={formatAmount(detail.report.deductionAmount)}
-              accent={(detail.report.deductionAmount ?? 0) !== 0 ? 'danger' : 'default'}
-              icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5M3 13l18 5"/></svg>}
             />
             <SnapshotCard
               label={tr('Bonus amount', 'Bonus summasi', 'Сумма бонуса')}
@@ -1223,7 +1211,7 @@ export function FaultsMemberDetailPage({
                     <h4 className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-(--muted)">
                       {tr('Salary Composition', 'Maosh tarkibi', 'Состав зарплаты')}
                     </h4>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                       <SnapshotCard
                         label={lt('Base salary')}
                         value={formatAmount(detail.report.baseSalary)}
@@ -1246,12 +1234,6 @@ export function FaultsMemberDetailPage({
                         value={formatCount(detail.report.deliveryBonusCount)}
                         accent="success"
                         icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>}
-                      />
-                      <SnapshotCard
-                        label={tr('Calculated final', 'Hisoblangan yakuniy', 'Рассчитанная итоговая')}
-                        value={formatAmount(detail.report.finalSalary)}
-                        accent="blue"
-                        icon={<svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>}
                       />
                     </div>
                   </div>
