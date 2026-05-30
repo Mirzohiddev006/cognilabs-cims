@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { ceoService, type CeoUserRecord, type CompanyPaymentRecord } from '../../../shared/api/services/ceo.service'
 import { projectsService, type UserOpenCardRecord } from '../../../shared/api/services/projects.service'
 import type { PaymentItem } from '../../../shared/api/types'
@@ -47,9 +48,23 @@ const emptyPayments: PaymentItem[] = []
 const emptyCompanyPayments: CompanyPaymentRecord[] = []
 const emptyUsers: CeoUserRecord[] = []
 const emptyUserTasks: UserOpenCardRecord[] = []
+const doneColumnNamePattern = /\b(done|complete|completed|closed|finished|resolved)\b/i
+
+function isDoneTask(task: Pick<UserOpenCardRecord, 'column_name'>) {
+  return doneColumnNamePattern.test(task.column_name.trim())
+}
+
+function filterOpenTasks(tasks: UserOpenCardRecord[]) {
+  return tasks.filter((task) => !isDoneTask(task))
+}
+
+function getTaskPath(task: UserOpenCardRecord) {
+  return `/projects/${task.project_id}?board=${task.board_id}&card=${task.id}`
+}
 
 export function CeoDashboardPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
 
@@ -101,32 +116,64 @@ export function CeoDashboardPage() {
   const [userTasksData, setUserTasksData] = useState<UserOpenCardRecord[]>(emptyUserTasks)
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [isLoadingUserTasks, setIsLoadingUserTasks] = useState(false)
+  const [isCompletingTaskId, setIsCompletingTaskId] = useState<number | null>(null)
 
   const payments = paymentsQuery.data?.payments ?? emptyPayments
   const companyPayments = companyPaymentsQuery.data?.payments ?? emptyCompanyPayments
   const users = dashboardQuery.data?.users ?? emptyUsers
+  const selectedUser = users.find((u) => u.id === selectedTaskUserId)
 
   // Load task counts for all users when dashboard data loads
   useEffect(() => {
-    if (users.length === 0) return
+    let cancelled = false
 
-    setIsLoadingTaskCounts(true)
-
-    const userIds = users.map((u) => u.id)
-
-    void Promise.allSettled(
-      users.map((user) => projectsService.listUserOpenCards(user.id)),
-    ).then((results) => {
-      const counts: Record<number, number> = {}
-      results.forEach((result, idx) => {
-        if (result.status === 'fulfilled') {
-          counts[userIds[idx]] = result.value.total_count
+    async function loadTaskCounts() {
+      if (users.length === 0) {
+        if (!cancelled) {
+          setUserTaskCounts({})
+          setIsLoadingTaskCounts(false)
         }
-      })
-      setUserTaskCounts(counts)
-      setIsLoadingTaskCounts(false)
-    })
+        return
+      }
+
+      if (!cancelled) {
+        setIsLoadingTaskCounts(true)
+      }
+
+      const userIds = users.map((u) => u.id)
+
+      try {
+        const results = await Promise.allSettled(userIds.map((userId) => projectsService.listUserOpenCards(userId)))
+
+        if (cancelled) {
+          return
+        }
+
+        const counts: Record<number, number> = {}
+        results.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            counts[userIds[idx]] = filterOpenTasks(result.value.cards).length
+          }
+        })
+        setUserTaskCounts(counts)
+      } finally {
+        if (!cancelled) {
+          setIsLoadingTaskCounts(false)
+        }
+      }
+    }
+
+    void loadTaskCounts()
+
+    return () => {
+      cancelled = true
+    }
   }, [users])
+
+  async function loadUserTasks(userId: number) {
+    const result = await projectsService.listUserOpenCards(userId)
+    return filterOpenTasks(result.cards)
+  }
 
   async function handleOpenUserTasks(userId: number) {
     setSelectedTaskUserId(userId)
@@ -135,8 +182,8 @@ export function CeoDashboardPage() {
     setUserTasksData(emptyUserTasks)
 
     try {
-      const result = await projectsService.listUserOpenCards(userId)
-      setUserTasksData(result.cards)
+      const tasks = await loadUserTasks(userId)
+      setUserTasksData(tasks)
     } catch {
       setUserTasksData(emptyUserTasks)
     } finally {
@@ -148,9 +195,86 @@ export function CeoDashboardPage() {
     setIsTaskDialogOpen(false)
     setSelectedTaskUserId(null)
     setUserTasksData(emptyUserTasks)
+    setIsCompletingTaskId(null)
   }
 
-  const selectedUser = users.find((u) => u.id === selectedTaskUserId)
+  async function refreshCurrentUserTasks() {
+    if (selectedTaskUserId === null) {
+      return
+    }
+
+    setIsLoadingUserTasks(true)
+
+    try {
+      const tasks = await loadUserTasks(selectedTaskUserId)
+      setUserTasksData(tasks)
+    } catch {
+      setUserTasksData(emptyUserTasks)
+    } finally {
+      setIsLoadingUserTasks(false)
+    }
+  }
+
+  async function refreshTaskCounts() {
+    if (users.length === 0) {
+      setUserTaskCounts({})
+      return
+    }
+
+    const userIds = users.map((u) => u.id)
+    const results = await Promise.allSettled(userIds.map((userId) => projectsService.listUserOpenCards(userId)))
+    const counts: Record<number, number> = {}
+
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled') {
+        counts[userIds[idx]] = filterOpenTasks(result.value.cards).length
+      }
+    })
+
+    setUserTaskCounts(counts)
+  }
+
+  async function handleMarkTaskDone(task: UserOpenCardRecord) {
+    if (isCompletingTaskId !== null) {
+      return
+    }
+
+    setIsCompletingTaskId(task.id)
+
+    try {
+      const board = await projectsService.getBoard(task.board_id)
+      const doneColumn = board.columns.find((column) => doneColumnNamePattern.test(column.name.trim()))
+
+      if (!doneColumn) {
+        showToast({
+          title: t('ceo.dashboard.tasks.done_column_missing_title', 'Done column not found'),
+          description: t('ceo.dashboard.tasks.done_column_missing_description', 'This board does not have a Done column.'),
+          tone: 'error',
+        })
+        return
+      }
+
+      await projectsService.moveCard(task.id, doneColumn.id, doneColumn.cards.length)
+
+      await Promise.allSettled([
+        refreshTaskCounts(),
+        selectedTaskUserId !== null ? refreshCurrentUserTasks() : Promise.resolve(),
+      ])
+
+      showToast({
+        title: t('ceo.dashboard.tasks.mark_done_title', 'Task marked as done'),
+        tone: 'success',
+      })
+    } catch (error) {
+      showToast({
+        title: t('ceo.dashboard.tasks.mark_done_failed_title', 'Failed to mark task as done'),
+        description: error instanceof Error ? error.message : t('common.try_again', 'Please try again'),
+        tone: 'error',
+      })
+    } finally {
+      setIsCompletingTaskId(null)
+    }
+  }
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -751,9 +875,32 @@ export function CeoDashboardPage() {
               return (
                 <div
                   key={task.id}
-                  className="flex items-start gap-3 rounded-lg border border-(--border) p-3 transition-colors hover:bg-(--accent-soft)/30"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(getTaskPath(task))}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      navigate(getTaskPath(task))
+                    }
+                  }}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-(--border) p-3 text-left transition-colors hover:bg-(--accent-soft)/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
                 >
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-(--border)" />
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      void handleMarkTaskDone(task)
+                    }}
+                    onMouseDown={(event) => {
+                      event.stopPropagation()
+                    }}
+                    disabled={isCompletingTaskId === task.id}
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-(--border) text-green-400 transition-colors hover:border-green-400 hover:bg-green-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={t('ceo.dashboard.tasks.mark_done', 'Mark task as done')}
+                    title={t('ceo.dashboard.tasks.mark_done', 'Mark task as done')}
+                  >
+                  </button>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold leading-snug">{task.title}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-(--muted)">

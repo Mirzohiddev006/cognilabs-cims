@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
@@ -104,6 +104,26 @@ function moveColumnInBoard(board: BoardDetail, columnId: number, order: number):
   }
 }
 
+function parsePositiveId(rawValue: string | null) {
+  if (!rawValue) {
+    return null
+  }
+
+  const parsed = Number(rawValue)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+function findCardInBoard(board: BoardDetail, cardId: number) {
+  for (const column of board.columns) {
+    const card = column.cards.find((item) => item.id === cardId)
+    if (card) {
+      return card
+    }
+  }
+
+  return null
+}
+
 export function BoardWorkspace({
   boardId,
   projectId = null,
@@ -111,6 +131,7 @@ export function BoardWorkspace({
   onBoardsChanged,
 }: BoardWorkspaceProps) {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user } = useAuth()
@@ -151,6 +172,25 @@ export function BoardWorkspace({
   const board = boardQuery.data
   const allUsers = canManageProjects ? usersQuery.data ?? [] : []
   const isReadOnlyBoard = !canManageProjects || Boolean(board?.is_archived)
+  const selectedCardId = parsePositiveId(searchParams.get('card'))
+
+  useEffect(() => {
+    if (!board) {
+      return
+    }
+
+    const matchingCard = selectedCardId === null ? null : findCardInBoard(board, selectedCardId)
+    if (matchingCard) {
+      if (matchingCard.id !== detailCard?.id) {
+        setDetailCard(matchingCard)
+      }
+      return
+    }
+
+    if (detailCard && !findCardInBoard(board, detailCard.id)) {
+      setDetailCard(null)
+    }
+  }, [board, detailCard?.id, selectedCardId])
 
   const boardStats = useMemo(() => {
     if (!board) {
@@ -275,6 +315,24 @@ export function BoardWorkspace({
     }
   }
 
+  function openCardDetail(card: CardRecord) {
+    setDetailCard(card)
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      next.set('card', String(card.id))
+      return next
+    })
+  }
+
+  function closeCardDetail() {
+    setDetailCard(null)
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current)
+      next.delete('card')
+      return next
+    })
+  }
+
   async function handleCreateCard(fd: FormData) {
     if (!canManageProjects || !addCardState || board?.is_archived) {
       return
@@ -304,7 +362,7 @@ export function BoardWorkspace({
       showToast({ title: lt('Card updated'), tone: 'success' })
       setEditCardState(null)
       if (detailCard?.id === editCardState.card.id) {
-        setDetailCard(null)
+        closeCardDetail()
       }
       await boardQuery.refetch()
     } catch {
@@ -333,7 +391,7 @@ export function BoardWorkspace({
       await projectsService.deleteCard(cardId)
       showToast({ title: lt('Card deleted'), tone: 'success' })
       if (detailCard?.id === cardId) {
-        setDetailCard(null)
+        closeCardDetail()
       }
       await boardQuery.refetch()
     } catch {
@@ -486,7 +544,7 @@ export function BoardWorkspace({
         onOpenAddCardModal={(columnId) => setAddCardState({ columnId })}
         onEditCard={(card) => setEditCardState({ card })}
         onDeleteCard={handleDeleteCard}
-        onClickCard={(card) => setDetailCard(card)}
+        onClickCard={openCardDetail}
         onEditColumn={(column) => setEditColumnState({ column })}
         onDeleteColumn={handleDeleteColumn}
         onAddColumn={() => setIsAddColumnOpen(true)}
@@ -565,16 +623,16 @@ export function BoardWorkspace({
       <CardDetailModal
         card={detailCard}
         open={detailCard !== null}
-        onClose={() => setDetailCard(null)}
+        onClose={closeCardDetail}
         onEdit={() => {
           if (detailCard && !isReadOnlyBoard) {
             setEditCardState({ card: detailCard })
-            setDetailCard(null)
+            closeCardDetail()
           }
         }}
         onDelete={() => {
           if (detailCard && !isReadOnlyBoard) {
-            setDetailCard(null)
+            closeCardDetail()
             void handleDeleteCard(detailCard.id)
           }
         }}

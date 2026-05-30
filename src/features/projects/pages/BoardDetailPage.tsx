@@ -31,7 +31,15 @@ export function BoardDetailPage() {
   }
 
   if (projectId !== null) {
-    return <Navigate to={`/projects/${projectId}?board=${id}`} replace />
+    const nextSearchParams = new URLSearchParams()
+    nextSearchParams.set('board', String(id))
+
+    const selectedCardId = searchParams.get('card')
+    if (selectedCardId) {
+      nextSearchParams.set('card', selectedCardId)
+    }
+
+    return <Navigate to={`/projects/${projectId}?${nextSearchParams.toString()}`} replace />
   }
 
   return <BoardWorkspace boardId={id} projectId={projectId} mode="fullscreen" />
