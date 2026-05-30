@@ -16,6 +16,7 @@ function buildUrl(path: string, query?: Record<string, string | number | boolean
     return url.toString()
   }
 
+  
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') {
       return
