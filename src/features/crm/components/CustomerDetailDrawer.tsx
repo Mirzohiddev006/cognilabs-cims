@@ -117,6 +117,8 @@ export function CustomerDetailContent({
   const { user: currentUser } = useAuth()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
+  const recallTone = getRecallTimeTone(customer.recall_time)
+  const recallTimeClasses = recallTone ? getRecallTimeToneClasses(recallTone) : ''
 
   // Additional notes from API
   const notesQuery = useAsyncData(() => crmService.getAdditionalNotes(customer.id), [customer.id], { enabled: Boolean(customer.id) })
@@ -281,29 +283,36 @@ export function CustomerDetailContent({
             />
           </div>
           <div className="grid gap-3 px-6 py-5">
-            {[
-              [t('common.phone', 'Phone'), customer.phone_number ?? customer.phone ?? '-'],
-              [t('common.platform', 'Platform'), getCustomerDisplayPlatform(customer) || '-'],
-              [t('customers.detail.audio_file_id', 'Audio file ID'), customer.audio_file_id || '-'],
-              [t('common.assistant', 'Assistant'), customer.assistant_name || '-'],
-              [
-                t('common.conversation_language', 'Conversation language'),
-                formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
-              ],
-              [
-                t('common.recall_time', 'Recall time'),
-                (
-                  <span className={`inline-flex rounded-sm border px-2.5 py-1 text-[13px] font-medium leading-none ${recallTimeClasses}`}>
-                    {formatNumericDateTime(customer.recall_time)}
-                  </span>
-                ),
-              ],
-            ].map(([label, value]) => (
-              <div key={label} className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
-                <span className="text-sm text-[var(--muted-strong)]">{label}</span>
-                <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{value}</span>
-              </div>
-            ))}
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('common.phone', 'Phone')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{customer.phone_number ?? customer.phone ?? '-'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('common.platform', 'Platform')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{getCustomerDisplayPlatform(customer) || '-'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('customers.detail.audio_file_id', 'Audio file ID')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{customer.audio_file_id || '-'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('common.assistant', 'Assistant')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">{customer.assistant_name || '-'}</span>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('common.conversation_language', 'Conversation language')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">
+                {formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language)}
+              </span>
+            </div>
+            <div className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+              <span className="text-sm text-[var(--muted-strong)]">{t('common.recall_time', 'Recall time')}</span>
+              <span className="max-w-[62%] break-all text-right text-sm font-semibold text-[var(--foreground)]">
+                <span className={`inline-flex rounded-sm border px-2.5 py-1 text-[13px] font-medium leading-none ${recallTimeClasses}`}>
+                  {formatNumericDateTime(customer.recall_time)}
+                </span>
+              </span>
+            </div>
           </div>
         </Card>
 
@@ -474,8 +483,6 @@ export function CustomerDetailDrawer({
     () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url),
     [customer?.audio_file_id, customer?.audio_url],
   )
-  const recallTone = getRecallTimeTone(customer?.recall_time)
-  const recallTimeClasses = recallTone ? getRecallTimeToneClasses(recallTone) : ''
 
   if (!open) {
     return null
