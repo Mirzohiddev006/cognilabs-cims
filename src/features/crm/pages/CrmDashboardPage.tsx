@@ -18,6 +18,7 @@ import {
 } from '../../../shared/lib/customer-display'
 import { formatCompactNumber, formatNumericDateTime } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
+import { getRecallTimeTone, getRecallTimeToneClasses } from '../lib/recallTime'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
@@ -178,6 +179,30 @@ function buildCustomerDraft(customer: CustomerSummary, values: CustomerFormValue
 
 function formatDateTime(value?: string | null) {
   return formatNumericDateTime(value)
+}
+
+function renderRecallTime(value?: string | null) {
+  const tone = getRecallTimeTone(value)
+  const formatted = formatDateTime(value)
+
+  if (!tone || formatted === '-') {
+    return formatted
+  }
+
+  const toneLabels: Record<typeof tone, string> = {
+    past: 'Passed',
+    active: 'Now',
+    future: 'Upcoming',
+  }
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-sm border px-2.5 py-1 text-[13px] font-medium leading-none ${getRecallTimeToneClasses(tone)}`}
+      title={toneLabels[tone]}
+    >
+      {formatted}
+    </span>
+  )
 }
 
 function resolveAudioUrl(customer: CustomerSummary) {
@@ -1052,7 +1077,7 @@ export function CrmDashboardPage() {
               {
                 key: 'recall',
                 header: t('customers.table.recall', 'Recall time'),
-                render: (row) => formatDateTime(row.recall_time),
+                render: (row) => renderRecallTime(row.recall_time),
               },
               {
                 key: 'created',

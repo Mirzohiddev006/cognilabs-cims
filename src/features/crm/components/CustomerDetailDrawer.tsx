@@ -21,6 +21,7 @@ import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../sh
 import { useToast } from '../../../shared/toast/useToast'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import { resolveCustomerAudioUrl } from '../lib/customerAudio'
+import { getRecallTimeTone, getRecallTimeToneClasses } from '../lib/recallTime'
 import { AudioPlayerCard } from './AudioPlayerCard'
 
 function formatCustomerNotes(notes?: string | null) {
@@ -236,7 +237,9 @@ export function CustomerDetailContent({
               </div>
               <div className="rounded-xl border border-emerald-500/16 bg-emerald-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('customers.table.recall', 'Recall time')}</p>
-                <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">{formatNumericDateTime(customer.recall_time)}</p>
+                <p className={`mt-2 inline-flex rounded-sm border px-2.5 py-1 text-[13px] font-medium leading-none ${recallTimeClasses}`}>
+                  {formatNumericDateTime(customer.recall_time)}
+                </p>
               </div>
               <div className="rounded-xl border border-amber-500/16 bg-amber-500/[0.08] px-4 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">{t('common.created', 'Created')}</p>
@@ -287,7 +290,14 @@ export function CustomerDetailContent({
                 t('common.conversation_language', 'Conversation language'),
                 formatConversationLanguageLabel((key, fallback) => t(key, fallback), customer.conversation_language),
               ],
-              [t('common.recall_time', 'Recall time'), formatNumericDateTime(customer.recall_time)],
+              [
+                t('common.recall_time', 'Recall time'),
+                (
+                  <span className={`inline-flex rounded-sm border px-2.5 py-1 text-[13px] font-medium leading-none ${recallTimeClasses}`}>
+                    {formatNumericDateTime(customer.recall_time)}
+                  </span>
+                ),
+              ],
             ].map(([label, value]) => (
               <div key={label} className="flex items-start justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
                 <span className="text-sm text-[var(--muted-strong)]">{label}</span>
@@ -464,6 +474,8 @@ export function CustomerDetailDrawer({
     () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url),
     [customer?.audio_file_id, customer?.audio_url],
   )
+  const recallTone = getRecallTimeTone(customer?.recall_time)
+  const recallTimeClasses = recallTone ? getRecallTimeToneClasses(recallTone) : ''
 
   if (!open) {
     return null
