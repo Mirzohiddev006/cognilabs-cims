@@ -9,8 +9,11 @@ export type SelectFieldOption = {
 
 type SelectFieldProps = {
   value: string
+  values?: string[]
   options: SelectFieldOption[]
-  onValueChange: (value: string) => void
+  onValueChange?: (value: string) => void
+  onValuesChange?: (values: string[]) => void
+  multiple?: boolean
   placeholder?: string
   searchable?: boolean
   searchPlaceholder?: string
@@ -33,9 +36,9 @@ function normalizeOptionValue(value?: string | null) {
     .replace(/[^a-z0-9]+/g, '')
 }
 
-function getMenuPosition(trigger: HTMLButtonElement, optionCount: number): MenuPosition {
+function getMenuPosition(trigger: HTMLButtonElement, optionCount: number, extraHeight = 0): MenuPosition {
   const rect = trigger.getBoundingClientRect()
-  const menuHeight = Math.min(optionCount, 6) * 40 + 12
+  const menuHeight = Math.min(optionCount, 6) * 40 + 12 + extraHeight
   const openAbove = rect.bottom + menuHeight + 8 > window.innerHeight && rect.top - menuHeight - 8 >= 8
   const top = openAbove
     ? Math.max(8, rect.top - menuHeight - 8)
@@ -50,8 +53,11 @@ function getMenuPosition(trigger: HTMLButtonElement, optionCount: number): MenuP
 
 export function SelectField({
   value,
+  values,
   options,
   onValueChange,
+  onValuesChange,
+  multiple = false,
   placeholder = 'Select option',
   searchable = false,
   searchPlaceholder = 'Search...',
@@ -63,14 +69,24 @@ export function SelectField({
   const [isOpen, setIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [position, setPosition] = useState<MenuPosition>({ top: 0, left: 0, width: 0 })
+  const isMultiple = multiple && Array.isArray(values)
+  const selectedValues = isMultiple ? values : []
 
   const normalizedValue = normalizeOptionValue(value)
+  const normalizedSelectedValues = new Set(selectedValues.map((item) => normalizeOptionValue(item)))
   const selectedOption =
     options.find((option) => option.value === value) ??
     options.find((option) =>
       normalizeOptionValue(option.value) === normalizedValue ||
       normalizeOptionValue(option.label) === normalizedValue,
     )
+  const selectedOptions = isMultiple
+    ? options.filter((option) => {
+        const normalizedOptionValue = normalizeOptionValue(option.value)
+        const normalizedOptionLabel = normalizeOptionValue(option.label)
+        return normalizedSelectedValues.has(normalizedOptionValue) || normalizedSelectedValues.has(normalizedOptionLabel)
+      })
+    : []
 
   const normalizedSearchQuery = normalizeOptionValue(searchQuery)
   const visibleOptions = searchable && normalizedSearchQuery
@@ -92,7 +108,7 @@ export function SelectField({
         return
       }
 
-      setPosition(getMenuPosition(triggerRef.current, visibleOptions.length))
+      setPosition(getMenuPosition(triggerRef.current, visibleOptions.length, isMultiple ? 48 : 0))
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -111,7 +127,7 @@ export function SelectField({
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, visibleOptions.length])
+  }, [isMultiple, isOpen, visibleOptions.length])
 
   useEffect(() => {
     if (!isOpen) {
@@ -144,8 +160,14 @@ export function SelectField({
           className,
         )}
       >
-        <span className={cn('truncate text-left', selectedOption ? 'text-[var(--foreground)]' : 'text-[var(--muted)]')}>
-          {selectedOption?.label ?? placeholder}
+        <span className={cn('truncate text-left', (isMultiple ? selectedOptions.length > 0 : Boolean(selectedOption)) ? 'text-[var(--foreground)]' : 'text-[var(--muted)]')}>
+          {isMultiple
+            ? (selectedOptions.length > 0
+                ? (selectedOptions.length === 1
+                    ? selectedOptions[0]?.label
+                    : `${selectedOptions.length} selected`)
+                : placeholder)
+            : (selectedOption?.label ?? placeholder)}
         </span>
         <svg
           viewBox="0 0 16 16"
@@ -168,6 +190,7 @@ export function SelectField({
                 className="fixed z-[100] max-h-72 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] p-1.5 text-[var(--foreground)] shadow-[var(--shadow-xl)] backdrop-blur-xl"
                 style={position}
                 role="listbox"
+                aria-multiselectable={isMultiple || undefined}
               >
                 {searchable ? (
                   <div className="sticky top-0 z-10 bg-[var(--surface-elevated)] p-1 pb-2">
@@ -187,9 +210,12 @@ export function SelectField({
 
                 {visibleOptions.map((option) => {
                   const isSelected =
-                    option.value === value ||
-                    normalizeOptionValue(option.value) === normalizedValue ||
-                    normalizeOptionValue(option.label) === normalizedValue
+                    isMultiple
+                      ? normalizedSelectedValues.has(normalizeOptionValue(option.value)) ||
+                        normalizedSelectedValues.has(normalizeOptionValue(option.label))
+                      : option.value === value ||
+                        normalizeOptionValue(option.value) === normalizedValue ||
+                        normalizeOptionValue(option.label) === normalizedValue
 
                   return (
                     <button
@@ -199,8 +225,22 @@ export function SelectField({
                       role="option"
                       aria-selected={isSelected}
                       onClick={() => {
+                        if (isMultiple) {
+                          if (!onValuesChange) {
+                            return
+                          }
+
+                          const normalized = normalizeOptionValue(option.value)
+                          const nextValues = normalizedSelectedValues.has(normalized)
+                            ? selectedValues.filter((item) => normalizeOptionValue(item) !== normalized)
+                            : [...selectedValues, option.value]
+
+                          onValuesChange(nextValues)
+                          return
+                        }
+
                         setIsOpen(false)
-                        onValueChange(option.value)
+                        onValueChange?.(option.value)
                       }}
                       className={cn(
                         'flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
@@ -230,6 +270,28 @@ export function SelectField({
                     </button>
                   )
                 })}
+
+                {isMultiple ? (
+                  <div className="sticky bottom-0 mt-1 flex items-center justify-between gap-2 border-t border-[var(--border)] bg-[var(--surface-elevated)] p-2">
+                    <button
+                      type="button"
+                      className="rounded-md border border-[var(--border)] px-2.5 py-1 text-xs font-medium text-[var(--muted-strong)] transition hover:border-[var(--border-hover)] hover:text-[var(--foreground)]"
+                      onClick={() => {
+                        onValuesChange?.([])
+                        setIsOpen(false)
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-[var(--blue-border)] bg-[var(--blue-dim)] px-2.5 py-1 text-xs font-medium text-[var(--blue-text)] transition hover:bg-[var(--blue-soft)]"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      Done
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </>,
             document.body,

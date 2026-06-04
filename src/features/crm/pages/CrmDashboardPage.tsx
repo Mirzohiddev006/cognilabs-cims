@@ -276,33 +276,47 @@ function buildNormalizedStatusMetaMap(statusOptions: DynamicStatusOption[]) {
   return map
 }
 
-function buildStatusFilterOptions(
-  statusChoices: Array<{ value?: string | null; label?: string | null }>,
-  statusOptions: DynamicStatusOption[],
-  customers: CustomerSummary[],
+function buildSelectableStatusOptions(
+  dynamicStatuses: DynamicStatusOption[],
+  statusChoices: SelectFieldOption[],
+  currentStatuses: string[] = [],
+  currentValue?: string | null,
 ) {
-  const optionsByKey = new Map<string, SelectFieldOption>()
+  const optionsByKey = new Map<string, { value: string; label: string; order: number }>()
 
-  const registerOption = (rawValue?: string | null, rawLabel?: string | null) => {
-    const label = (rawLabel ?? rawValue ?? '').trim()
-    const originalValue = (rawValue ?? '').trim()
-    const normalizedKey = normalizeStatusKey(originalValue || rawLabel || '')
+  const register = (value?: string | null, label?: string | null, order = Number.POSITIVE_INFINITY) => {
+    const normalizedKey = normalizeStatusKey(value || label || '')
+    const trimmedValue = (value ?? '').trim()
+    const trimmedLabel = (label ?? value ?? '').trim()
 
-    if (!label || !normalizedKey || optionsByKey.has(normalizedKey)) {
+    if (!normalizedKey || !trimmedValue || optionsByKey.has(normalizedKey)) {
       return
     }
 
     optionsByKey.set(normalizedKey, {
-      value: originalValue || normalizedKey,
-      label,
+      value: trimmedValue,
+      label: trimmedLabel,
+      order,
     })
   }
 
-  statusChoices.forEach((option) => registerOption(option.value, option.label))
-  statusOptions.forEach((option) => registerOption(option.value, option.label))
-  customers.forEach((customer) => registerOption(customer.status, customer.status))
+  dynamicStatuses.forEach((status) => {
+    register(status.value, status.label, status.order)
+  })
 
-  return Array.from(optionsByKey.values()).sort((left, right) => left.label.localeCompare(right.label))
+  statusChoices.forEach((status) => {
+    register(status.value, status.label)
+  })
+
+  currentStatuses.forEach((status) => {
+    register(status, status)
+  })
+
+  register(currentValue, currentValue)
+
+  return [...optionsByKey.values()]
+    .sort((left, right) => left.order - right.order || left.label.localeCompare(right.label))
+    .map(({ value, label }) => ({ value, label }))
 }
 
 function getCustomerStatusKeys(customer: CustomerSummary, statusMetaMap: Map<string, DynamicStatusOption>) {
@@ -431,7 +445,7 @@ export function CrmDashboardPage() {
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
-  const [statusFilter, setStatusFilter] = useState('')
+  const [statusFilters, setStatusFilters] = useState<string[]>([])
   const [platformFilter, setPlatformFilter] = useState('')
   const [dateStart, setDateStart] = useState('')
   const [dateEnd, setDateEnd] = useState('')
@@ -459,24 +473,16 @@ export function CrmDashboardPage() {
     () => crmService.periodReport({
       period: periodReportPeriodKey || undefined,
       search: deferredSearch || undefined,
-      status_filter: statusFilter || undefined,
+      status_filter: statusFilters.length === 1 ? statusFilters[0] : undefined,
     }),
-    [periodReportPeriodKey, deferredSearch, statusFilter],
+    [periodReportPeriodKey, deferredSearch, statusFilters],
     { enabled: Boolean(periodReportPeriodKey) },
-  )
-
-  const statusFilterQuery = useAsyncData(
-    () => crmService.filterByStatus(statusFilter),
-    [statusFilter],
-    { enabled: Boolean(statusFilter) && !selectedPeriod },
   )
 
   const periodCustomers = periodReportQuery.data?.customers
   const customers = selectedPeriod && periodCustomers
     ? periodCustomers
-    : statusFilter && statusFilterQuery.data
-      ? statusFilterQuery.data
-      : (dashboardQuery.data?.customers ?? emptyCustomers)
+    : (dashboardQuery.data?.customers ?? emptyCustomers)
   const statusOptions = statusesQuery.data ?? emptyStatuses
 
   const periodSummaryBucket = useMemo(() => {
@@ -497,11 +503,17 @@ export function CrmDashboardPage() {
 
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
   const statusFilterOptions = useMemo(
-    () => [
-      { value: '', label: t('customers.filters.all_statuses', 'All statuses') },
-      ...buildStatusFilterOptions(dashboardQuery.data?.status_choices ?? [], statusOptions, customers),
-    ],
-    [customers, dashboardQuery.data?.status_choices, statusOptions, t],
+    () => buildSelectableStatusOptions(
+      statusOptions,
+      dashboardQuery.data?.status_choices ?? [],
+      customers.map((customer) => customer.status),
+      formValues.status,
+    ),
+    [customers, dashboardQuery.data?.status_choices, formValues.status, statusOptions],
+  )
+  const selectedStatusFilterSet = useMemo(
+    () => new Set(statusFilters.map((value) => normalizeStatusKey(value)).filter(Boolean)),
+    [statusFilters],
   )
 
   const availablePlatforms = useMemo(() => {
@@ -516,8 +528,8 @@ export function CrmDashboardPage() {
 
   const displayedCustomers = useMemo(() => {
     const normalizedSearch = normalizeFilterValue(deferredSearch)
-    const normalizedStatusFilter = normalizeStatusKey(statusFilter)
     const normalizedPlatformFilter = normalizeFilterValue(platformFilter)
+    const statusFilterActive = selectedStatusFilterSet.size > 0
     const startDate = dateStart ? new Date(`${dateStart}T00:00:00`) : null
     const endDate = dateEnd ? new Date(`${dateEnd}T23:59:59.999`) : null
 
@@ -539,8 +551,8 @@ export function CrmDashboardPage() {
             .some((value) => normalizeFilterValue(String(value)).includes(normalizedSearch))
         : true
 
-      const matchesStatus = normalizedStatusFilter
-        ? getCustomerStatusKeys(customer, statusMetaMap).has(normalizedStatusFilter)
+      const matchesStatus = statusFilterActive
+        ? [...getCustomerStatusKeys(customer, statusMetaMap)].some((key) => selectedStatusFilterSet.has(key))
         : true
       const matchesPlatform = normalizedPlatformFilter
         ? customerPlatforms.some((platform) => normalizeFilterValue(platform) === normalizedPlatformFilter)
@@ -552,7 +564,7 @@ export function CrmDashboardPage() {
 
       return matchesSearch && matchesStatus && matchesPlatform && matchesStart && matchesEnd
     })
-  }, [customers, dateEnd, dateStart, deferredSearch, platformFilter, statusFilter, statusMetaMap])
+  }, [customers, dateEnd, dateStart, deferredSearch, platformFilter, selectedStatusFilterSet, statusMetaMap])
 
   async function refreshAll() {
     await Promise.allSettled([
@@ -561,13 +573,12 @@ export function CrmDashboardPage() {
       summaryQuery.refetch(),
       statusSummaryQuery.refetch(),
       ...(selectedPeriod ? [periodReportQuery.refetch()] : []),
-      ...(statusFilter && !selectedPeriod ? [statusFilterQuery.refetch()] : []),
     ])
   }
 
   function resetFilters() {
     setSearch('')
-    setStatusFilter('')
+    setStatusFilters([])
     setPlatformFilter('')
     setDateStart('')
     setDateEnd('')
@@ -763,7 +774,13 @@ export function CrmDashboardPage() {
     { value: '50', label: t('common.per_page', '{{count}} per page', { count: 50 }) },
     { value: '75', label: t('common.per_page', '{{count}} per page', { count: 75 }) },
   ]
-  const activeFilterCount = [search, statusFilter, platformFilter, dateStart, dateEnd].filter(Boolean).length
+  const activeFilterCount = [
+    search,
+    statusFilters.length > 0 ? 1 : 0,
+    platformFilter,
+    dateStart,
+    dateEnd,
+  ].filter((value) => Boolean(value)).length
 
   return (
     <section className="flex min-h-[calc(100vh-10rem)] flex-col gap-4">
@@ -905,10 +922,12 @@ export function CrmDashboardPage() {
                 {t('customers.filters.status_label', 'Status')}
               </Label>
               <SelectField
-                key={`crm-status-filter-${statusFilter || 'all'}`}
-                value={statusFilter}
+                value={statusFilters[0] ?? ''}
+                values={statusFilters}
+                multiple
                 options={statusFilterOptions}
-                onValueChange={setStatusFilter}
+                onValuesChange={setStatusFilters}
+                placeholder={t('customers.filters.all_statuses', 'All statuses')}
               />
             </div>
 
@@ -958,13 +977,6 @@ export function CrmDashboardPage() {
             isSidebarCollapsed ? 'px-2 xl:px-3' : 'px-0',
           )}
         >
-          {statusFilterQuery.isLoading ? (
-            <LoadingStateBlock
-              eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
-              title={t('customers.loading.dashboard.title', 'CRM dashboard loading')}
-              description={t('customers.loading.dashboard.description', 'Retrieving customers and summary statistics.')}
-            />
-          ) : null}
           <DataTable
             key={`crm-table-${pageSizeValue}`}
             caption={t('customers.table.caption', 'CRM customers table')}
@@ -1115,12 +1127,7 @@ export function CrmDashboardPage() {
         customerId={modalMode === 'edit' ? (selectedCustomer?.id ?? undefined) : undefined}
         values={formValues}
         statusOptions={[
-          { value: 'contacted', label: t('status.contacted', 'Contacted') },
-          { value: 'project_started', label: t('status.project_started', 'Project Started') },
-          { value: 'continuing', label: t('status.continuing', 'Continuing') },
-          { value: 'finished', label: t('status.finished', 'Finished') },
-          { value: 'rejected', label: t('status.rejected', 'Rejected') },
-          { value: 'need_to_call', label: t('status.need_to_call', 'Need to Call') },
+          ...statusFilterOptions,
         ]}
         onClose={() => setIsFormOpen(false)}
         onChange={(field, value) =>
