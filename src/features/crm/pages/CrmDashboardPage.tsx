@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useDeferredValue, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
 import { crmService } from '../../../shared/api/services/crm.service'
@@ -231,6 +231,11 @@ function normalizeDateValue(value?: string | null) {
   return parsed
 }
 
+function getConversationIdFromChatUrl(value?: string | null) {
+  const match = value?.match(/conversation_id=(\d+)/)
+  return match ? Number(match[1]) : null
+}
+
 function normalizeStatusKey(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
@@ -442,6 +447,7 @@ export function CrmDashboardPage() {
   const { isSidebarCollapsed } = useAppShell()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [search, setSearch] = useState('')
   const deferredSearch = useDeferredValue(search)
@@ -501,6 +507,74 @@ export function CrmDashboardPage() {
   }, [selectedPeriod, statusSummaryQuery.data])
 
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
+
+  useEffect(() => {
+    const customerIdParam = searchParams.get('customer_id')
+    if (!customerIdParam) {
+      return
+    }
+
+    const customerId = Number(customerIdParam)
+    if (!Number.isFinite(customerId) || customerId <= 0) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('customer_id')
+        return next
+      }, { replace: true })
+      return
+    }
+
+    void crmService.detail(customerId)
+      .then((customer) => {
+        setDetailCustomer(customer)
+      })
+      .catch(() => {
+        setDetailCustomer(null)
+      })
+      .finally(() => {
+        setSearchParams((prev) => {
+          const next = new URLSearchParams(prev)
+          next.delete('customer_id')
+          return next
+        }, { replace: true })
+      })
+
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    const conversationIdParam = searchParams.get('conversation_id')
+    if (!conversationIdParam) {
+      return
+    }
+
+    const conversationId = Number(conversationIdParam)
+    if (!Number.isFinite(conversationId) || conversationId <= 0) {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('conversation_id')
+        return next
+      }, { replace: true })
+      return
+    }
+
+    const allCustomers = dashboardQuery.data?.customers
+    if (!allCustomers) {
+      return
+    }
+
+    const matchedCustomer = allCustomers.find((customer) => getConversationIdFromChatUrl(customer.chat_url) === conversationId)
+
+    if (matchedCustomer) {
+      setDetailCustomer(matchedCustomer)
+    }
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('conversation_id')
+      return next
+    }, { replace: true })
+  }, [dashboardQuery.data?.customers, searchParams, setSearchParams])
+
   const statusFilterOptions = useMemo(
     () => buildSelectableStatusOptions(
       statusOptions,
@@ -1131,6 +1205,10 @@ export function CrmDashboardPage() {
         onOpenChat={(id) => {
           setDetailCustomer(null)
           navigate(`/cognilabsai/chat?conversation_id=${id}`)
+        }}
+        onSearchTelegram={(phoneNumber) => {
+          setDetailCustomer(null)
+          navigate(`/cognilabsai/chat?telegram_search=${encodeURIComponent(phoneNumber)}`)
         }}
         onEdit={(customer) => {
           setDetailCustomer(null)

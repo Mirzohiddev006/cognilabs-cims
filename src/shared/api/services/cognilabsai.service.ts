@@ -8,6 +8,7 @@ export type ConversationItem = {
   channel: string
   chat_mode: 'telegram_operator' | 'instagram_ai' | string
   supports_ai: boolean
+  crm_customer_id?: number | null
   client_external_id: string
   client_username: string | null
   client_full_name: string | null

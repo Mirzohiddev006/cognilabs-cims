@@ -5,11 +5,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
 import { useAuth } from '../../auth/hooks/useAuth'
+import { crmService } from '../../../shared/api/services/crm.service'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { Button } from '../../../shared/ui/button'
@@ -54,6 +55,11 @@ function getFollowUpModeLabel(mode: FollowUpMode | null | undefined) {
 
 function getClientName(conv: ConversationItem): string {
   return conv.client_display_name || conv.client_full_name || conv.client_username || `#${conv.id}`
+}
+
+function getConversationIdFromChatUrl(value?: string | null) {
+  const match = value?.match(/conversation_id=(\d+)/)
+  return match ? Number(match[1]) : null
 }
 
 function getPresenceTone(status: string | null | undefined) {
@@ -200,11 +206,15 @@ function ConversationListItem({
   conv,
   isActive,
   onSelect,
+  crmCustomerId,
+  onOpenCrm,
   onDelete,
 }: {
   conv: ConversationItem
   isActive: boolean
   onSelect: () => void
+  crmCustomerId: number | null
+  onOpenCrm: () => void
   onDelete: () => void
 }) {
   const name = getClientName(conv)
@@ -261,10 +271,21 @@ function ConversationListItem({
               {timeLabel}
             </span>
           )}
-          <div
-            className="hidden group-hover:block shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="hidden group-hover:flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            {crmCustomerId ? (
+              <button
+                type="button"
+                onClick={onOpenCrm}
+                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2 text-[11px] font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                title="CRM"
+              >
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                  <path d="M2.5 5.25A1.75 1.75 0 0 1 4.25 3.5h7.5A1.75 1.75 0 0 1 13.5 5.25v5.5a1.75 1.75 0 0 1-1.75 1.75h-7.5A1.75 1.75 0 0 1 2.5 10.75z" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M5 6.25h6M5 8h3.25" strokeLinecap="round" />
+                </svg>
+                CRM
+              </button>
+            ) : null}
             <ActionsMenu
               label={`Actions for ${getClientName(conv)}`}
               items={[
@@ -380,12 +401,14 @@ function TelegramSearchModal({
   onClose,
   onStartChat,
   onNewChatStarted,
+  initialQuery = '',
 }: {
   onClose: () => void
   onStartChat: (conversationId: number) => void
   onNewChatStarted?: () => void
+  initialQuery?: string
 }) {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState<TelegramSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [selectedPeer, setSelectedPeer] = useState<TelegramSearchResult | null>(null)
@@ -393,6 +416,10 @@ function TelegramSearchModal({
   const [isSending, setIsSending] = useState(false)
   const { showToast } = useToast()
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    setQuery(initialQuery)
+  }, [initialQuery])
 
   useEffect(() => {
     if (!query.trim()) {
@@ -602,6 +629,7 @@ function TelegramSearchModal({
 
 export function CognilabsAIChatPage() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user } = useAuth()
@@ -622,6 +650,7 @@ export function CognilabsAIChatPage() {
   const [isSavingFollowUp, setIsSavingFollowUp] = useState(false)
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [showNewTelegramModal, setShowNewTelegramModal] = useState(false)
+  const [newTelegramInitialQuery, setNewTelegramInitialQuery] = useState('')
   const [wsKey, setWsKey] = useState<string | null>(null)
   const [showPauseUntil, setShowPauseUntil] = useState(false)
   const [pauseUntilDate, setPauseUntilDate] = useState('')
@@ -637,6 +666,24 @@ export function CognilabsAIChatPage() {
       onSuccess: (data) => setConversations(data),
     },
   )
+  const crmDashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
+
+  useEffect(() => {
+    const telegramSearchQuery = (searchParams.get('telegram_search') ?? '').trim()
+
+    if (!telegramSearchQuery) {
+      return
+    }
+
+    setNewTelegramInitialQuery(telegramSearchQuery)
+    setShowNewTelegramModal(true)
+
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev)
+      next.delete('telegram_search')
+      return next
+    }, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const refetchConversationsRef = useRef(conversationsQuery.refetch)
   useEffect(() => {
@@ -662,6 +709,18 @@ export function CognilabsAIChatPage() {
     () => conversations.find((c) => c.id === selectedConversationId) ?? null,
     [conversations, selectedConversationId],
   )
+  const crmCustomerIdByConversationId = useMemo(() => {
+    const map = new Map<number, number>()
+
+    for (const customer of crmDashboardQuery.data?.customers ?? []) {
+      const conversationId = getConversationIdFromChatUrl(customer.chat_url)
+      if (conversationId) {
+        map.set(conversationId, customer.id)
+      }
+    }
+
+    return map
+  }, [crmDashboardQuery.data?.customers])
 
   const filteredConversations = useMemo(() => {
     let list = conversations
@@ -867,6 +926,14 @@ export function CognilabsAIChatPage() {
     }
   }
 
+  function resolveVisibleCrmCustomerId(conv: ConversationItem) {
+    return crmCustomerIdByConversationId.get(conv.id) ?? null
+  }
+
+  function handleOpenCrm(customerId: number) {
+    navigate(`/crm?customer_id=${customerId}`)
+  }
+
   async function handleSend() {
     if (!selectedConversationId || !messageText.trim() || isSending) return
     const text = messageText.trim()
@@ -1024,7 +1091,10 @@ export function CognilabsAIChatPage() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-[15px] font-bold text-[var(--foreground)] tracking-tight">Xabarlar</h2>
               <button
-                onClick={() => setShowNewTelegramModal(true)}
+                onClick={() => {
+                  setNewTelegramInitialQuery('')
+                  setShowNewTelegramModal(true)
+                }}
                 className="h-8 w-8 flex items-center justify-center rounded-xl bg-[#2AABEE]/10 text-[#2AABEE] hover:bg-[#2AABEE] hover:text-white transition-colors border border-[#2AABEE]/20"
                 title="Yangi Telegram chat"
               >
@@ -1097,6 +1167,13 @@ export function CognilabsAIChatPage() {
                     conv={conv}
                     isActive={selectedConversationId === conv.id}
                     onSelect={() => handleSelectConversation(conv.id)}
+                    crmCustomerId={resolveVisibleCrmCustomerId(conv)}
+                    onOpenCrm={() => {
+                      const customerId = resolveVisibleCrmCustomerId(conv)
+                      if (customerId) {
+                        handleOpenCrm(customerId)
+                      }
+                    }}
                     onDelete={() => void handleDeleteConversation(conv)}
                   />
                 ))}
@@ -1454,10 +1531,15 @@ export function CognilabsAIChatPage() {
 
       {showNewTelegramModal ? (
         <TelegramSearchModal
-          onClose={() => setShowNewTelegramModal(false)}
+          initialQuery={newTelegramInitialQuery}
+          onClose={() => {
+            setShowNewTelegramModal(false)
+            setNewTelegramInitialQuery('')
+          }}
           onStartChat={(id) => {
             handleSelectConversation(id)
             setShowNewTelegramModal(false)
+            setNewTelegramInitialQuery('')
           }}
           onNewChatStarted={() => void conversationsQuery.refetch()}
         />

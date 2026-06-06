@@ -440,6 +440,7 @@ export function CustomerDetailDrawer({
   initialCustomer,
   onClose,
   onOpenChat,
+  onSearchTelegram,
   onEdit,
 }: {
   open: boolean
@@ -447,6 +448,7 @@ export function CustomerDetailDrawer({
   initialCustomer?: CustomerSummary | null
   onClose: () => void
   onOpenChat?: (conversationId: number) => void
+  onSearchTelegram?: (phoneNumber: string) => void
   onEdit?: (customer: CustomerSummary) => void
 }) {
   const { t } = useTranslation()
@@ -479,6 +481,7 @@ export function CustomerDetailDrawer({
   }, [onClose, open])
 
   const customer = detailQuery.data?.id === customerId ? detailQuery.data : initialCustomer ?? null
+  const customerPhoneNumber = (customer?.phone_number ?? customer?.phone ?? '').trim()
   const audioSource = useMemo(
     () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url),
     [customer?.audio_file_id, customer?.audio_url],
@@ -510,6 +513,20 @@ export function CustomerDetailDrawer({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {customer && onSearchTelegram && customerPhoneNumber ? (
+                <button
+                  type="button"
+                  title={t('customers.detail.search_telegram', 'Search Telegram')}
+                  onClick={() => onSearchTelegram(customerPhoneNumber)}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#2AABEE]/30 bg-[#2AABEE]/10 px-3 text-xs font-semibold text-[#2AABEE] transition hover:bg-[#2AABEE]/20"
+                >
+                  <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <circle cx="7" cy="7" r="4.25" />
+                    <path d="M10.25 10.25 13 13" strokeLinecap="round" />
+                  </svg>
+                  {t('customers.detail.search_telegram', 'Search Telegram')}
+                </button>
+              ) : null}
               {customer && onEdit ? (
                 <button
                   type="button"
