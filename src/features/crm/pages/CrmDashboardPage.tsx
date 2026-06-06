@@ -473,14 +473,13 @@ export function CrmDashboardPage() {
     () => crmService.periodReport({
       period: periodReportPeriodKey || undefined,
       search: deferredSearch || undefined,
-      status_filter: statusFilters.length === 1 ? statusFilters[0] : undefined,
     }),
-    [periodReportPeriodKey, deferredSearch, statusFilters],
+    [periodReportPeriodKey, deferredSearch],
     { enabled: Boolean(periodReportPeriodKey) },
   )
 
   const periodCustomers = periodReportQuery.data?.customers
-  const customers = selectedPeriod && periodCustomers
+  const baseCustomers = selectedPeriod && periodCustomers
     ? periodCustomers
     : (dashboardQuery.data?.customers ?? emptyCustomers)
   const statusOptions = statusesQuery.data ?? emptyStatuses
@@ -506,15 +505,37 @@ export function CrmDashboardPage() {
     () => buildSelectableStatusOptions(
       statusOptions,
       dashboardQuery.data?.status_choices ?? [],
-      customers.map((customer) => customer.status),
+      baseCustomers.map((customer) => customer.status),
       formValues.status,
     ),
-    [customers, dashboardQuery.data?.status_choices, formValues.status, statusOptions],
+    [baseCustomers, dashboardQuery.data?.status_choices, formValues.status, statusOptions],
   )
   const selectedStatusFilterSet = useMemo(
     () => new Set(statusFilters.map((value) => normalizeStatusKey(value)).filter(Boolean)),
     [statusFilters],
   )
+  const rejectedCustomersQuery = useAsyncData(
+    () => crmService.filterByStatus('rejected'),
+    [selectedStatusFilterSet.has('rejected')],
+    { enabled: selectedStatusFilterSet.has('rejected') },
+  )
+  const customers = useMemo(() => {
+    if (!selectedStatusFilterSet.has('rejected')) {
+      return baseCustomers
+    }
+
+    const merged = new Map<number, CustomerSummary>()
+
+    for (const customer of baseCustomers) {
+      merged.set(customer.id, customer)
+    }
+
+    for (const customer of rejectedCustomersQuery.data ?? emptyCustomers) {
+      merged.set(customer.id, customer)
+    }
+
+    return [...merged.values()]
+  }, [baseCustomers, rejectedCustomersQuery.data, selectedStatusFilterSet])
 
   const availablePlatforms = useMemo(() => {
     return Array.from(
@@ -573,6 +594,7 @@ export function CrmDashboardPage() {
       summaryQuery.refetch(),
       statusSummaryQuery.refetch(),
       ...(selectedPeriod ? [periodReportQuery.refetch()] : []),
+      ...(selectedStatusFilterSet.has('rejected') ? [rejectedCustomersQuery.refetch()] : []),
     ])
   }
 
