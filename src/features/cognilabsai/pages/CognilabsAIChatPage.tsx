@@ -19,6 +19,7 @@ import { Textarea } from '../../../shared/ui/textarea'
 import { SelectField } from '../../../shared/ui/select-field'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
+import Lottie from 'lottie-react'
 import {
   cognilabsaiService,
   type ConversationItem,
@@ -101,6 +102,19 @@ function formatConvTime(isoString: string | null): string {
     return date.toLocaleDateString([], { weekday: 'short' })
   }
   return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+function isStickerMediaType(value?: string | null) {
+  return value === 'sticker' || value === 'animated_sticker' || value === 'video_sticker'
+}
+
+function shouldShowStickerCaption(text?: string | null) {
+  const normalized = (text ?? '').trim()
+  if (!normalized) {
+    return false
+  }
+
+  return !/^\[(?:Animated Sticker|Sticker|Video Sticker).*]$/i.test(normalized)
 }
 
 function AvatarOrInitials({
@@ -326,6 +340,37 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
   const isClient = msg.sender_type === 'client'
   const isAi = msg.sender_type === 'ai'
   const isSystem = msg.sender_type === 'system'
+  const isSticker = isStickerMediaType(msg.media_type)
+  const isAnimatedSticker = msg.media_type === 'animated_sticker'
+  const isStaticSticker = msg.media_type === 'sticker' || msg.media_type === 'video_sticker'
+  const mediaUrl = isSticker ? resolveMediaUrl(msg.media_url) : null
+  const [animationData, setAnimationData] = useState<unknown | null>(null)
+
+  useEffect(() => {
+    if (!isAnimatedSticker || !mediaUrl) {
+      setAnimationData(null)
+      return
+    }
+
+    const controller = new AbortController()
+
+    void fetch(mediaUrl, { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setAnimationData(data)
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setAnimationData(null)
+        }
+      })
+
+    return () => {
+      controller.abort()
+    }
+  }, [isAnimatedSticker, mediaUrl])
 
   if (isSystem) {
     return (
@@ -342,6 +387,7 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
 
   const timeStr = new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   const isUnreadClientMessage = isClient && msg.is_read === false
+  const showStickerCaption = Boolean(mediaUrl && shouldShowStickerCaption(msg.text))
 
   return (
     <div className={cn(
@@ -369,7 +415,29 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
           </p>
         ) : null}
 
-        <p className="whitespace-pre-wrap wrap-break-word text-(--foreground)">{msg.text}</p>
+        <div className="flex flex-col gap-2">
+          {isAnimatedSticker && mediaUrl && animationData ? (
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-black/5 p-1">
+              <div className="h-[180px] w-[180px] sm:h-[220px] sm:w-[220px]">
+                <Lottie animationData={animationData as object} loop autoplay />
+              </div>
+            </div>
+          ) : isStaticSticker && mediaUrl ? (
+            <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-black/5">
+              <img
+                src={mediaUrl}
+                alt={msg.text?.trim() || 'Sticker'}
+                className="block max-h-[180px] max-w-[180px] object-contain sm:max-h-[220px] sm:max-w-[220px]"
+                loading="lazy"
+                draggable={false}
+              />
+            </div>
+          ) : null}
+
+          {!isSticker || !mediaUrl || showStickerCaption || (isAnimatedSticker && !animationData) ? (
+            <p className="whitespace-pre-wrap wrap-break-word text-(--foreground)">{msg.text}</p>
+          ) : null}
+        </div>
 
         <div className={cn(
           'flex items-center gap-1 mt-1',

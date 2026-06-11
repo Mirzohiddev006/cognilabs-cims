@@ -47,6 +47,8 @@ export type MessageItem = {
   client_external_id: string | null
   instagram_message_id: string | null
   telegram_message_id: string | null
+  media_type?: 'sticker' | 'animated_sticker' | 'video_sticker' | string | null
+  media_url?: string | null
   text: string
   is_read: boolean
   read_at: string | null
