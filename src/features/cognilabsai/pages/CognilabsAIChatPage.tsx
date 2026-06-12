@@ -812,6 +812,26 @@ export function CognilabsAIChatPage() {
     refetchConversationsRef.current = conversationsQuery.refetch
   }, [conversationsQuery.refetch])
 
+  const isRefetchingConversationsRef = useRef(false)
+  const lastConversationsRefetchAtRef = useRef(0)
+
+  const requestConversationsRefetch = useCallback(() => {
+    const now = Date.now()
+    if (isRefetchingConversationsRef.current) {
+      return
+    }
+    if (now - lastConversationsRefetchAtRef.current < 5000) {
+      return
+    }
+
+    isRefetchingConversationsRef.current = true
+    lastConversationsRefetchAtRef.current = now
+
+    void refetchConversationsRef.current().finally(() => {
+      isRefetchingConversationsRef.current = false
+    })
+  }, [])
+
   const conversationsRef = useRef<ConversationItem[]>([])
   useEffect(() => {
     conversationsRef.current = conversations
@@ -962,7 +982,7 @@ export function CognilabsAIChatPage() {
             }
             const convId = data.conversation_id
             if (!conversationsRef.current.some((c) => c.id === convId)) {
-              refetchConversationsRef.current()
+              requestConversationsRefetch()
             } else {
               setConversations((prev) =>
                 prev.map((c) =>
@@ -983,7 +1003,7 @@ export function CognilabsAIChatPage() {
           } else if (data.type === 'conversation.updated') {
             const convId = data.conversation_id
             if (!conversationsRef.current.some((c) => c.id === convId)) {
-              refetchConversationsRef.current()
+              requestConversationsRefetch()
             } else {
               setConversations((prev) =>
                 prev.map((c) => (c.id === convId ? data.conversation : c))
