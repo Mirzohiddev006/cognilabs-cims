@@ -28,7 +28,7 @@ import {
   type WsEvent,
 } from '../../../shared/api/services/cognilabsai.service'
 
-type ChannelTab = 'all' | 'instagram' | 'telegram'
+type ChannelTab = 'all' | 'instagram' | 'telegram' | 'website'
 
 type FollowUpMode = 'global' | 'custom'
 
@@ -61,6 +61,27 @@ function getClientName(conv: ConversationItem): string {
 function getConversationIdFromChatUrl(value?: string | null) {
   const match = value?.match(/conversation_id=(\d+)/)
   return match ? Number(match[1]) : null
+}
+
+function getConversationTab(channel: string): Exclude<ChannelTab, 'all'> | null {
+  if (channel === 'instagram') return 'instagram'
+  if (channel === 'telegram') return 'telegram'
+  if (channel === 'website_ai' || channel === 'website') return 'website'
+  return null
+}
+
+function getChannelLabel(channel: string) {
+  if (channel === 'instagram') return 'Instagram'
+  if (channel === 'telegram') return 'Telegram'
+  if (channel === 'website_ai' || channel === 'website') return 'Website'
+  return channel
+}
+
+function getChannelBadgeClass(channel: string) {
+  if (channel === 'instagram') return 'bg-pink-500'
+  if (channel === 'telegram') return 'bg-[#2AABEE]'
+  if (channel === 'website_ai' || channel === 'website') return 'bg-emerald-500'
+  return 'bg-[var(--muted)]'
 }
 
 function getPresenceTone(status: string | null | undefined) {
@@ -163,17 +184,49 @@ function AvatarOrInitials({
 }
 
 function ChannelIcon({ channel }: { channel: string }) {
+  if (channel === 'all') {
+    return (
+      <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
+        <path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z" />
+      </svg>
+    )
+  }
+
   if (channel === 'instagram') {
     return (
-      <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
+      <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
         <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
       </svg>
     )
   }
+  if (channel === 'telegram') {
+    return (
+      <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
+      </svg>
+    )
+  }
+  if (channel === 'website' || channel === 'website_ai') {
+    return (
+      <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M3 12h18" strokeLinecap="round" />
+        <path d="M12 3a14.5 14.5 0 0 1 0 18M12 3a14.5 14.5 0 0 0 0 18" strokeLinecap="round" />
+      </svg>
+    )
+  }
   return (
-    <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor">
+    <svg viewBox="0 0 24 24" className="h-3 w-3 shrink-0" fill="currentColor" aria-hidden="true">
       <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-1.97 9.289c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.932z"/>
     </svg>
+  )
+}
+
+function ChannelFilterIcon({ channel }: { channel: ChannelTab }) {
+  return (
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-current">
+      <ChannelIcon channel={channel} />
+    </span>
   )
 }
 
@@ -256,7 +309,7 @@ function ConversationListItem({
         <AvatarOrInitials avatarUrl={conv.client_avatar_url} name={name} size="md" />
         <div className={cn(
           'absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center',
-          conv.channel === 'instagram' ? 'bg-pink-500' : 'bg-[#2AABEE]'
+          getChannelBadgeClass(conv.channel)
         )}>
           <ChannelIcon channel={conv.channel} />
         </div>
@@ -717,6 +770,7 @@ export function CognilabsAIChatPage() {
   const [isTogglingAi, setIsTogglingAi] = useState(false)
   const [isSavingFollowUp, setIsSavingFollowUp] = useState(false)
   const [conversations, setConversations] = useState<ConversationItem[]>([])
+  const [selectedConversationDetail, setSelectedConversationDetail] = useState<ConversationItem | null>(null)
   const [showNewTelegramModal, setShowNewTelegramModal] = useState(false)
   const [newTelegramInitialQuery, setNewTelegramInitialQuery] = useState('')
   const [wsKey, setWsKey] = useState<string | null>(null)
@@ -774,8 +828,8 @@ export function CognilabsAIChatPage() {
   )
 
   const selectedConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedConversationId) ?? null,
-    [conversations, selectedConversationId],
+    () => selectedConversationDetail ?? conversations.find((c) => c.id === selectedConversationId) ?? null,
+    [conversations, selectedConversationDetail, selectedConversationId],
   )
   const crmCustomerIdByConversationId = useMemo(() => {
     const map = new Map<number, number>()
@@ -792,7 +846,7 @@ export function CognilabsAIChatPage() {
 
   const filteredConversations = useMemo(() => {
     let list = conversations
-    if (activeTab !== 'all') list = list.filter((c) => c.channel === activeTab)
+    if (activeTab !== 'all') list = list.filter((c) => getConversationTab(c.channel) === activeTab)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       list = list.filter(
@@ -831,7 +885,7 @@ export function CognilabsAIChatPage() {
     cognilabsaiService.getConversation(selectedConversationId)
       .then((detail) => {
         if (cancelled) return
-        setConversations((prev) => prev.map((conversation) => (conversation.id === detail.id ? detail : conversation)))
+        setSelectedConversationDetail(detail)
         setFollowUpDraft(createFollowUpDraft(detail))
       })
       .catch(() => {
@@ -936,6 +990,7 @@ export function CognilabsAIChatPage() {
               )
             }
             if (data.conversation_id === selectedConversationIdRef.current) {
+              setSelectedConversationDetail(data.conversation)
               setFollowUpDraft(createFollowUpDraft(data.conversation))
             }
           }
@@ -964,12 +1019,13 @@ export function CognilabsAIChatPage() {
   }, [wsKey])
 
   const handleSelectConversation = useCallback((id: number) => {
+    const nextConversation = conversations.find((c) => c.id === id) ?? null
     setSelectedConversationId(id)
-    setMessages([])
     setMessageText('')
     setShowPauseUntil(false)
     setPauseUntilDate('')
-    setFollowUpDraft(createFollowUpDraft(conversations.find((c) => c.id === id) ?? null))
+    setSelectedConversationDetail(nextConversation)
+    setFollowUpDraft(createFollowUpDraft(nextConversation))
   }, [conversations])
 
   async function handleDeleteConversation(conv: ConversationItem) {
@@ -987,6 +1043,7 @@ export function CognilabsAIChatPage() {
       if (selectedConversationId === conv.id) {
         setSelectedConversationId(null)
         setMessages([])
+        setSelectedConversationDetail(null)
       }
       showToast({ title: `Suhbat o'chirildi`, tone: 'success' })
     } catch (error) {
@@ -1043,6 +1100,7 @@ export function CognilabsAIChatPage() {
           ? await cognilabsaiService.pause(selectedConversationId)
           : await cognilabsaiService.resume(selectedConversationId)
       setConversations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      setSelectedConversationDetail(updated)
       showToast({ title: action === 'pause' ? "AI to'xtatildi" : 'AI faollashdi', tone: 'success' })
     } catch (err) {
       showToast({ title: 'Xatolik', description: getApiErrorMessage(err), tone: 'error' })
@@ -1073,6 +1131,7 @@ export function CognilabsAIChatPage() {
         new Date(pauseUntilDate).toISOString(),
       )
       setConversations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      setSelectedConversationDetail(updated)
       setShowPauseUntil(false)
       setPauseUntilDate('')
       showToast({ title: "AI vaqtinchalik to'xtatildi", tone: 'success' })
@@ -1116,6 +1175,7 @@ export function CognilabsAIChatPage() {
       )
 
       setConversations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)))
+      setSelectedConversationDetail(updated)
       setFollowUpDraft(createFollowUpDraft(updated))
       showToast({ title: 'Follow-up saqlandi', tone: 'success' })
     } catch (err) {
@@ -1135,9 +1195,10 @@ export function CognilabsAIChatPage() {
     : 'Disabled'
 
   const tabItems: Array<{ key: ChannelTab; label: string }> = [
-    { key: 'all', label: 'Barchasi' },
+    { key: 'all', label: 'All' },
     { key: 'instagram', label: 'Instagram' },
     { key: 'telegram', label: 'Telegram' },
+    { key: 'website', label: 'Website' },
   ]
 
   return (
@@ -1179,14 +1240,16 @@ export function CognilabsAIChatPage() {
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
+                  aria-label={tab.label}
+                  title={tab.label}
                   className={cn(
-                    'flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition-all',
+                    'flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition-all inline-flex items-center justify-center',
                     activeTab === tab.key
                       ? 'bg-blue-600 text-white shadow-sm'
                       : 'text-[var(--muted)] hover:text-[var(--muted-strong)] hover:bg-[var(--accent-soft)]',
                   )}
                 >
-                  {tab.label}
+                  <ChannelFilterIcon channel={tab.key} />
                 </button>
               ))}
             </div>
@@ -1287,7 +1350,7 @@ export function CognilabsAIChatPage() {
                     <AvatarOrInitials avatarUrl={selectedConversation.client_avatar_url} name={getClientName(selectedConversation)} size="sm" />
                     <div className={cn(
                       'absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full border-2 border-[var(--surface)] flex items-center justify-center',
-                      selectedConversation.channel === 'instagram' ? 'bg-pink-500' : 'bg-[#2AABEE]'
+                      getChannelBadgeClass(selectedConversation.channel)
                     )}>
                       <ChannelIcon channel={selectedConversation.channel} />
                     </div>
@@ -1295,8 +1358,9 @@ export function CognilabsAIChatPage() {
                     <div className="min-w-0">
                       <h3 className="truncate text-[14px] font-bold text-[var(--foreground)]">{getClientName(selectedConversation)}</h3>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className="text-[11px] text-[var(--muted)] font-medium">
-                          {selectedConversation.channel === 'telegram' ? 'Telegram' : 'Instagram'}
+                        <span className="inline-flex items-center gap-1 text-[11px] text-[var(--muted)] font-medium">
+                          <ChannelIcon channel={selectedConversation.channel} />
+                          {getChannelLabel(selectedConversation.channel)}
                         </span>
                         {selectedConversation.channel === 'telegram' && (
                           <>
@@ -1429,15 +1493,11 @@ export function CognilabsAIChatPage() {
               {/* Messages */}
               <div
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 custom-scrollbar-visible"
+                className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 custom-scrollbar-visible relative"
               >
                 <div className="flex flex-col min-h-full">
                   <div className="flex-1" />
-                  {isLoadingMessages ? (
-                    <div className="py-20 flex flex-col items-center justify-center">
-                      <div className="h-5 w-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-                    </div>
-                  ) : messages.length === 0 ? (
+                  {messages.length === 0 && !isLoadingMessages ? (
                     <div className="py-10 flex flex-col items-center justify-center text-center">
                       <div className="px-4 py-2 rounded-xl bg-[var(--muted-surface)] border border-[var(--border)]">
                         <p className="text-[13px] font-medium text-[var(--muted)]">Xabarlar ko'rsatiladi</p>
@@ -1466,6 +1526,11 @@ export function CognilabsAIChatPage() {
                       }, [])}
                     </div>
                   )}
+                  {isLoadingMessages ? (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[var(--background)]/40 backdrop-blur-[1px]">
+                      <div className="h-5 w-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
