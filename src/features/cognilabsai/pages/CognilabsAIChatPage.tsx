@@ -70,6 +70,25 @@ function getConversationTab(channel: string): Exclude<ChannelTab, 'all'> | null 
   return null
 }
 
+function getConversationActivityTime(conv: ConversationItem): number {
+  const value = conv.last_message_at ?? conv.updated_at ?? conv.created_at
+  const time = value ? new Date(value).getTime() : 0
+  return Number.isFinite(time) ? time : 0
+}
+
+function sortConversationsByActivity(conversations: ConversationItem[]): ConversationItem[] {
+  return [...conversations].sort((a, b) => getConversationActivityTime(b) - getConversationActivityTime(a))
+}
+
+function upsertConversation(conversations: ConversationItem[], nextConversation: ConversationItem): ConversationItem[] {
+  const exists = conversations.some((conversation) => conversation.id === nextConversation.id)
+  const next = exists
+    ? conversations.map((conversation) => (conversation.id === nextConversation.id ? nextConversation : conversation))
+    : [nextConversation, ...conversations]
+
+  return sortConversationsByActivity(next)
+}
+
 function getChannelLabel(channel: string) {
   if (channel === 'instagram') return 'Instagram'
   if (channel === 'telegram') return 'Telegram'
@@ -401,7 +420,6 @@ function MessageBubble({ msg, isNextSameSender }: { msg: MessageItem; isNextSame
 
   useEffect(() => {
     if (!isAnimatedSticker || !mediaUrl) {
-      setAnimationData(null)
       return
     }
 
@@ -785,7 +803,7 @@ export function CognilabsAIChatPage() {
     () => cognilabsaiService.listConversations(),
     [],
     {
-      onSuccess: (data) => setConversations(data),
+      onSuccess: (data) => setConversations(sortConversationsByActivity(data)),
     },
   )
   const crmDashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
@@ -889,7 +907,10 @@ export function CognilabsAIChatPage() {
         setFollowUpDraft(createFollowUpDraft(detail))
       })
       .catch(() => {
-        if (!cancelled) setFollowUpDraft(createFollowUpDraft(selectedConversation))
+        if (!cancelled) {
+          const fallbackConversation = conversationsRef.current.find((conversation) => conversation.id === selectedConversationId) ?? null
+          setFollowUpDraft(createFollowUpDraft(fallbackConversation))
+        }
       })
 
     return () => {
@@ -963,28 +984,37 @@ export function CognilabsAIChatPage() {
             const convId = data.conversation_id
             if (conversationsRef.current.some((c) => c.id === convId)) {
               setConversations((prev) =>
-                prev.map((c) =>
-                  c.id === convId
-                    ? {
-                        ...c,
-                        last_message_at: data.message.created_at,
-                        last_message_preview: data.message.text,
-                        unread_count:
-                          data.message.sender_type === 'client' && convId !== selectedConversationIdRef.current
-                            ? (c.unread_count ?? 0) + 1
-                            : c.unread_count,
-                      }
-                    : c,
+                sortConversationsByActivity(
+                  prev.map((c) =>
+                    c.id === convId
+                      ? {
+                          ...c,
+                          last_message_at: data.message.created_at,
+                          last_message_preview: data.message.text,
+                          unread_count:
+                            data.message.sender_type === 'client' && convId !== selectedConversationIdRef.current
+                              ? (c.unread_count ?? 0) + 1
+                              : c.unread_count,
+                        }
+                      : c,
+                  ),
                 )
               )
+            } else {
+              void cognilabsaiService
+                .getConversation(convId)
+                .then((conversation) => {
+                  if (!isComponentMounted) return
+                  setConversations((prev) => upsertConversation(prev, conversation))
+                })
+                .catch(() => {
+                  if (isComponentMounted) {
+                    void refetchConversationsRef.current()
+                  }
+                })
             }
           } else if (data.type === 'conversation.updated') {
-            const convId = data.conversation_id
-            if (conversationsRef.current.some((c) => c.id === convId)) {
-              setConversations((prev) =>
-                prev.map((c) => (c.id === convId ? data.conversation : c))
-              )
-            }
+            setConversations((prev) => upsertConversation(prev, data.conversation))
             if (data.conversation_id === selectedConversationIdRef.current) {
               setSelectedConversationDetail(data.conversation)
               setFollowUpDraft(createFollowUpDraft(data.conversation))
