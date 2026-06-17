@@ -523,11 +523,13 @@ function TelegramSearchModal({
   onStartChat,
   onNewChatStarted,
   initialQuery = '',
+  onBackToCrm,
 }: {
   onClose: () => void
   onStartChat: (conversationId: number) => void
   onNewChatStarted?: () => void
   initialQuery?: string
+  onBackToCrm?: () => void
 }) {
   const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState<TelegramSearchResult[]>([])
@@ -715,11 +717,27 @@ function TelegramSearchModal({
 
         {/* Actions */}
         <div className="flex gap-2 px-5 pb-5">
+          {onBackToCrm ? (
+            <Button
+              variant="ghost"
+              onClick={onBackToCrm}
+              disabled={isSending}
+              className="flex-1 h-10 rounded-xl font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] text-[13px]"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="mr-1.5 h-4 w-4">
+                <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              CRM ga qaytish
+            </Button>
+          ) : null}
           <Button
             variant="ghost"
             onClick={onClose}
             disabled={isSending}
-            className="flex-1 h-10 rounded-xl font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] text-[13px]"
+            className={cn(
+              'h-10 rounded-xl font-medium text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] text-[13px]',
+              onBackToCrm ? 'flex-1' : 'w-full',
+            )}
           >
             Bekor qilish
           </Button>
@@ -763,6 +781,13 @@ export function CognilabsAIChatPage() {
       return id ? Number(id) : null
     },
   )
+  const returnCustomerId = useMemo(() => {
+    const raw = searchParams.get('return_customer_id')
+    if (!raw) return null
+
+    const parsed = Number(raw)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  }, [searchParams])
   const [messages, setMessages] = useState<MessageItem[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [messageText, setMessageText] = useState('')
@@ -1197,6 +1222,10 @@ export function CognilabsAIChatPage() {
     { key: 'website', label: 'Website' },
   ]
 
+  function handleReturnToCrm() {
+    navigate('/crm')
+  }
+
   return (
     <div
       className="flex min-h-0 flex-col bg-[var(--background)] text-[var(--foreground)] font-sans -mx-4 -mt-4 -mb-6 sm:-mx-6 lg:-mx-8"
@@ -1350,7 +1379,20 @@ export function CognilabsAIChatPage() {
                     )}>
                       <ChannelIcon channel={selectedConversation.channel} />
                     </div>
-                  </div>
+                    </div>
+                  {returnCustomerId ? (
+                    <button
+                      type="button"
+                      onClick={handleReturnToCrm}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-2.5 py-1.5 text-[11px] font-semibold text-[var(--foreground)] transition hover:border-[var(--border-hover)] hover:bg-[var(--input-surface-hover)]"
+                      title="Back to CRM"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4" aria-hidden="true">
+                        <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      CRM
+                    </button>
+                  ) : null}
                     <div className="min-w-0">
                       <h3 className="truncate text-[14px] font-bold text-[var(--foreground)]">{getClientName(selectedConversation)}</h3>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -1661,6 +1703,15 @@ export function CognilabsAIChatPage() {
       {showNewTelegramModal ? (
         <TelegramSearchModal
           initialQuery={newTelegramInitialQuery}
+          onBackToCrm={
+            returnCustomerId
+              ? () => {
+                  setShowNewTelegramModal(false)
+                  setNewTelegramInitialQuery('')
+                  handleReturnToCrm()
+                }
+              : undefined
+          }
           onClose={() => {
             setShowNewTelegramModal(false)
             setNewTelegramInitialQuery('')

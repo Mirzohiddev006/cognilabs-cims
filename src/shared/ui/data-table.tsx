@@ -20,9 +20,12 @@ type DataTableProps<T> = {
   getRowKey: (row: T) => string
   emptyState?: ReactNode
   pageSize?: number
+  initialPage?: number
   zebra?: boolean
   compact?: boolean
   onRowClick?: (row: T) => void
+  onPageChange?: (page: number) => void
+  disableAutoResetPage?: boolean
   className?: string
   fillHeight?: boolean
 }
@@ -75,18 +78,33 @@ export function DataTable<T>({
   getRowKey,
   emptyState,
   pageSize = 75,
+  initialPage = 1,
   zebra = false,
   onRowClick,
+  onPageChange,
+  disableAutoResetPage = false,
   className,
   fillHeight = false,
 }: DataTableProps<T>) {
   const effectivePageSize = Math.max(1, pageSize > 0 ? pageSize : rows.length)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(() => Math.max(1, initialPage))
   const totalPages = Math.max(1, Math.ceil(rows.length / effectivePageSize))
 
   useEffect(() => {
+    if (disableAutoResetPage) {
+      return
+    }
+
     setCurrentPage((current) => (current === 1 ? current : 1))
-  }, [rows.length, effectivePageSize])
+  }, [disableAutoResetPage, rows.length, effectivePageSize])
+
+  useEffect(() => {
+    if (!disableAutoResetPage) {
+      return
+    }
+
+    setCurrentPage(Math.max(1, initialPage))
+  }, [disableAutoResetPage, initialPage])
 
   useEffect(() => {
     setCurrentPage((current) => {
@@ -94,6 +112,10 @@ export function DataTable<T>({
       return nextPage === current ? current : nextPage
     })
   }, [totalPages])
+
+  useEffect(() => {
+    onPageChange?.(currentPage)
+  }, [currentPage, onPageChange])
 
   const startIndex = (currentPage - 1) * effectivePageSize
   const endIndex = Math.min(startIndex + effectivePageSize, rows.length)
@@ -143,6 +165,7 @@ export function DataTable<T>({
                 <tr
                   key={getRowKey(row)}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  data-row-key={getRowKey(row)}
                   className={cn(
                     'border-b border-[var(--border)] transition-colors hover:bg-[var(--accent-soft)]',
                     zebra && isEven && 'bg-white/[0.012]',

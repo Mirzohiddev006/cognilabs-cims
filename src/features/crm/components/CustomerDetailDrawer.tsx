@@ -448,7 +448,7 @@ export function CustomerDetailDrawer({
   initialCustomer?: CustomerSummary | null
   onClose: () => void
   onOpenChat?: (conversationId: number) => void
-  onSearchTelegram?: (phoneNumber: string) => void
+  onSearchTelegram?: (phoneNumber: string, customerId: number) => void
   onEdit?: (customer: CustomerSummary) => void
 }) {
   const { t } = useTranslation()
@@ -517,7 +517,7 @@ export function CustomerDetailDrawer({
                 <button
                   type="button"
                   title={t('customers.detail.search_telegram', 'Search Telegram')}
-                  onClick={() => onSearchTelegram(customerPhoneNumber)}
+                  onClick={() => onSearchTelegram(customerPhoneNumber, customer.id)}
                   className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#2AABEE]/30 bg-[#2AABEE]/10 px-3 text-xs font-semibold text-[#2AABEE] transition hover:bg-[#2AABEE]/20"
                 >
                   <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">

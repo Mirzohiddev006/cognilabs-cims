@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
@@ -33,6 +33,7 @@ import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
 const emptyCustomers: CustomerSummary[] = []
 const emptyStatuses: DynamicStatusOption[] = []
+const CRM_RETURN_STATE_KEY = 'cims:crm-return-state'
 
 const initialFormValues: CustomerFormValues = {
   full_name: '',
@@ -203,6 +204,63 @@ function renderRecallTime(value?: string | null) {
       {formatted}
     </span>
   )
+}
+
+type CrmReturnState = {
+  search: string
+  statusFilters: string[]
+  platformFilter: string
+  dateStart: string
+  dateEnd: string
+  pageSize: string
+  selectedPeriod: '' | 'today' | '3d' | '7d' | '30d' | '90d'
+  tablePage: number
+  customerId: number
+  customerIndex: number
+}
+
+type CrmViewState = Omit<CrmReturnState, 'customerId' | 'customerIndex'>
+
+function readCrmReturnState(): CrmReturnState | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  try {
+    const raw = window.sessionStorage.getItem(CRM_RETURN_STATE_KEY)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw) as CrmReturnState
+    if (
+      !parsed
+      || !Number.isFinite(parsed.customerId)
+      || parsed.customerId <= 0
+      || !Number.isFinite(parsed.customerIndex)
+      || parsed.customerIndex < 0
+    ) {
+      return null
+    }
+
+    return parsed
+  } catch {
+    return null
+  }
+}
+
+function saveCrmReturnState(state: CrmReturnState) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.sessionStorage.setItem(CRM_RETURN_STATE_KEY, JSON.stringify(state))
+}
+
+function clearCrmReturnState() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.sessionStorage.removeItem(CRM_RETURN_STATE_KEY)
 }
 
 function resolveAudioUrl(customer: CustomerSummary) {
@@ -448,15 +506,17 @@ export function CrmDashboardPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [initialReturnState] = useState(() => readCrmReturnState())
 
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => initialReturnState?.search ?? '')
   const deferredSearch = useDeferredValue(search)
-  const [statusFilters, setStatusFilters] = useState<string[]>([])
-  const [platformFilter, setPlatformFilter] = useState('')
-  const [dateStart, setDateStart] = useState('')
-  const [dateEnd, setDateEnd] = useState('')
-  const [pageSize, setPageSize] = useState('75')
-  const [selectedPeriod, setSelectedPeriod] = useState<'' | 'today' | '3d' | '7d' | '30d' | '90d'>('')
+  const [statusFilters, setStatusFilters] = useState<string[]>(() => initialReturnState?.statusFilters ?? [])
+  const [platformFilter, setPlatformFilter] = useState(() => initialReturnState?.platformFilter ?? '')
+  const [dateStart, setDateStart] = useState(() => initialReturnState?.dateStart ?? '')
+  const [dateEnd, setDateEnd] = useState(() => initialReturnState?.dateEnd ?? '')
+  const [pageSize, setPageSize] = useState(() => initialReturnState?.pageSize ?? '75')
+  const [selectedPeriod, setSelectedPeriod] = useState<'' | 'today' | '3d' | '7d' | '30d' | '90d'>(() => initialReturnState?.selectedPeriod ?? '')
+  const [tablePage, setTablePage] = useState(() => Math.max(1, initialReturnState?.tablePage ?? 1))
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null)
@@ -467,8 +527,35 @@ export function CrmDashboardPage() {
   const [isFormSubmitting, setIsFormSubmitting] = useState(false)
   const [audioModal, setAudioModal] = useState<{ src: string; name: string } | null>(null)
   const navigate = useNavigate()
+  const hasRestoredReturnTargetRef = useRef(false)
+  const restoreScrollTimerRef = useRef<number | null>(null)
+  const restoreScrollAttemptsRef = useRef(0)
+  const latestCrmViewStateRef = useRef<CrmViewState>({
+    search: '',
+    statusFilters: [],
+    platformFilter: '',
+    dateStart: '',
+    dateEnd: '',
+    pageSize: '75',
+    selectedPeriod: '',
+    tablePage: 1,
+  })
 
   const pageSizeValue = Number(pageSize) || 75
+  const shouldRestoreReturnState = Boolean(initialReturnState?.customerId)
+
+  useLayoutEffect(() => {
+    latestCrmViewStateRef.current = {
+      search,
+      statusFilters,
+      platformFilter,
+      dateStart,
+      dateEnd,
+      pageSize,
+      selectedPeriod,
+      tablePage,
+    }
+  }, [dateEnd, dateStart, pageSize, platformFilter, search, selectedPeriod, statusFilters, tablePage])
 
   const dashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
   const statusesQuery = useAsyncData(() => crmService.dynamicStatuses(), [])
@@ -588,13 +675,17 @@ export function CrmDashboardPage() {
     () => new Set(statusFilters.map((value) => normalizeStatusKey(value)).filter(Boolean)),
     [statusFilters],
   )
-  const rejectedCustomersQuery = useAsyncData(
-    () => crmService.filterByStatus('rejected'),
-    [selectedStatusFilterSet.has('rejected')],
-    { enabled: selectedStatusFilterSet.has('rejected') },
+  const selectedStatusFilterValues = useMemo(
+    () => statusFilters.map((value) => value.trim()).filter(Boolean),
+    [statusFilters],
+  )
+  const selectedStatusCustomersQuery = useAsyncData(
+    () => Promise.all(selectedStatusFilterValues.map((status) => crmService.filterByStatus(status))).then((results) => results.flat()),
+    [selectedStatusFilterValues.join('|')],
+    { enabled: selectedStatusFilterValues.length > 0 },
   )
   const customers = useMemo(() => {
-    if (!selectedStatusFilterSet.has('rejected')) {
+    if (selectedStatusFilterValues.length === 0) {
       return baseCustomers
     }
 
@@ -604,12 +695,12 @@ export function CrmDashboardPage() {
       merged.set(customer.id, customer)
     }
 
-    for (const customer of rejectedCustomersQuery.data ?? emptyCustomers) {
+    for (const customer of selectedStatusCustomersQuery.data ?? emptyCustomers) {
       merged.set(customer.id, customer)
     }
 
     return [...merged.values()]
-  }, [baseCustomers, rejectedCustomersQuery.data, selectedStatusFilterSet])
+  }, [baseCustomers, selectedStatusCustomersQuery.data, selectedStatusFilterValues.join('|')])
 
   const availablePlatforms = useMemo(() => {
     return Array.from(
@@ -661,6 +752,79 @@ export function CrmDashboardPage() {
     })
   }, [customers, dateEnd, dateStart, deferredSearch, platformFilter, selectedStatusFilterSet, statusMetaMap])
 
+  useEffect(() => {
+    const targetCustomerId = initialReturnState?.customerId
+    const isDashboardReady = Boolean(dashboardQuery.data)
+    const isPeriodReady = !selectedPeriod || Boolean(periodReportQuery.data)
+    const isSelectedStatusReady = selectedStatusFilterValues.length === 0 || Boolean(selectedStatusCustomersQuery.data)
+    const isDataReady = isDashboardReady && isPeriodReady && isSelectedStatusReady
+
+    if (restoreScrollTimerRef.current !== null) {
+      window.clearTimeout(restoreScrollTimerRef.current)
+      restoreScrollTimerRef.current = null
+    }
+
+    if (!shouldRestoreReturnState || !targetCustomerId || hasRestoredReturnTargetRef.current) {
+      return
+    }
+
+    if (!isDataReady) {
+      return
+    }
+
+    const targetIndex = displayedCustomers.findIndex((customer) => customer.id === targetCustomerId)
+    if (targetIndex < 0) {
+      hasRestoredReturnTargetRef.current = true
+      clearCrmReturnState()
+      return
+    }
+
+    const expectedPage = Math.max(1, Math.floor(targetIndex / pageSizeValue) + 1)
+    if (tablePage !== expectedPage) {
+      setTablePage(expectedPage)
+      return
+    }
+
+    const tryScroll = () => {
+      const row = document.querySelector<HTMLElement>(`tr[data-row-key="${targetCustomerId}"]`)
+      if (row) {
+        row.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        hasRestoredReturnTargetRef.current = true
+        restoreScrollAttemptsRef.current = 0
+        clearCrmReturnState()
+        restoreScrollTimerRef.current = null
+        return
+      }
+
+      restoreScrollAttemptsRef.current += 1
+      if (restoreScrollAttemptsRef.current >= 20) {
+        return
+      }
+
+      restoreScrollTimerRef.current = window.setTimeout(tryScroll, 100)
+    }
+
+    restoreScrollTimerRef.current = window.setTimeout(tryScroll, 0)
+
+    return () => {
+      if (restoreScrollTimerRef.current !== null) {
+        window.clearTimeout(restoreScrollTimerRef.current)
+        restoreScrollTimerRef.current = null
+      }
+    }
+  }, [
+    dashboardQuery.data,
+    displayedCustomers,
+    initialReturnState,
+    pageSizeValue,
+    periodReportQuery.data,
+    selectedPeriod,
+    selectedStatusCustomersQuery.data,
+    selectedStatusFilterValues.length,
+    shouldRestoreReturnState,
+    tablePage,
+  ])
+
   async function refreshAll() {
     await Promise.allSettled([
       dashboardQuery.refetch(),
@@ -668,7 +832,7 @@ export function CrmDashboardPage() {
       summaryQuery.refetch(),
       statusSummaryQuery.refetch(),
       ...(selectedPeriod ? [periodReportQuery.refetch()] : []),
-      ...(selectedStatusFilterSet.has('rejected') ? [rejectedCustomersQuery.refetch()] : []),
+      ...(selectedStatusFilterValues.length > 0 ? [selectedStatusCustomersQuery.refetch()] : []),
     ])
   }
 
@@ -698,6 +862,20 @@ export function CrmDashboardPage() {
 
   function openCustomerDrawer(customer: CustomerSummary) {
     setDetailCustomer(customer)
+  }
+
+  function handleSearchTelegramReturn(phoneNumber: string, customerId: number) {
+    const currentViewState = latestCrmViewStateRef.current
+    const customerIndex = displayedCustomers.findIndex((customer) => customer.id === customerId)
+    const effectiveIndex = customerIndex >= 0 ? customerIndex : Math.max(0, (currentViewState.tablePage - 1) * pageSizeValue)
+
+    saveCrmReturnState({
+      ...currentViewState,
+      customerId,
+      customerIndex: effectiveIndex,
+    })
+    setDetailCustomer(null)
+    navigate(`/cognilabsai/chat?telegram_search=${encodeURIComponent(phoneNumber)}&return_customer_id=${customerId}`)
   }
 
   function syncCustomerInUi(nextCustomer: CustomerSummary) {
@@ -1079,9 +1257,12 @@ export function CrmDashboardPage() {
             rows={displayedCustomers}
             getRowKey={(row) => String(row.id)}
             pageSize={pageSizeValue}
+            initialPage={tablePage}
             zebra
             fillHeight
             onRowClick={openCustomerDrawer}
+            onPageChange={setTablePage}
+            disableAutoResetPage={shouldRestoreReturnState}
             className="rounded-none border-x-0 border-b-0"
             emptyState={
               <EmptyStateBlock
@@ -1206,10 +1387,7 @@ export function CrmDashboardPage() {
           setDetailCustomer(null)
           navigate(`/cognilabsai/chat?conversation_id=${id}`)
         }}
-        onSearchTelegram={(phoneNumber) => {
-          setDetailCustomer(null)
-          navigate(`/cognilabsai/chat?telegram_search=${encodeURIComponent(phoneNumber)}`)
-        }}
+        onSearchTelegram={handleSearchTelegramReturn}
         onEdit={(customer) => {
           setDetailCustomer(null)
           setSelectedCustomer(customer)
@@ -1251,3 +1429,4 @@ export function CrmDashboardPage() {
     </section>
   )
 }
+
