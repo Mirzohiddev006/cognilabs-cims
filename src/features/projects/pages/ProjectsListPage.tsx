@@ -16,7 +16,7 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { Avatar } from '../components/Avatar'
 import { ProjectCard, ProjectCardSkeleton } from '../components/ProjectCard'
 import { ProjectFormModal } from '../components/ProjectFormModal'
-import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { formatProjectDateTime, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { buildMemberProjectOverview } from '../lib/memberOverview'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 
@@ -543,7 +543,7 @@ export function ProjectsListPage() {
                                       </Badge>
                                     ) : null}
                                     <Badge variant={dueVariant}>
-                                      {task.dueDate ? `${lt('Due')} ${formatProjectDate(task.dueDate)}` : lt('No due date')}
+                                      {task.dueDate ? `${lt('Due')} ${formatProjectDateTime(task.dueDate)}` : lt('No due date')}
                                     </Badge>
                                   </div>
                                 </div>

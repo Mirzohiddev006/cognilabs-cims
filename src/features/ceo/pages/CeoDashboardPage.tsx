@@ -6,7 +6,7 @@ import { projectsService, type UserOpenCardRecord } from '../../../shared/api/se
 import type { PaymentItem } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
-import { formatCurrency, formatShortDate } from '../../../shared/lib/format'
+import { formatCurrency, formatShortDate, formatShortDateTime } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { Badge } from '../../../shared/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../../../shared/ui/card'
@@ -911,7 +911,7 @@ export function CeoDashboardPage() {
                         <>
                           <span>·</span>
                           <span className={isOverdue ? 'text-red-400' : ''}>
-                            {formatShortDate(task.due_date)}
+                            {formatShortDateTime(task.due_date)}
                             {isOverdue ? ` (${t('ceo.dashboard.tasks.overdue', 'overdue')})` : ''}
                           </span>
                         </>

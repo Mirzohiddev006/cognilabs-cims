@@ -128,7 +128,9 @@ export type CardRecord = {
   order: number
   priority: CardPriority | null
   assignee: UserSummary | null
+  assignees: UserSummary[]
   assignee_id: number | null
+  assignee_ids: number[]
   due_date: string | null
   column_id: number
   created_by: UserSummary
@@ -169,9 +171,16 @@ type ApiCardImage = {
   created_at?: string
 }
 
-type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by'> & {
+type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by' | 'assignee' | 'assignees' | 'assignee_id' | 'assignee_ids'> & {
   created_by?: ApiUserSummary | number | null
   created_by_user?: ApiUserSummary
+  assignee?: ApiUserSummary | number | null
+  assignee_user?: ApiUserSummary
+  assignees?: ApiUserSummary[] | null
+  assignee_users?: ApiUserSummary[] | null
+  assignee_id?: number | null
+  assignee_ids?: number[] | null
+  member_ids?: number[] | null
   images?: ApiCardImage[] | null
   files?: ApiCardImage[] | null
   board_id?: number
@@ -233,6 +242,20 @@ function resolveUserReference(primary?: ApiUserSummary | number | null, fallback
   return typeof primary === 'object' ? primary : null
 }
 
+function normalizeUserSummaryList(users?: Array<ApiUserSummary | null | undefined> | null) {
+  return Array.isArray(users)
+    ? users.filter(Boolean).map((user) => normalizeUserSummary(user))
+    : []
+}
+
+function getCardAssignees(card: Pick<CardRecord, 'assignee' | 'assignees'>) {
+  if (Array.isArray(card.assignees) && card.assignees.length > 0) {
+    return card.assignees
+  }
+
+  return card.assignee ? [card.assignee] : []
+}
+
 function resolveProjectImage(project: ApiProjectRecord) {
   return project.image ?? project.image_url ?? project.image_path ?? project.project_image ?? project.thumbnail ?? null
 }
@@ -292,6 +315,19 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     : Array.isArray(card.files)
       ? card.files
       : []
+  const assignees = normalizeUserSummaryList(card.assignees ?? card.assignee_users)
+  const fallbackAssignee = normalizeUserSummary(resolveUserReference(card.assignee, card.assignee_user))
+  const normalizedAssignees = assignees.length > 0
+    ? assignees
+    : fallbackAssignee.id > 0
+      ? [fallbackAssignee]
+      : []
+  const primaryAssignee = normalizedAssignees[0] ?? null
+  const assigneeIds = Array.from(new Set([
+    ...(Array.isArray(card.assignee_ids) ? card.assignee_ids : []),
+    ...(Array.isArray(card.member_ids) ? card.member_ids : []),
+    ...(primaryAssignee?.id ? [primaryAssignee.id] : []),
+  ])).filter((value) => Number.isFinite(value) && value > 0)
 
   return {
     id: card.id ?? 0,
@@ -299,8 +335,10 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     description: card.description ?? null,
     order: card.order ?? 0,
     priority: normalizeCardPriority(card.priority),
-    assignee: card.assignee ? normalizeUserSummary(card.assignee) : null,
-    assignee_id: card.assignee_id ?? null,
+    assignee: primaryAssignee,
+    assignees: normalizedAssignees,
+    assignee_id: card.assignee_id ?? primaryAssignee?.id ?? null,
+    assignee_ids: assigneeIds,
     due_date: card.due_date ?? null,
     column_id: card.column_id ?? 0,
     created_by: normalizeUserSummary(resolveUserReference(card.created_by, card.created_by_user)),
@@ -423,14 +461,26 @@ function mergeCardImages(...groups: Array<CardImage[] | null | undefined>) {
 }
 
 function mergeCardRecord(left: CardRecord, right: CardRecord): CardRecord {
+  const assignees = mergeUserSummaryLists(getCardAssignees(left), getCardAssignees(right))
+  const primaryAssignee = assignees[0] ?? null
+  const assigneeIds = Array.from(new Set([
+    ...(Array.isArray(left.assignee_ids) ? left.assignee_ids : []),
+    ...(Array.isArray(right.assignee_ids) ? right.assignee_ids : []),
+    ...(left.assignee_id ? [left.assignee_id] : []),
+    ...(right.assignee_id ? [right.assignee_id] : []),
+    ...(primaryAssignee?.id ? [primaryAssignee.id] : []),
+  ])).filter((value) => Number.isFinite(value) && value > 0)
+
   return {
     id: right.id || left.id,
     title: pickString(right.title, left.title),
     description: pickNullableString(right.description, left.description),
     order: right.order ?? left.order,
     priority: right.priority ?? left.priority ?? null,
-    assignee: right.assignee || left.assignee ? mergeUserSummary(left.assignee, right.assignee) : null,
-    assignee_id: right.assignee_id ?? left.assignee_id ?? null,
+    assignee: primaryAssignee,
+    assignees,
+    assignee_id: right.assignee_id ?? left.assignee_id ?? primaryAssignee?.id ?? null,
+    assignee_ids: assigneeIds,
     due_date: pickNullableString(right.due_date, left.due_date),
     column_id: right.column_id || left.column_id,
     created_by: mergeUserSummary(left.created_by, right.created_by),

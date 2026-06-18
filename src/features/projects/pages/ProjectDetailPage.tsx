@@ -23,7 +23,7 @@ import { BoardFormModal } from '../components/BoardFormModal'
 import { BoardWorkspace } from '../components/BoardWorkspace'
 import { ProjectFormModal } from '../components/ProjectFormModal'
 import { ProjectAttachmentsModal } from '../components/ProjectAttachmentsModal'
-import { formatProjectDate } from '../lib/format'
+import { formatProjectDate, formatProjectDateTime } from '../lib/format'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 import { cn } from '../../../shared/lib/cn'
 
@@ -706,14 +706,30 @@ export function ProjectDetailPage() {
                                       {task.title}
                                    </p>
                                 </div>
-                                <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]/50">
+                                <div className="flex items-center justify-between gap-3 pt-4 border-t border-[var(--border)]/50">
                                    <div className="flex items-center gap-2">
                                       <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_var(--blue-glow)]" />
                                       <span className="text-[10px] font-black text-[var(--muted-strong)] uppercase tracking-tighter">{lt('Priority High')}</span>
                                    </div>
-                                   <div className="flex items-center gap-1.5 text-[10px] font-bold text-[var(--muted)]">
-                                      <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                      {formatProjectDate(task.updated_at)}
+                                   <div className="flex flex-col items-end gap-1 text-[10px] font-bold text-[var(--muted)]">
+                                      {task.due_date ? (
+                                        <div className="flex items-center gap-1.5 text-[var(--foreground)]">
+                                          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                                            <path d="M16 2v4" />
+                                            <path d="M8 2v4" />
+                                            <path d="M3 10h18" />
+                                          </svg>
+                                          {formatProjectDateTime(task.due_date)}
+                                        </div>
+                                      ) : null}
+                                      <div className="flex items-center gap-1.5">
+                                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                          <circle cx="12" cy="12" r="10" />
+                                          <polyline points="12 6 12 12 16 14" />
+                                        </svg>
+                                        {formatProjectDate(task.updated_at)}
+                                      </div>
                                    </div>
                                 </div>
                              </Link>

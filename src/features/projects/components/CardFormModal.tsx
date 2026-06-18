@@ -13,12 +13,13 @@ import type {
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { buildFormData } from '../lib/formdata'
 import { getPriorityConfig } from '../lib/format'
+import { MemberSelector } from './MemberSelector'
 
 type CardFormValues = {
   title: string
   description: string
   priority: string
-  assignee_id: string
+  assignee_ids: number[]
   due_date: string
   images: File[]
   clear_existing_images: boolean
@@ -40,10 +41,49 @@ const empty: CardFormValues = {
   title: '',
   description: '',
   priority: '',
-  assignee_id: '',
+  assignee_ids: [],
   due_date: '',
   images: [],
   clear_existing_images: false,
+}
+
+function toDateTimeLocalValue(value?: string | null) {
+  if (!value) {
+    return ''
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const timezoneOffset = date.getTimezoneOffset() * 60_000
+  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16)
+}
+
+function toApiDateTimeWithOffset(value: string) {
+  const [datePart, timePart] = value.split('T')
+
+  if (!datePart || !timePart) {
+    return value
+  }
+
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hours, minutes] = timePart.split(':').map(Number)
+  const date = new Date(year, month - 1, day, hours, minutes, 0)
+
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  const offsetMinutes = -date.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const absoluteOffset = Math.abs(offsetMinutes)
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, '0')
+  const offsetMins = String(absoluteOffset % 60).padStart(2, '0')
+
+  return `${datePart}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00${sign}${offsetHours}:${offsetMins}`
 }
 
 function getCardImageUrl(image: { url?: string | null; url_path?: string | null }) {
@@ -77,14 +117,6 @@ export function CardFormModal({
     { value: 'high', label: priorityConfig.high.label },
   ]
 
-  const memberOptions: SelectFieldOption[] = [
-    { value: '', label: t('projects.unassigned', 'Unassigned') },
-    ...members.map((member) => ({
-      value: String(member.id),
-      label: `${member.name} ${member.surname}`,
-    })),
-  ]
-
   useEffect(() => {
     if (open) {
       if (initial) {
@@ -98,8 +130,14 @@ export function CardFormModal({
           title: initial.title,
           description: initial.description ?? '',
           priority: initial.priority === 'urgent' ? 'high' : (initial.priority ?? ''),
-          assignee_id: initial.assignee_id ? String(initial.assignee_id) : '',
-          due_date: initial.due_date ? initial.due_date.slice(0, 10) : '',
+          assignee_ids: Array.isArray(initial.assignee_ids) && initial.assignee_ids.length > 0
+            ? initial.assignee_ids.filter((value) => Number.isFinite(value) && value > 0)
+            : initial.assignees.length > 0
+              ? initial.assignees.map((member) => member.id).filter((value) => Number.isFinite(value) && value > 0)
+              : initial.assignee_id
+                ? [initial.assignee_id]
+                : [],
+          due_date: toDateTimeLocalValue(initial.due_date),
           images: [],
           clear_existing_images: false,
         })
@@ -188,8 +226,9 @@ export function CardFormModal({
       title: values.title.trim(),
       description: values.description.trim() || undefined,
       priority: showPriority ? (values.priority || undefined) : undefined,
-      assignee_id: values.assignee_id ? Number(values.assignee_id) : undefined,
-      due_date: values.due_date || undefined,
+      assignee_id: values.assignee_ids[0] ?? undefined,
+      assignee_ids: values.assignee_ids,
+      due_date: values.due_date ? toApiDateTimeWithOffset(values.due_date) : undefined,
     })
 
     if (initial && values.clear_existing_images) {
@@ -273,28 +312,25 @@ export function CardFormModal({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
-              {t('projects.assignee', 'Assignee')}
+              {t('projects.assignees', 'Assignees')}
             </label>
-            <SelectField
-              value={values.assignee_id}
-              options={memberOptions}
-              onValueChange={(value) => set('assignee_id', value)}
-              placeholder={t('projects.unassigned', 'Unassigned')}
-              searchable
-              searchPlaceholder={t('projects.search_assignee', 'Search assignee...')}
-              emptyMessage={t('projects.no_assignee_found', 'No assignee found')}
+            <MemberSelector
+              allUsers={members}
+              selectedIds={values.assignee_ids}
+              onChange={(ids) => set('assignee_ids', ids)}
             />
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
-            {t('projects.due_date', 'Due Date')}
+            {t('projects.due_date_time', 'Due Date & Time')}
           </label>
           <Input
-            type="date"
+            type="datetime-local"
             value={values.due_date}
             onChange={(event) => set('due_date', event.target.value)}
+            step="60"
             className="text-sm"
           />
         </div>

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../../shared/ui/button'
 import { translateCurrentLiteral } from '../../../shared/i18n/translations'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
-import { Avatar } from './Avatar'
-import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { Avatar, AvatarGroup } from './Avatar'
+import { formatProjectDate, formatProjectDateTime, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { cn } from '../../../shared/lib/cn'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
@@ -73,6 +73,11 @@ export function CardDetailModal({
   const priority = card.priority ? priorityConfig[card.priority] : null
   const overdue = card.due_date ? isDueDateOverdue(card.due_date) : false
   const soon = card.due_date ? isDueDateSoon(card.due_date) : false
+  const assignees = Array.isArray(card.assignees) && card.assignees.length > 0
+    ? card.assignees
+    : card.assignee
+      ? [card.assignee]
+      : []
   const images = Array.isArray(card.images)
     ? card.images
     : Array.isArray(card.files)
@@ -196,9 +201,9 @@ export function CardDetailModal({
                       <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
                    </svg>
                    <span className="text-xs font-bold uppercase tracking-widest">
-                      {lt('Due')} {formatProjectDate(card.due_date)}
+                      {lt('Due')} {formatProjectDateTime(card.due_date)}
                    </span>
-                </div>
+                 </div>
              )}
           </div>
         </div>
@@ -282,21 +287,32 @@ export function CardDetailModal({
               {/* Assignment Card */}
               <div className="space-y-4">
                  <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] mb-5">{lt('Assignee')}</h4>
-                    {card.assignee ? (
-                      <div className="flex items-center gap-4 p-5 rounded-xl bg-[var(--accent-soft)] border border-[var(--border)] shadow-sm transition-transform hover:scale-[1.01] duration-300">
-                        <Avatar
-                          name={card.assignee.name}
-                          surname={card.assignee.surname}
-                          imageUrl={card.assignee.profile_image}
-                          size="md"
-                          className="ring-2 ring-[var(--border)] ring-offset-2 ring-offset-[var(--surface-elevated)]"
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-[var(--foreground)] truncate leading-none mb-1.5">
-                            {card.assignee.name} {card.assignee.surname}
-                          </p>
-                          <p className="text-[11px] text-[var(--muted)] truncate font-semibold uppercase tracking-wider">{card.assignee.job_title || lt('Member')}</p>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)] mb-5">
+                      {assignees.length > 1 ? lt('Assignees') : lt('Assignee')}
+                    </h4>
+                    {assignees.length > 0 ? (
+                      <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--accent-soft)] p-5 shadow-sm">
+                        <AvatarGroup users={assignees} max={4} size="sm" className="flex-wrap" />
+                        <div className="space-y-2">
+                          {assignees.map((assignee) => (
+                            <div key={assignee.id} className="flex items-center gap-3">
+                              <Avatar
+                                name={assignee.name}
+                                surname={assignee.surname}
+                                imageUrl={assignee.profile_image}
+                                size="sm"
+                                className="ring-1 ring-[var(--border)]"
+                              />
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                                  {assignee.name} {assignee.surname}
+                                </p>
+                                <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                                  {assignee.job_title || lt('Member')}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ) : (
@@ -355,7 +371,7 @@ export function CardDetailModal({
                              soon ? 'bg-[var(--warning-dim)] text-[var(--warning-text)] border border-[var(--warning-border)]' : 
                              'text-[var(--foreground)] bg-[var(--accent-soft)]'
                           )}>
-                             {formatProjectDate(card.due_date)}
+                             {formatProjectDateTime(card.due_date)}
                           </span>
                        </DetailInfoBlock>
                     )}

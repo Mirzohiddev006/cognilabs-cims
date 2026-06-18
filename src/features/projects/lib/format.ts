@@ -1,6 +1,6 @@
 import type { CardPriority } from '../../../shared/api/services/projects.service'
 import { getStoredLocale, translateCurrent } from '../../../shared/i18n/translations'
-import { formatShortDate as formatSharedShortDate } from '../../../shared/lib/format'
+import { formatShortDate as formatSharedShortDate, formatShortDateTime as formatSharedShortDateTime } from '../../../shared/lib/format'
 
 function parseProjectDate(value?: string | null): Date | null {
   if (typeof value !== 'string') {
@@ -23,6 +23,20 @@ export function formatProjectDate(date?: string | null): string {
 
   if (!parsed) {
     return translateCurrent('projects.unknown_date', 'Unknown date')
+  }
+
+  return formatSharedShortDate(date, getStoredLocale())
+}
+
+export function formatProjectDateTime(date?: string | null): string {
+  const parsed = parseProjectDate(date)
+
+  if (!parsed) {
+    return translateCurrent('projects.unknown_date', 'Unknown date')
+  }
+
+  if (typeof date === 'string' && /(?:T| )\d{1,2}:\d{2}/.test(date)) {
+    return formatSharedShortDateTime(date, getStoredLocale())
   }
 
   return formatSharedShortDate(date, getStoredLocale())

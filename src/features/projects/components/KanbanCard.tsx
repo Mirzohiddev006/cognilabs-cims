@@ -6,8 +6,8 @@ import { cn } from '../../../shared/lib/cn'
 import { Badge } from '../../../shared/ui/badge'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { CardRecord } from '../../../shared/api/services/projects.service'
-import { Avatar } from './Avatar'
-import { formatProjectDate, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
+import { Avatar, AvatarGroup } from './Avatar'
+import { formatProjectDateTime, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 
 type KanbanCardProps = {
   card: CardRecord
@@ -76,9 +76,14 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
     : Array.isArray(card.files)
       ? card.files
       : []
-  const assigneeName = card.assignee
-    ? [card.assignee.name, card.assignee.surname].filter(Boolean).join(' ').trim()
-    : ''
+  const assignees = Array.isArray(card.assignees) && card.assignees.length > 0
+    ? card.assignees
+    : card.assignee
+      ? [card.assignee]
+      : []
+  const assigneeName = assignees
+    .map((assignee) => [assignee.name, assignee.surname].filter(Boolean).join(' ').trim())
+    .join(', ')
   const dueTone: MetaChipTone = overdue ? 'danger' : soon ? 'warning' : 'neutral'
 
   function stopCardAction(event: SyntheticEvent) {
@@ -187,7 +192,7 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
                 </svg>
               )}
             >
-              {formatProjectDate(card.due_date)}
+              {formatProjectDateTime(card.due_date)}
             </MetaChip>
           ) : null}
 
@@ -205,23 +210,35 @@ export function KanbanCard({ card, onEdit, onDelete, onClick, isOverlay, readOnl
           ) : null}
         </div>
 
-        {card.assignee ? (
-          <div
-            className="inline-flex max-w-[50%] shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1 py-0.5 shadow-sm"
-            title={assigneeName}
-          >
-            <Avatar
-              name={card.assignee.name}
-              surname={card.assignee.surname}
-              imageUrl={card.assignee.profile_image}
-              size="xs"
+        {assignees.length > 0 ? (
+          assignees.length > 1 ? (
+            <div
+              className="inline-flex max-w-[55%] shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1 py-0.5 shadow-sm"
               title={assigneeName}
-              className="h-4 w-4 shrink-0"
-            />
-            <span className="truncate text-[9px] font-bold uppercase tracking-tighter text-[var(--muted-strong)]">
-              {assigneeName}
-            </span>
-          </div>
+            >
+              <AvatarGroup users={assignees} max={3} size="xs" className="pr-0.5" />
+              <span className="truncate text-[9px] font-bold uppercase tracking-tighter text-[var(--muted-strong)]">
+                {assigneeName}
+              </span>
+            </div>
+          ) : (
+            <div
+              className="inline-flex max-w-[50%] shrink-0 items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-elevated)] px-1 py-0.5 shadow-sm"
+              title={assigneeName}
+            >
+              <Avatar
+                name={assignees[0]?.name}
+                surname={assignees[0]?.surname}
+                imageUrl={assignees[0]?.profile_image}
+                size="xs"
+                title={assigneeName}
+                className="h-4 w-4 shrink-0"
+              />
+              <span className="truncate text-[9px] font-bold uppercase tracking-tighter text-[var(--muted-strong)]">
+                {assigneeName}
+              </span>
+            </div>
+          )
         ) : null}
       </div>
     </div>
