@@ -32,9 +32,19 @@ export type ConversationItem = {
   follow_up_message: string | null
   follow_up_due_at: string | null
   follow_up_sent_at: string | null
+  default_follow_up_last_step: number | null
+  default_follow_up_due_at: string | null
+  default_follow_up_last_sent_at: string | null
   is_imported: boolean
   created_at: string
   updated_at: string
+}
+
+export type PaginatedResponse<T> = {
+  items: T[]
+  total: number
+  limit: number
+  offset: number
 }
 
 export type MessageItem = {
@@ -128,10 +138,10 @@ export type WsEvent =
   | { type: 'conversation.updated'; conversation_id: number; conversation: ConversationItem }
 
 export const cognilabsaiService = {
-  listConversations(channel?: string) {
-    return request<ConversationItem[]>({
+  listConversations(channel?: string | null, limit = 50, offset = 0) {
+    return request<PaginatedResponse<ConversationItem>>({
       path: '/cognilabsai/chat/conversations',
-      query: channel ? { channel } : undefined,
+      query: { ...(channel != null ? { channel } : {}), limit, offset },
     })
   },
 

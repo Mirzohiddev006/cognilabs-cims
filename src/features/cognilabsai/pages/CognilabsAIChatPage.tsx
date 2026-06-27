@@ -828,7 +828,7 @@ export function CognilabsAIChatPage() {
     () => cognilabsaiService.listConversations(),
     [],
     {
-      onSuccess: (data) => setConversations(sortConversationsByActivity(data)),
+      onSuccess: (data) => setConversations(sortConversationsByActivity(data.items)),
     },
   )
   const crmDashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
