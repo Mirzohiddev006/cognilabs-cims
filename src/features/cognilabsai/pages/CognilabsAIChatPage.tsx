@@ -813,6 +813,8 @@ export function CognilabsAIChatPage() {
   const [isTogglingAi, setIsTogglingAi] = useState(false)
   const [isSavingFollowUp, setIsSavingFollowUp] = useState(false)
   const [conversations, setConversations] = useState<ConversationItem[]>([])
+  const [conversationsTotal, setConversationsTotal] = useState(0)
+  const [conversationsPage, setConversationsPage] = useState(0)
   const [selectedConversationDetail, setSelectedConversationDetail] = useState<ConversationItem | null>(null)
   const [showNewTelegramModal, setShowNewTelegramModal] = useState(false)
   const [newTelegramInitialQuery, setNewTelegramInitialQuery] = useState('')
@@ -825,10 +827,13 @@ export function CognilabsAIChatPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const conversationsQuery = useAsyncData(
-    () => cognilabsaiService.listConversations(),
-    [],
+    () => cognilabsaiService.listConversations(undefined, 50, conversationsPage * 50),
+    [conversationsPage],
     {
-      onSuccess: (data) => setConversations(sortConversationsByActivity(data.items)),
+      onSuccess: (data) => {
+        setConversations(sortConversationsByActivity(data.items))
+        setConversationsTotal(data.total)
+      },
     },
   )
   const crmDashboardQuery = useAsyncData(() => crmService.dashboardWithAllCustomers(), [])
@@ -1308,6 +1313,37 @@ export function CognilabsAIChatPage() {
                 </button>
               ))}
             </div>
+
+            {/* Pagination */}
+            {conversationsTotal > 50 && (
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] text-[var(--caption)]">
+                  {conversationsPage * 50 + 1}–{Math.min((conversationsPage + 1) * 50, conversationsTotal)} / {conversationsTotal}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setConversationsPage((p) => Math.max(0, p - 1))}
+                    disabled={conversationsPage === 0 || conversationsQuery.isLoading}
+                    className="h-6 w-6 flex items-center justify-center rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
+                      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConversationsPage((p) => p + 1)}
+                    disabled={(conversationsPage + 1) * 50 >= conversationsTotal || conversationsQuery.isLoading}
+                    className="h-6 w-6 flex items-center justify-center rounded-lg text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5">
+                      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Search */}
             <div className="relative">
