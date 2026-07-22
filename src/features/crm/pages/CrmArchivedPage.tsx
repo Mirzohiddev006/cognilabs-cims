@@ -244,21 +244,13 @@ export function CrmArchivedPage() {
                   key: 'actions',
                   header: t('customers.table.actions', 'Actions'),
                   render: (row) => (
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <ActionsMenu
-                        label={`Actions for ${getCustomerDisplayName(row)}`}
-                        items={[
-                          {
-                            label: 'Tiklash',
-                            onSelect: () => void handleRestore(row),
-                          },
-                          {
-                            label: "Butunlay o'chirish",
-                            onSelect: () => void handleHardDelete(row),
-                            tone: 'danger',
-                          },
-                        ]}
-                      />
+                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button type="button" title="Tiklash" onClick={() => void handleRestore(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M3 7v6h6"/><path d="M3 13C3 8.029 7.029 4 12 4a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9.003 9.003 0 0 1-8.1-5.1"/></svg>
+                      </button>
+                      <button type="button" title="Butunlay o'chirish" onClick={() => void handleHardDelete(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                      </button>
                     </div>
                   ),
                 },

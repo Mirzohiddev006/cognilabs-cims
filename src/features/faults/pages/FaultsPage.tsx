@@ -842,25 +842,16 @@ export function FaultsPage() {
               align: 'right',
               minWidth: '88px',
               render: (row) => (
-                <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
-                  <ActionsMenu
-                    label={tl(`Open actions for ${row.fullName}`, `${row.fullName} uchun amallarni ochish`, `Открыть действия для ${row.fullName}`)}
-                    items={[
-                      {
-                        label: lt('View details'),
-                        onSelect: () => openDetailPage(row),
-                      },
-                      {
-                        label: tr('Add mistake', "Xato qo'shish", 'Добавить ошибку'),
-                        onSelect: () => openMistakeDialog(row),
-                        tone: 'danger',
-                      },
-                      {
-                        label: tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу'),
-                        onSelect: () => openDeliveryBonusDialog(row),
-                      },
-                    ]}
-                  />
+                <div className="flex justify-end items-center gap-1" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" title={lt('View details')} onClick={() => openDetailPage(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                  <button type="button" title={tr('Add mistake', "Xato qo'shish", 'Добавить ошибку')} onClick={() => openMistakeDialog(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  </button>
+                  <button type="button" title={tr('Add delivery bonus', "Topshirish bonusini qo'shish", 'Добавить бонус за сдачу')} onClick={() => openDeliveryBonusDialog(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </button>
                 </div>
               ),
             },

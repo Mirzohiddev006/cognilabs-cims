@@ -143,14 +143,13 @@ export function MistakeIncidentSection({
               key: 'actions',
               header: tr('Actions', 'Amallar', 'Deystviya'),
               render: (row) => editable && onEdit && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
-                  <ActionsMenu
-                    label={`${lt('Open mistake actions for')} ${row.title}`}
-                    items={[
-                      { label: lt('Edit mistake'), onSelect: () => onEdit(row) },
-                      { label: lt('Delete mistake'), onSelect: () => onDelete(row), tone: 'danger' },
-                    ]}
-                  />
+                <div className="flex items-center gap-1 shrink-0" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" title={lt('Edit mistake')} onClick={() => onEdit(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button type="button" title={lt('Delete mistake')} onClick={() => onDelete(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
                 </div>
               ) : '-',
             },
@@ -236,14 +235,13 @@ export function DeliveryBonusSection({
               key: 'actions',
               header: tr('Actions', 'Amallar', 'Deystviya'),
               render: (row) => editable && onEdit && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
-                  <ActionsMenu
-                    label={`${lt('Open delivery bonus actions for')} ${row.title}`}
-                    items={[
-                      { label: lt('Edit delivery bonus'), onSelect: () => onEdit(row) },
-                      { label: lt('Delete delivery bonus'), onSelect: () => onDelete(row), tone: 'danger' },
-                    ]}
-                  />
+                <div className="flex items-center gap-1 shrink-0" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" title={lt('Edit delivery bonus')} onClick={() => onEdit(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--accent-soft)] transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button type="button" title={lt('Delete delivery bonus')} onClick={() => onDelete(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
                 </div>
               ) : '-',
             },
@@ -318,13 +316,10 @@ export function SimpleBonusSection({
               key: 'actions',
               header: tr('Actions', 'Amallar', 'Deystviya'),
               render: (row) => editable && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
-                  <ActionsMenu
-                    label={`${lt('Open bonus actions for')} ${row.reason}`}
-                    items={[
-                      { label: lt('Delete bonus'), onSelect: () => onDelete(row), tone: 'danger' },
-                    ]}
-                  />
+                <div className="flex items-center gap-1 shrink-0" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" title={lt('Delete bonus')} onClick={() => onDelete(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
                 </div>
               ) : '-',
             },
@@ -399,13 +394,10 @@ export function SimplePenaltySection({
               key: 'actions',
               header: tr('Actions', 'Amallar', 'Deystviya'),
               render: (row) => editable && onDelete ? (
-                <div onClick={(event) => event.stopPropagation()} className="shrink-0">
-                  <ActionsMenu
-                    label={`${lt('Open penalty actions for')} ${row.reason}`}
-                    items={[
-                      { label: lt('Delete penalty'), onSelect: () => onDelete(row), tone: 'danger' },
-                    ]}
-                  />
+                <div className="flex items-center gap-1 shrink-0" onClick={(event) => event.stopPropagation()}>
+                  <button type="button" title={lt('Delete penalty')} onClick={() => onDelete(row)} className="h-7 w-7 inline-flex items-center justify-center rounded-md text-[var(--muted)] hover:text-red-500 hover:bg-red-500/10 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                  </button>
                 </div>
               ) : '-',
             },
