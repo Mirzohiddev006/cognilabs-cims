@@ -130,7 +130,7 @@ export const attendanceService = {
   updateRecord(attendanceId: number, data: Partial<AttendanceRecord>) {
     return request<AttendanceRecord>({
       path: `/attendance/records/${attendanceId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: data,
     })
   },
@@ -180,7 +180,7 @@ export const attendanceService = {
   upsertDailyRecord(employeeId: number, date: string, data: Partial<DailyRecord>) {
     return request<DailyRecord>({
       path: `/attendance/daily-records/${employeeId}/${date}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: data,
     })
   },

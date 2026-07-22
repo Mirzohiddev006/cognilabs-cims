@@ -200,7 +200,7 @@ export const cognilabsaiService = {
   updateConversationFollowUp(conversationId: number, payload: ConversationFollowUpPayload) {
     return request<ConversationItem>({
       path: `/cognilabsai/chat/conversations/${conversationId}/follow-up`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -236,7 +236,7 @@ export const cognilabsaiService = {
   updateIntegrations(payload: IntegrationConfigPayload) {
     return request<IntegrationConfig>({
       path: '/cognilabsai/integrations',
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },

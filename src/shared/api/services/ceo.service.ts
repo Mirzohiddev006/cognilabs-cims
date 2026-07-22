@@ -226,7 +226,7 @@ export const ceoService = {
   updateUser(userId: number, payload: UserPayload) {
     return request<SuccessResponse>({
       path: `/ceo/users/${userId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -276,7 +276,7 @@ export const ceoService = {
   updateUserPermissions(userId: number, permissions: PermissionMap) {
     return request<SuccessResponse>({
       path: `/ceo/users/${userId}/permissions`,
-      method: 'PUT',
+      method: 'PATCH',
       body: permissions,
     })
   },
@@ -366,7 +366,7 @@ export const ceoService = {
   updatePayment(paymentId: number, payload: { project: string; date: string | null; summ: number; payment: boolean }) {
     return request<SuccessResponse>({
       path: `/ceo/payments/${paymentId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -422,7 +422,7 @@ export const ceoService = {
   }) {
     return request<SuccessResponse>({
       path: `/ceo/company-payments/${paymentId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },

@@ -34,7 +34,7 @@ export const managementService = {
   updatePage(pageId: number, payload: ManagementPageUpdatePayload) {
     return request<ManagementPageRecord>({
       path: `/management/pages/${pageId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -105,7 +105,7 @@ export const managementService = {
   updateStatus(statusId: number, payload: ManagementStatusUpdatePayload) {
     return request<ManagementStatusRecord>({
       path: `/management/statuses/${statusId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -134,7 +134,7 @@ export const managementService = {
   updateRole(roleId: number, payload: ManagementRoleUpdatePayload) {
     return request<ManagementRoleRecord>({
       path: `/management/roles/${roleId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },

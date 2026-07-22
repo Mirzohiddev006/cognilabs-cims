@@ -315,7 +315,7 @@ export const updateTrackingService = {
   updateWorkdayOverride(overrideId: number, payload: UpdateWorkdayOverridePayload) {
     return request<WorkdayOverrideRecord>({
       path: `/update-tracking/workday-overrides/${overrideId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },

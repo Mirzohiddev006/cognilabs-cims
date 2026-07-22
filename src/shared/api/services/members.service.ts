@@ -135,7 +135,7 @@ export const membersService = {
   updateMistake(mistakeId: number, payload: MemberMistakePayload) {
     return request<unknown>({
       path: `/members/member/mistakes/${mistakeId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -169,7 +169,7 @@ export const membersService = {
   updateDeliveryBonus(bonusId: number, payload: MemberDeliveryBonusPayload) {
     return request<unknown>({
       path: `/members/member/delivery-bonuses/${bonusId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
@@ -236,7 +236,7 @@ export const membersService = {
   putMemberUpdate(updateId: number, { year, month, updatePercentage, salaryAmount, nextPaymentDate, note }: PutMemberUpdatePayload) {
     return request<unknown>({
       path: `/members/member/update/${updateId}`,
-      method: 'PUT',
+      method: 'PATCH',
       query: {
         year,
         month,

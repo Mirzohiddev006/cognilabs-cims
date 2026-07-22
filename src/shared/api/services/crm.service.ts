@@ -165,7 +165,7 @@ export const crmService = {
   updateCustomer(customerId: number, formData: FormData) {
     return request<SuccessResponse>({
       path: `/crm/customers/${customerId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: formData,
     })
   },
@@ -210,7 +210,7 @@ export const crmService = {
   updateAdditionalNote(customerId: number, noteId: number, note: string) {
     return request<AdditionalNote>({
       path: `/crm/customers/${customerId}/notes/${noteId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: { note },
     })
   },

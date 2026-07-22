@@ -53,7 +53,7 @@ export const financeService = {
   update(financeId: number, payload: Record<string, unknown>) {
     return request<SuccessResponse>({
       path: `/finance/${financeId}`,
-      method: 'PUT',
+      method: 'PATCH',
       body: payload,
     })
   },
