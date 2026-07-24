@@ -9,7 +9,6 @@ import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/tra
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { useToast } from '../../../shared/toast/useToast'
-import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Button } from '../../../shared/ui/button'
 import { Card } from '../../../shared/ui/card'
 import { DataTable } from '../../../shared/ui/data-table'

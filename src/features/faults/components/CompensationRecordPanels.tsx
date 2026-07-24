@@ -5,7 +5,6 @@ import type {
   SimplePenaltyRecord,
 } from '../../../shared/api/types'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
-import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { Badge } from '../../../shared/ui/badge'
 import { Button } from '../../../shared/ui/button'
 import { CardSection } from '../../../shared/ui/card'
