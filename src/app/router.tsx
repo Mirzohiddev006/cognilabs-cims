@@ -203,6 +203,10 @@ const CognilabsAIMediaContextsPage = lazyPage(
   () => import('../features/cognilabsai/pages/CognilabsAIMediaContextsPage'),
   'CognilabsAIMediaContextsPage',
 )
+const CognilabsAIKanbanPage = lazyPage(
+  () => import('../features/cognilabsai/pages/CognilabsAIKanbanPage'),
+  'CognilabsAIKanbanPage',
+)
 const AuditLogsPage = lazyPage(
   () => import('../features/auditLogs/pages/AuditLogsPage'),
   'AuditLogsPage',
@@ -452,6 +456,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="cognilabsai_chat">
                     {withPageLoader(<CognilabsAIMediaContextsPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'cognilabsai/kanban',
+                element: (
+                  <ProtectedRoute permissionKey="cognilabsai_chat">
+                    {withPageLoader(<CognilabsAIKanbanPage />)}
                   </ProtectedRoute>
                 ),
               },

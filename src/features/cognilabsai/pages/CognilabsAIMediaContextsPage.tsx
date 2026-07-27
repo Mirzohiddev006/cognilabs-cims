@@ -7,6 +7,7 @@ import { cn } from '../../../shared/lib/cn'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
+import { Switch } from '../../../shared/ui/switch'
 import { Dialog } from '../../../shared/ui/dialog'
 import { Label } from '../../../shared/ui/label'
 import {
@@ -511,21 +512,12 @@ function CreateEditModal({ mode, initial, onClose, onSaved }: {
 
         {/* Active toggle */}
         <div className="flex items-center gap-3 rounded-xl bg-[var(--accent-soft)] px-4 py-3">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={draft.is_active}
-            onClick={() => set('is_active', !draft.is_active)}
-            className={cn(
-              'relative h-5 w-9 rounded-full transition-colors shrink-0',
-              draft.is_active ? 'bg-emerald-500' : 'bg-[var(--border)]',
-            )}
-          >
-            <span className={cn(
-              'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform',
-              draft.is_active ? 'translate-x-4' : 'translate-x-0.5',
-            )} />
-          </button>
+          <Switch
+            checked={draft.is_active}
+            onChange={(v) => set('is_active', v)}
+            tone="emerald"
+            label="Active"
+          />
           <div>
             <p className="text-[13px] font-medium text-[var(--foreground)]">Active</p>
             <p className="text-[11px] text-[var(--caption)]">AI bu context bo'yicha javob beradi</p>

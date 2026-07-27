@@ -188,6 +188,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: false,
   },
   {
+    to: '/cognilabsai/kanban',
+    label: 'AI Kanban',
+    description: 'View AI-tracked conversation stages in a Kanban board.',
+    group: 'CognilabsAI',
+    permissionKey: 'cognilabsai_chat',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/cognilabsai/media-contexts',
     label: 'Media Contexts',
     description: 'Manage Instagram story, post, reel, and ad contexts for AI responses.',

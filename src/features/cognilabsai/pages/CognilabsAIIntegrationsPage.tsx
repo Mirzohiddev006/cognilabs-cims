@@ -7,6 +7,7 @@ import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-blo
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
+import { Switch } from '../../../shared/ui/switch'
 import {
   cognilabsaiService,
   type IntegrationConfigPayload,
@@ -441,21 +442,11 @@ export function CognilabsAIIntegrationsPage() {
                             <h3 className="text-sm font-semibold text-(--foreground)">{label} follow-up</h3>
                             <p className="mt-0.5 text-xs text-(--muted)">One-time static reminder message.</p>
                           </div>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={channelState.enabled}
-                            onClick={() => updateFollowUpField(channel, 'enabled', !channelState.enabled)}
-                            className={cn(
-                              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30',
-                              channelState.enabled ? 'bg-blue-600' : 'bg-(--border)',
-                            )}
-                          >
-                            <span className={cn(
-                              'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition duration-200',
-                              channelState.enabled ? 'translate-x-4' : 'translate-x-0',
-                            )} />
-                          </button>
+                          <Switch
+                            checked={channelState.enabled}
+                            onChange={(v) => updateFollowUpField(channel, 'enabled', v)}
+                            label={`${label} follow-up enabled`}
+                          />
                         </div>
 
                         <div className={cn('mt-4 space-y-3 transition-opacity duration-200', !channelState.enabled && 'opacity-40 pointer-events-none')}>
@@ -495,21 +486,11 @@ export function CognilabsAIIntegrationsPage() {
                         <div key={i} className="rounded-xl border border-(--border) bg-(--surface) p-4 shadow-sm">
                           <div className="mb-3 flex items-center justify-between gap-2">
                             <p className="text-sm font-semibold text-(--foreground)">Step {i + 1}</p>
-                            <button
-                              type="button"
-                              role="switch"
-                              aria-checked={instagramDefaultSteps[i].enabled}
-                              onClick={() => updateDefaultStep(i, 'enabled', !instagramDefaultSteps[i].enabled)}
-                              className={cn(
-                                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30',
-                                instagramDefaultSteps[i].enabled ? 'bg-blue-600' : 'bg-(--border)',
-                              )}
-                            >
-                              <span className={cn(
-                                'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition duration-200',
-                                instagramDefaultSteps[i].enabled ? 'translate-x-4' : 'translate-x-0',
-                              )} />
-                            </button>
+                            <Switch
+                              checked={instagramDefaultSteps[i].enabled}
+                              onChange={(v) => updateDefaultStep(i, 'enabled', v)}
+                              label={`Step ${i + 1} enabled`}
+                            />
                           </div>
                           <div className={cn('space-y-3 transition-opacity duration-200', !instagramDefaultSteps[i].enabled && 'opacity-40 pointer-events-none')}>
                             <div>

@@ -18,6 +18,7 @@ import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
 import { SelectField } from '../../../shared/ui/select-field'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
+import { Switch } from '../../../shared/ui/switch'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
 import Lottie from 'lottie-react'
 import {
@@ -1594,21 +1595,11 @@ export function CognilabsAIChatPage() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={followUpDraft.enabled}
-                      onClick={() => setFollowUpDraft((prev) => ({ ...prev, enabled: !prev.enabled }))}
-                      className={cn(
-                        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/30',
-                        followUpDraft.enabled ? 'bg-blue-600' : 'bg-(--border)',
-                      )}
-                    >
-                      <span className={cn(
-                        'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition duration-200',
-                        followUpDraft.enabled ? 'translate-x-4' : 'translate-x-0',
-                      )} />
-                    </button>
+                    <Switch
+                      checked={followUpDraft.enabled}
+                      onChange={(v) => setFollowUpDraft((prev) => ({ ...prev, enabled: v }))}
+                      label="Follow-up enabled"
+                    />
                     <Button
                       size="sm"
                       onClick={() => void handleSaveFollowUp()}
