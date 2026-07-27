@@ -141,12 +141,12 @@ function KanbanCard({ conv, onClick }: { conv: ConversationItem; onClick: () => 
         )}
         {hasFollowUpSent && (
           <span className="inline-flex items-center gap-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-blue-400">
-            ✓ AI javob yuborildi
+            AI Follow-up ✓
           </span>
         )}
         {hasFollowUpScheduled && !hasFollowUpSent && (
           <span className="inline-flex items-center gap-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-purple-400">
-            ⏱ AI javob kutilmoqda
+            ⏱ AI Follow-up
           </span>
         )}
         {conv.pause_reason && (

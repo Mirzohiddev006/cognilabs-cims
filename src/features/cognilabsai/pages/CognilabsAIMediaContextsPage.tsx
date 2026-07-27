@@ -242,23 +242,19 @@ function MediaCard({ ctx, onView, onEdit, onDelete }: {
 type FormDraft = {
   media_type: MediaType
   url: string
-  media_id: string
-  story_id: string
   title: string
   ai_description: string
   is_active: boolean
 }
 
 function emptyDraft(): FormDraft {
-  return { media_type: 'post', url: '', media_id: '', story_id: '', title: '', ai_description: '', is_active: true }
+  return { media_type: 'post', url: '', title: '', ai_description: '', is_active: true }
 }
 
 function draftFromContext(ctx: MediaContextItem): FormDraft {
   return {
     media_type: (ctx.media_type as MediaType) || 'post',
     url: ctx.url,
-    media_id: ctx.media_id ?? '',
-    story_id: ctx.story_id ?? '',
     title: ctx.title,
     ai_description: ctx.ai_description,
     is_active: ctx.is_active,
@@ -329,23 +325,6 @@ function ViewModal({ ctx, onClose, onEdit }: {
           </div>
         </div>
 
-        {/* Meta */}
-        {(ctx.media_id || ctx.story_id) && (
-          <div className="grid grid-cols-2 gap-3">
-            {ctx.media_id && (
-              <div>
-                <p className="text-[11px] text-[var(--caption)] uppercase tracking-wide mb-1">Media ID</p>
-                <p className="text-[12px] text-[var(--foreground)] font-mono bg-[var(--accent-soft)] rounded-lg px-2 py-1 truncate">{ctx.media_id}</p>
-              </div>
-            )}
-            {ctx.story_id && (
-              <div>
-                <p className="text-[11px] text-[var(--caption)] uppercase tracking-wide mb-1">Story ID</p>
-                <p className="text-[12px] text-[var(--foreground)] font-mono bg-[var(--accent-soft)] rounded-lg px-2 py-1 truncate">{ctx.story_id}</p>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="flex gap-2 pt-2">
           <Button className="flex-1" onClick={onEdit}>
@@ -385,8 +364,6 @@ function CreateEditModal({ mode, initial, onClose, onSaved }: {
         const payload: MediaContextCreatePayload = {
           media_type: draft.media_type,
           url: draft.url.trim(),
-          media_id: draft.media_id.trim() || null,
-          story_id: draft.story_id.trim() || null,
           title: draft.title.trim(),
           ai_description: draft.ai_description.trim(),
           is_active: draft.is_active,
@@ -482,33 +459,6 @@ function CreateEditModal({ mode, initial, onClose, onSaved }: {
           />
           <p className="text-[11px] text-[var(--caption)] mt-1">AI shu contextni bilib mijozga javob beradi</p>
         </div>
-
-        {mode === 'create' && (
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="ctx-media-id">Media ID <span className="text-[var(--caption)]">(optional)</span></Label>
-              <Input
-                id="ctx-media-id"
-                placeholder="18000000000000000"
-                value={draft.media_id}
-                onChange={(e) => set('media_id', e.target.value)}
-                className="mt-1"
-              />
-            </div>
-            {draft.media_type === 'story' && (
-              <div>
-                <Label htmlFor="ctx-story-id">Story ID <span className="text-[var(--caption)]">(optional)</span></Label>
-                <Input
-                  id="ctx-story-id"
-                  placeholder="story_id"
-                  value={draft.story_id}
-                  onChange={(e) => set('story_id', e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Active toggle */}
         <div className="flex items-center gap-3 rounded-xl bg-[var(--accent-soft)] px-4 py-3">

@@ -264,7 +264,7 @@ function AiFollowUpBadge({ dueAt, sentAt }: { dueAt: string | null; sentAt: stri
     return (
       <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        AI follow-up yuborildi
+        AI Follow-up ✓
       </span>
     )
   }
@@ -272,19 +272,42 @@ function AiFollowUpBadge({ dueAt, sentAt }: { dueAt: string | null; sentAt: stri
     return (
       <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        AI follow-up rejalashtirildi
+        AI Follow-up
       </span>
     )
   }
   return null
 }
 
+const STAGE_LABEL_MAP: Record<string, string> = {
+  'instagram_media_inquiry': "Instagram so'rovi",
+  'returned_client': "Qaytgan mijoz",
+  'phone provided': "Telefon berildi",
+  'phone_provided': "Telefon berildi",
+  'greeted': "Salomlashildi",
+  'Greeted': "Salomlashildi",
+  'new': "Yangi",
+  'interested_ai': "AI qiziqdi",
+  'interested_crm': "CRM qiziqdi",
+  'interested_website': "Website qiziqdi",
+  'interested_automation': "Avtomatika qiziqdi",
+  'interested_other': "Boshqa qiziqish",
+  'phone_received': "Telefon olindi",
+  'lead_created': "Lead yaratildi",
+  'not_fit': "Mos emas",
+  "lost": "Yo'qotildi",
+}
+
+function translateStageLabel(stage: string | null, label: string | null): string {
+  const raw = label || stage || ''
+  return STAGE_LABEL_MAP[raw] ?? STAGE_LABEL_MAP[raw.toLowerCase()] ?? raw.replaceAll('_', ' ')
+}
+
 function AiStageBadge({ stage, label }: { stage: string | null; label: string | null }) {
   if (!stage) return null
-  const displayLabel = label || stage.replaceAll('_', ' ')
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold text-indigo-400 capitalize">
-      {displayLabel}
+      {translateStageLabel(stage, label)}
     </span>
   )
 }
