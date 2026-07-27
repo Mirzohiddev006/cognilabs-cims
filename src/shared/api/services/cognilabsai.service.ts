@@ -35,9 +35,49 @@ export type ConversationItem = {
   default_follow_up_last_step: number | null
   default_follow_up_due_at: string | null
   default_follow_up_last_sent_at: string | null
+  ai_stage: string | null
+  ai_stage_label: string | null
+  ai_interest: string | null
+  instagram_media_context_id: number | null
+  ai_follow_up_due_at: string | null
+  ai_follow_up_sent_at: string | null
+  lead_phone_number: string | null
+  lead_full_name: string | null
+  lead_business_field: string | null
+  lead_scheduled_time: string | null
   is_imported: boolean
   created_at: string
   updated_at: string
+}
+
+export type MediaContextItem = {
+  id: number
+  media_type: 'story' | 'post' | 'reel' | 'ad' | string
+  url: string
+  normalized_url: string
+  media_id: string | null
+  story_id: string | null
+  title: string
+  ai_description: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type MediaContextCreatePayload = {
+  media_type: 'story' | 'post' | 'reel' | 'ad'
+  url: string
+  media_id?: string | null
+  story_id?: string | null
+  title: string
+  ai_description: string
+  is_active: boolean
+}
+
+export type MediaContextUpdatePayload = {
+  title?: string
+  ai_description?: string
+  is_active?: boolean
 }
 
 export type PaginatedResponse<T> = {
@@ -254,6 +294,46 @@ export const cognilabsaiService = {
     if (!avatarPath) return null
     if (avatarPath.startsWith('http')) return avatarPath
     return `${env.apiBaseUrl.replace(/\/$/, '')}${avatarPath}`
+  },
+
+  listMediaContexts(params?: { limit?: number; offset?: number; active?: boolean }) {
+    return request<PaginatedResponse<MediaContextItem>>({
+      path: '/cognilabsai/chat/instagram/media-contexts',
+      query: {
+        limit: params?.limit ?? 50,
+        offset: params?.offset ?? 0,
+        ...(params?.active !== undefined ? { active: params.active } : {}),
+      },
+    })
+  },
+
+  getMediaContext(id: number) {
+    return request<MediaContextItem>({
+      path: `/cognilabsai/chat/instagram/media-contexts/${id}`,
+    })
+  },
+
+  createMediaContext(payload: MediaContextCreatePayload) {
+    return request<MediaContextItem>({
+      path: '/cognilabsai/chat/instagram/media-contexts',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateMediaContext(id: number, payload: MediaContextUpdatePayload) {
+    return request<MediaContextItem>({
+      path: `/cognilabsai/chat/instagram/media-contexts/${id}`,
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  deleteMediaContext(id: number) {
+    return request<SuccessResponse>({
+      path: `/cognilabsai/chat/instagram/media-contexts/${id}`,
+      method: 'DELETE',
+    })
   },
 
   deleteConversation(conversationId: number) {

@@ -188,6 +188,15 @@ export const navigationItems: readonly NavigationItem[] = [
     defaultRedirect: false,
   },
   {
+    to: '/cognilabsai/media-contexts',
+    label: 'Media Contexts',
+    description: 'Manage Instagram story, post, reel, and ad contexts for AI responses.',
+    group: 'CognilabsAI',
+    permissionKey: 'cognilabsai_chat',
+    sidebar: true,
+    defaultRedirect: false,
+  },
+  {
     to: '/cognilabsai/integrations',
     label: 'AI Integrations',
     description: 'Configure OpenAI, Instagram, Telegram, and WebSocket credentials.',

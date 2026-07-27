@@ -258,6 +258,36 @@ function PauseReasonBadge({ reason }: { reason: string | null }) {
   )
 }
 
+function AiFollowUpBadge({ dueAt, sentAt }: { dueAt: string | null; sentAt: string | null }) {
+  if (sentAt) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5"><path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        AI follow-up yuborildi
+      </span>
+    )
+  }
+  if (dueAt) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-2.5 w-2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        AI follow-up rejalashtirildi
+      </span>
+    )
+  }
+  return null
+}
+
+function AiStageBadge({ stage, label }: { stage: string | null; label: string | null }) {
+  if (!stage) return null
+  const displayLabel = label || stage.replaceAll('_', ' ')
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 text-[10px] font-semibold text-indigo-400 capitalize">
+      {displayLabel}
+    </span>
+  )
+}
+
 function PresenceBadge({
   status,
   isOnline,
@@ -397,6 +427,12 @@ function ConversationListItem({
                   lastSeenAt={conv.telegram_last_seen_at}
                 />
               </div>
+            ) : null}
+            {conv.ai_stage && !isActive ? (
+              <AiStageBadge stage={conv.ai_stage} label={conv.ai_stage_label} />
+            ) : null}
+            {!conv.crm_customer_id && !conv.lead_phone_number && (conv.ai_follow_up_due_at || conv.ai_follow_up_sent_at) ? (
+              <AiFollowUpBadge dueAt={conv.ai_follow_up_due_at} sentAt={conv.ai_follow_up_sent_at} />
             ) : null}
           </div>
           {conv.pause_reason && !isActive ? (
@@ -1488,7 +1524,40 @@ export function CognilabsAIChatPage() {
                           <span className="text-[11px] text-[var(--muted)]">{selectedConversation.last_operator_name}</span>
                         </>
                       )}
+                      {selectedConversation.ai_stage && (
+                        <>
+                          <span className="h-1 w-1 rounded-full bg-[var(--border)] shrink-0" />
+                          <AiStageBadge stage={selectedConversation.ai_stage} label={selectedConversation.ai_stage_label} />
+                        </>
+                      )}
+                      {!selectedConversation.crm_customer_id && !selectedConversation.lead_phone_number && (selectedConversation.ai_follow_up_due_at || selectedConversation.ai_follow_up_sent_at) && (
+                        <>
+                          <span className="h-1 w-1 rounded-full bg-[var(--border)] shrink-0" />
+                          <AiFollowUpBadge dueAt={selectedConversation.ai_follow_up_due_at} sentAt={selectedConversation.ai_follow_up_sent_at} />
+                        </>
+                      )}
                     </div>
+                    {/* Lead info row */}
+                    {(selectedConversation.lead_phone_number || selectedConversation.lead_full_name) && (
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {selectedConversation.lead_phone_number && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-2.5 w-2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3-8.59A2 2 0 0 1 3.59 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            {selectedConversation.lead_phone_number}
+                          </span>
+                        )}
+                        {selectedConversation.lead_full_name && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[var(--accent-soft)] border border-[var(--border)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+                            {selectedConversation.lead_full_name}
+                          </span>
+                        )}
+                        {selectedConversation.lead_business_field && (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-[var(--accent-soft)] border border-[var(--border)] px-2 py-0.5 text-[10px] font-medium text-[var(--muted)]">
+                            {selectedConversation.lead_business_field}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 

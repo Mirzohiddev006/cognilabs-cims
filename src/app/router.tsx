@@ -199,6 +199,10 @@ const CognilabsAIIntegrationsPage = lazyPage(
   () => import('../features/cognilabsai/pages/CognilabsAIIntegrationsPage'),
   'CognilabsAIIntegrationsPage',
 )
+const CognilabsAIMediaContextsPage = lazyPage(
+  () => import('../features/cognilabsai/pages/CognilabsAIMediaContextsPage'),
+  'CognilabsAIMediaContextsPage',
+)
 const AuditLogsPage = lazyPage(
   () => import('../features/auditLogs/pages/AuditLogsPage'),
   'AuditLogsPage',
@@ -440,6 +444,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="cognilabsai_integrations">
                     {withPageLoader(<CognilabsAIIntegrationsPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'cognilabsai/media-contexts',
+                element: (
+                  <ProtectedRoute permissionKey="cognilabsai_chat">
+                    {withPageLoader(<CognilabsAIMediaContextsPage />)}
                   </ProtectedRoute>
                 ),
               },
