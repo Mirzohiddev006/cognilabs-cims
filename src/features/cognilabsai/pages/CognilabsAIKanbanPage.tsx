@@ -141,12 +141,12 @@ function KanbanCard({ conv, onClick }: { conv: ConversationItem; onClick: () => 
         )}
         {hasFollowUpSent && (
           <span className="inline-flex items-center gap-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-blue-400">
-            ✓ AI FU
+            ✓ AI javob yuborildi
           </span>
         )}
         {hasFollowUpScheduled && !hasFollowUpSent && (
           <span className="inline-flex items-center gap-0.5 rounded-md bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-purple-400">
-            ⏱ AI FU
+            ⏱ AI javob kutilmoqda
           </span>
         )}
         {conv.pause_reason && (
@@ -221,6 +221,58 @@ export function CognilabsAIKanbanPage() {
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
+
+  const boardRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef({ isDown: false, startX: 0, scrollLeft: 0, didDrag: false })
+
+  useEffect(() => {
+    const el = boardRef.current
+    if (!el) return
+
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as HTMLElement).closest('button')) return
+      dragRef.current.isDown = true
+      dragRef.current.startX = e.pageX - el.offsetLeft
+      dragRef.current.scrollLeft = el.scrollLeft
+      dragRef.current.didDrag = false
+      el.style.userSelect = 'none'
+      el.style.cursor = 'grabbing'
+    }
+
+    const onMouseUp = () => {
+      dragRef.current.isDown = false
+      el.style.userSelect = ''
+      el.style.cursor = 'grab'
+    }
+
+    const onMouseLeave = () => {
+      dragRef.current.isDown = false
+      el.style.userSelect = ''
+      el.style.cursor = 'grab'
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragRef.current.isDown) return
+      e.preventDefault()
+      const x = e.pageX - el.offsetLeft
+      const walk = (x - dragRef.current.startX) * 1.2
+      if (Math.abs(walk) > 5) dragRef.current.didDrag = true
+      el.scrollLeft = dragRef.current.scrollLeft - walk
+    }
+
+    el.style.cursor = 'grab'
+    el.addEventListener('mousedown', onMouseDown)
+    el.addEventListener('mouseup', onMouseUp)
+    el.addEventListener('mouseleave', onMouseLeave)
+    el.addEventListener('mousemove', onMouseMove)
+
+    return () => {
+      el.removeEventListener('mousedown', onMouseDown)
+      el.removeEventListener('mouseup', onMouseUp)
+      el.removeEventListener('mouseleave', onMouseLeave)
+      el.removeEventListener('mousemove', onMouseMove)
+    }
+  }, [])
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true)
@@ -366,7 +418,7 @@ export function CognilabsAIKanbanPage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="text-[12px] text-[var(--muted)]">Leads: <strong className="text-emerald-400">{totalLeads}</strong></span>
+              <span className="text-[12px] text-[var(--muted)]">Leadlar: <strong className="text-emerald-400">{totalLeads}</strong></span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
@@ -419,11 +471,21 @@ export function CognilabsAIKanbanPage() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div
+          ref={boardRef}
+          className="flex-1 overflow-x-auto overflow-y-hidden"
+          onClickCapture={(e) => {
+            if (dragRef.current.didDrag) {
+              e.stopPropagation()
+              dragRef.current.didDrag = false
+            }
+          }}
+        >
           <div className="flex gap-4 p-4 h-full" style={{ width: 'max-content' }}>
             {STAGES.map((stage) => {
               const stageKey = stage.key ?? 'new'
               const cards = byStage.get(stageKey) ?? []
+              if (cards.length === 0) return null
               return (
                 <KanbanColumn
                   key={stageKey}

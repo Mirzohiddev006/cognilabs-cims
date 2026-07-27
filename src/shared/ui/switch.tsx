@@ -21,7 +21,7 @@ export function Switch({ checked, onChange, disabled, size = 'md', tone = 'blue'
     ? 'h-3 w-3'
     : 'h-4 w-4'
   const thumbOn = size === 'sm' ? 'translate-x-3.5' : 'translate-x-4'
-  const thumbOff = size === 'sm' ? 'translate-x-0.5' : 'translate-x-0.5'
+  const thumbOff = 'translate-x-0'
 
   return (
     <button
