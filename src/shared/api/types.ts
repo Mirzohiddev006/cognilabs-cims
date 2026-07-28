@@ -79,6 +79,26 @@ export type AdditionalNote = {
   updated_at: string
 }
 
+export type LeadResponseMetrics = {
+  lead_created_at: string | null
+  current_status: string | null
+  first_status_changed_at: string | null
+  first_status_changed_to: string | null
+  response_minutes: number | null
+  response_human: string | null
+  response_limit_minutes: number
+  is_late_response: boolean
+  late_minutes: number | null
+  late_human: string | null
+  first_note_at: string | null
+  note_minutes: number | null
+  note_human: string | null
+  note_written: boolean
+  status_changed: boolean
+  status_changed_without_note: boolean
+  message: string | null
+}
+
 export type CustomerSummary = {
   id: number
   full_name?: string | null
@@ -129,6 +149,7 @@ export type CustomerSummary = {
   created_at: string
   is_archived?: boolean
   additional_notes?: AdditionalNote[]
+  lead_response_metrics?: LeadResponseMetrics | null
 }
 
 export type PaymentItem = {

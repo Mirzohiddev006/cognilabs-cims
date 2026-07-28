@@ -186,6 +186,39 @@ export type DashboardResponse = {
     messages_count: number
     active_user_count: number
     inactive_user_count: number
+    instagram_media_total_sent_count?: number
+    instagram_media_total_lead_count?: number
+    instagram_media_total_contacted_count?: number
+    instagram_media_total_continuing_count?: number
+    instagram_media_unknown_sent_count?: number
+    instagram_media_unknown_lead_count?: number
+    instagram_media_posts?: Array<{
+      post_id: number
+      media_type: string
+      title: string
+      url: string
+      sent_count: number
+      lead_count: number
+      contacted_count: number
+      continuing_count: number
+    }>
+    lead_response_limit_minutes?: number
+    lead_response_total_count?: number
+    lead_response_status_changed_count?: number
+    lead_response_on_time_count?: number
+    lead_response_late_count?: number
+    lead_response_no_status_change_count?: number
+    lead_response_note_written_count?: number
+    lead_response_note_missing_count?: number
+    lead_response_status_changed_without_note_count?: number
+    lead_response_average_minutes?: number | null
+    lead_response_average_human?: string | null
+    lead_response_average_with_note_minutes?: number | null
+    lead_response_average_with_note_human?: string | null
+    lead_response_average_note_minutes?: number | null
+    lead_response_average_note_human?: string | null
+    lead_response_average_late_minutes?: number | null
+    lead_response_average_late_human?: string | null
   }
 }
 

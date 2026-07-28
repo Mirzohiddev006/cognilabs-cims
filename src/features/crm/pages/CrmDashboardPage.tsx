@@ -1177,6 +1177,51 @@ export function CrmDashboardPage() {
             )}
           </div>
 
+          {statusFilterOptions.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-1.5">
+              {statusFilterOptions.map((option) => {
+                const meta = statusMetaMap.get(normalizeStatusKey(option.value))
+                const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      const key = normalizeStatusKey(option.value)
+                      setStatusFilters((prev) =>
+                        isActive
+                          ? prev.filter((s) => normalizeStatusKey(s) !== key)
+                          : [...prev, option.value],
+                      )
+                    }}
+                    className={cn(
+                      'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
+                      isActive
+                        ? 'shadow-sm'
+                        : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
+                    )}
+                    style={isActive ? {
+                      borderColor: meta?.color ?? 'var(--blue-border)',
+                      color: meta?.color ?? 'var(--blue-text)',
+                      backgroundColor: meta?.color ? `${meta.color}18` : 'rgba(59,130,246,0.1)',
+                    } : undefined}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+              {statusFilters.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilters([])}
+                  className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
+                >
+                  × Barchasi
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="flex flex-col gap-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-(--muted)">
@@ -1301,7 +1346,35 @@ export function CrmDashboardPage() {
               {
                 key: 'status',
                 header: t('customers.table.status', 'Status'),
-                render: (row) => <StatusBadge status={row.status} statusMetaMap={statusMetaMap} />,
+                render: (row) => (
+                  <div className="flex flex-col gap-1">
+                    <StatusBadge status={row.status} statusMetaMap={statusMetaMap} />
+                    {row.lead_response_metrics && (
+                      <div className="flex flex-wrap gap-1">
+                        {!row.lead_response_metrics.status_changed && (
+                          <span className="inline-flex items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0 text-[9px] font-semibold text-amber-400">
+                            Hali bog'lanilmagan
+                          </span>
+                        )}
+                        {row.lead_response_metrics.status_changed && !row.lead_response_metrics.is_late_response && (
+                          <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0 text-[9px] font-semibold text-emerald-400">
+                            ✓ O'z vaqtida
+                          </span>
+                        )}
+                        {row.lead_response_metrics.is_late_response && (
+                          <span className="inline-flex items-center rounded-md border border-red-500/20 bg-red-500/10 px-1.5 py-0 text-[9px] font-semibold text-red-400">
+                            Kech {row.lead_response_metrics.late_human ?? ''}
+                          </span>
+                        )}
+                        {row.lead_response_metrics.status_changed_without_note && (
+                          <span className="inline-flex items-center rounded-md border border-orange-500/20 bg-orange-500/10 px-1.5 py-0 text-[9px] font-semibold text-orange-400">
+                            Note yo'q
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ),
               },
               {
                 key: 'actions',

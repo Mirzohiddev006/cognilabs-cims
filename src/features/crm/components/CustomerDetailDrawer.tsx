@@ -316,6 +316,73 @@ export function CustomerDetailContent({
           </div>
         </Card>
 
+        {/* Lead Response Metrics */}
+        {customer.lead_response_metrics && (
+          <Card className="overflow-hidden rounded-xl border-[var(--border)] lg:col-span-2">
+            <div className="border-b border-[var(--border)] px-6 py-5">
+              <SectionTitle
+                title={t('customers.detail.lead_response.title', 'Lead javob vaqti')}
+                description={t('customers.detail.lead_response.description', `SLA: ${customer.lead_response_metrics.response_limit_minutes} daqiqa`)}
+              />
+            </div>
+            <div className="px-6 py-5 space-y-3">
+              {customer.lead_response_metrics.message && (
+                <div className={cn(
+                  'rounded-xl border px-4 py-3 text-sm font-medium',
+                  customer.lead_response_metrics.is_late_response
+                    ? 'border-red-500/20 bg-red-500/[0.08] text-red-400'
+                    : customer.lead_response_metrics.status_changed
+                      ? 'border-emerald-500/20 bg-emerald-500/[0.08] text-emerald-400'
+                      : 'border-amber-500/20 bg-amber-500/[0.08] text-amber-400',
+                )}>
+                  {customer.lead_response_metrics.message}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Javob vaqti</p>
+                  <p className={cn('mt-1.5 text-lg font-semibold',
+                    customer.lead_response_metrics.is_late_response ? 'text-red-400' : 'text-emerald-400'
+                  )}>
+                    {customer.lead_response_metrics.response_human ?? '-'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Holat</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {!customer.lead_response_metrics.status_changed && (
+                      <span className="inline-flex items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-400">
+                        Hali bog'lanilmagan
+                      </span>
+                    )}
+                    {customer.lead_response_metrics.status_changed && !customer.lead_response_metrics.is_late_response && (
+                      <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
+                        O'z vaqtida
+                      </span>
+                    )}
+                    {customer.lead_response_metrics.is_late_response && (
+                      <span className="inline-flex items-center rounded-md border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[11px] font-semibold text-red-400">
+                        Kech bog'lanildi
+                      </span>
+                    )}
+                    {customer.lead_response_metrics.status_changed_without_note && (
+                      <span className="inline-flex items-center rounded-md border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[11px] font-semibold text-orange-400">
+                        Note yozilmadi
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {customer.lead_response_metrics.note_human && (
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--input-surface)] px-4 py-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">Note vaqti</p>
+                    <p className="mt-1.5 text-lg font-semibold text-sky-400">{customer.lead_response_metrics.note_human}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* 3. Notes Card (Operator + Additional Notes combined) */}
         <Card className="overflow-hidden rounded-xl border-[var(--border)] lg:col-span-2">
           <div className="border-b border-[var(--border)] px-6 py-5 flex items-center justify-between gap-4">

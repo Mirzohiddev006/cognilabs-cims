@@ -835,6 +835,124 @@ export function CeoDashboardPage() {
         </div>
       </div>
 
+      {/* Instagram Media Funnel */}
+      {dashboardQuery.data?.statistics?.instagram_media_posts !== undefined && (
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>Instagram Media Funnel</CardTitle>
+            <Badge variant="blue" dot>
+              {dashboardQuery.data.statistics.instagram_media_posts.length} media
+            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-6">
+              {([
+                { label: 'Jami yuborildi', value: dashboardQuery.data.statistics.instagram_media_total_sent_count ?? 0, color: 'text-blue-400' },
+                { label: 'Jami lead', value: dashboardQuery.data.statistics.instagram_media_total_lead_count ?? 0, color: 'text-emerald-400' },
+                { label: 'Contacted', value: dashboardQuery.data.statistics.instagram_media_total_contacted_count ?? 0, color: 'text-sky-400' },
+                { label: 'Continuing', value: dashboardQuery.data.statistics.instagram_media_total_continuing_count ?? 0, color: 'text-violet-400' },
+                { label: 'Noaniq yuborildi', value: dashboardQuery.data.statistics.instagram_media_unknown_sent_count ?? 0, color: 'text-amber-400' },
+                { label: 'Noaniq lead', value: dashboardQuery.data.statistics.instagram_media_unknown_lead_count ?? 0, color: 'text-orange-400' },
+              ] as const).map((item) => (
+                <div key={item.label} className="rounded-xl border border-(--border) bg-(--accent-soft)/30 px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--muted)">{item.label}</p>
+                  <p className={`mt-2 text-2xl font-semibold leading-none ${item.color}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+            {dashboardQuery.data.statistics.instagram_media_posts.length === 0 ? (
+              <p className="py-4 text-center text-sm text-(--muted)">Hali media context qo'shilmagan.</p>
+            ) : (
+              <>
+                {(dashboardQuery.data.statistics.instagram_media_unknown_sent_count ?? 0) > 0 && (
+                  <p className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+                    Ba'zi Instagram media xabarlari contextga bog'lanmagan. Media Contexts sahifasidan post/reel/story link qo'shing.
+                  </p>
+                )}
+                <DataTable
+                  caption="Instagram media posts"
+                  rows={dashboardQuery.data.statistics.instagram_media_posts}
+                  getRowKey={(row) => String(row.post_id)}
+                  zebra
+                  emptyState={<EmptyStateBlock eyebrow="CEO Workspace" title="No media" />}
+                  columns={[
+                    {
+                      key: 'title',
+                      header: 'Post',
+                      render: (row) => (
+                        <div className="min-w-0">
+                          <p className="font-semibold text-white text-sm truncate">{row.title}</p>
+                          <p className="text-xs text-(--muted) capitalize">{row.media_type}</p>
+                        </div>
+                      ),
+                    },
+                    { key: 'sent', header: 'Yuborildi', align: 'center', render: (row) => <span className="font-semibold text-blue-400">{row.sent_count}</span> },
+                    { key: 'leads', header: 'Lead', align: 'center', render: (row) => <span className="font-semibold text-emerald-400">{row.lead_count}</span> },
+                    { key: 'contacted', header: 'Contacted', align: 'center', render: (row) => <span className="font-semibold text-sky-400">{row.contacted_count}</span> },
+                    { key: 'continuing', header: 'Continuing', align: 'center', render: (row) => <span className="font-semibold text-violet-400">{row.continuing_count}</span> },
+                    {
+                      key: 'conversion',
+                      header: 'Conversion',
+                      align: 'right',
+                      render: (row) => {
+                        const pct = row.sent_count > 0 ? ((row.lead_count / row.sent_count) * 100).toFixed(1) : '0.0'
+                        return <span className="font-semibold text-emerald-400">{pct}%</span>
+                      },
+                    },
+                    {
+                      key: 'link',
+                      header: '',
+                      render: (row) => (
+                        <a
+                          href={row.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-(--muted) hover:text-blue-400 transition-colors underline-offset-2 hover:underline"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Instagram
+                        </a>
+                      ),
+                    },
+                  ]}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lead Response Metrics */}
+      {(dashboardQuery.data?.statistics?.lead_response_total_count ?? 0) > 0 && (
+        <Card noPadding>
+          <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle>Lead Javob Vaqti</CardTitle>
+            <Badge variant="blue" dot>
+              SLA: {dashboardQuery.data?.statistics?.lead_response_limit_minutes ?? 5} min
+            </Badge>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {([
+                { label: 'Jami lead', value: dashboardQuery.data?.statistics?.lead_response_total_count ?? 0, color: 'text-blue-400', border: 'border-blue-500/20' },
+                { label: "O'z vaqtida", value: dashboardQuery.data?.statistics?.lead_response_on_time_count ?? 0, color: 'text-emerald-400', border: 'border-emerald-500/20' },
+                { label: 'Kech boglanildi', value: dashboardQuery.data?.statistics?.lead_response_late_count ?? 0, color: 'text-red-400', border: 'border-red-500/20' },
+                { label: "Status o'zgarmadi", value: dashboardQuery.data?.statistics?.lead_response_no_status_change_count ?? 0, color: 'text-amber-400', border: 'border-amber-500/20' },
+                { label: 'Note yozilgan', value: dashboardQuery.data?.statistics?.lead_response_note_written_count ?? 0, color: 'text-sky-400', border: 'border-sky-500/20' },
+                { label: 'Note yozilmagan', value: dashboardQuery.data?.statistics?.lead_response_note_missing_count ?? 0, color: 'text-orange-400', border: 'border-orange-500/20' },
+                { label: 'Note yoqsiz status', value: dashboardQuery.data?.statistics?.lead_response_status_changed_without_note_count ?? 0, color: 'text-fuchsia-400', border: 'border-fuchsia-500/20' },
+                { label: "O'rtacha vaqt", value: dashboardQuery.data?.statistics?.lead_response_average_human ?? '-', color: 'text-violet-400', border: 'border-violet-500/20' },
+              ] as const).map((item) => (
+                <div key={item.label} className={`rounded-xl border ${item.border} bg-(--accent-soft)/20 px-4 py-3`}>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-(--muted)">{item.label}</p>
+                  <p className={`mt-2 text-xl font-semibold leading-none ${item.color}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Task list dialog */}
       <Dialog
         open={isTaskDialogOpen}
