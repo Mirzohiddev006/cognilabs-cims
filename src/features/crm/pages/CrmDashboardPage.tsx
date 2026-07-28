@@ -701,6 +701,15 @@ export function CrmDashboardPage() {
     return [...merged.values()]
   }, [baseCustomers, selectedStatusCustomersQuery.data, selectedStatusFilterValues.join('|')])
 
+  const statusCounts = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const c of baseCustomers) {
+      const key = normalizeStatusKey(c.status)
+      if (key) map.set(key, (map.get(key) ?? 0) + 1)
+    }
+    return map
+  }, [baseCustomers])
+
   const availablePlatforms = useMemo(() => {
     return Array.from(
       new Set(
@@ -1163,6 +1172,61 @@ export function CrmDashboardPage() {
           </div>
         </div>
 
+        {statusOptions.length > 0 && (
+          <div
+            className={cn(
+              'flex flex-wrap gap-1.5 border-b border-(--border) py-3',
+              isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
+            )}
+          >
+            {statusOptions.map((option) => {
+              const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
+              const count = statusCounts.get(normalizeStatusKey(option.value)) ?? 0
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => {
+                    const key = normalizeStatusKey(option.value)
+                    setStatusFilters((prev) =>
+                      isActive
+                        ? prev.filter((s) => normalizeStatusKey(s) !== key)
+                        : [...prev, option.value],
+                    )
+                  }}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
+                    isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
+                  )}
+                  style={isActive ? {
+                    borderColor: option.color,
+                    color: option.color,
+                    backgroundColor: `${option.color}18`,
+                  } : undefined}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: option.color }} />
+                  {option.label}
+                  <span
+                    className={cn('rounded-full px-1 py-px text-[9px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
+                    style={isActive ? { backgroundColor: `${option.color}25`, color: option.color } : undefined}
+                  >
+                    {count}
+                  </span>
+                </button>
+              )
+            })}
+            {statusFilters.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setStatusFilters([])}
+                className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
+              >
+                × Hammasi
+              </button>
+            )}
+          </div>
+        )}
+
         <div
           className={cn(
             'border-b border-(--border) bg-(--muted-surface)/40 py-4',
@@ -1176,51 +1240,6 @@ export function CrmDashboardPage() {
               </Button>
             )}
           </div>
-
-          {statusFilterOptions.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {statusFilterOptions.map((option) => {
-                const meta = statusMetaMap.get(normalizeStatusKey(option.value))
-                const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => {
-                      const key = normalizeStatusKey(option.value)
-                      setStatusFilters((prev) =>
-                        isActive
-                          ? prev.filter((s) => normalizeStatusKey(s) !== key)
-                          : [...prev, option.value],
-                      )
-                    }}
-                    className={cn(
-                      'rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
-                      isActive
-                        ? 'shadow-sm'
-                        : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
-                    )}
-                    style={isActive ? {
-                      borderColor: meta?.color ?? 'var(--blue-border)',
-                      color: meta?.color ?? 'var(--blue-text)',
-                      backgroundColor: meta?.color ? `${meta.color}18` : 'rgba(59,130,246,0.1)',
-                    } : undefined}
-                  >
-                    {option.label}
-                  </button>
-                )
-              })}
-              {statusFilters.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setStatusFilters([])}
-                  className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
-                >
-                  × Barchasi
-                </button>
-              )}
-            </div>
-          )}
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="flex flex-col gap-1.5">
