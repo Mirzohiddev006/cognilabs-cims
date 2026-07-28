@@ -710,6 +710,26 @@ export function CrmDashboardPage() {
     return map
   }, [baseCustomers])
 
+  const allChipStatuses = useMemo(() => {
+    const seen = new Set<string>()
+    const result: Array<{ value: string; label: string; color: string }> = []
+    for (const opt of statusOptions) {
+      const key = normalizeStatusKey(opt.value)
+      if (key && !seen.has(key)) {
+        seen.add(key)
+        result.push({ value: opt.value, label: opt.label, color: opt.color })
+      }
+    }
+    for (const c of baseCustomers) {
+      const key = normalizeStatusKey(c.status)
+      if (key && !seen.has(key)) {
+        seen.add(key)
+        result.push({ value: c.status, label: c.status, color: '#94a3b8' })
+      }
+    }
+    return result
+  }, [statusOptions, baseCustomers])
+
   const availablePlatforms = useMemo(() => {
     return Array.from(
       new Set(
@@ -1172,14 +1192,14 @@ export function CrmDashboardPage() {
           </div>
         </div>
 
-        {statusOptions.length > 0 && (
+        {allChipStatuses.length > 0 && (
           <div
             className={cn(
               'flex flex-wrap gap-1.5 border-b border-(--border) py-3',
               isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
             )}
           >
-            {statusOptions.map((option) => {
+            {allChipStatuses.map((option) => {
               const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
               const count = statusCounts.get(normalizeStatusKey(option.value)) ?? 0
               return (
