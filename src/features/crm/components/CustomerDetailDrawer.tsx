@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom'
 import React, { useEffect, useMemo, useState } from 'react'
+import { cn } from '../../../shared/lib/cn'
 import { useTranslation } from 'react-i18next'
 import { crmService } from '../../../shared/api/services/crm.service'
 import type { CustomerSummary } from '../../../shared/api/types'
