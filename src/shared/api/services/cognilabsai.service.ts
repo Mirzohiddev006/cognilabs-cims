@@ -344,7 +344,7 @@ export const cognilabsaiService = {
   },
 
   listAiStages() {
-    return request<Array<{ key: string; label: string; color?: string | null; order?: number | null }>>({
+    return request<Array<{ value: string; label: string; color?: string | null; order?: number | null }>>({
       path: '/cognilabsai/chat/ai-stages',
     })
   },

@@ -46,10 +46,10 @@ const FALLBACK_STAGES: StageConfig[] = [
 
 const FALLBACK_LABEL_MAP = new Map(FALLBACK_STAGES.map((s) => [s.key, s.label]))
 
-function buildStageConfigs(apiStages: Array<{ key: string; label: string; order?: number | null }>): StageConfig[] {
+function buildStageConfigs(apiStages: Array<{ value: string; label: string; order?: number | null }>): StageConfig[] {
   return apiStages.map((s, i) => ({
-    key: s.key,
-    label: FALLBACK_LABEL_MAP.get(s.key) ?? s.label,
+    key: s.value,
+    label: FALLBACK_LABEL_MAP.get(s.value) ?? s.label,
     ...STAGE_PALETTE[i % STAGE_PALETTE.length],
   }))
 }
@@ -349,8 +349,8 @@ export function CognilabsAIKanbanPage() {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           const sorted = [...data].sort((a, b) => {
-            const ai = fallbackOrder.get(a.key) ?? 9999
-            const bi = fallbackOrder.get(b.key) ?? 9999
+            const ai = fallbackOrder.get(a.value) ?? 9999
+            const bi = fallbackOrder.get(b.value) ?? 9999
             return ai - bi
           })
           setStages(buildStageConfigs(sorted))
