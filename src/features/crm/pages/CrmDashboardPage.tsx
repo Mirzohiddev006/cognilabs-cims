@@ -1172,6 +1172,112 @@ export function CrmDashboardPage() {
         />
       </div>
 
+      {/* Lead Response Metrics section */}
+      {(() => {
+        const metricsLeads = baseCustomers.filter((c) => c.lead_response_metrics)
+        if (metricsLeads.length === 0) return null
+        const sorted = [...metricsLeads].sort((a, b) => {
+          const mA = a.lead_response_metrics!
+          const mB = b.lead_response_metrics!
+          if (mA.is_late_response && !mB.is_late_response) return -1
+          if (!mA.is_late_response && mB.is_late_response) return 1
+          if (!mA.status_changed && mB.status_changed) return -1
+          if (mA.status_changed && !mB.status_changed) return 1
+          return 0
+        })
+        const lateCount = sorted.filter((c) => c.lead_response_metrics!.is_late_response).length
+        const onTimeCount = sorted.filter((c) => c.lead_response_metrics!.status_changed && !c.lead_response_metrics!.is_late_response).length
+        const pendingCount = sorted.filter((c) => !c.lead_response_metrics!.status_changed).length
+        return (
+          <Card noPadding className="overflow-hidden">
+            <div className={cn('flex items-center justify-between gap-3 border-b border-(--border) px-5 py-3', isSidebarCollapsed ? '' : '')}>
+              <div className="flex items-center gap-3">
+                <h3 className="text-[13px] font-bold text-(--foreground) tracking-tight">Lead Javob Vaqti</h3>
+                <div className="flex items-center gap-2">
+                  {lateCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400">
+                      {lateCount} kech
+                    </span>
+                  )}
+                  {pendingCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                      {pendingCount} kutilmoqda
+                    </span>
+                  )}
+                  {onTimeCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                      {onTimeCount} o'z vaqtida
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="text-[11px] text-(--muted)">{sorted.length} lead</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[12px]">
+                <thead>
+                  <tr className="border-b border-(--border) bg-(--muted-surface)/40">
+                    <th className="px-4 py-2 text-left font-semibold text-(--muted) uppercase tracking-wider text-[10px]">Mijoz</th>
+                    <th className="px-4 py-2 text-left font-semibold text-(--muted) uppercase tracking-wider text-[10px]">Status</th>
+                    <th className="px-4 py-2 text-left font-semibold text-(--muted) uppercase tracking-wider text-[10px]">Bog'lanish vaqti</th>
+                    <th className="px-4 py-2 text-left font-semibold text-(--muted) uppercase tracking-wider text-[10px]">Note</th>
+                    <th className="px-4 py-2 text-left font-semibold text-(--muted) uppercase tracking-wider text-[10px]">Holat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sorted.slice(0, 30).map((c) => {
+                    const m = c.lead_response_metrics!
+                    const name = getCustomerDisplayName(c)
+                    return (
+                      <tr
+                        key={c.id}
+                        className="border-b border-(--border)/50 hover:bg-(--accent-soft)/50 cursor-pointer transition-colors"
+                        onClick={() => openCustomerDrawer(c)}
+                      >
+                        <td className="px-4 py-2.5">
+                          <span className="font-semibold text-(--foreground) truncate max-w-[140px] block">{name}</span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <StatusBadge status={c.status} statusMetaMap={statusMetaMap} />
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {m.response_human
+                            ? <span className={cn('font-medium', m.is_late_response ? 'text-red-400' : 'text-emerald-400')}>{m.response_human}</span>
+                            : <span className="text-(--caption)">—</span>
+                          }
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {m.note_human
+                            ? <span className="text-(--muted)">{m.note_human}</span>
+                            : <span className="text-(--caption)">—</span>
+                          }
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex flex-wrap gap-1">
+                            {!m.status_changed && (
+                              <span className="inline-flex items-center rounded-md border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-400">Kutilmoqda</span>
+                            )}
+                            {m.status_changed && !m.is_late_response && (
+                              <span className="inline-flex items-center rounded-md border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">✓ O'z vaqtida</span>
+                            )}
+                            {m.is_late_response && (
+                              <span className="inline-flex items-center rounded-md border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-red-400">Kech {m.late_human ?? ''}</span>
+                            )}
+                            {m.status_changed_without_note && (
+                              <span className="inline-flex items-center rounded-md border border-orange-500/20 bg-orange-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-orange-400">Note yo'q</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        )
+      })()}
+
       <Card noPadding className="flex flex-1 flex-col overflow-hidden">
         <div
           className={cn(

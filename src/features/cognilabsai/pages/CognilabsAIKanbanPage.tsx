@@ -485,7 +485,6 @@ export function CognilabsAIKanbanPage() {
             {STAGES.map((stage) => {
               const stageKey = stage.key ?? 'new'
               const cards = byStage.get(stageKey) ?? []
-              if (cards.length === 0) return null
               return (
                 <KanbanColumn
                   key={stageKey}

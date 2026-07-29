@@ -1586,6 +1586,20 @@ export function CognilabsAIChatPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {selectedConversation.crm_customer_id ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenCrm(selectedConversation.crm_customer_id!)}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 text-[12px] font-semibold text-emerald-400 transition-colors hover:bg-emerald-500/20"
+                      title="CRM da ko'rish"
+                    >
+                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                        <path d="M2.5 5.25A1.75 1.75 0 0 1 4.25 3.5h7.5A1.75 1.75 0 0 1 13.5 5.25v5.5a1.75 1.75 0 0 1-1.75 1.75h-7.5A1.75 1.75 0 0 1 2.5 10.75z" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M5 6.25h6M5 8h3.25" strokeLinecap="round" />
+                      </svg>
+                      CRM
+                    </button>
+                  ) : null}
                   {supportsAi && (
                     <Button
                       size="sm"
