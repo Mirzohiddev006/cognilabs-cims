@@ -1138,6 +1138,56 @@ export function CrmDashboardPage() {
         </div>
       </div>
 
+      {allChipStatuses.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {allChipStatuses.map((option) => {
+            const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
+            const count = statusCounts.get(normalizeStatusKey(option.value)) ?? 0
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  const key = normalizeStatusKey(option.value)
+                  setStatusFilters((prev) =>
+                    isActive
+                      ? prev.filter((s) => normalizeStatusKey(s) !== key)
+                      : [...prev, option.value],
+                  )
+                }}
+                className={cn(
+                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
+                  isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
+                )}
+                style={isActive ? {
+                  borderColor: option.color,
+                  color: option.color,
+                  backgroundColor: `${option.color}18`,
+                } : undefined}
+              >
+                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: option.color }} />
+                {option.label}
+                <span
+                  className={cn('rounded-full px-1 py-px text-[9px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
+                  style={isActive ? { backgroundColor: `${option.color}25`, color: option.color } : undefined}
+                >
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+          {statusFilters.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setStatusFilters([])}
+              className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
+            >
+              × Hammasi
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
         <MetricCard
           label={t('customers.metrics.total.title', 'Total customers')}
@@ -1203,60 +1253,6 @@ export function CrmDashboardPage() {
           </div>
         </div>
 
-        {allChipStatuses.length > 0 && (
-          <div
-            className={cn(
-              'flex flex-wrap gap-1.5 border-b border-(--border) py-3',
-              isSidebarCollapsed ? 'px-4 xl:px-5' : 'px-6',
-            )}
-          >
-            {allChipStatuses.map((option) => {
-              const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
-              const count = statusCounts.get(normalizeStatusKey(option.value)) ?? 0
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    const key = normalizeStatusKey(option.value)
-                    setStatusFilters((prev) =>
-                      isActive
-                        ? prev.filter((s) => normalizeStatusKey(s) !== key)
-                        : [...prev, option.value],
-                    )
-                  }}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
-                    isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
-                  )}
-                  style={isActive ? {
-                    borderColor: option.color,
-                    color: option.color,
-                    backgroundColor: `${option.color}18`,
-                  } : undefined}
-                >
-                  <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: option.color }} />
-                  {option.label}
-                  <span
-                    className={cn('rounded-full px-1 py-px text-[9px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
-                    style={isActive ? { backgroundColor: `${option.color}25`, color: option.color } : undefined}
-                  >
-                    {count}
-                  </span>
-                </button>
-              )
-            })}
-            {statusFilters.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setStatusFilters([])}
-                className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
-              >
-                × Hammasi
-              </button>
-            )}
-          </div>
-        )}
 
         <div
           className={cn(
