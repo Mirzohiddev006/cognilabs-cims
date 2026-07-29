@@ -532,6 +532,21 @@ export function CognilabsAIKanbanPage() {
                 />
               )
             })}
+            {/* Extra stages from conversations not covered by API list */}
+            {Array.from(byStage.entries())
+              .filter(([key]) => !stages.some((s) => s.key === key) && key !== 'new')
+              .map(([key, cards], i) => {
+                const palette = STAGE_PALETTE[(stages.length + i) % STAGE_PALETTE.length]
+                const stage: StageConfig = { key, label: key.replaceAll('_', ' '), ...palette }
+                return (
+                  <KanbanColumn
+                    key={key}
+                    stage={stage}
+                    cards={cards}
+                    onCardClick={handleCardClick}
+                  />
+                )
+              })}
           </div>
         </div>
       )}
