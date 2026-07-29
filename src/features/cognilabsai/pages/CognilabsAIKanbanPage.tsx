@@ -32,17 +32,16 @@ const STAGE_PALETTE: Array<{ color: string; bg: string; border: string; dot: str
 ]
 
 const FALLBACK_STAGES: StageConfig[] = [
-  { key: 'new',                   label: 'Yangi',              ...STAGE_PALETTE[0] },
-  { key: 'greeted',               label: 'Salomlashildi',      ...STAGE_PALETTE[1] },
-  { key: 'interested_crm',        label: 'CRM qiziqdi',        ...STAGE_PALETTE[2] },
-  { key: 'interested_ai',         label: 'AI qiziqdi',         ...STAGE_PALETTE[3] },
-  { key: 'interested_website',    label: 'Website qiziqdi',    ...STAGE_PALETTE[4] },
-  { key: 'interested_automation', label: 'Avtomatika qiziqdi', ...STAGE_PALETTE[5] },
-  { key: 'interested_other',      label: 'Boshqa qiziqish',    ...STAGE_PALETTE[6] },
-  { key: 'phone_received',        label: 'Telefon olindi',     ...STAGE_PALETTE[7] },
-  { key: 'lead_created',          label: 'Lead yaratildi',     ...STAGE_PALETTE[8] },
-  { key: 'not_fit',               label: 'Mos emas',           ...STAGE_PALETTE[9] },
-  { key: 'lost',                  label: "Yo'qotildi",         ...STAGE_PALETTE[10] },
+  { key: 'service_interest',    label: 'Xizmatga qiziqdi',       ...STAGE_PALETTE[0] },
+  { key: 'business_field',      label: 'Sohasini yozdi',         ...STAGE_PALETTE[1] },
+  { key: 'experience_years',    label: 'Sohadagi yil etildi',    ...STAGE_PALETTE[2] },
+  { key: 'phone_discussion',    label: 'Telefon orqali muhokama',...STAGE_PALETTE[3] },
+  { key: 'phone_collected',     label: 'Telefon olindi',         ...STAGE_PALETTE[4] },
+  { key: 'call_time_collected', label: 'Qulay vaqt olindi',      ...STAGE_PALETTE[5] },
+  { key: 'name_collected',      label: 'Ism olindi',             ...STAGE_PALETTE[6] },
+  { key: 'agreement_confirmed', label: 'Kelishuv tasdiqlandi',   ...STAGE_PALETTE[7] },
+  { key: 'lead_created',        label: 'Lead yaratildi',         ...STAGE_PALETTE[8] },
+  { key: 'lost',                label: "Yo'qotildi",             ...STAGE_PALETTE[10] },
 ]
 
 function buildStageConfigs(apiStages: Array<{ key: string; label: string; order?: number | null }>): StageConfig[] {
