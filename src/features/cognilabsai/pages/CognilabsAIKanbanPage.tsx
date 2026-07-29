@@ -11,19 +11,47 @@ import {
 
 type ChannelTab = 'all' | 'instagram' | 'telegram'
 
-const STAGES: { key: string | null; label: string; color: string; bg: string; border: string; dot: string }[] = [
-  { key: 'new',                   label: 'Yangi',              color: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/20',   dot: 'bg-slate-400' },
-  { key: 'greeted',               label: "Salomlashildi",      color: 'text-sky-400',     bg: 'bg-sky-500/10',     border: 'border-sky-500/20',     dot: 'bg-sky-400' },
-  { key: 'interested_crm',        label: 'CRM qiziqdi',        color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    dot: 'bg-blue-400' },
-  { key: 'interested_ai',         label: 'AI qiziqdi',         color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20',  dot: 'bg-violet-400' },
-  { key: 'interested_website',    label: 'Website qiziqdi',    color: 'text-indigo-400',  bg: 'bg-indigo-500/10',  border: 'border-indigo-500/20',  dot: 'bg-indigo-400' },
-  { key: 'interested_automation', label: 'Avtomatika qiziqdi', color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  dot: 'bg-purple-400' },
-  { key: 'interested_other',      label: "Boshqa qiziqish",    color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20', dot: 'bg-fuchsia-400' },
-  { key: 'phone_received',        label: "Telefon olindi",     color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   dot: 'bg-amber-400' },
-  { key: 'lead_created',          label: 'Lead yaratildi',     color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', dot: 'bg-emerald-400' },
-  { key: 'not_fit',               label: "Mos emas",           color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20',  dot: 'bg-orange-400' },
-  { key: 'lost',                  label: "Yo'qotildi",         color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     dot: 'bg-red-400' },
+type StageConfig = { key: string; label: string; color: string; bg: string; border: string; dot: string }
+
+const STAGE_PALETTE: Array<{ color: string; bg: string; border: string; dot: string }> = [
+  { color: 'text-slate-400',   bg: 'bg-slate-500/10',   border: 'border-slate-500/20',   dot: 'bg-slate-400' },
+  { color: 'text-sky-400',     bg: 'bg-sky-500/10',     border: 'border-sky-500/20',     dot: 'bg-sky-400' },
+  { color: 'text-blue-400',    bg: 'bg-blue-500/10',    border: 'border-blue-500/20',    dot: 'bg-blue-400' },
+  { color: 'text-violet-400',  bg: 'bg-violet-500/10',  border: 'border-violet-500/20',  dot: 'bg-violet-400' },
+  { color: 'text-indigo-400',  bg: 'bg-indigo-500/10',  border: 'border-indigo-500/20',  dot: 'bg-indigo-400' },
+  { color: 'text-purple-400',  bg: 'bg-purple-500/10',  border: 'border-purple-500/20',  dot: 'bg-purple-400' },
+  { color: 'text-fuchsia-400', bg: 'bg-fuchsia-500/10', border: 'border-fuchsia-500/20', dot: 'bg-fuchsia-400' },
+  { color: 'text-amber-400',   bg: 'bg-amber-500/10',   border: 'border-amber-500/20',   dot: 'bg-amber-400' },
+  { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', dot: 'bg-emerald-400' },
+  { color: 'text-orange-400',  bg: 'bg-orange-500/10',  border: 'border-orange-500/20',  dot: 'bg-orange-400' },
+  { color: 'text-red-400',     bg: 'bg-red-500/10',     border: 'border-red-500/20',     dot: 'bg-red-400' },
+  { color: 'text-teal-400',    bg: 'bg-teal-500/10',    border: 'border-teal-500/20',    dot: 'bg-teal-400' },
+  { color: 'text-cyan-400',    bg: 'bg-cyan-500/10',    border: 'border-cyan-500/20',    dot: 'bg-cyan-400' },
+  { color: 'text-rose-400',    bg: 'bg-rose-500/10',    border: 'border-rose-500/20',    dot: 'bg-rose-400' },
+  { color: 'text-lime-400',    bg: 'bg-lime-500/10',    border: 'border-lime-500/20',    dot: 'bg-lime-400' },
 ]
+
+const FALLBACK_STAGES: StageConfig[] = [
+  { key: 'new',                   label: 'Yangi',              ...STAGE_PALETTE[0] },
+  { key: 'greeted',               label: 'Salomlashildi',      ...STAGE_PALETTE[1] },
+  { key: 'interested_crm',        label: 'CRM qiziqdi',        ...STAGE_PALETTE[2] },
+  { key: 'interested_ai',         label: 'AI qiziqdi',         ...STAGE_PALETTE[3] },
+  { key: 'interested_website',    label: 'Website qiziqdi',    ...STAGE_PALETTE[4] },
+  { key: 'interested_automation', label: 'Avtomatika qiziqdi', ...STAGE_PALETTE[5] },
+  { key: 'interested_other',      label: 'Boshqa qiziqish',    ...STAGE_PALETTE[6] },
+  { key: 'phone_received',        label: 'Telefon olindi',     ...STAGE_PALETTE[7] },
+  { key: 'lead_created',          label: 'Lead yaratildi',     ...STAGE_PALETTE[8] },
+  { key: 'not_fit',               label: 'Mos emas',           ...STAGE_PALETTE[9] },
+  { key: 'lost',                  label: "Yo'qotildi",         ...STAGE_PALETTE[10] },
+]
+
+function buildStageConfigs(apiStages: Array<{ key: string; label: string; order?: number | null }>): StageConfig[] {
+  return apiStages.map((s, i) => ({
+    key: s.key,
+    label: s.label,
+    ...STAGE_PALETTE[i % STAGE_PALETTE.length],
+  }))
+}
 
 
 function getChannelBadgeStyle(channel: string) {
@@ -164,7 +192,7 @@ function KanbanColumn({
   cards,
   onCardClick,
 }: {
-  stage: typeof STAGES[number]
+  stage: StageConfig
   cards: ConversationItem[]
   onCardClick: (id: number) => void
 }) {
@@ -216,6 +244,7 @@ export function CognilabsAIKanbanPage() {
   const [channelTab, setChannelTab] = useState<ChannelTab>('instagram')
   const [wsKey, setWsKey] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
+  const [stages, setStages] = useState<StageConfig[]>(FALLBACK_STAGES)
 
   const conversationsRef = useRef<ConversationItem[]>([])
   useEffect(() => {
@@ -299,6 +328,16 @@ export function CognilabsAIKanbanPage() {
     void fetchAll()
   }, [fetchAll])
 
+  useEffect(() => {
+    cognilabsaiService.listAiStages()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setStages(buildStageConfigs(data))
+        }
+      })
+      .catch(() => {/* keep fallback */})
+  }, [])
+
   // Auto-refresh every 60s
   useEffect(() => {
     const interval = setInterval(() => void fetchAll(), 60_000)
@@ -372,7 +411,7 @@ export function CognilabsAIKanbanPage() {
 
   const byStage = useMemo(() => {
     const map = new Map<string, ConversationItem[]>()
-    for (const s of STAGES) map.set(s.key ?? 'new', [])
+    for (const s of stages) map.set(s.key, [])
     for (const conv of filtered) {
       const key = conv.ai_stage ?? 'new'
       if (!map.has(key)) map.set(key, [])
@@ -387,7 +426,7 @@ export function CognilabsAIKanbanPage() {
       })
     }
     return map
-  }, [filtered])
+  }, [filtered, stages])
 
   const totalActive = filtered.filter((c) => c.ai_enabled).length
   const totalLeads = filtered.filter((c) => c.ai_stage === 'lead_created').length
@@ -482,12 +521,11 @@ export function CognilabsAIKanbanPage() {
           }}
         >
           <div className="flex gap-4 p-4 h-full" style={{ width: 'max-content' }}>
-            {STAGES.map((stage) => {
-              const stageKey = stage.key ?? 'new'
-              const cards = byStage.get(stageKey) ?? []
+            {stages.map((stage) => {
+              const cards = byStage.get(stage.key) ?? []
               return (
                 <KanbanColumn
-                  key={stageKey}
+                  key={stage.key}
                   stage={stage}
                   cards={cards}
                   onCardClick={handleCardClick}

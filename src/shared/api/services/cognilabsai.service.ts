@@ -342,6 +342,12 @@ export const cognilabsaiService = {
       method: 'DELETE',
     })
   },
+
+  listAiStages() {
+    return request<Array<{ key: string; label: string; color?: string | null; order?: number | null }>>({
+      path: '/cognilabsai/chat/ai-stages',
+    })
+  },
 }
 
 export function getWsKeyFromStorage(): string | null {
