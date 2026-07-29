@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { cn } from '../../../shared/lib/cn'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
@@ -108,7 +108,7 @@ function getClientName(conv: ConversationItem): string {
   return conv.client_display_name || conv.client_full_name || conv.client_username || `#${conv.id}`
 }
 
-function KanbanCard({ conv, onClick }: { conv: ConversationItem; onClick: () => void }) {
+function KanbanCard({ conv, onClick, highlighted }: { conv: ConversationItem; onClick: () => void; highlighted?: boolean }) {
   const name = getClientName(conv)
   const ch = getChannelBadgeStyle(conv.channel)
   const hasFollowUpScheduled = !conv.crm_customer_id && !conv.lead_phone_number && conv.ai_follow_up_due_at
@@ -118,7 +118,12 @@ function KanbanCard({ conv, onClick }: { conv: ConversationItem; onClick: () => 
     <button
       type="button"
       onClick={onClick}
-      className="group w-full text-left rounded-xl border border-[var(--border)] bg-[var(--surface)] p-3 transition-all duration-150 hover:border-[var(--border-hover)] hover:shadow-md hover:bg-[var(--surface-elevated)] active:scale-[0.98]"
+      className={cn(
+        'group w-full text-left rounded-xl border p-3 transition-all duration-150 hover:shadow-md active:scale-[0.98]',
+        highlighted
+          ? 'border-blue-500/60 bg-blue-500/8 shadow-[0_0_0_2px_rgba(59,130,246,0.25)] hover:border-blue-500/80 hover:bg-blue-500/12'
+          : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-hover)] hover:bg-[var(--surface-elevated)]',
+      )}
     >
       <div className="flex items-start gap-2.5 mb-2">
         <div className="relative shrink-0 mt-0.5">
@@ -191,10 +196,12 @@ function KanbanColumn({
   stage,
   cards,
   onCardClick,
+  highlightedConvId,
 }: {
   stage: StageConfig
   cards: ConversationItem[]
   onCardClick: (id: number) => void
+  highlightedConvId?: number | null
 }) {
   return (
     <div className="flex flex-col w-[280px] shrink-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden h-full">
@@ -223,7 +230,7 @@ function KanbanColumn({
           </div>
         ) : (
           cards.map((conv) => (
-            <KanbanCard key={conv.id} conv={conv} onClick={() => onCardClick(conv.id)} />
+            <KanbanCard key={conv.id} conv={conv} onClick={() => onCardClick(conv.id)} highlighted={highlightedConvId === conv.id} />
           ))
         )}
       </div>
@@ -239,12 +246,19 @@ const CHANNEL_TABS: { key: ChannelTab; label: string }[] = [
 
 export function CognilabsAIKanbanPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [conversations, setConversations] = useState<ConversationItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [channelTab, setChannelTab] = useState<ChannelTab>('instagram')
   const [wsKey, setWsKey] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const [stages, setStages] = useState<StageConfig[]>(FALLBACK_STAGES)
+
+  const highlightedConvId = useMemo(() => {
+    const raw = searchParams.get('highlight')
+    const n = Number(raw)
+    return Number.isFinite(n) && n > 0 ? n : null
+  }, [searchParams])
 
   const conversationsRef = useRef<ConversationItem[]>([])
   useEffect(() => {
@@ -411,13 +425,11 @@ export function CognilabsAIKanbanPage() {
 
   const byStage = useMemo(() => {
     const map = new Map<string, ConversationItem[]>()
-    for (const s of stages) map.set(s.key, [])
     for (const conv of filtered) {
       const key = conv.ai_stage ?? 'new'
       if (!map.has(key)) map.set(key, [])
       map.get(key)!.push(conv)
     }
-    // Sort each column by last_message_at desc
     for (const [, arr] of map) {
       arr.sort((a, b) => {
         const ta = a.last_message_at ? new Date(a.last_message_at).getTime() : 0
@@ -426,13 +438,48 @@ export function CognilabsAIKanbanPage() {
       })
     }
     return map
-  }, [filtered, stages])
+  }, [filtered])
+
+  // Ordered column list: API stages first (with their labels), then extra from conversations, then empty API stages
+  const orderedStages = useMemo((): StageConfig[] => {
+    const result: StageConfig[] = []
+    const usedKeys = new Set<string>()
+
+    // 1. API stages that have conversations
+    for (const s of stages) {
+      if (byStage.has(s.key)) {
+        result.push(s)
+        usedKeys.add(s.key)
+      }
+    }
+
+    // 2. Conversation stages not in API list
+    let extraIdx = 0
+    for (const key of byStage.keys()) {
+      if (!usedKeys.has(key)) {
+        const palette = STAGE_PALETTE[(stages.length + extraIdx) % STAGE_PALETTE.length]
+        result.push({ key, label: key.replaceAll('_', ' '), ...palette })
+        usedKeys.add(key)
+        extraIdx++
+      }
+    }
+
+    // 3. API stages with no conversations (show empty columns last)
+    for (const s of stages) {
+      if (!usedKeys.has(s.key)) {
+        result.push(s)
+        usedKeys.add(s.key)
+      }
+    }
+
+    return result
+  }, [stages, byStage])
 
   const totalActive = filtered.filter((c) => c.ai_enabled).length
   const totalLeads = filtered.filter((c) => c.ai_stage === 'lead_created').length
 
   function handleCardClick(conversationId: number) {
-    navigate(`/cognilabsai/chat?conversation_id=${conversationId}`)
+    navigate(`/cognilabsai/chat?conversation_id=${conversationId}&return_to=kanban`)
   }
 
   return (
@@ -521,32 +568,15 @@ export function CognilabsAIKanbanPage() {
           }}
         >
           <div className="flex gap-4 p-4 h-full" style={{ width: 'max-content' }}>
-            {stages.map((stage) => {
-              const cards = byStage.get(stage.key) ?? []
-              return (
-                <KanbanColumn
-                  key={stage.key}
-                  stage={stage}
-                  cards={cards}
-                  onCardClick={handleCardClick}
-                />
-              )
-            })}
-            {/* Extra stages from conversations not covered by API list */}
-            {Array.from(byStage.entries())
-              .filter(([key]) => !stages.some((s) => s.key === key) && key !== 'new')
-              .map(([key, cards], i) => {
-                const palette = STAGE_PALETTE[(stages.length + i) % STAGE_PALETTE.length]
-                const stage: StageConfig = { key, label: key.replaceAll('_', ' '), ...palette }
-                return (
-                  <KanbanColumn
-                    key={key}
-                    stage={stage}
-                    cards={cards}
-                    onCardClick={handleCardClick}
-                  />
-                )
-              })}
+            {orderedStages.map((stage) => (
+              <KanbanColumn
+                key={stage.key}
+                stage={stage}
+                cards={byStage.get(stage.key) ?? []}
+                onCardClick={handleCardClick}
+                highlightedConvId={highlightedConvId}
+              />
+            ))}
           </div>
         </div>
       )}

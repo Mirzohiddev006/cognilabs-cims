@@ -866,6 +866,8 @@ export function CognilabsAIChatPage() {
     const parsed = Number(raw)
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null
   }, [searchParams])
+
+  const returnToKanban = searchParams.get('return_to') === 'kanban'
   const [messages, setMessages] = useState<MessageItem[]>([])
   const [isLoadingMessages, setIsLoadingMessages] = useState(false)
   const [messageText, setMessageText] = useState('')
@@ -1586,6 +1588,19 @@ export function CognilabsAIChatPage() {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  {returnToKanban && selectedConversationId ? (
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/cognilabsai/kanban?highlight=${selectedConversationId}`)}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--input-surface)] px-3 text-[12px] font-semibold text-[var(--foreground)] transition-colors hover:bg-[var(--input-surface-hover)]"
+                      title="Kanbanga qaytish"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-3.5 w-3.5" aria-hidden="true">
+                        <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      Kanban
+                    </button>
+                  ) : null}
                   {selectedConversation.crm_customer_id ? (
                     <button
                       type="button"
