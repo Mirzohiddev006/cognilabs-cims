@@ -539,22 +539,6 @@ export function CrmDashboardPage() {
     : (dashboardQuery.data?.customers ?? emptyCustomers)
   const statusOptions = statusesQuery.data ?? emptyStatuses
 
-  const periodSummaryBucket = useMemo(() => {
-    if (!selectedPeriod || !statusSummaryQuery.data) {
-      return null
-    }
-
-    const map = {
-      today: statusSummaryQuery.data.today,
-      '3d': statusSummaryQuery.data.last_3_days,
-      '7d': statusSummaryQuery.data.last_7_days,
-      '30d': statusSummaryQuery.data.last_30_days,
-      '90d': statusSummaryQuery.data.last_90_days,
-    } as const
-
-    return map[selectedPeriod as keyof typeof map] ?? null
-  }, [selectedPeriod, statusSummaryQuery.data])
-
   const statusMetaMap = useMemo(() => buildNormalizedStatusMetaMap(statusOptions), [statusOptions])
 
   useEffect(() => {
