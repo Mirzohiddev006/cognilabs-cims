@@ -16,7 +16,7 @@ import {
   getCustomerDisplayPlatform,
   getCustomerPlatforms,
 } from '../../../shared/lib/customer-display'
-import { formatCompactNumber, formatNumericDateTime } from '../../../shared/lib/format'
+import { formatNumericDateTime } from '../../../shared/lib/format'
 import { useToast } from '../../../shared/toast/useToast'
 import { getRecallTimeTone, getRecallTimeToneClasses } from '../lib/recallTime'
 import { Badge } from '../../../shared/ui/badge'
@@ -460,43 +460,6 @@ function TableAudioControl({
   )
 }
 
-function MetricCard({
-  label,
-  value,
-  description: _description,
-  tone = 'blue',
-}: {
-  label: string
-  value: string | number
-  description?: string
-  tone?: 'blue' | 'success' | 'warning' | 'violet' | 'danger'
-}) {
-  const toneClassNames = {
-    blue: 'border-blue-500/15 shadow-[inset_0_0_0_1px_rgba(59,130,246,0.10),0_0_20px_rgba(59,130,246,0.06)]',
-    success: 'border-emerald-500/15 shadow-[inset_0_0_0_1px_rgba(34,197,94,0.10),0_0_20px_rgba(34,197,94,0.05)]',
-    warning: 'border-amber-500/15 shadow-[inset_0_0_0_1px_rgba(245,158,11,0.10),0_0_20px_rgba(245,158,11,0.05)]',
-    violet: 'border-violet-500/15 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.10),0_0_20px_rgba(139,92,246,0.05)]',
-    danger: 'border-rose-500/15 shadow-[inset_0_0_0_1px_rgba(244,63,94,0.10),0_0_20px_rgba(244,63,94,0.05)]',
-  }
-  const toneLabelClassNames = {
-    blue: 'text-[var(--blue-text)]',
-    success: 'text-[var(--success-text)]',
-    warning: 'text-[var(--warning-text)]',
-    violet: 'text-[var(--violet-text)]',
-    danger: 'text-[var(--danger-text)]',
-  }
-
-  return (
-    <Card variant="metric" className={cn('flex min-h-30 flex-col justify-between p-4', toneClassNames[tone])}>
-      <div>
-        <p className={cn('text-[10px] font-bold uppercase tracking-[0.28em]', toneLabelClassNames[tone])}>{label}</p>
-        <p className="mt-3 text-2xl leading-none font-semibold tracking-tight text-[var(--foreground)]">
-          {typeof value === 'number' ? formatCompactNumber(value) : value}
-        </p>
-      </div>
-    </Card>
-  )
-}
 
 
 export function CrmDashboardPage() {
@@ -1058,17 +1021,6 @@ export function CrmDashboardPage() {
     )
   }
 
-  const stats = periodSummaryBucket
-    ? {
-        total_customers: periodSummaryBucket.total_customers,
-        need_to_call: periodSummaryBucket.status_stats.need_to_call ?? 0,
-        contacted: periodSummaryBucket.status_stats.contacted ?? 0,
-        project_started: periodSummaryBucket.status_stats.project_started ?? 0,
-        continuing: periodSummaryBucket.status_stats.continuing ?? 0,
-        finished: periodSummaryBucket.status_stats.finished ?? 0,
-        rejected: periodSummaryBucket.status_stats.rejected ?? 0,
-      }
-    : summaryQuery.data
   const periodOptions: Array<{ value: typeof selectedPeriod; label: string }> = [
     { value: '', label: t('customers.period.all', 'All time') },
     { value: 'today', label: t('customers.period.today', 'Today') },
@@ -1139,7 +1091,23 @@ export function CrmDashboardPage() {
       </div>
 
       {allChipStatuses.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-2">
+          {/* All clients chip */}
+          <button
+            type="button"
+            onClick={() => setStatusFilters([])}
+            className={cn(
+              'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+              statusFilters.length === 0
+                ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text)'
+                : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
+            )}
+          >
+            Barchasi
+            <span className={cn('ml-1.5 rounded-full px-1.5 py-px text-[10px] font-bold leading-none', statusFilters.length === 0 ? 'bg-(--blue-border)/30' : 'bg-(--accent-soft) text-(--muted)')}>
+              {baseCustomers.length}
+            </span>
+          </button>
           {allChipStatuses.map((option) => {
             const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
             const count = statusCounts.get(normalizeStatusKey(option.value)) ?? 0
@@ -1156,8 +1124,8 @@ export function CrmDashboardPage() {
                   )
                 }}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold transition-all',
-                  isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface) text-(--muted) hover:text-(--foreground) hover:border-(--border-hover)',
+                  'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+                  isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
                 )}
                 style={isActive ? {
                   borderColor: option.color,
@@ -1165,10 +1133,10 @@ export function CrmDashboardPage() {
                   backgroundColor: `${option.color}18`,
                 } : undefined}
               >
-                <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: option.color }} />
+                <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', !isActive && 'bg-(--muted)')} style={isActive ? { backgroundColor: option.color } : undefined} />
                 {option.label}
                 <span
-                  className={cn('rounded-full px-1 py-px text-[9px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
+                  className={cn('rounded-full px-1.5 py-px text-[10px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
                   style={isActive ? { backgroundColor: `${option.color}25`, color: option.color } : undefined}
                 >
                   {count}
@@ -1176,62 +1144,8 @@ export function CrmDashboardPage() {
               </button>
             )
           })}
-          {statusFilters.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setStatusFilters([])}
-              className="rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--muted) hover:text-(--foreground) hover:border-(--border-hover) transition-all"
-            >
-              × Hammasi
-            </button>
-          )}
         </div>
       )}
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 stagger-children">
-        <MetricCard
-          label={t('customers.metrics.total.title', 'Total customers')}
-          value={typeof stats?.total_customers === 'number' ? stats.total_customers : '-'}
-          description={t('customers.metrics.total.description', 'Total customers currently in CRM')}
-          tone="blue"
-        />
-        <MetricCard
-          label={t('status.need_to_call', 'Need to Call')}
-          value={typeof stats?.need_to_call === 'number' ? stats.need_to_call : '-'}
-          description={t('customers.metrics.need_to_call.description', 'Customers who need a follow-up call')}
-          tone="warning"
-        />
-        <MetricCard
-          label={t('status.contacted', 'Contacted')}
-          value={typeof stats?.contacted === 'number' ? stats.contacted : '-'}
-          description={t('customers.metrics.contacted.description', 'Customers already contacted')}
-          tone="blue"
-        />
-        <MetricCard
-          label={t('status.project_started', 'Project Started')}
-          value={typeof stats?.project_started === 'number' ? stats.project_started : '-'}
-          description={t('customers.metrics.project_started.description', 'Projects currently in kickoff')}
-          tone="violet"
-        />
-        <MetricCard
-          label={t('status.continuing', 'Continuing')}
-          value={typeof stats?.continuing === 'number' ? stats.continuing : '-'}
-          description={t('customers.metrics.continuing.description', 'Active ongoing projects')}
-          tone="success"
-        />
-        <MetricCard
-          label={t('status.finished', 'Finished')}
-          value={typeof stats?.finished === 'number' ? stats.finished : '-'}
-          description={t('customers.metrics.finished.description', 'Successfully completed projects')}
-          tone="success"
-        />
-        <MetricCard
-          label={t('status.rejected', 'Rejected')}
-          value={typeof stats?.rejected === 'number' ? stats.rejected : '-'}
-          description={t('customers.metrics.rejected.description', 'Deals that did not close')}
-          tone="danger"
-        />
-      </div>
 
       <Card noPadding className="flex flex-1 flex-col overflow-hidden">
         <div
