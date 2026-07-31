@@ -1075,22 +1075,24 @@ export function CrmDashboardPage() {
       </div>
 
       {allChipStatuses.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {/* All clients chip */}
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+          {/* All clients card */}
           <button
             type="button"
             onClick={() => setStatusFilters([])}
             className={cn(
-              'rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
+              'flex flex-col justify-between rounded-xl border p-4 text-left transition-all min-h-24',
               statusFilters.length === 0
-                ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text)'
-                : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
+                ? 'border-(--blue-border) bg-(--blue-soft) shadow-sm'
+                : 'border-(--border) bg-(--surface-elevated) hover:border-(--border-hover) hover:bg-(--surface)',
             )}
           >
-            Barchasi
-            <span className={cn('ml-1.5 rounded-full px-1.5 py-px text-[10px] font-bold leading-none', statusFilters.length === 0 ? 'bg-(--blue-border)/30' : 'bg-(--accent-soft) text-(--muted)')}>
+            <p className={cn('text-[10px] font-bold uppercase tracking-widest', statusFilters.length === 0 ? 'text-(--blue-text)' : 'text-(--muted)')}>
+              Barchasi
+            </p>
+            <p className={cn('mt-3 text-2xl font-semibold leading-none tracking-tight', statusFilters.length === 0 ? 'text-(--blue-text)' : 'text-(--foreground)')}>
               {baseCustomers.length}
-            </span>
+            </p>
           </button>
           {allChipStatuses.map((option) => {
             const isActive = selectedStatusFilterSet.has(normalizeStatusKey(option.value))
@@ -1108,23 +1110,26 @@ export function CrmDashboardPage() {
                   )
                 }}
                 className={cn(
-                  'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition',
-                  isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface-elevated) text-(--muted-strong) hover:border-(--border-hover) hover:text-(--foreground)',
+                  'flex flex-col justify-between rounded-xl border p-4 text-left transition-all min-h-24',
+                  isActive ? 'shadow-sm' : 'border-(--border) bg-(--surface-elevated) hover:border-(--border-hover) hover:bg-(--surface)',
                 )}
                 style={isActive ? {
                   borderColor: option.color,
-                  color: option.color,
-                  backgroundColor: `${option.color}18`,
+                  backgroundColor: `${option.color}12`,
                 } : undefined}
               >
-                <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', !isActive && 'bg-(--muted)')} style={isActive ? { backgroundColor: option.color } : undefined} />
-                {option.label}
-                <span
-                  className={cn('rounded-full px-1.5 py-px text-[10px] font-bold leading-none', isActive ? '' : 'bg-(--accent-soft) text-(--muted)')}
-                  style={isActive ? { backgroundColor: `${option.color}25`, color: option.color } : undefined}
+                <p
+                  className={cn('text-[10px] font-bold uppercase tracking-widest truncate', !isActive && 'text-(--muted)')}
+                  style={isActive ? { color: option.color } : undefined}
+                >
+                  {option.label}
+                </p>
+                <p
+                  className={cn('mt-3 text-2xl font-semibold leading-none tracking-tight', !isActive && 'text-(--foreground)')}
+                  style={isActive ? { color: option.color } : undefined}
                 >
                   {count}
-                </span>
+                </p>
               </button>
             )
           })}
