@@ -67,9 +67,22 @@ export type ProjectRecord = {
   project_description: string | null
   project_url: string | null
   image: string | null
+  team_id: number | null
+  team: ProjectTeamRecord | null
+  deadline: string | null
+  telegram_group_id: string | null
   created_by: UserSummary
   members: UserSummary[]
   boards_count: number
+  created_at: string
+  updated_at: string
+}
+
+export type ProjectTeamRecord = {
+  id: number
+  name: string
+  description: string | null
+  members: UserSummary[]
   created_at: string
   updated_at: string
 }
@@ -132,12 +145,25 @@ export type CardRecord = {
   assignee_id: number | null
   assignee_ids: number[]
   due_date: string | null
+  completed_at: string | null
+  completion_duration_seconds: number | null
+  current_status_duration_seconds: number | null
+  status_history: CardStatusHistoryRecord[]
   column_id: number
   created_by: UserSummary
   created_at: string
   updated_at: string
   images: CardImage[]
   files?: CardImage[]
+}
+
+export type CardStatusHistoryRecord = {
+  id: number | null
+  column_id: number | null
+  column_name: string | null
+  started_at: string | null
+  ended_at: string | null
+  duration_seconds: number | null
 }
 
 export type UserOpenCardRecord = CardRecord & {
@@ -188,6 +214,15 @@ type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by'
   project_name?: string | null
   board_name?: string | null
   column_name?: string | null
+  status_history?: ApiCardStatusHistoryRecord[] | null
+}
+
+type ApiCardStatusHistoryRecord = Partial<CardStatusHistoryRecord> & {
+  status_id?: number | null
+  status_name?: string | null
+  started_on?: string | null
+  ended_on?: string | null
+  duration?: number | null
 }
 
 type ApiColumnRecord = Omit<Partial<ColumnRecord>, 'cards'> & {
@@ -206,7 +241,7 @@ type ApiBoardDetail = Omit<ApiBoardRecord, 'columns'> & {
 
 type ApiUserSummary = Partial<UserSummary> | null | undefined
 
-type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members' | 'boards_count'> & {
+type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members' | 'boards_count' | 'team'> & {
   boards_count?: number | null
   image_url?: string | null
   image_path?: string | null
@@ -217,6 +252,19 @@ type ApiProjectRecord = Omit<Partial<ProjectRecord>, 'created_by' | 'members' | 
   created_by?: ApiUserSummary | number | null
   created_by_user?: ApiUserSummary
   members?: ApiUserSummary[] | null
+  team?: ApiProjectTeamRecord | null
+}
+
+type ApiProjectTeamRecord = Partial<ProjectTeamRecord> & {
+  team_name?: string | null
+  users?: ApiUserSummary[] | null
+  member_ids?: number[] | null
+}
+
+type ApiProjectTeamListResponse = ApiProjectTeamRecord[] | {
+  teams?: ApiProjectTeamRecord[]
+  items?: ApiProjectTeamRecord[]
+  total_count?: number
 }
 
 type ApiProjectDetail = Omit<ApiProjectRecord, 'boards'> & {
@@ -256,6 +304,36 @@ function getCardAssignees(card: Pick<CardRecord, 'assignee' | 'assignees'>) {
   return card.assignee ? [card.assignee] : []
 }
 
+function normalizeProjectTeam(team?: ApiProjectTeamRecord | null): ProjectTeamRecord | null {
+  if (!team || !team.id) {
+    return null
+  }
+
+  return {
+    id: team.id,
+    name: team.name ?? team.team_name ?? '',
+    description: team.description ?? null,
+    members: normalizeUserSummaryList(team.members ?? team.users),
+    created_at: team.created_at ?? '',
+    updated_at: team.updated_at ?? '',
+  }
+}
+
+function normalizeCardStatusHistory(history?: ApiCardStatusHistoryRecord[] | null): CardStatusHistoryRecord[] {
+  if (!Array.isArray(history)) {
+    return []
+  }
+
+  return history.map((entry) => ({
+    id: entry.id ?? null,
+    column_id: entry.column_id ?? entry.status_id ?? null,
+    column_name: entry.column_name ?? entry.status_name ?? null,
+    started_at: entry.started_at ?? entry.started_on ?? null,
+    ended_at: entry.ended_at ?? entry.ended_on ?? null,
+    duration_seconds: entry.duration_seconds ?? entry.duration ?? null,
+  }))
+}
+
 function resolveProjectImage(project: ApiProjectRecord) {
   return project.image ?? project.image_url ?? project.image_path ?? project.project_image ?? project.thumbnail ?? null
 }
@@ -267,6 +345,10 @@ function normalizeProject(project: ApiProjectRecord): ProjectRecord {
     project_description: project.project_description ?? null,
     project_url: project.project_url ?? null,
     image: resolveProjectImage(project),
+    team_id: project.team_id ?? project.team?.id ?? null,
+    team: normalizeProjectTeam(project.team),
+    deadline: project.deadline ?? null,
+    telegram_group_id: project.telegram_group_id ?? null,
     created_by: normalizeUserSummary(resolveUserReference(project.created_by, project.created_by_user)),
     members: Array.isArray(project.members) ? project.members.map(normalizeUserSummary) : [],
     boards_count: project.boards_count ?? project.board_count ?? 0,
@@ -340,6 +422,10 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     assignee_id: card.assignee_id ?? primaryAssignee?.id ?? null,
     assignee_ids: assigneeIds,
     due_date: card.due_date ?? null,
+    completed_at: card.completed_at ?? null,
+    completion_duration_seconds: card.completion_duration_seconds ?? null,
+    current_status_duration_seconds: card.current_status_duration_seconds ?? null,
+    status_history: normalizeCardStatusHistory(card.status_history),
     column_id: card.column_id ?? 0,
     created_by: normalizeUserSummary(resolveUserReference(card.created_by, card.created_by_user)),
     created_at: card.created_at ?? '',
@@ -482,6 +568,10 @@ function mergeCardRecord(left: CardRecord, right: CardRecord): CardRecord {
     assignee_id: right.assignee_id ?? left.assignee_id ?? primaryAssignee?.id ?? null,
     assignee_ids: assigneeIds,
     due_date: pickNullableString(right.due_date, left.due_date),
+    completed_at: pickNullableString(right.completed_at, left.completed_at),
+    completion_duration_seconds: right.completion_duration_seconds ?? left.completion_duration_seconds ?? null,
+    current_status_duration_seconds: right.current_status_duration_seconds ?? left.current_status_duration_seconds ?? null,
+    status_history: right.status_history.length > 0 ? right.status_history : left.status_history,
     column_id: right.column_id || left.column_id,
     created_by: mergeUserSummary(left.created_by, right.created_by),
     created_at: pickString(left.created_at, right.created_at),
@@ -596,6 +686,10 @@ function mergeProjectRecord(left: ProjectRecord, right: ProjectRecord): ProjectR
     project_description: pickNullableString(right.project_description, left.project_description),
     project_url: pickNullableString(right.project_url, left.project_url),
     image: pickNullableString(right.image, left.image),
+    team_id: right.team_id ?? left.team_id ?? null,
+    team: right.team ?? left.team ?? null,
+    deadline: pickNullableString(right.deadline, left.deadline),
+    telegram_group_id: pickNullableString(right.telegram_group_id, left.telegram_group_id),
     created_by: mergeUserSummary(left.created_by, right.created_by),
     members: mergeUserSummaryLists(left.members, right.members),
     boards_count: Math.max(left.boards_count, right.boards_count),
@@ -638,6 +732,51 @@ function flattenBoardCards(project: Pick<ProjectRecord, 'id' | 'project_name'>, 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const projectsService = {
+  // Teams
+  listTeams() {
+    return request<ApiProjectTeamListResponse>({ path: '/projects/teams' })
+      .then((response) => {
+        const source = Array.isArray(response) ? response : response.teams ?? response.items ?? []
+        const teams = source.map(normalizeProjectTeam).filter((team): team is ProjectTeamRecord => team !== null)
+        return { teams, total_count: Array.isArray(response) ? teams.length : response.total_count ?? teams.length }
+      })
+  },
+
+  getTeam(teamId: number) {
+    return request<ApiProjectTeamRecord>({ path: `/projects/teams/${teamId}` })
+      .then((team) => normalizeProjectTeam(team))
+      .then((team) => {
+        if (!team) {
+          throw new Error('Team not found')
+        }
+
+        return team
+      })
+  },
+
+  createTeam(payload: { name: string; description?: string; member_ids: number[] }) {
+    return request<CreateResponse>({
+      path: '/projects/teams',
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateTeam(teamId: number, payload: { name: string; description?: string; member_ids: number[] }) {
+    return request<SuccessResponse>({
+      path: `/projects/teams/${teamId}`,
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  deleteTeam(teamId: number) {
+    return request<SuccessResponse>({
+      path: `/projects/teams/${teamId}`,
+      method: 'DELETE',
+    })
+  },
+
   // Projects
   listProjects() {
     return request<ProjectListResponse & { projects?: ApiProjectRecord[] }>({ path: '/projects' }).then((response) => ({
@@ -743,6 +882,14 @@ export const projectsService = {
       path: `/projects/${projectId}`,
       method: 'PATCH',
       body: formData,
+    })
+  },
+
+  updateProjectTelegramGroup(projectId: number, telegramGroupId: string | null) {
+    return request<SuccessResponse>({
+      path: `/projects/${projectId}/telegram-group`,
+      method: 'PATCH',
+      body: { telegram_group_id: telegramGroupId },
     })
   },
 

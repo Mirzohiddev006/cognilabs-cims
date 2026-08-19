@@ -219,7 +219,7 @@ export function ProjectDetailPage() {
     setExpandedMemberId((prev) => prev === memberId ? null : memberId)
   }
 
-  async function handleUpdateProject(fd: FormData) {
+  async function handleUpdateProject(fd: FormData, telegramGroupId?: string | null) {
     if (!canManageProjects || !project) {
       return
     }
@@ -227,6 +227,9 @@ export function ProjectDetailPage() {
     setIsProjectSubmitting(true)
     try {
       await projectsService.updateProject(project.id, fd)
+      if (telegramGroupId !== undefined) {
+        await projectsService.updateProjectTelegramGroup(project.id, telegramGroupId)
+      }
       showToast({ title: lt('Project updated'), tone: 'success' })
       setIsEditProjectOpen(false)
       await projectQuery.refetch()
@@ -387,6 +390,13 @@ export function ProjectDetailPage() {
                   <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[var(--foreground)] truncate">
                     {project.project_name}
                   </h1>
+                  {project.team || project.deadline || project.telegram_group_id ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {project.team ? <Badge variant="blue">{project.team.name}</Badge> : null}
+                      {project.deadline ? <Badge variant="outline">Deadline: {formatProjectDateTime(project.deadline)}</Badge> : null}
+                      {project.telegram_group_id ? <Badge variant="outline">Telegram connected</Badge> : null}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 

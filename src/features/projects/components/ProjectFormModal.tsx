@@ -4,6 +4,7 @@ import { Dialog } from '../../../shared/ui/dialog'
 import { Button } from '../../../shared/ui/button'
 import { Input } from '../../../shared/ui/input'
 import { Textarea } from '../../../shared/ui/textarea'
+import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { projectsService, type ProjectRecord } from '../../../shared/api/services/projects.service'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
@@ -15,6 +16,9 @@ type ProjectFormValues = {
   project_description: string
   project_url: string
   member_ids: number[]
+  team_id: string
+  deadline: string
+  telegram_group_id: string
   image: File | null
   clear_existing_image: boolean
 }
@@ -22,7 +26,7 @@ type ProjectFormValues = {
 type ProjectFormModalProps = {
   open: boolean
   onClose: () => void
-  onSubmit: (fd: FormData) => Promise<void>
+  onSubmit: (fd: FormData, telegramGroupId?: string | null) => Promise<void>
   initial?: ProjectRecord | null
   title: string
   submitLabel: string
@@ -34,8 +38,33 @@ const empty: ProjectFormValues = {
   project_description: '',
   project_url: '',
   member_ids: [],
+  team_id: '',
+  deadline: '',
+  telegram_group_id: '',
   image: null,
   clear_existing_image: false,
+}
+
+function toDateTimeLocalValue(value?: string | null) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
+function toApiDateTimeWithOffset(value: string) {
+  const [datePart, timePart] = value.split('T')
+  if (!datePart || !timePart) return value
+
+  const [year, month, day] = datePart.split('-').map(Number)
+  const [hours, minutes] = timePart.split(':').map(Number)
+  const localDate = new Date(year, month - 1, day, hours, minutes, 0)
+  if (Number.isNaN(localDate.getTime())) return value
+
+  const offsetMinutes = -localDate.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const absoluteOffset = Math.abs(offsetMinutes)
+  return `${datePart}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00${sign}${String(Math.floor(absoluteOffset / 60)).padStart(2, '0')}:${String(absoluteOffset % 60).padStart(2, '0')}`
 }
 
 export function ProjectFormModal({
@@ -58,6 +87,11 @@ export function ProjectFormModal({
     [open],
     { enabled: open },
   )
+  const teamsQuery = useAsyncData(
+    () => projectsService.listTeams(),
+    [open],
+    { enabled: open },
+  )
 
   useEffect(() => {
     if (open) {
@@ -67,6 +101,9 @@ export function ProjectFormModal({
           project_description: initial.project_description ?? '',
           project_url: initial.project_url ?? '',
           member_ids: initial.members.map((member) => member.id),
+          team_id: initial.team_id ? String(initial.team_id) : '',
+          deadline: toDateTimeLocalValue(initial.deadline),
+          telegram_group_id: initial.telegram_group_id ?? '',
           image: null,
           clear_existing_image: false,
         })
@@ -136,6 +173,9 @@ export function ProjectFormModal({
       project_description: values.project_description.trim() || undefined,
       project_url: values.project_url.trim() || undefined,
       member_ids: values.member_ids,
+      team_id: values.team_id ? Number(values.team_id) : undefined,
+      deadline: values.deadline ? toApiDateTimeWithOffset(values.deadline) : undefined,
+      telegram_group_id: initial ? undefined : values.telegram_group_id.trim() || undefined,
       image: values.image ?? undefined,
     })
 
@@ -143,10 +183,14 @@ export function ProjectFormModal({
       fd.append('clear_existing_image', 'true')
     }
 
-    await onSubmit(fd)
+    await onSubmit(fd, initial ? values.telegram_group_id.trim() || null : undefined)
   }
 
   const allUsers = usersQuery.data ?? []
+  const teamOptions: SelectFieldOption[] = [
+    { value: '', label: t('projects.no_team', 'No team') },
+    ...(teamsQuery.data?.teams ?? []).map((team) => ({ value: String(team.id), label: team.name })),
+  ]
 
   return (
     <Dialog
@@ -272,6 +316,47 @@ export function ProjectFormModal({
             onChange={(event) => set('project_url', event.target.value)}
             placeholder="https://example.com"
           />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+              {t('projects.team', 'Team')}
+            </label>
+            <SelectField
+              value={values.team_id}
+              options={teamOptions}
+              onValueChange={(value) => set('team_id', value)}
+              placeholder={t('projects.no_team', 'No team')}
+              disabled={teamsQuery.isLoading}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+              {t('projects.deadline', 'Project deadline')}
+            </label>
+            <Input
+              type="datetime-local"
+              value={values.deadline}
+              onChange={(event) => set('deadline', event.target.value)}
+              step="60"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
+            {t('projects.telegram_group_id', 'Telegram group ID')}
+          </label>
+          <Input
+            value={values.telegram_group_id}
+            onChange={(event) => set('telegram_group_id', event.target.value)}
+            placeholder="-1001234567890"
+          />
+          <p className="text-[11px] text-[var(--muted)]">
+            {t('projects.telegram_group_hint', 'Tasks created from this group are added to the matching board.')}
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5">

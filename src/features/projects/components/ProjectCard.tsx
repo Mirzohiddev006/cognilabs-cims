@@ -4,7 +4,7 @@ import { Badge } from '../../../shared/ui/badge'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import type { ProjectRecord } from '../../../shared/api/services/projects.service'
 import { Avatar, AvatarGroup } from './Avatar'
-import { formatRelativeDate } from '../lib/format'
+import { formatProjectDateTime, formatRelativeDate, isDueDateOverdue } from '../lib/format'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 
 type ProjectCardProps = {
@@ -18,6 +18,7 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
   const { t } = useLocale()
   const boardCount = project.boards_count ?? 0
   const memberCount = (project.members ?? []).length
+  const isDeadlineOverdue = project.deadline ? isDueDateOverdue(project.deadline) : false
 
   return (
     <div data-slot="card" className="group relative flex flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-[0_2px_8px_rgba(0,0,0,0.14)] transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.24)] hover:border-[var(--border-hover)]">
@@ -101,6 +102,12 @@ export function ProjectCard({ project, onEdit, onDelete, canManage = true }: Pro
                 : t('projects.member_count_plural', '{count} members', { count: memberCount })}
             </Badge>
           )}
+          {project.team ? <Badge variant="blue" size="sm">{project.team.name}</Badge> : null}
+          {project.deadline ? (
+            <Badge variant={isDeadlineOverdue ? 'danger' : 'outline'} size="sm">
+              {formatProjectDateTime(project.deadline)}
+            </Badge>
+          ) : null}
         </div>
 
         {/* Footer */}

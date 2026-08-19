@@ -16,6 +16,7 @@ import { useAuth } from '../../auth/hooks/useAuth'
 import { Avatar } from '../components/Avatar'
 import { ProjectCard, ProjectCardSkeleton } from '../components/ProjectCard'
 import { ProjectFormModal } from '../components/ProjectFormModal'
+import { TeamManagementModal } from '../components/TeamManagementModal'
 import { formatProjectDateTime, getPriorityConfig, isDueDateOverdue, isDueDateSoon } from '../lib/format'
 import { buildMemberProjectOverview } from '../lib/memberOverview'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
@@ -61,6 +62,7 @@ export function ProjectsListPage() {
 
   const [search, setSearch] = useState('')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isTeamsOpen, setIsTeamsOpen] = useState(false)
   const [editProject, setEditProject] = useState<ProjectRecord | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -238,7 +240,7 @@ export function ProjectsListPage() {
     }
   }
 
-  async function handleUpdate(fd: FormData) {
+  async function handleUpdate(fd: FormData, telegramGroupId?: string | null) {
     if (!canManageProjects || !editProject) {
       return
     }
@@ -246,6 +248,9 @@ export function ProjectsListPage() {
     setIsSubmitting(true)
     try {
       await projectsService.updateProject(editProject.id, fd)
+      if (telegramGroupId !== undefined) {
+        await projectsService.updateProjectTelegramGroup(editProject.id, telegramGroupId)
+      }
       showToast({ title: lt('Project updated'), tone: 'success' })
       setEditProject(null)
       await projectsQuery.refetch()
@@ -339,18 +344,23 @@ export function ProjectsListPage() {
                 ) : null}
 
                 {canManageProjects ? (
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => setIsCreateOpen(true)}
-                    leftIcon={(
-                      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                        <path d="M8 3v10M3 8h10" strokeLinecap="round" />
-                      </svg>
-                    )}
-                  >
-                    {lt('New project')}
-                  </Button>
+                  <>
+                    <Button variant="secondary" size="md" onClick={() => setIsTeamsOpen(true)}>
+                      {lt('Teams')}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={() => setIsCreateOpen(true)}
+                      leftIcon={(
+                        <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M8 3v10M3 8h10" strokeLinecap="round" />
+                        </svg>
+                      )}
+                    >
+                      {lt('New project')}
+                    </Button>
+                  </>
                 ) : undefined}
               </div>
             </div>
@@ -669,6 +679,12 @@ export function ProjectsListPage() {
             title={lt('Edit project')}
             submitLabel={lt('Save changes')}
             isSubmitting={isSubmitting}
+          />
+
+          <TeamManagementModal
+            open={isTeamsOpen}
+            onClose={() => setIsTeamsOpen(false)}
+            onChanged={() => Promise.allSettled([projectsQuery.refetch(), projectDetailsQuery.refetch()])}
           />
         </>
       ) : null}

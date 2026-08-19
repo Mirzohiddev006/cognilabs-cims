@@ -36,6 +36,21 @@ function DetailInfoBlock({ label, children, icon }: { label: string; children: R
   )
 }
 
+function formatDuration(seconds?: number | null) {
+  if (seconds === null || seconds === undefined || seconds < 0) return '-'
+
+  const days = Math.floor(seconds / 86_400)
+  const hours = Math.floor((seconds % 86_400) / 3_600)
+  const minutes = Math.floor((seconds % 3_600) / 60)
+  const parts = [
+    days ? `${days}d` : '',
+    hours ? `${hours}h` : '',
+    minutes || (!days && !hours) ? `${minutes}m` : '',
+  ].filter(Boolean)
+
+  return parts.join(' ')
+}
+
 export function CardDetailModal({
   card,
   open,
@@ -84,6 +99,9 @@ export function CardDetailModal({
       ? card.files
       : []
   const selectedImage = images[selectedImageIndex] ?? images[0] ?? null
+  const statusHistory = [...card.status_history].sort((left, right) =>
+    (right.started_at ?? '').localeCompare(left.started_at ?? ''),
+  )
 
   const priorityTheme = {
     urgent: {
@@ -375,8 +393,46 @@ export function CardDetailModal({
                           </span>
                        </DetailInfoBlock>
                     )}
+
+                    {card.completed_at ? (
+                      <DetailInfoBlock
+                        label={lt('Completed')}
+                        icon={<svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3"><path d="m5 12 4 4L19 6" /></svg>}
+                      >
+                        <span className="text-[var(--success-text)]">{formatProjectDateTime(card.completed_at)}</span>
+                      </DetailInfoBlock>
+                    ) : null}
+
+                    {card.completion_duration_seconds !== null ? (
+                      <DetailInfoBlock label={lt('Completion time')}>
+                        <span className="text-[var(--muted-strong)]">{formatDuration(card.completion_duration_seconds)}</span>
+                      </DetailInfoBlock>
+                    ) : null}
+
+                    {card.current_status_duration_seconds !== null ? (
+                      <DetailInfoBlock label={lt('Time in current status')}>
+                        <span className="text-[var(--muted-strong)]">{formatDuration(card.current_status_duration_seconds)}</span>
+                      </DetailInfoBlock>
+                    ) : null}
                  </div>
               </div>
+
+              {statusHistory.length > 0 ? (
+                <div className="space-y-4 pt-8 border-t border-[var(--border)]">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">{lt('Status history')}</h4>
+                  <div className="space-y-3">
+                    {statusHistory.map((entry, index) => (
+                      <div key={entry.id ?? `${entry.column_id ?? 'status'}-${entry.started_at ?? index}`} className="rounded-xl border border-[var(--border)] bg-[var(--accent-soft)] px-3 py-2.5">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 truncate text-xs font-semibold text-[var(--foreground)]">{entry.column_name || lt('Status')}</span>
+                          <span className="shrink-0 text-[11px] font-medium text-[var(--muted-strong)]">{formatDuration(entry.duration_seconds)}</span>
+                        </div>
+                        {entry.started_at ? <p className="mt-1 text-[10px] text-[var(--muted)]">{formatProjectDateTime(entry.started_at)}{entry.ended_at ? ` - ${formatProjectDateTime(entry.ended_at)}` : ''}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               {/* Mobile Actions */}
               {canManage && (
