@@ -2,6 +2,8 @@ import { env } from '../../config/env'
 import { request } from '../http'
 import type { ApiRequestOptions } from '../types'
 
+const FACE_ID_ATTENDANCE_API_URL = 'https://api.project.cims.cognilabs.org'
+
 export type AttendanceRecord = {
   id: number
   employee_id: number
@@ -351,7 +353,7 @@ export type FaceIdDailyRecordUpdate = {
 function faceIdAttendanceRequest<T>(options: ApiRequestOptions) {
   return request<T>({
     ...options,
-    path: `${env.attendanceApiBaseUrl.replace(/\/$/, '')}${options.path}`,
+    path: `${FACE_ID_ATTENDANCE_API_URL}${options.path}`,
     auth: false,
     headers: {
       ...options.headers,
