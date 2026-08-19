@@ -1,5 +1,6 @@
 import { env } from '../../config/env'
 import { request } from '../http'
+import type { ApiRequestOptions } from '../types'
 
 export type AttendanceRecord = {
   id: number
@@ -286,4 +287,116 @@ export type PublicAttendanceMeta = {
 export type PublicAttendanceResponse = {
   meta: PublicAttendanceMeta
   employees: PublicAttendanceEmployee[]
+}
+
+export type FaceIdAttendanceStatus = 'present' | 'late' | 'absent' | 'incomplete'
+
+export type FaceIdAttendanceUser = {
+  id: number
+  name: string
+  surname: string
+  full_name: string
+  email: string | null
+  department: string | null
+  position: string | null
+  role: string | null
+  role_name: string | null
+  is_active: boolean
+}
+
+export type FaceIdAttendanceUsersResponse = {
+  items: FaceIdAttendanceUser[]
+  total_count?: number
+  total_items?: number
+  page?: number
+  page_size?: number
+  total_pages?: number
+}
+
+export type FaceIdDailyRecord = {
+  employee_id: number
+  employee_full_name: string
+  attendance_date: string
+  check_in_at: string | null
+  check_out_at: string | null
+  check_in_time: string | null
+  check_out_time: string | null
+  worked_minutes: number | null
+  worked_hours_decimal: number | null
+  status: FaceIdAttendanceStatus
+  source_system: string | null
+  is_manual: boolean
+  note: string | null
+}
+
+export type FaceIdDailyRecordsResponse = {
+  items: FaceIdDailyRecord[]
+  total_count?: number
+  total_items?: number
+  page?: number
+  page_size?: number
+  total_pages?: number
+}
+
+export type FaceIdDailyRecordUpdate = {
+  status?: FaceIdAttendanceStatus
+  check_in_at?: string | null
+  check_out_at?: string | null
+  note?: string | null
+  is_deleted?: boolean
+  delete_reason?: string
+  source_updated_at: string
+}
+
+function faceIdAttendanceRequest<T>(options: ApiRequestOptions) {
+  return request<T>({
+    ...options,
+    path: `${env.attendanceApiBaseUrl.replace(/\/$/, '')}${options.path}`,
+    auth: false,
+    headers: {
+      ...options.headers,
+      'X-Attendance-Key': env.attendanceApiKey,
+    },
+  })
+}
+
+export const faceIdAttendanceService = {
+  listUsers(params: {
+    search?: string
+    is_active?: boolean
+    page?: number
+    page_size?: number
+  }) {
+    return faceIdAttendanceRequest<FaceIdAttendanceUsersResponse>({
+      path: '/attendance/users',
+      query: params,
+    })
+  },
+
+  listDailyRecords(params: {
+    employee_id?: number
+    date_from?: string
+    date_to?: string
+    year?: number
+    month?: number
+    day?: number
+    status?: FaceIdAttendanceStatus
+    source_system?: string
+    is_manual?: boolean
+    page?: number
+    page_size?: number
+  }) {
+    return faceIdAttendanceRequest<FaceIdDailyRecordsResponse>({
+      path: '/attendance/daily-records',
+      query: params,
+    })
+  },
+
+  updateDailyRecord(employeeId: number, attendanceDate: string, payload: FaceIdDailyRecordUpdate) {
+    return faceIdAttendanceRequest<FaceIdDailyRecord>({
+      path: `/attendance/daily-records/${employeeId}/${attendanceDate}`,
+      method: 'PATCH',
+      body: payload,
+    })
+  },
 }

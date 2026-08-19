@@ -1,6 +1,7 @@
 const fallbackApiBaseUrl = '/api'
 const fallbackWebsiteStatsApiBaseUrl = fallbackApiBaseUrl
 const fallbackAttendancePublicApiUrl = 'https://essentially-stop-bunny-miami.trycloudflare.com/api'
+const fallbackAttendanceApiBaseUrl = 'https://api.project.cims.cognilabs.org'
 
 export const env = {
   appName: import.meta.env.VITE_APP_NAME || 'Cognilabs CIMS',
@@ -10,6 +11,7 @@ export const env = {
     import.meta.env.VITE_API_BASE_URL ||
     fallbackWebsiteStatsApiBaseUrl,
   appEnv: import.meta.env.VITE_APP_ENV || 'development',
+  attendanceApiBaseUrl: import.meta.env.VITE_ATTENDANCE_API_BASE_URL || fallbackAttendanceApiBaseUrl,
   attendancePublicApiUrl: import.meta.env.VITE_ATTENDANCE_PUBLIC_API_URL || fallbackAttendancePublicApiUrl,
   attendanceApiKey: import.meta.env.VITE_ATTENDANCE_API_KEY || '',
 } as const

@@ -1,523 +1,298 @@
-import { useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { attendanceService } from '../../../shared/api/services/attendance.service'
+import { useEffect, useMemo, useState } from 'react'
+import type { ApiResponseError } from '../../../shared/api/types'
+import { faceIdAttendanceService, type FaceIdAttendanceStatus, type FaceIdDailyRecord } from '../../../shared/api/services/attendance.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
-import { Card } from '../../../shared/ui/card'
-import { LoadingStateBlock, ErrorStateBlock } from '../../../shared/ui/state-block'
 import { Badge } from '../../../shared/ui/badge'
-import { Input } from '../../../shared/ui/input'
 import { Button } from '../../../shared/ui/button'
-import { Modal } from '../../../shared/ui/modal'
+import { Dialog } from '../../../shared/ui/dialog'
+import { Input } from '../../../shared/ui/input'
+import { SelectField, type SelectFieldOption } from '../../../shared/ui/select-field'
+import { StateBlock } from '../../../shared/ui/state-block'
+import { Textarea } from '../../../shared/ui/textarea'
+import { useToast } from '../../../shared/toast/useToast'
 import { cn } from '../../../shared/lib/cn'
-import {
-  extractEmployeeAttendances,
-  formatHours,
-  formatIsoDate,
-  formatTime,
-  mergeEmployeeAttendances,
-  type NormalizedEmployeeAttendance,
-  statusVariant,
-} from '../lib/attendance-normalizers'
 
-type ViewMode = 'monthly' | 'weekly' | 'daily'
+const TASHKENT_TIMEZONE = 'Asia/Tashkent'
+const PAGE_SIZE = 100
 
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+const statusOptions: SelectFieldOption[] = [
+  { value: '', label: 'All statuses' },
+  { value: 'present', label: 'Present' },
+  { value: 'late', label: 'Late' },
+  { value: 'absent', label: 'Absent' },
+  { value: 'incomplete', label: 'Incomplete' },
 ]
 
-function buildMonthDate(year: number, month: number, day: number) {
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+const sourceOptions: SelectFieldOption[] = [
+  { value: '', label: 'All sources' },
+  { value: 'faceid', label: 'FaceID' },
+  { value: 'manual', label: 'Manual' },
+]
+
+function getDateTimeParts(value: Date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TASHKENT_TIMEZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(value)
+  return Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]))
 }
 
-function getMonthRange(year: number, month: number) {
-  const lastDay = new Date(year, month, 0).getDate()
-  return {
-    from: buildMonthDate(year, month, 1),
-    to: buildMonthDate(year, month, lastDay),
+function getTodayInTashkent() {
+  const parts = getDateTimeParts(new Date())
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+function formatDate(value: string) {
+  const date = new Date(`${value}T00:00:00`)
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(date)
+}
+
+function formatTime(dateTime: string | null, time: string | null) {
+  if (dateTime) {
+    const date = new Date(dateTime)
+    if (!Number.isNaN(date.getTime())) {
+      return new Intl.DateTimeFormat('en-GB', { timeZone: TASHKENT_TIMEZONE, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(date)
+    }
   }
+  return time?.slice(0, 5) || '-'
 }
 
-function buildInitialDailyDate(year: number, month: number) {
-  const now = new Date()
-  if (now.getFullYear() === year && now.getMonth() + 1 === month) {
-    return buildMonthDate(year, month, now.getDate())
+function formatWorkedMinutes(minutes: number | null) {
+  if (minutes === null || minutes === undefined || minutes < 0) return '-'
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+}
+
+function toDateTimeLocal(value: string | null, attendanceDate: string, fallbackTime: string | null) {
+  if (value) {
+    const date = new Date(value)
+    if (!Number.isNaN(date.getTime())) {
+      const parts = getDateTimeParts(date)
+      return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
+    }
   }
-  return buildMonthDate(year, month, 1)
+  return fallbackTime ? `${attendanceDate}T${fallbackTime.slice(0, 5)}` : ''
 }
 
-
-function SegmentButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: string
-}) {
-  return (
-    <button
-      data-ui-control="true"
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition',
-        active
-          ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
-          : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] hover:border-[var(--border-hover)] hover:bg-[var(--accent-soft)]',
-      )}
-    >
-      {children}
-    </button>
-  )
+function toTashkentApiDateTime(value: string) {
+  return value ? `${value}:00+05:00` : null
 }
+
+function getTashkentNowWithOffset() {
+  const parts = getDateTimeParts(new Date())
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:00+05:00`
+}
+
+function statusBadgeVariant(status: FaceIdAttendanceStatus) {
+  if (status === 'present') return 'success'
+  if (status === 'late') return 'warning'
+  if (status === 'absent') return 'danger'
+  return 'blue'
+}
+
+function getErrorMessage(error: unknown) {
+  const apiError = error as Partial<ApiResponseError>
+  if (apiError.status === 401 || apiError.status === 403) return 'Attendance API key is invalid or this account has no permission.'
+  if (apiError.status === 422) return 'One or more filters or values are invalid. Check the entered data and try again.'
+  if (apiError.status === 500) return 'Attendance server error. Please try again shortly.'
+  return 'Unable to load attendance data. Please try again.'
+}
+
+type EditValues = {
+  status: FaceIdAttendanceStatus
+  checkInAt: string
+  checkOutAt: string
+  note: string
+  deleteReason: string
+}
+
+const emptyEditValues: EditValues = { status: 'incomplete', checkInAt: '', checkOutAt: '', note: '', deleteReason: '' }
 
 export function AttendanceManagementPage() {
-  const { t } = useTranslation()
-  const [date, setDate] = useState(() => {
-    const now = new Date()
-    return { year: now.getFullYear(), month: now.getMonth() + 1 }
-  })
-  const [view, setView] = useState<ViewMode>('monthly')
-  const [search, setSearch] = useState('')
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(null)
-  const [selectedDate, setSelectedDate] = useState(() => buildInitialDailyDate(new Date().getFullYear(), new Date().getMonth() + 1))
-  const [selectedEmployee, setSelectedEmployee] = useState<NormalizedEmployeeAttendance | null>(null)
+  const { showToast } = useToast()
+  const [month, setMonth] = useState(() => getTodayInTashkent().slice(0, 7))
+  const [day, setDay] = useState('')
+  const [employeeId, setEmployeeId] = useState('')
+  const [status, setStatus] = useState('')
+  const [source, setSource] = useState('')
+  const [page, setPage] = useState(1)
+  const [editingRecord, setEditingRecord] = useState<FaceIdDailyRecord | null>(null)
+  const [editValues, setEditValues] = useState<EditValues>(emptyEditValues)
+  const [isDeleteMode, setIsDeleteMode] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [year, monthNumber] = month.split('-').map(Number)
+  const selectedEmployeeId = Number(employeeId)
 
-  const monthlyQuery = useAsyncData(
-    async () => {
-      try {
-        const result = await attendanceService.getPublicUsers({
-          year: date.year,
-          month: date.month,
-          page_size: 200,
-          include_empty: true,
-        })
-        return extractEmployeeAttendances(result)
-      } catch {
-        // fallback: internal API (port 8000)
-        const [summaryResult, officeTimeResult] = await Promise.allSettled([
-          attendanceService.getMonthlySummary(date.year, date.month),
-          attendanceService.getEmployeeMonthlyOfficeTime(date.year, date.month),
-        ])
-        if (summaryResult.status === 'rejected' && officeTimeResult.status === 'rejected') {
-          throw summaryResult.reason ?? officeTimeResult.reason
-        }
-        const summaryItems = summaryResult.status === 'fulfilled' ? extractEmployeeAttendances(summaryResult.value) : []
-        const officeItems = officeTimeResult.status === 'fulfilled' ? extractEmployeeAttendances(officeTimeResult.value) : []
-        return mergeEmployeeAttendances(summaryItems, officeItems)
-      }
-    },
-    [date.year, date.month],
+  const employeesQuery = useAsyncData(
+    () => faceIdAttendanceService.listUsers({ page: 1, page_size: 500, is_active: true }),
+    [],
+  )
+  const recordsQuery = useAsyncData(
+    () => faceIdAttendanceService.listDailyRecords({
+      year,
+      month: monthNumber,
+      day: day ? Number(day) : undefined,
+      employee_id: Number.isFinite(selectedEmployeeId) && selectedEmployeeId > 0 ? selectedEmployeeId : undefined,
+      status: status ? status as FaceIdAttendanceStatus : undefined,
+      source_system: source || undefined,
+      is_manual: source === 'manual' ? true : undefined,
+      page,
+      page_size: PAGE_SIZE,
+    }),
+    [month, day, employeeId, status, source, page],
   )
 
-  const dailyQuery = useAsyncData(
-    async () => {
-      try {
-        return await attendanceService.getPublicUsers({
-          date_from: selectedDate,
-          date_to: selectedDate,
-          page_size: 200,
-          include_empty: true,
-        })
-      } catch {
-        // fallback: internal daily-records API
-        return attendanceService.getDailyRecords({
-          date_from: selectedDate,
-          date_to: selectedDate,
-          page: 1,
-          page_size: 200,
-        })
-      }
-    },
-    [selectedDate, view],
-    { enabled: view === 'daily' },
-  )
+  useEffect(() => { setPage(1) }, [month, day, employeeId, status, source])
 
-  const employees = useMemo(() => monthlyQuery.data ?? [], [monthlyQuery.data])
+  const employeeOptions = useMemo<SelectFieldOption[]>(() => [
+    { value: '', label: 'All employees' },
+    ...(employeesQuery.data?.items ?? []).map((employee) => ({
+      value: String(employee.id),
+      label: `${employee.full_name || `${employee.name} ${employee.surname}`}${employee.department ? ` - ${employee.department}` : ''}`,
+    })),
+  ], [employeesQuery.data])
 
-  const filteredEmployees = useMemo(
-    () => employees.filter(employee => employee.fullName.toLowerCase().includes(search.toLowerCase())),
-    [employees, search],
-  )
+  const records = recordsQuery.data?.items ?? []
+  const totalItems = recordsQuery.data?.total_count ?? recordsQuery.data?.total_items ?? 0
+  const totalPages = recordsQuery.data?.total_pages ?? Math.max(1, Math.ceil(totalItems / PAGE_SIZE))
+  const presentCount = records.filter((record) => record.status === 'present').length
+  const lateCount = records.filter((record) => record.status === 'late').length
+  const incompleteCount = records.filter((record) => record.status === 'incomplete').length
 
-  const weekOptions = useMemo(() => {
-    const map = new Map<number, { number: number; label: string }>()
-    for (const employee of employees) {
-      for (const week of employee.weeks) {
-        if (!map.has(week.weekNumber)) {
-          map.set(week.weekNumber, { number: week.weekNumber, label: week.label || t('attendance.week', 'Week {{number}}', { number: week.weekNumber }) })
-        }
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => a.number - b.number)
-  }, [employees, t])
-
-  const effectiveSelectedWeek = weekOptions.some(week => week.number === selectedWeek)
-    ? selectedWeek
-    : (weekOptions[0]?.number ?? null)
-
-  const weeklyRows = useMemo(() => {
-    if (effectiveSelectedWeek === null) return []
-
-    return filteredEmployees
-      .map(employee => {
-        const week = employee.weeks.find(item => item.weekNumber === effectiveSelectedWeek)
-        return {
-          employee,
-          week,
-        }
-      })
-      .sort((a, b) => (b.week?.workedHours ?? 0) - (a.week?.workedHours ?? 0))
-  }, [effectiveSelectedWeek, filteredEmployees])
-
-  const dailyRows = useMemo(() => {
-    const source = dailyQuery.data
-      ? extractEmployeeAttendances(dailyQuery.data).filter(emp =>
-          emp.fullName.toLowerCase().includes(search.toLowerCase()),
-        )
-      : filteredEmployees
-
-    return source.map(emp => ({
-      employeeId: emp.employeeId,
-      fullName: emp.fullName,
-      role: emp.role,
-      status: emp.latestStatus,
-      checkIn: emp.latestCheckIn,
-      checkOut: emp.latestCheckOut,
-      workedHours: emp.totalWorkedHours,
-    }))
-  }, [dailyQuery.data, filteredEmployees, search])
-
-  const updateMonth = (year: number, month: number) => {
-    setDate({ year, month })
-    setSelectedDate(buildInitialDailyDate(year, month))
+  function openEdit(record: FaceIdDailyRecord) {
+    setEditingRecord(record)
+    setEditValues({
+      status: record.status,
+      checkInAt: toDateTimeLocal(record.check_in_at, record.attendance_date, record.check_in_time),
+      checkOutAt: toDateTimeLocal(record.check_out_at, record.attendance_date, record.check_out_time),
+      note: record.note ?? '',
+      deleteReason: '',
+    })
+    setIsDeleteMode(false)
   }
 
-  const nextMonth = () => {
-    if (date.month === 12) {
-      updateMonth(date.year + 1, 1)
-      return
-    }
-    updateMonth(date.year, date.month + 1)
+  function closeEdit() {
+    if (isSaving) return
+    setEditingRecord(null)
+    setIsDeleteMode(false)
+    setEditValues(emptyEditValues)
   }
 
-  const prevMonth = () => {
-    if (date.month === 1) {
-      updateMonth(date.year - 1, 12)
+  async function saveEdit() {
+    if (!editingRecord) return
+    if (isDeleteMode && !editValues.deleteReason.trim()) {
+      showToast({ title: 'Enter a reason before deleting this attendance record.', tone: 'error' })
       return
     }
-    updateMonth(date.year, date.month - 1)
+    setIsSaving(true)
+    try {
+      if (isDeleteMode) {
+        await faceIdAttendanceService.updateDailyRecord(editingRecord.employee_id, editingRecord.attendance_date, {
+          is_deleted: true, delete_reason: editValues.deleteReason.trim(), source_updated_at: getTashkentNowWithOffset(),
+        })
+        showToast({ title: 'Attendance record deleted', tone: 'success' })
+      } else {
+        await faceIdAttendanceService.updateDailyRecord(editingRecord.employee_id, editingRecord.attendance_date, {
+          status: editValues.status,
+          check_in_at: toTashkentApiDateTime(editValues.checkInAt),
+          check_out_at: toTashkentApiDateTime(editValues.checkOutAt),
+          note: editValues.note.trim() || null,
+          source_updated_at: getTashkentNowWithOffset(),
+        })
+        showToast({ title: 'Attendance record updated', tone: 'success' })
+      }
+      closeEdit()
+      await recordsQuery.refetch()
+    } catch (error) {
+      showToast({ title: getErrorMessage(error), tone: 'error' })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
-    <div className="page-enter space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <SegmentButton active={view === 'monthly'} onClick={() => setView('monthly')}>{t('attendance.view.monthly', 'Monthly')}</SegmentButton>
-        <SegmentButton active={view === 'weekly'} onClick={() => setView('weekly')}>{t('attendance.view.weekly', 'Weekly')}</SegmentButton>
-        <SegmentButton active={view === 'daily'} onClick={() => setView('daily')}>{t('attendance.view.daily', 'Daily')}</SegmentButton>
-      </div>
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" size="sm" onClick={prevMonth}>{'<'}</Button>
-          <h2 className="min-w-[160px] text-center text-base font-bold text-[var(--foreground)]">
-            {t(`attendance.month.${date.month - 1}`, MONTHS[date.month - 1])} {date.year}
-          </h2>
-          <Button variant="secondary" size="sm" onClick={nextMonth}>{'>'}</Button>
-        </div>
-
-        <div className="flex flex-1 flex-col gap-3 lg:max-w-xl lg:flex-row lg:items-center lg:justify-end">
-          {view === 'daily' ? (
-            <Input
-              type="date"
-              value={selectedDate}
-              min={getMonthRange(date.year, date.month).from}
-              max={getMonthRange(date.year, date.month).to}
-              onChange={event => setSelectedDate(event.target.value)}
-              className="h-10 lg:max-w-[180px]"
-            />
-          ) : null}
-
-          <div className="w-full lg:max-w-xs">
-            <Input
-              placeholder={t('attendance.search_employee', 'Search employee...')}
-              value={search}
-              onChange={event => setSearch(event.target.value)}
-              className="h-10"
-            />
+    <div className="page-enter space-y-5">
+      <section className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-6 sm:px-7">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.2),transparent_68%)]" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-blue-400">Operations / FaceID</p>
+            <h1 className="mt-2 text-2xl font-black tracking-tight text-[var(--foreground)] sm:text-3xl">Attendance</h1>
+            <p className="mt-2 max-w-2xl text-sm text-[var(--muted-strong)]">Review device attendance records and correct exceptions when the source data is incomplete.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:min-w-[310px]">
+            <SummaryStat label="Present" value={presentCount} className="text-[var(--success-text)]" />
+            <SummaryStat label="Late" value={lateCount} className="text-[var(--warning-text)]" />
+            <SummaryStat label="Incomplete" value={incompleteCount} className="text-[var(--blue-text)]" />
           </div>
         </div>
-      </div>
+      </section>
 
-      {monthlyQuery.isLoading ? (
-        <LoadingStateBlock eyebrow={t('attendance.eyebrow', 'Attendance')} title={t('attendance.loading_data', 'Loading attendance data...')} />
-      ) : monthlyQuery.isError ? (
-        <ErrorStateBlock eyebrow={t('attendance.eyebrow', 'Attendance')} title={t('attendance.failed_load_data', 'Failed to load attendance data')} description={t('attendance.check_api_reachable', 'Check that the attendance API is reachable.')} />
-      ) : filteredEmployees.length === 0 ? (
-        <Card className="px-6 py-10 text-center text-sm text-[var(--muted-strong)]">
-          {employees.length === 0 ? t('attendance.no_data_period', 'No attendance data for this period.') : t('attendance.no_matches', 'No employees match your search.')}
-        </Card>
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[170px_150px_minmax(220px,1fr)_180px_160px]">
+          <FilterLabel label="Month"><Input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></FilterLabel>
+          <FilterLabel label="Day"><Input type="number" min="1" max="31" value={day} onChange={(event) => setDay(event.target.value)} placeholder="All days" /></FilterLabel>
+          <FilterLabel label="Employee"><SelectField value={employeeId} options={employeeOptions} onValueChange={setEmployeeId} searchable searchPlaceholder="Search employee..." disabled={employeesQuery.isLoading} /></FilterLabel>
+          <FilterLabel label="Status"><SelectField value={status} options={statusOptions} onValueChange={setStatus} /></FilterLabel>
+          <FilterLabel label="Source"><SelectField value={source} options={sourceOptions} onValueChange={setSource} /></FilterLabel>
+        </div>
+      </section>
+
+      {recordsQuery.isLoading ? (
+        <StateBlock tone="loading" eyebrow="Attendance" title="Loading attendance records" />
+      ) : recordsQuery.isError ? (
+        <StateBlock tone="error" eyebrow="Attendance" title="Unable to load attendance" description={getErrorMessage(recordsQuery.error)} actionLabel="Retry" onAction={() => void recordsQuery.refetch()} />
+      ) : records.length === 0 ? (
+        <StateBlock tone="empty" eyebrow="Attendance" title="Davomat ma'lumoti topilmadi" description="Change the filters or select another month." />
       ) : (
-        <>
-          {view === 'monthly' ? (
-            <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                      <th className="px-6 py-4">{t('attendance.table.employee', 'Employee')}</th>
-                      <th className="px-6 py-4 text-center">{t('attendance.table.monthly_hours', 'Monthly Hours')}</th>
-                      <th className="px-6 py-4 text-center">{t('attendance.table.days_present', 'Days Present')}</th>
-                      <th className="px-6 py-4 text-center">{t('attendance.table.days_complete', 'Days Complete')}</th>
-                      <th className="px-6 py-4">{t('attendance.table.last_status', 'Last Status')}</th>
-                      <th className="px-6 py-4 text-right">{t('attendance.table.details', 'Details')}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
-                    {filteredEmployees.map(item => (
-                      <tr key={item.employeeId} className="transition-colors hover:bg-[var(--accent-soft)]/5">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--accent-soft)] text-sm font-bold text-blue-500">
-                              {item.fullName.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-[var(--foreground)]">{item.fullName}</p>
-                              <p className="text-xs text-[var(--muted-strong)]">
-                                ID: {item.employeeId}{item.role ? ` • ${item.role}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center text-sm font-black text-blue-500">{formatHours(item.totalWorkedHours)}</td>
-                        <td className="px-6 py-4 text-center text-sm text-[var(--foreground)]">{item.daysPresent}</td>
-                        <td className="px-6 py-4 text-center text-sm text-[var(--foreground)]">{item.daysComplete}</td>
-                        <td className="px-6 py-4">
-                          <Badge variant={statusVariant(item.latestStatus)} className="capitalize">
-                            {t(`attendance.status.${item.latestStatus}`, item.latestStatus)}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedEmployee(item)}>
-                            {t('attendance.view_history', 'View History')}
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : null}
-
-          {view === 'weekly' ? (
-            <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                {weekOptions.map(week => (
-                  <button
-                    data-ui-control="true"
-                    key={week.number}
-                    type="button"
-                    onClick={() => setSelectedWeek(week.number)}
-                    className={cn(
-                      'rounded-xl border px-3 py-2 text-sm font-semibold transition',
-                      effectiveSelectedWeek === week.number
-                        ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
-                        : 'border-[var(--border)] bg-[var(--surface)] text-[var(--muted-strong)] hover:bg-[var(--accent-soft)]',
-                    )}
-                  >
-                    {week.label}
-                  </button>
+        <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+            <p className="text-sm font-semibold text-[var(--foreground)]">{totalItems} attendance records</p>
+            <p className="text-xs text-[var(--muted)]">Times are shown in Asia/Tashkent.</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1050px] text-left">
+              <thead><tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/40 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--muted)]">
+                <th className="px-5 py-3.5">Employee</th><th className="px-4 py-3.5">Date</th><th className="px-4 py-3.5">Came</th><th className="px-4 py-3.5">Gone</th><th className="px-4 py-3.5">Worked time</th><th className="px-4 py-3.5">Status</th><th className="px-4 py-3.5">Source</th><th className="px-4 py-3.5">Note</th><th className="px-5 py-3.5 text-right">Action</th>
+              </tr></thead>
+              <tbody className="divide-y divide-[var(--border)]">
+                {records.map((record) => (
+                  <tr key={`${record.employee_id}-${record.attendance_date}`} className="transition-colors hover:bg-[var(--accent-soft)]/45">
+                    <td className="px-5 py-4"><p className="text-sm font-semibold text-[var(--foreground)]">{record.employee_full_name || `Employee #${record.employee_id}`}</p><p className="mt-0.5 text-xs text-[var(--muted)]">ID: {record.employee_id}</p></td>
+                    <td className="px-4 py-4 text-sm font-medium text-[var(--foreground)]">{formatDate(record.attendance_date)}</td>
+                    <td className="px-4 py-4 text-sm text-[var(--muted-strong)]">{formatTime(record.check_in_at, record.check_in_time)}</td>
+                    <td className="px-4 py-4 text-sm text-[var(--muted-strong)]">{formatTime(record.check_out_at, record.check_out_time)}</td>
+                    <td className="px-4 py-4 text-sm font-semibold text-[var(--foreground)]">{formatWorkedMinutes(record.worked_minutes)}</td>
+                    <td className="px-4 py-4"><Badge variant={statusBadgeVariant(record.status)} dot>{record.status}</Badge></td>
+                    <td className="px-4 py-4"><Badge variant={record.is_manual ? 'blue' : 'outline'}>{record.is_manual ? 'manual' : record.source_system || 'faceid'}</Badge></td>
+                    <td className="max-w-[230px] px-4 py-4 text-sm text-[var(--muted-strong)]"><p className="line-clamp-2">{record.note || '-'}</p></td>
+                    <td className="px-5 py-4 text-right"><Button variant="ghost" size="sm" onClick={() => openEdit(record)}>Edit</Button></td>
+                  </tr>
                 ))}
-              </div>
-
-              <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                        <th className="px-6 py-4">{t('attendance.table.employee', 'Employee')}</th>
-                        <th className="px-6 py-4 text-center">{t('attendance.table.week_hours', 'Week Hours')}</th>
-                        <th className="px-6 py-4 text-center">{t('attendance.table.days_present', 'Days Present')}</th>
-                        <th className="px-6 py-4 text-center">{t('attendance.table.avg_daily', 'Average / Day')}</th>
-                        <th className="px-6 py-4 text-right">{t('attendance.table.details', 'Details')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border)]">
-                      {weeklyRows.map(({ employee, week }) => (
-                        <tr key={employee.employeeId} className="transition-colors hover:bg-[var(--accent-soft)]/5">
-                          <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-[var(--foreground)]">{employee.fullName}</p>
-                            <p className="text-xs text-[var(--muted-strong)]">
-                              ID: {employee.employeeId}{employee.role ? ` • ${employee.role}` : ''}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4 text-center text-sm font-black text-blue-500">
-                            {formatHours(week?.workedHours ?? 0)}
-                          </td>
-                          <td className="px-6 py-4 text-center text-sm text-[var(--foreground)]">{week?.daysPresent ?? 0}</td>
-                          <td className="px-6 py-4 text-center text-sm text-[var(--foreground)]">
-                            {formatHours(week?.avgDailyHours ?? 0)}
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedEmployee(employee)}>
-                              {t('attendance.view_history', 'View History')}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          {view === 'daily' ? (
-            dailyQuery.isLoading ? (
-              <LoadingStateBlock eyebrow={t('attendance.eyebrow', 'Attendance')} title={t('attendance.loading_daily', 'Loading daily attendance...')} />
-            ) : dailyQuery.isError ? (
-              <ErrorStateBlock eyebrow={t('attendance.eyebrow', 'Attendance')} title={t('attendance.failed_load_daily', 'Failed to load daily attendance')} description={t('attendance.api_error_daily', 'The daily records endpoint did not respond.')} />
-            ) : (
-              <div data-ui-surface="true" className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg">
-                <div className="border-b border-[var(--border)] px-6 py-4">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.daily_attendance_for', 'Daily attendance for {{date}}', { date: selectedDate })}</p>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                        <th className="px-6 py-4">{t('attendance.table.employee', 'Employee')}</th>
-                        <th className="px-6 py-4">{t('attendance.table.status', 'Status')}</th>
-                        <th className="px-6 py-4">{t('attendance.table.check_in', 'Check In')}</th>
-                        <th className="px-6 py-4">{t('attendance.table.check_out', 'Check Out')}</th>
-                        <th className="px-6 py-4 text-right">{t('attendance.table.hours', 'Hours')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border)]">
-                      {dailyRows.map(item => (
-                        <tr key={item.employeeId} className="transition-colors hover:bg-[var(--accent-soft)]/5">
-                          <td className="px-6 py-4">
-                            <p className="text-sm font-semibold text-[var(--foreground)]">{item.fullName}</p>
-                            <p className="text-xs text-[var(--muted-strong)]">
-                              ID: {item.employeeId}{item.role ? ` • ${item.role}` : ''}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge variant={statusVariant(item.status)} className="capitalize">
-                              {t(`attendance.status.${item.status}`, item.status)}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-[var(--muted-strong)]">{formatTime(item.checkIn)}</td>
-                          <td className="px-6 py-4 text-sm text-[var(--muted-strong)]">{formatTime(item.checkOut)}</td>
-                          <td className="px-6 py-4 text-right text-sm font-bold text-[var(--foreground)]">
-                            {item.workedHours > 0 ? formatHours(item.workedHours) : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )
-          ) : null}
-        </>
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-5 py-4">
+            <p className="text-xs text-[var(--muted)]">Page {page} of {totalPages}</p>
+            <div className="flex items-center gap-2"><Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</Button><Button variant="secondary" size="sm" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)}>Next</Button></div>
+          </div>
+        </section>
       )}
 
-      {selectedEmployee ? (
-        <Modal
-          open
-          onClose={() => setSelectedEmployee(null)}
-          title={t('attendance.modal.title', '{{name}} - Attendance', { name: selectedEmployee.fullName })}
-          description={t('attendance.modal.description', '{{month}} {{year}} - Weekly and daily breakdown', { month: MONTHS[date.month - 1], year: date.year })}
-          size="xl"
-        >
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Card className="rounded-xl px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.monthly_hours', 'Monthly Hours')}</p>
-                <p className="mt-2 text-xl font-black text-blue-500">{formatHours(selectedEmployee.totalWorkedHours)}</p>
-              </Card>
-              <Card className="rounded-xl px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.days_present', 'Days Present')}</p>
-                <p className="mt-2 text-xl font-black text-[var(--foreground)]">{selectedEmployee.daysPresent}</p>
-              </Card>
-              <Card className="rounded-xl px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">{t('attendance.table.days_complete', 'Days Complete')}</p>
-                <p className="mt-2 text-xl font-black text-[var(--foreground)]">{selectedEmployee.daysComplete}</p>
-              </Card>
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.weekly_breakdown', 'Weekly breakdown')}</p>
-              {selectedEmployee.weeks.length === 0 ? (
-                <Card className="px-4 py-6 text-center text-sm text-[var(--muted-strong)]">{t('attendance.no_weekly_records', 'No weekly records found.')}</Card>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {selectedEmployee.weeks.map(week => (
-                    <Card key={`${week.weekNumber}-${week.dateFrom}`} className="rounded-xl px-4 py-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-[var(--foreground)]">{week.label || t('attendance.week', 'Week {{number}}', { number: week.weekNumber })}</p>
-                          <p className="text-xs text-[var(--muted-strong)]">{week.dateFrom && week.dateTo ? `${week.dateFrom} - ${week.dateTo}` : t('attendance.weekly_summary', 'Weekly summary')}</p>
-                        </div>
-                        <Badge variant="blue">{formatHours(week.workedHours)}</Badge>
-                      </div>
-                      <div className="mt-4 flex items-center gap-4 text-xs text-[var(--muted-strong)]">
-                        <span>{t('attendance.present', 'Present')}: {week.daysPresent}</span>
-                        <span>{t('attendance.avg_daily', 'Avg/day')}: {formatHours(week.avgDailyHours)}</span>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              <p className="text-sm font-semibold text-[var(--foreground)]">{t('attendance.daily_records', 'Daily records')}</p>
-              {selectedEmployee.days.length === 0 ? (
-                <Card className="px-4 py-6 text-center text-sm text-[var(--muted-strong)]">{t('attendance.no_daily_records', 'No daily records found.')}</Card>
-              ) : (
-                <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-[var(--border)] bg-[var(--muted-surface)]/30 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
-                        <th className="px-4 py-3">{t('attendance.table.date', 'Date')}</th>
-                        <th className="px-4 py-3">{t('attendance.table.status', 'Status')}</th>
-                        <th className="px-4 py-3">{t('attendance.table.check_in', 'Check In')}</th>
-                        <th className="px-4 py-3">{t('attendance.table.check_out', 'Check Out')}</th>
-                        <th className="px-4 py-3 text-right">{t('attendance.table.hours', 'Hours')}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border)]">
-                      {selectedEmployee.days.map((day, index) => (
-                        <tr key={`${day.date}-${index}`} className="hover:bg-[var(--accent-soft)]/5">
-                          <td className="px-4 py-3 text-sm font-medium text-[var(--foreground)]">
-                            {day.date ? `${formatIsoDate(day.date)}${day.weekday ? ` (${day.weekday})` : ''}` : '-'}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Badge variant={statusVariant(day.status)} size="sm" className="capitalize">
-                              {t(`attendance.status.${day.status}`, day.status)}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{formatTime(day.checkIn)}</td>
-                          <td className="px-4 py-3 text-xs text-[var(--muted-strong)]">{formatTime(day.checkOut)}</td>
-                          <td className="px-4 py-3 text-right text-sm font-bold text-[var(--foreground)]">
-                            {day.workedHours > 0 ? formatHours(day.workedHours) : '-'}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </Modal>
-      ) : null}
+      <Dialog open={editingRecord !== null} onClose={closeEdit} title={isDeleteMode ? 'Delete attendance record' : 'Edit attendance record'} description={editingRecord ? `${editingRecord.employee_full_name || `Employee #${editingRecord.employee_id}`} - ${formatDate(editingRecord.attendance_date)}` : undefined} eyebrow="Attendance correction" tone={isDeleteMode ? 'danger' : 'default'} footer={<><Button variant="ghost" size="md" onClick={closeEdit} disabled={isSaving}>Cancel</Button><Button variant={isDeleteMode ? 'danger' : 'primary'} size="md" onClick={() => void saveEdit()} loading={isSaving}>{isDeleteMode ? 'Delete record' : 'Save changes'}</Button></>}>
+        {isDeleteMode ? (
+          <div className="space-y-4"><div className="rounded-xl border border-[var(--danger-border)] bg-[var(--danger-dim)] px-4 py-3 text-sm text-[var(--danger-text)]">This hides the selected daily record from attendance reports. Provide the reason for auditability.</div><FilterLabel label="Delete reason"><Textarea value={editValues.deleteReason} rows={3} onChange={(event) => setEditValues((current) => ({ ...current, deleteReason: event.target.value }))} placeholder="Wrong employee mapping" /></FilterLabel><Button type="button" variant="ghost" size="sm" onClick={() => setIsDeleteMode(false)}>Back to edit</Button></div>
+        ) : (
+          <div className="space-y-4"><div className="grid gap-4 sm:grid-cols-2"><FilterLabel label="Status"><SelectField value={editValues.status} options={statusOptions.slice(1)} onValueChange={(value) => setEditValues((current) => ({ ...current, status: value as FaceIdAttendanceStatus }))} /></FilterLabel><div className="flex items-end"><Badge variant="outline" className="mb-2">Asia/Tashkent (+05:00)</Badge></div><FilterLabel label="Check in"><Input type="datetime-local" value={editValues.checkInAt} onChange={(event) => setEditValues((current) => ({ ...current, checkInAt: event.target.value }))} /></FilterLabel><FilterLabel label="Check out"><Input type="datetime-local" value={editValues.checkOutAt} onChange={(event) => setEditValues((current) => ({ ...current, checkOutAt: event.target.value }))} /></FilterLabel></div><FilterLabel label="Note"><Textarea value={editValues.note} rows={4} onChange={(event) => setEditValues((current) => ({ ...current, note: event.target.value }))} placeholder="Check-out event missing" /></FilterLabel><div className="flex justify-end border-t border-[var(--border)] pt-4"><Button type="button" variant="ghost" size="sm" className="text-[var(--danger-text)]" onClick={() => setIsDeleteMode(true)}>Delete record</Button></div></div>
+        )}
+      </Dialog>
     </div>
   )
+}
+
+function FilterLabel({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div className="flex flex-col gap-1.5"><label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">{label}</label>{children}</div>
+}
+
+function SummaryStat({ label, value, className }: { label: string; value: number; className: string }) {
+  return <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/75 px-3 py-2.5 text-center shadow-sm backdrop-blur-sm"><p className="text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">{label}</p><p className={cn('mt-1 text-xl font-black', className)}>{value}</p></div>
 }
