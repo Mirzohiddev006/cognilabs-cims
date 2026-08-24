@@ -350,7 +350,14 @@ export type FaceIdDailyRecordUpdate = {
   source_updated_at: string
 }
 
-function faceIdAttendanceRequest<T>(options: ApiRequestOptions) {
+function attendanceReadRequest<T>(options: ApiRequestOptions) {
+  return request<T>({
+    ...options,
+    path: `${FACE_ID_ATTENDANCE_API_URL}${options.path}`,
+  })
+}
+
+function attendanceWriteRequest<T>(options: ApiRequestOptions) {
   return request<T>({
     ...options,
     path: `${FACE_ID_ATTENDANCE_API_URL}${options.path}`,
@@ -369,7 +376,7 @@ export const faceIdAttendanceService = {
     page?: number
     page_size?: number
   }) {
-    return faceIdAttendanceRequest<FaceIdAttendanceUsersResponse>({
+    return attendanceReadRequest<FaceIdAttendanceUsersResponse>({
       path: '/attendance/users',
       query: params,
     })
@@ -388,14 +395,20 @@ export const faceIdAttendanceService = {
     page?: number
     page_size?: number
   }) {
-    return faceIdAttendanceRequest<FaceIdDailyRecordsResponse>({
+    return attendanceReadRequest<FaceIdDailyRecordsResponse>({
       path: '/attendance/daily-records',
       query: params,
     })
   },
 
+  getDailyRecord(employeeId: number, attendanceDate: string) {
+    return attendanceReadRequest<FaceIdDailyRecord>({
+      path: `/attendance/daily-records/${employeeId}/${attendanceDate}`,
+    })
+  },
+
   updateDailyRecord(employeeId: number, attendanceDate: string, payload: FaceIdDailyRecordUpdate) {
-    return faceIdAttendanceRequest<FaceIdDailyRecord>({
+    return attendanceWriteRequest<FaceIdDailyRecord>({
       path: `/attendance/daily-records/${employeeId}/${attendanceDate}`,
       method: 'PATCH',
       body: payload,
