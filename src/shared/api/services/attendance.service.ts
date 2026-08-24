@@ -317,7 +317,10 @@ export type FaceIdAttendanceUsersResponse = {
 
 export type FaceIdDailyRecord = {
   employee_id: number
-  employee_full_name: string
+  employee_full_name?: string | null
+  employee_name?: string | null
+  full_name?: string | null
+  employee?: FaceIdAttendanceEmployee | null
   attendance_date: string
   check_in_at: string | null
   check_out_at: string | null
@@ -331,6 +334,17 @@ export type FaceIdDailyRecord = {
   note: string | null
 }
 
+export type FaceIdAttendanceEmployee = {
+  id: number
+  full_name: string | null
+  name: string | null
+  surname: string | null
+  email: string | null
+  role: string | null
+  role_name: string | null
+  job_title: string | null
+}
+
 export type FaceIdDailyRecordsResponse = {
   items: FaceIdDailyRecord[]
   total_count?: number
@@ -338,6 +352,24 @@ export type FaceIdDailyRecordsResponse = {
   page?: number
   page_size?: number
   total_pages?: number
+}
+
+export type FaceIdUserDailyRecordsResponse = {
+  employee: FaceIdAttendanceEmployee
+  items: FaceIdDailyRecord[]
+  stats: {
+    total_records: number
+    present_count: number
+    late_count: number
+    absent_count: number
+    incomplete_count: number
+    total_worked_minutes: number
+    total_worked_hours: number
+    avg_worked_minutes: number
+  }
+  page: number
+  page_size: number
+  total_count: number
 }
 
 export type FaceIdDailyRecordUpdate = {
@@ -404,6 +436,24 @@ export const faceIdAttendanceService = {
   getDailyRecord(employeeId: number, attendanceDate: string) {
     return attendanceReadRequest<FaceIdDailyRecord>({
       path: `/attendance/daily-records/${employeeId}/${attendanceDate}`,
+    })
+  },
+
+  listUserDailyRecords(employeeId: number, params: {
+    date_from?: string
+    date_to?: string
+    year?: number
+    month?: number
+    day?: number
+    status?: FaceIdAttendanceStatus
+    source_system?: string
+    is_manual?: boolean
+    page?: number
+    page_size?: number
+  }) {
+    return attendanceReadRequest<FaceIdUserDailyRecordsResponse>({
+      path: `/attendance/daily-records/user/${employeeId}`,
+      query: params,
     })
   },
 
