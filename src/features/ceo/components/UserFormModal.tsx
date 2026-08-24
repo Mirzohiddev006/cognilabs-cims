@@ -43,6 +43,19 @@ export function UserFormModal({
     currentRole && !currentRoleInList
       ? [...roleOptions, { value: currentRole, label: currentRole }]
       : roleOptions
+  const taskDisciplineOptions: SelectFieldOption[] = [
+    { value: '', label: t('ceo.users.form.task_discipline_none', 'Not assigned') },
+    { value: 'Frontend', label: t('ceo.users.form.task_discipline_frontend', 'Frontend') },
+    { value: 'Backend', label: t('ceo.users.form.task_discipline_backend', 'Backend') },
+  ]
+  const currentJobTitle = values.job_title?.trim() ?? ''
+  const currentJobTitleInList = taskDisciplineOptions.some(
+    (option) => option.value.toLowerCase() === currentJobTitle.toLowerCase(),
+  )
+  const availableTaskDisciplineOptions =
+    currentJobTitle && !currentJobTitleInList
+      ? [...taskDisciplineOptions, { value: currentJobTitle, label: currentJobTitle }]
+      : taskDisciplineOptions
 
   return (
     <Modal
@@ -88,12 +101,15 @@ export function UserFormModal({
           <Input value={values.surname} placeholder={t('ceo.users.form.surname_placeholder')} onChange={(event) => onChange('surname', event.target.value)} />
         </Label>
         <Label className="grid gap-2">
-          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('profile.job_title')}</span>
-          <Input
-            value={values.job_title ?? ''}
-            placeholder={t('ceo.users.form.job_title_placeholder')}
-            onChange={(event) => onChange('job_title', event.target.value)}
+          <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">{t('ceo.users.form.task_discipline', 'Task discipline')}</span>
+          <SelectField
+            value={currentJobTitle}
+            onValueChange={(value) => onChange('job_title', value)}
+            options={availableTaskDisciplineOptions}
+            placeholder={t('ceo.users.form.task_discipline_placeholder', 'Choose frontend or backend')}
+            className="min-h-12 rounded-xl px-4"
           />
+          <span className="text-[11px] leading-4 text-[var(--muted)]">{t('ceo.users.form.task_discipline_hint', 'Used to route Telegram tasks to frontend or backend team members.')}</span>
         </Label>
         <Label className="grid gap-2">
           <span className="text-xs font-bold tracking-tight text-[var(--foreground)] dark:text-white">
