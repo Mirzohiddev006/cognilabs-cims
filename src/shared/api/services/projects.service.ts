@@ -149,6 +149,10 @@ export type CardRecord = {
   completion_duration_seconds: number | null
   current_status_duration_seconds: number | null
   status_history: CardStatusHistoryRecord[]
+  telegram_source_chat_id: string | null
+  telegram_source_message_id: string | null
+  telegram_source_command: string | null
+  telegram_source_kind: string | null
   column_id: number
   created_by: UserSummary
   created_at: string
@@ -197,7 +201,7 @@ type ApiCardImage = {
   created_at?: string
 }
 
-type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by' | 'assignee' | 'assignees' | 'assignee_id' | 'assignee_ids'> & {
+type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by' | 'assignee' | 'assignees' | 'assignee_id' | 'assignee_ids' | 'telegram_source_chat_id' | 'telegram_source_message_id'> & {
   created_by?: ApiUserSummary | number | null
   created_by_user?: ApiUserSummary
   assignee?: ApiUserSummary | number | null
@@ -215,6 +219,8 @@ type ApiCardRecord = Omit<Partial<CardRecord>, 'images' | 'files' | 'created_by'
   board_name?: string | null
   column_name?: string | null
   status_history?: ApiCardStatusHistoryRecord[] | null
+  telegram_source_chat_id?: string | number | null
+  telegram_source_message_id?: string | number | null
 }
 
 type ApiCardStatusHistoryRecord = Partial<CardStatusHistoryRecord> & {
@@ -426,6 +432,10 @@ function normalizeCard(card: ApiCardRecord): CardRecord {
     completion_duration_seconds: card.completion_duration_seconds ?? null,
     current_status_duration_seconds: card.current_status_duration_seconds ?? null,
     status_history: normalizeCardStatusHistory(card.status_history),
+    telegram_source_chat_id: card.telegram_source_chat_id === null || card.telegram_source_chat_id === undefined ? null : String(card.telegram_source_chat_id),
+    telegram_source_message_id: card.telegram_source_message_id === null || card.telegram_source_message_id === undefined ? null : String(card.telegram_source_message_id),
+    telegram_source_command: card.telegram_source_command ?? null,
+    telegram_source_kind: card.telegram_source_kind ?? null,
     column_id: card.column_id ?? 0,
     created_by: normalizeUserSummary(resolveUserReference(card.created_by, card.created_by_user)),
     created_at: card.created_at ?? '',
@@ -572,6 +582,10 @@ function mergeCardRecord(left: CardRecord, right: CardRecord): CardRecord {
     completion_duration_seconds: right.completion_duration_seconds ?? left.completion_duration_seconds ?? null,
     current_status_duration_seconds: right.current_status_duration_seconds ?? left.current_status_duration_seconds ?? null,
     status_history: right.status_history.length > 0 ? right.status_history : left.status_history,
+    telegram_source_chat_id: pickNullableString(right.telegram_source_chat_id, left.telegram_source_chat_id),
+    telegram_source_message_id: pickNullableString(right.telegram_source_message_id, left.telegram_source_message_id),
+    telegram_source_command: pickNullableString(right.telegram_source_command, left.telegram_source_command),
+    telegram_source_kind: pickNullableString(right.telegram_source_kind, left.telegram_source_kind),
     column_id: right.column_id || left.column_id,
     created_by: mergeUserSummary(left.created_by, right.created_by),
     created_at: pickString(left.created_at, right.created_at),

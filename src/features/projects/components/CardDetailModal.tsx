@@ -102,6 +102,12 @@ export function CardDetailModal({
   const statusHistory = [...card.status_history].sort((left, right) =>
     (right.started_at ?? '').localeCompare(left.started_at ?? ''),
   )
+  const hasTelegramSource = Boolean(
+    card.telegram_source_kind ||
+    card.telegram_source_command ||
+    card.telegram_source_chat_id ||
+    card.telegram_source_message_id,
+  )
 
   const priorityTheme = {
     urgent: {
@@ -430,6 +436,37 @@ export function CardDetailModal({
                         {entry.started_at ? <p className="mt-1 text-[10px] text-[var(--muted)]">{formatProjectDateTime(entry.started_at)}{entry.ended_at ? ` - ${formatProjectDateTime(entry.ended_at)}` : ''}</p> : null}
                       </div>
                     ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {hasTelegramSource ? (
+                <div className="space-y-4 pt-8 border-t border-[var(--border)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">{lt('Telegram source')}</h4>
+                    <span className="rounded-md border border-[var(--blue-border)] bg-[var(--blue-dim)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--blue-text)]">Telegram</span>
+                  </div>
+                  <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--accent-soft)] p-4">
+                    {card.telegram_source_kind ? (
+                      <DetailInfoBlock label={lt('Source type')}>
+                        <span className="text-[var(--muted-strong)]">{card.telegram_source_kind}</span>
+                      </DetailInfoBlock>
+                    ) : null}
+                    {card.telegram_source_command ? (
+                      <DetailInfoBlock label={lt('Command')}>
+                        <code className="rounded-md bg-[var(--input-surface)] px-2 py-1 text-xs text-[var(--foreground)]">{card.telegram_source_command}</code>
+                      </DetailInfoBlock>
+                    ) : null}
+                    {card.telegram_source_chat_id ? (
+                      <DetailInfoBlock label={lt('Chat ID')}>
+                        <span className="font-mono text-xs text-[var(--muted-strong)]">{card.telegram_source_chat_id}</span>
+                      </DetailInfoBlock>
+                    ) : null}
+                    {card.telegram_source_message_id ? (
+                      <DetailInfoBlock label={lt('Message ID')}>
+                        <span className="font-mono text-xs text-[var(--muted-strong)]">{card.telegram_source_message_id}</span>
+                      </DetailInfoBlock>
+                    ) : null}
                   </div>
                 </div>
               ) : null}

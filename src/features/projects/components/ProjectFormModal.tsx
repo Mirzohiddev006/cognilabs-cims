@@ -9,13 +9,11 @@ import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { projectsService, type ProjectRecord } from '../../../shared/api/services/projects.service'
 import { resolveMediaUrl } from '../../../shared/lib/media-url'
 import { buildFormData } from '../lib/formdata'
-import { MemberSelector } from './MemberSelector'
 
 type ProjectFormValues = {
   project_name: string
   project_description: string
   project_url: string
-  member_ids: number[]
   team_id: string
   deadline: string
   telegram_group_id: string
@@ -37,7 +35,6 @@ const empty: ProjectFormValues = {
   project_name: '',
   project_description: '',
   project_url: '',
-  member_ids: [],
   team_id: '',
   deadline: '',
   telegram_group_id: '',
@@ -82,11 +79,6 @@ export function ProjectFormModal({
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormValues, string>>>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const usersQuery = useAsyncData(
-    () => projectsService.getAllUsers(),
-    [open],
-    { enabled: open },
-  )
   const teamsQuery = useAsyncData(
     () => projectsService.listTeams(),
     [open],
@@ -100,7 +92,6 @@ export function ProjectFormModal({
           project_name: initial.project_name,
           project_description: initial.project_description ?? '',
           project_url: initial.project_url ?? '',
-          member_ids: initial.members.map((member) => member.id),
           team_id: initial.team_id ? String(initial.team_id) : '',
           deadline: toDateTimeLocalValue(initial.deadline),
           telegram_group_id: initial.telegram_group_id ?? '',
@@ -157,6 +148,10 @@ export function ProjectFormModal({
       next.project_name = t('projects.project_name_required', 'Project name is required')
     }
 
+    if (!values.team_id) {
+      next.team_id = t('projects.team_required', 'Select a team for this project')
+    }
+
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -172,7 +167,6 @@ export function ProjectFormModal({
       project_name: values.project_name.trim(),
       project_description: values.project_description.trim() || undefined,
       project_url: values.project_url.trim() || undefined,
-      member_ids: values.member_ids,
       team_id: values.team_id ? Number(values.team_id) : undefined,
       deadline: values.deadline ? toApiDateTimeWithOffset(values.deadline) : undefined,
       telegram_group_id: initial ? undefined : values.telegram_group_id.trim() || undefined,
@@ -186,9 +180,7 @@ export function ProjectFormModal({
     await onSubmit(fd, initial ? values.telegram_group_id.trim() || null : undefined)
   }
 
-  const allUsers = usersQuery.data ?? []
   const teamOptions: SelectFieldOption[] = [
-    { value: '', label: t('projects.no_team', 'No team') },
     ...(teamsQuery.data?.teams ?? []).map((team) => ({ value: String(team.id), label: team.name })),
   ]
 
@@ -327,9 +319,10 @@ export function ProjectFormModal({
               value={values.team_id}
               options={teamOptions}
               onValueChange={(value) => set('team_id', value)}
-              placeholder={t('projects.no_team', 'No team')}
+              placeholder={t('projects.select_team', 'Select a team')}
               disabled={teamsQuery.isLoading}
             />
+            {errors.team_id ? <p className="text-xs text-[var(--danger-text)]">{errors.team_id}</p> : null}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -357,23 +350,6 @@ export function ProjectFormModal({
           <p className="text-[11px] text-[var(--muted)]">
             {t('projects.telegram_group_hint', 'Tasks created from this group are added to the matching board.')}
           </p>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wide text-[var(--muted-strong)]">
-            {t('projects.members_selected', 'Members ({count} selected)', { count: values.member_ids.length })}
-          </label>
-          {usersQuery.isLoading ? (
-            <p className="py-2 text-xs text-[var(--muted)]">
-              {t('projects.loading_members', 'Loading members...')}
-            </p>
-          ) : (
-            <MemberSelector
-              allUsers={allUsers}
-              selectedIds={values.member_ids}
-              onChange={(ids) => set('member_ids', ids)}
-            />
-          )}
         </div>
       </form>
     </Dialog>
