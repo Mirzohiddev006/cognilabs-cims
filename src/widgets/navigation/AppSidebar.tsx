@@ -111,6 +111,28 @@ export function AppSidebar() {
     { enabled: shouldLoadProjects },
   )
 
+  const openCardsQuery = useAsyncData(
+    async () => {
+      if (!user?.id) return { cards: [], total_count: 0 }
+      const { projectsService } = await import('../../shared/api/services/projects.service')
+      return projectsService.listUserOpenCards(user.id)
+    },
+    [projectsRefreshKey, shouldLoadProjects, user?.id],
+    { enabled: shouldLoadProjects },
+  )
+
+  const doneColumnPattern = /\b(done|complete|completed|closed|finished|resolved)\b/i
+
+  const openTaskCountByProject = useMemo(() => {
+    const map = new Map<number, number>()
+    for (const card of openCardsQuery.data?.cards ?? []) {
+      if (!doneColumnPattern.test(card.column_name.trim())) {
+        map.set(card.project_id, (map.get(card.project_id) ?? 0) + 1)
+      }
+    }
+    return map
+  }, [openCardsQuery.data?.cards])
+
   const sidebarProjects = useMemo(
     () =>
       [...(projectsQuery.data?.projects ?? [])].sort((left, right) =>
@@ -346,15 +368,18 @@ export function AppSidebar() {
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full bg-(--sidebar-foreground)/50" />
                                   <span className="truncate">{project.project_name}</span>
-                                  {project.boards_count > 0 && (
-                                    <Badge
-                                      size="sm"
-                                      variant={isActiveProject ? 'blue' : 'secondary'}
-                                      className="ml-auto rounded-full px-1.5 py-0 shadow-none"
-                                    >
-                                      {project.boards_count}
-                                    </Badge>
-                                  )}
+                                  {(() => {
+                                    const count = openTaskCountByProject.get(project.id) ?? 0
+                                    return count > 0 ? (
+                                      <Badge
+                                        size="sm"
+                                        variant={isActiveProject ? 'blue' : 'secondary'}
+                                        className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                                      >
+                                        {count}
+                                      </Badge>
+                                    ) : null
+                                  })()}
                                 </NavLink>
                               )
                             })
