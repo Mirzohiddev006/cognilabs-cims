@@ -135,7 +135,8 @@ export function AppSidebar() {
   const openTaskCountByProject = useMemo(() => {
     const map = new Map<number, number>()
     for (const card of openCardsQuery.data?.cards ?? []) {
-      if (!DONE_COLUMN_PATTERN.test(card.column_name.trim())) {
+      const isDone = card.completed_at !== null || DONE_COLUMN_PATTERN.test(card.column_name.trim())
+      if (!isDone) {
         map.set(card.project_id, (map.get(card.project_id) ?? 0) + 1)
       }
     }
