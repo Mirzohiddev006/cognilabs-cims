@@ -8,7 +8,7 @@ import { authService } from '../../shared/api/services/auth.service'
 import { env } from '../../shared/config/env'
 import { useAsyncData } from '../../shared/hooks/useAsyncData'
 import { cn } from '../../shared/lib/cn'
-import { getAccessibleNavigation } from '../../shared/lib/permissions'
+import { canReadManagedProjects, getAccessibleNavigation } from '../../shared/lib/permissions'
 import { getApiErrorMessage } from '../../shared/lib/api-error'
 import { resolveMediaUrl } from '../../shared/lib/media-url'
 import { useToast } from '../../shared/toast/useToast'
@@ -19,6 +19,8 @@ import { Input } from '../../shared/ui/input'
 import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
+
+const DONE_COLUMN_PATTERN = /\b(done|complete|completed|closed|finished|resolved)\b/i
 
 function getInitials(name?: string, surname?: string) {
   return `${name?.charAt(0) ?? ''}${surname?.charAt(0) ?? ''}`.toUpperCase() || 'CI'
@@ -111,22 +113,29 @@ export function AppSidebar() {
     { enabled: shouldLoadProjects },
   )
 
+  const isCeoOrAdmin = canReadManagedProjects(user)
+
   const openCardsQuery = useAsyncData(
     async () => {
       if (!user?.id) return { cards: [], total_count: 0 }
       const { projectsService } = await import('../../shared/api/services/projects.service')
+      if (isCeoOrAdmin) {
+        const users = await projectsService.getAllUsers()
+        const results = await Promise.allSettled(users.map((u) => projectsService.listUserOpenCards(u.id)))
+        const all = results.flatMap((r) => r.status === 'fulfilled' ? r.value.cards : [])
+        const unique = new Map(all.map((c) => [c.id, c]))
+        return { cards: Array.from(unique.values()), total_count: unique.size }
+      }
       return projectsService.listUserOpenCards(user.id)
     },
-    [projectsRefreshKey, shouldLoadProjects, user?.id],
+    [projectsRefreshKey, shouldLoadProjects, user?.id, isCeoOrAdmin],
     { enabled: shouldLoadProjects },
   )
-
-  const doneColumnPattern = /\b(done|complete|completed|closed|finished|resolved)\b/i
 
   const openTaskCountByProject = useMemo(() => {
     const map = new Map<number, number>()
     for (const card of openCardsQuery.data?.cards ?? []) {
-      if (!doneColumnPattern.test(card.column_name.trim())) {
+      if (!DONE_COLUMN_PATTERN.test(card.column_name.trim())) {
         map.set(card.project_id, (map.get(card.project_id) ?? 0) + 1)
       }
     }
@@ -353,6 +362,7 @@ export function AppSidebar() {
                                 location.pathname === `/projects/${project.id}` ||
                                 location.pathname.startsWith(`/projects/${project.id}/`) ||
                                 location.pathname.startsWith(`/boards/`)
+                              const openCount = openTaskCountByProject.get(project.id) ?? 0
 
                               return (
                                 <NavLink
@@ -368,18 +378,15 @@ export function AppSidebar() {
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full bg-(--sidebar-foreground)/50" />
                                   <span className="truncate">{project.project_name}</span>
-                                  {(() => {
-                                    const count = openTaskCountByProject.get(project.id) ?? 0
-                                    return count > 0 ? (
-                                      <Badge
-                                        size="sm"
-                                        variant={isActiveProject ? 'blue' : 'secondary'}
-                                        className="ml-auto rounded-full px-1.5 py-0 shadow-none"
-                                      >
-                                        {count}
-                                      </Badge>
-                                    ) : null
-                                  })()}
+                                  {openCount > 0 && (
+                                    <Badge
+                                      size="sm"
+                                      variant={isActiveProject ? 'blue' : 'secondary'}
+                                      className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                                    >
+                                      {openCount}
+                                    </Badge>
+                                  )}
                                 </NavLink>
                               )
                             })
