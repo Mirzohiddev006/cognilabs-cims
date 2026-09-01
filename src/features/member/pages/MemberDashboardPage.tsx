@@ -1,4 +1,5 @@
 import { useMemo, type CSSProperties } from 'react'
+import { developerKpiService, type SalaryEstimate } from '../../../shared/api/services/developer-kpi.service'
 import { useSearchParams } from 'react-router-dom'
 import type { CurrentUser } from '../../../shared/api/types'
 import type { CeoUserRecord } from '../../../shared/api/services/ceo.service'
@@ -276,6 +277,16 @@ export function MemberDashboardPage() {
     [memberUser?.id, month, year],
     { enabled: shouldFetchDashboard, initialData: cachedDashboardData },
   )
+
+  const kpiQuery = useAsyncData(
+    async () => {
+      if (!user) throw new Error('No user')
+      return developerKpiService.getSalaryEstimate(user.id, year, month)
+    },
+    [user?.id, year, month],
+    { enabled: Boolean(user) },
+  )
+  const kpiEstimate: SalaryEstimate | undefined = kpiQuery.data
 
   const hasLiveDashboardDataForPeriod =
     dashboardQuery.data?.detail.memberId === memberUser?.id &&
@@ -718,6 +729,72 @@ export function MemberDashboardPage() {
       <Card noPadding className="overflow-hidden rounded-xl">
         <MistakeIncidentSection items={detail.mistakes} />
         <DeliveryBonusSection items={detail.deliveryBonuses} />
+      </Card>
+
+      {/* Developer KPI Section */}
+      <Card className="rounded-xl border-[var(--border)] bg-[var(--card)] p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{lt('Developer KPI')}</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-[var(--foreground)]">{lt('KPI Score Breakdown')}</h2>
+          </div>
+          {kpiEstimate ? (
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">{lt('Final KPI')}</p>
+              <p className="text-2xl font-black text-[var(--blue-text)]">{kpiEstimate.scores.final_kpi.toFixed(1)}%</p>
+            </div>
+          ) : null}
+        </div>
+
+        {kpiQuery.isLoading || kpiQuery.status === 'idle' ? (
+          <div className="space-y-3">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-8 animate-pulse rounded-xl bg-[var(--surface-elevated)]" />)}
+          </div>
+        ) : kpiQuery.isError ? (
+          <p className="text-sm text-[var(--muted-strong)]">{lt('KPI data unavailable for this period.')}</p>
+        ) : kpiEstimate ? (
+          <>
+            <div className="space-y-3">
+              {([
+                { key: 'delivery', label: lt('Delivery'), color: 'bg-blue-500' },
+                { key: 'deadline', label: lt('Deadline'), color: 'bg-violet-500' },
+                { key: 'quality', label: lt('Quality'), color: 'bg-emerald-500' },
+                { key: 'team', label: lt('Team'), color: 'bg-amber-500' },
+                { key: 'discipline', label: lt('Discipline'), color: 'bg-cyan-500' },
+              ] as const).map(({ key, label, color }) => {
+                const score = kpiEstimate.scores[key]
+                return (
+                  <div key={key}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs font-bold text-[var(--muted-strong)] uppercase tracking-wider">{label}</span>
+                      <span className="text-xs font-black text-[var(--foreground)]">{score.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                      <div className={`h-full rounded-full transition-[width] duration-500 ${color}`} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('KPI Expected Salary')}</p>
+                <p className="mt-1 text-base font-black text-[var(--foreground)]">{kpiEstimate.salary.expected_salary.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('KPI Bonus')}</p>
+                <p className="mt-1 text-base font-black text-blue-400">+{kpiEstimate.salary.kpi_bonus.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Deductions')}</p>
+                <p className="mt-1 text-base font-black text-rose-400">-{kpiEstimate.salary.approved_deductions.toLocaleString()}</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--muted-strong)]">{lt('No KPI data available for this period.')}</p>
+        )}
       </Card>
 
     </section>

@@ -26,6 +26,7 @@ import { ProjectAttachmentsModal } from '../components/ProjectAttachmentsModal'
 import { formatProjectDate, formatProjectDateTime } from '../lib/format'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 import { cn } from '../../../shared/lib/cn'
+import { developerKpiService, type Feature, type QualityEvent, type BlockedPeriod } from '../../../shared/api/services/developer-kpi.service'
 
 function parseBoardId(rawValue: string | null) {
   if (!rawValue) {
@@ -86,6 +87,7 @@ export function ProjectDetailPage() {
   const [isBoardSubmitting, setIsBoardSubmitting] = useState(false)
   const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null)
   const [isAttachmentsOpen, setIsAttachmentsOpen] = useState(false)
+  const [isKpiOpen, setIsKpiOpen] = useState(false)
 
   const project = projectQuery.data
   const projectImage = resolveMediaUrl(project?.image) ?? project?.image ?? null
@@ -133,6 +135,27 @@ export function ProjectDetailPage() {
     [expandedMemberId, id],
     { enabled: expandedMemberId !== null && !Number.isNaN(id) },
   )
+
+  const kpiFeaturesQuery = useAsyncData(
+    async () => developerKpiService.listFeatures({ project_id: id }),
+    [id, isKpiOpen],
+    { enabled: isKpiOpen && !Number.isNaN(id) },
+  )
+  const kpiFeatures: Feature[] = Array.isArray(kpiFeaturesQuery.data) ? kpiFeaturesQuery.data : []
+
+  const kpiQualityQuery = useAsyncData(
+    async () => developerKpiService.listQualityEvents({ project_id: id }),
+    [id, isKpiOpen],
+    { enabled: isKpiOpen && !Number.isNaN(id) },
+  )
+  const kpiQualityEvents: QualityEvent[] = Array.isArray(kpiQualityQuery.data) ? kpiQualityQuery.data : []
+
+  const kpiBlockedQuery = useAsyncData(
+    async () => developerKpiService.listBlockedPeriods({ project_id: id }),
+    [id, isKpiOpen],
+    { enabled: isKpiOpen && !Number.isNaN(id) },
+  )
+  const kpiBlockedPeriods: BlockedPeriod[] = Array.isArray(kpiBlockedQuery.data) ? kpiBlockedQuery.data : []
 
   const expandedMemberTasks = useMemo(() => {
     if (expandedMemberId === null) {
@@ -423,6 +446,15 @@ export function ProjectDetailPage() {
                           </svg>
                         ),
                         onSelect: () => setIsAttachmentsOpen(true),
+                      },
+                      {
+                        label: 'Project KPI',
+                        icon: (
+                          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1 11L4.5 7L7 9L10.5 4L14 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        ),
+                        onSelect: () => setIsKpiOpen(true),
                       },
                       {
                         label: lt('Edit'),
@@ -757,6 +789,113 @@ export function ProjectDetailPage() {
            </div>
         )}
       </div>
+
+      {/* Project KPI Modal */}
+      {isKpiOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
+          <button
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-default"
+            onClick={() => setIsKpiOpen(false)}
+          />
+          <Card variant="glass" className="relative z-10 w-full max-w-5xl rounded-xl shadow-2xl border-[var(--blue-border)] overflow-hidden page-enter">
+            <div className="flex items-center justify-between p-6 sm:p-8 border-b border-[var(--border)] bg-[var(--blue-dim)]/20 backdrop-blur-md">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Developer KPI</p>
+                <p className="mt-1 text-xl font-black text-[var(--foreground)] tracking-tight">{project.project_name}</p>
+              </div>
+              <button onClick={() => setIsKpiOpen(false)} className="h-12 w-12 rounded-xl flex items-center justify-center bg-black/10 hover:bg-red-500/20 hover:text-red-400 transition-all text-[var(--muted-strong)]">
+                <svg viewBox="0 0 16 16" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 4l8 8M12 4l-8 8" strokeLinecap="round"/></svg>
+              </button>
+            </div>
+
+            <div className="max-h-[75vh] overflow-y-auto p-6 sm:p-8 space-y-6 bg-[var(--surface-elevated)]">
+              {/* Features */}
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Features</h4>
+                  <Badge variant="blue">{kpiFeatures.length}</Badge>
+                </div>
+                {kpiFeaturesQuery.isLoading || kpiFeaturesQuery.status === 'idle' ? (
+                  <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
+                ) : kpiFeatures.length === 0 ? (
+                  <p className="text-sm text-[var(--muted-strong)]">No features for this project.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {kpiFeatures.map(f => (
+                      <div key={f.id} className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">{f.title}</p>
+                          <p className="text-xs text-[var(--muted-strong)]">{f.status}{f.due_date ? ` · due ${f.due_date.slice(0,10)}` : ''}</p>
+                        </div>
+                        <div className="ml-4 flex shrink-0 items-center gap-2">
+                          <Badge variant={f.status === 'accepted' ? 'success' : f.status === 'completed' ? 'blue' : 'outline'}>{f.points}pts</Badge>
+                          {f.is_mandatory ? <Badge variant="warning">mandatory</Badge> : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quality Events */}
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Quality Events</h4>
+                  <Badge variant={kpiQualityEvents.length > 0 ? 'danger' : 'outline'}>{kpiQualityEvents.length}</Badge>
+                </div>
+                {kpiQualityQuery.isLoading || kpiQualityQuery.status === 'idle' ? (
+                  <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
+                ) : kpiQualityEvents.length === 0 ? (
+                  <p className="text-sm text-[var(--muted-strong)]">No quality events for this project.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {kpiQualityEvents.map(e => (
+                      <div key={e.id} className="flex items-center justify-between rounded-xl border border-rose-500/20 bg-rose-500/5 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">{e.title}</p>
+                          <p className="text-xs text-[var(--muted-strong)]">{e.severity} · {e.event_date.slice(0,10)}</p>
+                        </div>
+                        <Badge variant={e.confirmed ? 'danger' : 'outline'}>{e.confirmed ? 'confirmed' : 'pending'}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Blocked Periods */}
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Blocked Periods</h4>
+                  <Badge variant="outline">{kpiBlockedPeriods.length}</Badge>
+                </div>
+                {kpiBlockedQuery.isLoading || kpiBlockedQuery.status === 'idle' ? (
+                  <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
+                ) : kpiBlockedPeriods.length === 0 ? (
+                  <p className="text-sm text-[var(--muted-strong)]">No blocked periods for this project.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {kpiBlockedPeriods.map(b => (
+                      <div key={b.id} className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[var(--foreground)]">{b.reason}</p>
+                          <p className="text-xs text-[var(--muted-strong)]">{b.started_at.slice(0,10)}{b.ended_at ? ` → ${b.ended_at.slice(0,10)}` : ' (ongoing)'}</p>
+                        </div>
+                        <Badge variant={b.approval_status === 'approved' ? 'success' : b.approval_status === 'rejected' ? 'danger' : 'warning'}>{b.approval_status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-[var(--border)] bg-[var(--accent-soft)]/10 flex justify-end">
+              <Button variant="ghost" className="rounded-xl font-black uppercase tracking-widest text-[var(--muted-strong)]" onClick={() => setIsKpiOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       <ProjectAttachmentsModal
         open={isAttachmentsOpen}

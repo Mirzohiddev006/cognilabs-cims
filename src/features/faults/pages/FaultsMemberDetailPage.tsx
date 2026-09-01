@@ -12,6 +12,7 @@ import type {
 } from '../../../shared/api/types'
 import { attendanceService } from '../../../shared/api/services/attendance.service'
 import { membersService } from '../../../shared/api/services/members.service'
+import { developerKpiService, type SalaryEstimate, type Feature } from '../../../shared/api/services/developer-kpi.service'
 import { updateTrackingService } from '../../../shared/api/services/updateTracking.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
@@ -597,6 +598,26 @@ export function FaultsMemberDetailPage({
       source_updated_at: null,
     }))
   }, [attendanceQuery.data, memberId])
+
+  const kpiQuery = useAsyncData(
+    async () => {
+      if (memberId <= 0) throw new Error('Invalid member')
+      return developerKpiService.getSalaryEstimate(memberId, year, month)
+    },
+    [memberId, year, month],
+    { enabled: Number.isFinite(memberId) && memberId > 0 },
+  )
+  const kpiEstimate: SalaryEstimate | undefined = kpiQuery.data
+
+  const kpiFeaturesQuery = useAsyncData(
+    async () => {
+      if (memberId <= 0) throw new Error('Invalid member')
+      return developerKpiService.listFeatures({ owner_id: memberId, year, month })
+    },
+    [memberId, year, month],
+    { enabled: Number.isFinite(memberId) && memberId > 0 },
+  )
+  const kpiFeatures: Feature[] = Array.isArray(kpiFeaturesQuery.data) ? kpiFeaturesQuery.data : []
 
   const detail = detailQuery.data
   const compensationPolicy = detail?.compensationPolicy ?? null
@@ -1361,6 +1382,110 @@ export function FaultsMemberDetailPage({
               </CardSection>
               </div>
             </Card>
+
+      {/* Developer KPI Section */}
+      <Card className="rounded-xl border-[var(--border)] bg-[var(--card)] p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--blue-text)]">{lt('Developer KPI')}</p>
+            <h2 className="mt-1 text-lg font-black tracking-tight text-[var(--foreground)]">{getMonthName(month)} {year} — {lt('KPI Score')}</h2>
+          </div>
+          {kpiEstimate ? (
+            <div className="text-right">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--muted)]">{lt('Final KPI')}</p>
+              <p className="text-2xl font-black text-[var(--blue-text)]">{kpiEstimate.scores.final_kpi.toFixed(1)}%</p>
+            </div>
+          ) : null}
+        </div>
+
+        {kpiQuery.isLoading || kpiQuery.status === 'idle' ? (
+          <div className="space-y-3">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-8 animate-pulse rounded-xl bg-[var(--surface-elevated)]" />)}
+          </div>
+        ) : kpiQuery.isError ? (
+          <p className="text-sm text-[var(--muted-strong)]">{lt('KPI data unavailable for this period.')}</p>
+        ) : kpiEstimate ? (
+          <>
+            <div className="space-y-3">
+              {([
+                { key: 'delivery', label: lt('Delivery'), color: 'bg-blue-500', weight: '35%' },
+                { key: 'deadline', label: lt('Deadline'), color: 'bg-violet-500', weight: '20%' },
+                { key: 'quality', label: lt('Quality'), color: 'bg-emerald-500', weight: '20%' },
+                { key: 'team', label: lt('Team'), color: 'bg-amber-500', weight: '15%' },
+                { key: 'discipline', label: lt('Discipline'), color: 'bg-cyan-500', weight: '10%' },
+              ] as const).map(({ key, label, color, weight }) => {
+                const score = kpiEstimate.scores[key]
+                return (
+                  <div key={key}>
+                    <div className="mb-1 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-[var(--muted-strong)] uppercase tracking-wider">{label}</span>
+                        <span className="rounded bg-[var(--surface-elevated)] px-1.5 py-0.5 text-[9px] font-black text-[var(--muted)] uppercase">{weight}</span>
+                      </div>
+                      <span className="text-xs font-black text-[var(--foreground)]">{score.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
+                      <div className={`h-full rounded-full transition-[width] duration-500 ${color}`} style={{ width: `${Math.min(100, Math.max(0, score))}%` }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Expected Salary')}</p>
+                <p className="mt-1 text-base font-black text-[var(--foreground)]">{kpiEstimate.salary.expected_salary.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Base Salary')}</p>
+                <p className="mt-1 text-base font-black text-[var(--foreground)]">{kpiEstimate.salary.base_salary.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('KPI Bonus')}</p>
+                <p className="mt-1 text-base font-black text-blue-400">+{kpiEstimate.salary.kpi_bonus.toLocaleString()}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Deductions')}</p>
+                <p className="mt-1 text-base font-black text-rose-400">-{kpiEstimate.salary.approved_deductions.toLocaleString()}</p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--muted)]">{lt('Features this period')}</p>
+                <Badge variant="blue">{kpiFeatures.length}</Badge>
+              </div>
+              {kpiFeaturesQuery.isLoading || kpiFeaturesQuery.status === 'idle' ? (
+                <div className="space-y-2">
+                  {[1,2,3].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-[var(--surface-elevated)]" />)}
+                </div>
+              ) : kpiFeatures.length === 0 ? (
+                <p className="text-sm text-[var(--muted-strong)]">{lt('No features assigned for this period.')}</p>
+              ) : (
+                <div className="space-y-2">
+                  {kpiFeatures.map(feature => (
+                    <div key={feature.id} className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-[var(--foreground)]">{feature.title}</p>
+                        <p className="text-xs text-[var(--muted-strong)]">{feature.status}{feature.due_date ? ` · due ${feature.due_date.slice(0, 10)}` : ''}</p>
+                      </div>
+                      <div className="ml-4 flex shrink-0 items-center gap-2">
+                        <Badge variant={feature.status === 'accepted' ? 'success' : feature.status === 'completed' ? 'blue' : 'outline'}>
+                          {feature.points}pts
+                        </Badge>
+                        {feature.is_mandatory ? <Badge variant="warning">mandatory</Badge> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-[var(--muted-strong)]">{lt('No KPI data available for this period.')}</p>
+        )}
+      </Card>
 
         <CardSection bleed>
           <div className="grid gap-4 px-5 py-5 sm:px-6 sm:py-6">
