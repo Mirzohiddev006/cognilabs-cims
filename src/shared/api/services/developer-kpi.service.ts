@@ -183,7 +183,7 @@ export const developerKpiService = {
   },
 
   // Features
-  listFeatures(params?: { year?: number; month?: number; owner_id?: number }) {
+  listFeatures(params?: { year?: number; month?: number; owner_id?: number; project_id?: number }) {
     return request<Feature[]>({
       path: '/developer-kpi/features',
       query: params as Record<string, string | number | boolean | undefined | null>,
