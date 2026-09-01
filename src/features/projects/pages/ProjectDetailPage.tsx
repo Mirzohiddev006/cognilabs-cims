@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { getIntlLocale, translateCurrentLiteral } from '../../../shared/i18n/translations'
 import { Card } from '../../../shared/ui/card'
 import { Button } from '../../../shared/ui/button'
 import { Badge } from '../../../shared/ui/badge'
+import { Input } from '../../../shared/ui/input'
+import { SelectField } from '../../../shared/ui/select-field'
 import { ActionsMenu } from '../../../shared/ui/actions-menu'
 import { StateBlock } from '../../../shared/ui/state-block'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
@@ -26,7 +28,16 @@ import { ProjectAttachmentsModal } from '../components/ProjectAttachmentsModal'
 import { formatProjectDate, formatProjectDateTime } from '../lib/format'
 import { notifyProjectsNavigationChanged } from '../lib/navigationSync'
 import { cn } from '../../../shared/lib/cn'
-import { developerKpiService, type Feature, type QualityEvent, type BlockedPeriod } from '../../../shared/api/services/developer-kpi.service'
+import {
+  developerKpiService,
+  type Feature,
+  type QualityEvent,
+  type BlockedPeriod,
+  type FeatureStatus,
+  type QualityEventSeverity,
+  FEATURE_POINTS,
+  QUALITY_SEVERITY_OPTIONS,
+} from '../../../shared/api/services/developer-kpi.service'
 
 function parseBoardId(rawValue: string | null) {
   if (!rawValue) {
@@ -66,6 +77,7 @@ export function ProjectDetailPage() {
 
   const id = Number(projectId)
   const canManageProjects = Boolean(user)
+  const canManageKpi = user?.role === 'CEO' || user?.role === 'Admin'
 
   const projectQuery = useAsyncData(
     async () => {
@@ -88,6 +100,29 @@ export function ProjectDetailPage() {
   const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null)
   const [isAttachmentsOpen, setIsAttachmentsOpen] = useState(false)
   const [isKpiOpen, setIsKpiOpen] = useState(false)
+
+  // KPI create form state
+  const [showAddFeature, setShowAddFeature] = useState(false)
+  const [featureForm, setFeatureForm] = useState({
+    title: '', points: '5', ownerId: '', dueDate: '',
+    status: 'planned' as FeatureStatus, isMandatory: false, lockNow: false,
+    fePct: '0', bePct: '100',
+  })
+  const [featureSubmitting, setFeatureSubmitting] = useState(false)
+
+  const [showAddQuality, setShowAddQuality] = useState(false)
+  const [qualityForm, setQualityForm] = useState({
+    employeeId: '', severity: 'functional' as QualityEventSeverity,
+    title: '', eventDate: '', confirmed: true, externalCause: false, description: '',
+  })
+  const [qualitySubmitting, setQualitySubmitting] = useState(false)
+
+  const [showAddBlocked, setShowAddBlocked] = useState(false)
+  const [blockedForm, setBlockedForm] = useState({
+    employeeId: '', featureId: '', startedAt: '', endedAt: '',
+    reason: '', isExternal: false, dependency: '',
+  })
+  const [blockedSubmitting, setBlockedSubmitting] = useState(false)
 
   const project = projectQuery.data
   const projectImage = resolveMediaUrl(project?.image) ?? project?.image ?? null
@@ -351,6 +386,86 @@ export function ProjectDetailPage() {
       setIsBoardSubmitting(false)
     }
   }
+
+  const handleAddFeature = useCallback(async () => {
+    if (!featureForm.title || !featureForm.ownerId) return
+    setFeatureSubmitting(true)
+    try {
+      await developerKpiService.createFeature({
+        project_id: id,
+        title: featureForm.title,
+        points: Number(featureForm.points),
+        owner_id: Number(featureForm.ownerId),
+        due_date: featureForm.dueDate || undefined,
+        status: featureForm.status,
+        is_mandatory: featureForm.isMandatory,
+        lock_now: featureForm.lockNow,
+        frontend_percent: Number(featureForm.fePct),
+        backend_percent: Number(featureForm.bePct),
+      })
+      showToast({ tone: 'success', title: 'Feature added' })
+      setShowAddFeature(false)
+      setFeatureForm({ title: '', points: '5', ownerId: '', dueDate: '', status: 'planned', isMandatory: false, lockNow: false, fePct: '0', bePct: '100' })
+      await kpiFeaturesQuery.refetch()
+    } catch {
+      showToast({ tone: 'error', title: 'Failed to add feature' })
+    } finally {
+      setFeatureSubmitting(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [featureForm, id])
+
+  const handleAddQuality = useCallback(async () => {
+    if (!qualityForm.employeeId || !qualityForm.title || !qualityForm.eventDate) return
+    setQualitySubmitting(true)
+    try {
+      await developerKpiService.createQualityEvent({
+        project_id: id,
+        employee_id: Number(qualityForm.employeeId),
+        severity: qualityForm.severity,
+        title: qualityForm.title,
+        event_date: qualityForm.eventDate,
+        confirmed: qualityForm.confirmed,
+        external_cause: qualityForm.externalCause,
+        description: qualityForm.description || undefined,
+      })
+      showToast({ tone: 'success', title: 'Quality event added' })
+      setShowAddQuality(false)
+      setQualityForm({ employeeId: '', severity: 'functional', title: '', eventDate: '', confirmed: true, externalCause: false, description: '' })
+      await kpiQualityQuery.refetch()
+    } catch {
+      showToast({ tone: 'error', title: 'Failed to add quality event' })
+    } finally {
+      setQualitySubmitting(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qualityForm, id])
+
+  const handleAddBlocked = useCallback(async () => {
+    if (!blockedForm.employeeId || !blockedForm.startedAt || !blockedForm.reason) return
+    setBlockedSubmitting(true)
+    try {
+      await developerKpiService.createBlockedPeriod({
+        project_id: id,
+        employee_id: Number(blockedForm.employeeId),
+        feature_id: blockedForm.featureId ? Number(blockedForm.featureId) : undefined,
+        started_at: blockedForm.startedAt,
+        ended_at: blockedForm.endedAt || undefined,
+        reason: blockedForm.reason,
+        is_external: blockedForm.isExternal,
+        dependency: blockedForm.dependency || undefined,
+      })
+      showToast({ tone: 'success', title: 'Blocked period added' })
+      setShowAddBlocked(false)
+      setBlockedForm({ employeeId: '', featureId: '', startedAt: '', endedAt: '', reason: '', isExternal: false, dependency: '' })
+      await kpiBlockedQuery.refetch()
+    } catch {
+      showToast({ tone: 'error', title: 'Failed to add blocked period' })
+    } finally {
+      setBlockedSubmitting(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blockedForm, id])
 
   if (projectQuery.isLoading) {
     return (
@@ -813,8 +928,127 @@ export function ProjectDetailPage() {
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Features</h4>
-                  <Badge variant="blue">{kpiFeatures.length}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="blue">{kpiFeatures.length}</Badge>
+                    {canManageKpi && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddFeature((v) => !v)}
+                        className="flex items-center gap-1 rounded-lg border border-[var(--blue-border)] bg-[var(--blue-dim)] px-2.5 py-1 text-xs font-bold text-[var(--blue-text)] transition hover:bg-[var(--blue-soft)]"
+                      >
+                        <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8 3v10M3 8h10" strokeLinecap="round"/></svg>
+                        Add
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {showAddFeature && canManageKpi && (
+                  <div className="mb-4 rounded-xl border border-[var(--blue-border)] bg-[var(--blue-dim)]/30 p-4 space-y-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">New Feature</p>
+                    <Input
+                      placeholder="Title *"
+                      value={featureForm.title}
+                      onChange={(e) => setFeatureForm((f) => ({ ...f, title: e.target.value }))}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Owner *</p>
+                        <SelectField
+                          value={featureForm.ownerId}
+                          options={projectMembers.map((m) => ({ value: String(m.id), label: `${m.name} ${m.surname}` }))}
+                          onValueChange={(v) => setFeatureForm((f) => ({ ...f, ownerId: v }))}
+                          placeholder="Select owner"
+                          searchable
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Points</p>
+                        <SelectField
+                          value={featureForm.points}
+                          options={FEATURE_POINTS.map((p) => ({ value: String(p), label: String(p) }))}
+                          onValueChange={(v) => setFeatureForm((f) => ({ ...f, points: v }))}
+                          placeholder="Points"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Status</p>
+                        <SelectField
+                          value={featureForm.status}
+                          options={[
+                            { value: 'planned', label: 'Planned' },
+                            { value: 'in_progress', label: 'In Progress' },
+                            { value: 'completed', label: 'Completed' },
+                          ]}
+                          onValueChange={(v) => setFeatureForm((f) => ({ ...f, status: v as FeatureStatus }))}
+                          placeholder="Status"
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Due Date</p>
+                        <Input
+                          type="date"
+                          value={featureForm.dueDate}
+                          onChange={(e) => setFeatureForm((f) => ({ ...f, dueDate: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">FE %</p>
+                        <Input
+                          type="number"
+                          min="0" max="100"
+                          value={featureForm.fePct}
+                          onChange={(e) => setFeatureForm((f) => ({ ...f, fePct: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">BE %</p>
+                        <Input
+                          type="number"
+                          min="0" max="100"
+                          value={featureForm.bePct}
+                          onChange={(e) => setFeatureForm((f) => ({ ...f, bePct: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-sm text-[var(--foreground)] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={featureForm.isMandatory}
+                          onChange={(e) => setFeatureForm((f) => ({ ...f, isMandatory: e.target.checked }))}
+                          className="h-4 w-4 rounded border-[var(--border)] accent-[var(--blue-text)]"
+                        />
+                        Mandatory
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-[var(--foreground)] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={featureForm.lockNow}
+                          onChange={(e) => setFeatureForm((f) => ({ ...f, lockNow: e.target.checked }))}
+                          className="h-4 w-4 rounded border-[var(--border)] accent-[var(--blue-text)]"
+                        />
+                        Lock now
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={!featureForm.title || !featureForm.ownerId || featureSubmitting}
+                        onClick={handleAddFeature}
+                      >
+                        {featureSubmitting ? 'Saving…' : 'Save Feature'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddFeature(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
                 {kpiFeaturesQuery.isLoading || kpiFeaturesQuery.status === 'idle' ? (
                   <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
                 ) : kpiFeatures.length === 0 ? (
@@ -841,8 +1075,92 @@ export function ProjectDetailPage() {
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Quality Events</h4>
-                  <Badge variant={kpiQualityEvents.length > 0 ? 'danger' : 'outline'}>{kpiQualityEvents.length}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={kpiQualityEvents.length > 0 ? 'danger' : 'outline'}>{kpiQualityEvents.length}</Badge>
+                    {canManageKpi && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddQuality((v) => !v)}
+                        className="flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-400 transition hover:bg-rose-500/20"
+                      >
+                        <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8 3v10M3 8h10" strokeLinecap="round"/></svg>
+                        Add
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {showAddQuality && canManageKpi && (
+                  <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4 space-y-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">New Quality Event</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Employee *</p>
+                        <SelectField
+                          value={qualityForm.employeeId}
+                          options={projectMembers.map((m) => ({ value: String(m.id), label: `${m.name} ${m.surname}` }))}
+                          onValueChange={(v) => setQualityForm((f) => ({ ...f, employeeId: v }))}
+                          placeholder="Select employee"
+                          searchable
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Severity</p>
+                        <SelectField
+                          value={qualityForm.severity}
+                          options={QUALITY_SEVERITY_OPTIONS}
+                          onValueChange={(v) => setQualityForm((f) => ({ ...f, severity: v as QualityEventSeverity }))}
+                          placeholder="Severity"
+                        />
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Title *"
+                      value={qualityForm.title}
+                      onChange={(e) => setQualityForm((f) => ({ ...f, title: e.target.value }))}
+                    />
+                    <div>
+                      <p className="mb-1 text-xs text-[var(--muted-strong)]">Event Date *</p>
+                      <Input
+                        type="date"
+                        value={qualityForm.eventDate}
+                        onChange={(e) => setQualityForm((f) => ({ ...f, eventDate: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 text-sm text-[var(--foreground)] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={qualityForm.confirmed}
+                          onChange={(e) => setQualityForm((f) => ({ ...f, confirmed: e.target.checked }))}
+                          className="h-4 w-4 rounded border-[var(--border)] accent-rose-500"
+                        />
+                        Confirmed
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-[var(--foreground)] cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={qualityForm.externalCause}
+                          onChange={(e) => setQualityForm((f) => ({ ...f, externalCause: e.target.checked }))}
+                          className="h-4 w-4 rounded border-[var(--border)] accent-rose-500"
+                        />
+                        External cause
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={!qualityForm.employeeId || !qualityForm.title || !qualityForm.eventDate || qualitySubmitting}
+                        onClick={handleAddQuality}
+                      >
+                        {qualitySubmitting ? 'Saving…' : 'Save Event'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddQuality(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
                 {kpiQualityQuery.isLoading || kpiQualityQuery.status === 'idle' ? (
                   <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
                 ) : kpiQualityEvents.length === 0 ? (
@@ -866,8 +1184,97 @@ export function ProjectDetailPage() {
               <div>
                 <div className="mb-3 flex items-center justify-between">
                   <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--muted)]">Blocked Periods</h4>
-                  <Badge variant="outline">{kpiBlockedPeriods.length}</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{kpiBlockedPeriods.length}</Badge>
+                    {canManageKpi && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAddBlocked((v) => !v)}
+                        className="flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400 transition hover:bg-amber-500/20"
+                      >
+                        <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M8 3v10M3 8h10" strokeLinecap="round"/></svg>
+                        Add
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {showAddBlocked && canManageKpi && (
+                  <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[var(--muted)]">New Blocked Period</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Employee *</p>
+                        <SelectField
+                          value={blockedForm.employeeId}
+                          options={projectMembers.map((m) => ({ value: String(m.id), label: `${m.name} ${m.surname}` }))}
+                          onValueChange={(v) => setBlockedForm((f) => ({ ...f, employeeId: v }))}
+                          placeholder="Select employee"
+                          searchable
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Feature (optional)</p>
+                        <SelectField
+                          value={blockedForm.featureId}
+                          options={[{ value: '', label: 'None' }, ...kpiFeatures.map((feat) => ({ value: String(feat.id), label: feat.title }))]}
+                          onValueChange={(v) => setBlockedForm((f) => ({ ...f, featureId: v }))}
+                          placeholder="No feature"
+                          searchable
+                        />
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Reason *"
+                      value={blockedForm.reason}
+                      onChange={(e) => setBlockedForm((f) => ({ ...f, reason: e.target.value }))}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Started At *</p>
+                        <Input
+                          type="datetime-local"
+                          value={blockedForm.startedAt}
+                          onChange={(e) => setBlockedForm((f) => ({ ...f, startedAt: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-xs text-[var(--muted-strong)]">Ended At</p>
+                        <Input
+                          type="datetime-local"
+                          value={blockedForm.endedAt}
+                          onChange={(e) => setBlockedForm((f) => ({ ...f, endedAt: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Dependency (e.g. Client, DevOps)"
+                      value={blockedForm.dependency}
+                      onChange={(e) => setBlockedForm((f) => ({ ...f, dependency: e.target.value }))}
+                    />
+                    <label className="flex items-center gap-2 text-sm text-[var(--foreground)] cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={blockedForm.isExternal}
+                        onChange={(e) => setBlockedForm((f) => ({ ...f, isExternal: e.target.checked }))}
+                        className="h-4 w-4 rounded border-[var(--border)] accent-amber-500"
+                      />
+                      External blocker
+                    </label>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        disabled={!blockedForm.employeeId || !blockedForm.startedAt || !blockedForm.reason || blockedSubmitting}
+                        onClick={handleAddBlocked}
+                      >
+                        {blockedSubmitting ? 'Saving…' : 'Save Period'}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddBlocked(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+
                 {kpiBlockedQuery.isLoading || kpiBlockedQuery.status === 'idle' ? (
                   <div className="space-y-2">{[1,2].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />)}</div>
                 ) : kpiBlockedPeriods.length === 0 ? (
