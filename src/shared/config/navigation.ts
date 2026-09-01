@@ -223,4 +223,14 @@ export const navigationItems: readonly NavigationItem[] = [
     sidebar: true,
     defaultRedirect: false,
   },
+  {
+    to: '/developer-kpi',
+    label: 'Developer KPI',
+    description: 'KPI scoring, salary estimates, features, quality events, and monthly snapshots.',
+    group: 'Work',
+    permissionKey: undefined,
+    sidebar: true,
+    defaultRedirect: false,
+    audience: 'member',
+  },
 ]

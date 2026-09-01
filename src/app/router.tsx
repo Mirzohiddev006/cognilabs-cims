@@ -211,6 +211,10 @@ const AuditLogsPage = lazyPage(
   () => import('../features/auditLogs/pages/AuditLogsPage'),
   'AuditLogsPage',
 )
+const DeveloperKpiPage = lazyPage(
+  () => import('../features/developer-kpi/pages/DeveloperKpiPage'),
+  'DeveloperKpiPage',
+)
 const AttendanceManagementPage = lazyPage(
   () => import('../features/attendance/pages/AttendanceManagementPage'),
   'AttendanceManagementPage',
@@ -480,6 +484,14 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="ceo">
                     {withPageLoader(<AuditLogsPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'developer-kpi',
+                element: (
+                  <ProtectedRoute audience="member">
+                    {withPageLoader(<DeveloperKpiPage />)}
                   </ProtectedRoute>
                 ),
               },
