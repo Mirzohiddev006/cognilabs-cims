@@ -148,7 +148,7 @@ function SalaryEstimatesTab({
   )
 
   const estimate = singleQuery.data
-  const list = estimatesQuery.data ?? []
+  const list = Array.isArray(estimatesQuery.data) ? estimatesQuery.data : []
 
   return (
     <div className="space-y-5">
@@ -232,10 +232,10 @@ function SalaryEstimatesTab({
       {/* All employees table (CEO view) */}
       {isCeo && selectedUserId == null && (
         <div>
-          {estimatesQuery.isLoading && <LoadingStateBlock eyebrow="KPI" title="Loading estimates..." />}
+          {(estimatesQuery.isLoading || estimatesQuery.isIdle) && <LoadingStateBlock eyebrow="KPI" title="Loading estimates..." />}
           {estimatesQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(estimatesQuery.error)} />}
-          {!estimatesQuery.isLoading && list.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No salary estimates for this period." />}
-          {list.length > 0 && (
+          {estimatesQuery.isSuccess && list.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No salary estimates for this period." />}
+          {estimatesQuery.isSuccess && list.length > 0 && (
             <Card noPadding className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
