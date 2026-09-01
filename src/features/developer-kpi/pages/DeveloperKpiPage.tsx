@@ -164,8 +164,8 @@ function SalaryEstimatesTab({
       {/* Single employee detail */}
       {selectedUserId != null && (
         <div className="space-y-4">
-          {singleQuery.isLoading && <LoadingStateBlock />}
-          {singleQuery.isError && <ErrorStateBlock message={getApiErrorMessage(singleQuery.error)} />}
+          {singleQuery.isLoading && <LoadingStateBlock eyebrow="KPI" title="Loading estimate..." />}
+          {singleQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(singleQuery.error)} />}
           {estimate && (
             <div className="space-y-4">
               {/* Salary summary */}
@@ -229,9 +229,9 @@ function SalaryEstimatesTab({
       {/* All employees table (CEO view) */}
       {isCeo && selectedUserId == null && (
         <div>
-          {estimatesQuery.isLoading && <LoadingStateBlock />}
-          {estimatesQuery.isError && <ErrorStateBlock message={getApiErrorMessage(estimatesQuery.error)} />}
-          {!estimatesQuery.isLoading && list.length === 0 && <EmptyStateBlock message="No salary estimates for this period." />}
+          {estimatesQuery.isLoading && <LoadingStateBlock eyebrow="KPI" title="Loading estimates..." />}
+          {estimatesQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(estimatesQuery.error)} />}
+          {!estimatesQuery.isLoading && list.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No salary estimates for this period." />}
           {list.length > 0 && (
             <Card noPadding className="overflow-hidden">
               <div className="overflow-x-auto">
@@ -286,13 +286,11 @@ function FeaturesTab({
   month,
   users,
   isCeo,
-  selfId,
 }: {
   year: number
   month: number
   users: Array<{ id: number; name: string; surname: string }>
   isCeo: boolean
-  selfId?: number
 }) {
   const { showToast } = useToast()
   const [ownerFilter, setOwnerFilter] = useState<string>('')
@@ -384,9 +382,9 @@ function FeaturesTab({
         <Button variant="secondary" onClick={() => setRefreshKey((k) => k + 1)}>Refresh</Button>
       </div>
 
-      {featuresQuery.isLoading && <LoadingStateBlock />}
-      {featuresQuery.isError && <ErrorStateBlock message={getApiErrorMessage(featuresQuery.error)} />}
-      {!featuresQuery.isLoading && features.length === 0 && <EmptyStateBlock message="No features for this period." />}
+      {featuresQuery.isLoading && <LoadingStateBlock eyebrow="Features" title="Loading features..." />}
+      {featuresQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(featuresQuery.error)} />}
+      {!featuresQuery.isLoading && features.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No features for this period." />}
 
       {features.length > 0 && (
         <Card noPadding className="overflow-hidden">
@@ -586,9 +584,9 @@ function DeductionsTab({
         </div>
       )}
 
-      {deductionsQuery.isLoading && <LoadingStateBlock />}
-      {deductionsQuery.isError && <ErrorStateBlock message={getApiErrorMessage(deductionsQuery.error)} />}
-      {!deductionsQuery.isLoading && deductions.length === 0 && <EmptyStateBlock message="No deductions for this period." />}
+      {deductionsQuery.isLoading && <LoadingStateBlock eyebrow="Deductions" title="Loading deductions..." />}
+      {deductionsQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(deductionsQuery.error)} />}
+      {!deductionsQuery.isLoading && deductions.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No deductions for this period." />}
 
       {deductions.length > 0 && (
         <Card noPadding className="overflow-hidden">
@@ -695,9 +693,9 @@ function SnapshotsTab({
         </div>
       )}
 
-      {snapshotsQuery.isLoading && <LoadingStateBlock />}
-      {snapshotsQuery.isError && <ErrorStateBlock message={getApiErrorMessage(snapshotsQuery.error)} />}
-      {!snapshotsQuery.isLoading && snapshots.length === 0 && <EmptyStateBlock message="No frozen snapshots for this period." />}
+      {snapshotsQuery.isLoading && <LoadingStateBlock eyebrow="Snapshots" title="Loading snapshots..." />}
+      {snapshotsQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(snapshotsQuery.error)} />}
+      {!snapshotsQuery.isLoading && snapshots.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No frozen snapshots for this period." />}
 
       {snapshots.length > 0 && (
         <Card noPadding className="overflow-hidden">
@@ -818,9 +816,9 @@ function QualityEventsTab({
         <Button variant="secondary" onClick={() => setRefreshKey((k) => k + 1)}>Refresh</Button>
       </div>
 
-      {eventsQuery.isLoading && <LoadingStateBlock />}
-      {eventsQuery.isError && <ErrorStateBlock message={getApiErrorMessage(eventsQuery.error)} />}
-      {!eventsQuery.isLoading && events.length === 0 && <EmptyStateBlock message="No quality events for this period." />}
+      {eventsQuery.isLoading && <LoadingStateBlock eyebrow="Quality" title="Loading quality events..." />}
+      {eventsQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(eventsQuery.error)} />}
+      {!eventsQuery.isLoading && events.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No quality events for this period." />}
 
       {events.length > 0 && (
         <Card noPadding className="overflow-hidden">
@@ -999,9 +997,9 @@ function BlockedPeriodsTab({
         <Button variant="secondary" onClick={() => setRefreshKey((k) => k + 1)}>Refresh</Button>
       </div>
 
-      {periodsQuery.isLoading && <LoadingStateBlock />}
-      {periodsQuery.isError && <ErrorStateBlock message={getApiErrorMessage(periodsQuery.error)} />}
-      {!periodsQuery.isLoading && periods.length === 0 && <EmptyStateBlock message="No blocked periods." />}
+      {periodsQuery.isLoading && <LoadingStateBlock eyebrow="Blocked Periods" title="Loading blocked periods..." />}
+      {periodsQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(periodsQuery.error)} />}
+      {!periodsQuery.isLoading && periods.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No blocked periods." />}
 
       {periods.length > 0 && (
         <Card noPadding className="overflow-hidden">
@@ -1177,9 +1175,9 @@ function WorkSchedulesTab({
         <Button variant="secondary" onClick={() => setRefreshKey((k) => k + 1)}>Refresh</Button>
       </div>
 
-      {schedulesQuery.isLoading && <LoadingStateBlock />}
-      {schedulesQuery.isError && <ErrorStateBlock message={getApiErrorMessage(schedulesQuery.error)} />}
-      {!schedulesQuery.isLoading && schedules.length === 0 && <EmptyStateBlock message="No work schedules." />}
+      {schedulesQuery.isLoading && <LoadingStateBlock eyebrow="Schedules" title="Loading work schedules..." />}
+      {schedulesQuery.isError && <ErrorStateBlock eyebrow="Error" title={getApiErrorMessage(schedulesQuery.error)} />}
+      {!schedulesQuery.isLoading && schedules.length === 0 && <EmptyStateBlock eyebrow="Empty" title="No work schedules." />}
 
       {schedules.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1290,7 +1288,7 @@ export function DeveloperKpiPage() {
   )
 
   const users = useMemo(
-    () => (usersQuery.data?.users ?? []).filter((u) => u.is_active !== false).map((u) => ({ id: u.id, name: u.name, surname: u.surname })),
+    () => (usersQuery.data?.users ?? []).map((u) => ({ id: u.id, name: u.name, surname: u.surname })),
     [usersQuery.data?.users],
   )
 
@@ -1366,7 +1364,7 @@ export function DeveloperKpiPage() {
           <SalaryEstimatesTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />
         )}
         {activeTab === 'features' && (
-          <FeaturesTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />
+          <FeaturesTab year={year} month={month} users={users} isCeo={isCeo} />
         )}
         {activeTab === 'deductions' && (
           <DeductionsTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />
