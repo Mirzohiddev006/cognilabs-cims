@@ -15,6 +15,7 @@ import {
   type WorkSchedule,
 } from '../../../shared/api/services/developer-kpi.service'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
+import { projectsService } from '../../../shared/api/services/projects.service'
 import { getApiErrorMessage } from '../../../shared/lib/api-error'
 import { cn } from '../../../shared/lib/cn'
 import { canReadManagedProjects } from '../../../shared/lib/permissions'
@@ -288,11 +289,13 @@ function FeaturesTab({
   month,
   users,
   isCeo,
+  projects,
 }: {
   year: number
   month: number
   users: Array<{ id: number; name: string; surname: string }>
   isCeo: boolean
+  projects: Array<{ id: number; project_name: string }>
 }) {
   const { showToast } = useToast()
   const [ownerFilter, setOwnerFilter] = useState<string>('')
@@ -332,6 +335,14 @@ function FeaturesTab({
       ...users.map((u) => ({ value: String(u.id), label: `${u.name} ${u.surname}` })),
     ],
     [users],
+  )
+
+  const projectOptions = useMemo(
+    () => [
+      { value: '', label: 'Select project' },
+      ...projects.map((p) => ({ value: String(p.id), label: `#${p.id} — ${p.project_name}` })),
+    ],
+    [projects],
   )
 
   async function handleCreate(e: React.FormEvent) {
@@ -447,8 +458,13 @@ function FeaturesTab({
         <form onSubmit={(e) => void handleCreate(e)} className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Project ID</Label>
-              <Input type="number" value={form.project_id} onChange={(e) => setForm((f) => ({ ...f, project_id: e.target.value }))} required />
+              <Label>Project</Label>
+              <SelectField
+                value={form.project_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, project_id: v }))}
+                options={projectOptions}
+                searchable
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Owner</Label>
@@ -742,11 +758,13 @@ function QualityEventsTab({
   month,
   users,
   isCeo,
+  projects,
 }: {
   year: number
   month: number
   users: Array<{ id: number; name: string; surname: string }>
   isCeo: boolean
+  projects: Array<{ id: number; project_name: string }>
 }) {
   const { showToast } = useToast()
   const [refreshKey, setRefreshKey] = useState(0)
@@ -808,6 +826,14 @@ function QualityEventsTab({
     [users],
   )
 
+  const projectOptions = useMemo(
+    () => [
+      { value: '', label: 'Select project' },
+      ...projects.map((p) => ({ value: String(p.id), label: `#${p.id} — ${p.project_name}` })),
+    ],
+    [projects],
+  )
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -860,8 +886,13 @@ function QualityEventsTab({
         <form onSubmit={(e) => void handleCreate(e)} className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Project ID</Label>
-              <Input type="number" value={form.project_id} onChange={(e) => setForm((f) => ({ ...f, project_id: e.target.value }))} required />
+              <Label>Project</Label>
+              <SelectField
+                value={form.project_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, project_id: v }))}
+                options={projectOptions}
+                searchable
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Feature ID <span className="text-(--muted)">(optional)</span></Label>
@@ -921,9 +952,11 @@ function QualityEventsTab({
 function BlockedPeriodsTab({
   users,
   isCeo,
+  projects,
 }: {
   users: Array<{ id: number; name: string; surname: string }>
   isCeo: boolean
+  projects: Array<{ id: number; project_name: string }>
 }) {
   const { showToast } = useToast()
   const [refreshKey, setRefreshKey] = useState(0)
@@ -987,6 +1020,14 @@ function BlockedPeriodsTab({
       ...users.map((u) => ({ value: String(u.id), label: `${u.name} ${u.surname}` })),
     ],
     [users],
+  )
+
+  const projectOptions = useMemo(
+    () => [
+      { value: '', label: 'Select project' },
+      ...projects.map((p) => ({ value: String(p.id), label: `#${p.id} — ${p.project_name}` })),
+    ],
+    [projects],
   )
 
   return (
@@ -1054,8 +1095,13 @@ function BlockedPeriodsTab({
         <form onSubmit={(e) => void handleCreate(e)} className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Project ID</Label>
-              <Input type="number" value={form.project_id} onChange={(e) => setForm((f) => ({ ...f, project_id: e.target.value }))} required />
+              <Label>Project</Label>
+              <SelectField
+                value={form.project_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, project_id: v }))}
+                options={projectOptions}
+                searchable
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Feature ID <span className="text-(--muted)">(optional)</span></Label>
@@ -1284,7 +1330,7 @@ const DELIVERY_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'cancelled', label: 'Cancelled' },
 ]
 
-function ProjectDeliveryTab({ isCeo }: { isCeo: boolean }) {
+function ProjectDeliveryTab({ isCeo, projects }: { isCeo: boolean; projects: Array<{ id: number; project_name: string }> }) {
   const { showToast } = useToast()
   const [projectId, setProjectId] = useState('')
   const [saving, setSaving] = useState(false)
@@ -1319,6 +1365,14 @@ function ProjectDeliveryTab({ isCeo }: { isCeo: boolean }) {
     }
   }
 
+  const projectOptions = useMemo(
+    () => [
+      { value: '', label: 'Select project' },
+      ...projects.map((p) => ({ value: String(p.id), label: `#${p.id} — ${p.project_name}` })),
+    ],
+    [projects],
+  )
+
   return (
     <div className="space-y-5 max-w-xl">
       <p className="text-sm text-(--muted)">
@@ -1327,13 +1381,12 @@ function ProjectDeliveryTab({ isCeo }: { isCeo: boolean }) {
 
       <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
         <div className="space-y-1.5">
-          <Label>Project ID</Label>
-          <Input
-            type="number"
-            placeholder="e.g. 14"
+          <Label>Project</Label>
+          <SelectField
             value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            required
+            onValueChange={setProjectId}
+            options={projectOptions}
+            searchable
           />
         </div>
         <div className="space-y-1.5">
@@ -1419,6 +1472,12 @@ export function DeveloperKpiPage() {
     [usersQuery.data?.users],
   )
 
+  const projectsQuery = useAsyncData(
+    () => projectsService.listProjects().then((r) => r.projects),
+    [],
+  )
+  const projects = projectsQuery.data ?? []
+
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear()
     return Array.from({ length: 3 }, (_, i) => currentYear - 1 + i).map((y) => ({ value: String(y), label: String(y) }))
@@ -1491,10 +1550,10 @@ export function DeveloperKpiPage() {
           <SalaryEstimatesTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />
         )}
         {activeTab === 'features' && (
-          <FeaturesTab year={year} month={month} users={users} isCeo={isCeo} />
+          <FeaturesTab year={year} month={month} users={users} isCeo={isCeo} projects={projects} />
         )}
         {activeTab === 'project_delivery' && (
-          <ProjectDeliveryTab isCeo={isCeo} />
+          <ProjectDeliveryTab isCeo={isCeo} projects={projects} />
         )}
         {activeTab === 'deductions' && (
           <DeductionsTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />
@@ -1503,10 +1562,10 @@ export function DeveloperKpiPage() {
           <SnapshotsTab year={year} month={month} users={users} isCeo={isCeo} />
         )}
         {activeTab === 'quality_events' && (
-          <QualityEventsTab year={year} month={month} users={users} isCeo={isCeo} />
+          <QualityEventsTab year={year} month={month} users={users} isCeo={isCeo} projects={projects} />
         )}
         {activeTab === 'blocked_periods' && (
-          <BlockedPeriodsTab users={users} isCeo={isCeo} />
+          <BlockedPeriodsTab users={users} isCeo={isCeo} projects={projects} />
         )}
         {activeTab === 'work_schedules' && (
           <WorkSchedulesTab users={users} isCeo={isCeo} />
