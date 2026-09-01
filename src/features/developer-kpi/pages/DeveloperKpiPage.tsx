@@ -32,10 +32,11 @@ import { Textarea } from '../../../shared/ui/textarea'
 const TABS = [
   'salary_estimates',
   'features',
-  'deductions',
-  'snapshots',
+  'project_delivery',
   'quality_events',
   'blocked_periods',
+  'deductions',
+  'snapshots',
   'work_schedules',
 ] as const
 
@@ -44,10 +45,11 @@ type Tab = (typeof TABS)[number]
 const TAB_LABELS: Record<Tab, string> = {
   salary_estimates: 'Salary Estimates',
   features: 'Features',
-  deductions: 'Deductions',
-  snapshots: 'Frozen Snapshots',
+  project_delivery: 'Project Delivery',
   quality_events: 'Quality Events',
   blocked_periods: 'Blocked Periods',
+  deductions: 'Deductions',
+  snapshots: 'Frozen Snapshots',
   work_schedules: 'Work Schedules',
 }
 
@@ -1271,6 +1273,131 @@ function WorkSchedulesTab({
   )
 }
 
+// ─── ProjectDeliveryTab ───────────────────────────────────────────────────────
+
+type DeliveryStatus = 'in_progress' | 'delivered' | 'delayed' | 'cancelled'
+
+const DELIVERY_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'delayed', label: 'Delayed' },
+  { value: 'cancelled', label: 'Cancelled' },
+]
+
+function ProjectDeliveryTab({ isCeo }: { isCeo: boolean }) {
+  const { showToast } = useToast()
+  const [projectId, setProjectId] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    actual_delivery_date: '',
+    delivery_status: 'in_progress' as DeliveryStatus,
+    approved_blocked_days: '0',
+  })
+  const [result, setResult] = useState<{
+    actual_delivery_date: string | null
+    delivery_status: string | null
+    approved_blocked_days: number
+    real_delay_days: number
+  } | null>(null)
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    if (!projectId) return
+    setSaving(true)
+    try {
+      const res = await developerKpiService.updateProjectDelivery(Number(projectId), {
+        actual_delivery_date: form.actual_delivery_date || undefined,
+        delivery_status: form.delivery_status,
+        approved_blocked_days: Number(form.approved_blocked_days),
+      })
+      setResult(res)
+      showToast({ tone: 'success', title: 'Project delivery updated' })
+    } catch (err) {
+      showToast({ tone: 'error', title: getApiErrorMessage(err) })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="space-y-5 max-w-xl">
+      <p className="text-sm text-(--muted)">
+        Set the actual delivery date for a project. Backend calculates real delay days (Sunday-off) and creates deduction candidates if delay exceeds 3 business days.
+      </p>
+
+      <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>Project ID</Label>
+          <Input
+            type="number"
+            placeholder="e.g. 14"
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Actual Delivery Date</Label>
+          <Input
+            type="date"
+            value={form.actual_delivery_date}
+            onChange={(e) => setForm((f) => ({ ...f, actual_delivery_date: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Delivery Status</Label>
+          <SelectField
+            value={form.delivery_status}
+            onValueChange={(v) => setForm((f) => ({ ...f, delivery_status: v as DeliveryStatus }))}
+            options={DELIVERY_STATUS_OPTIONS}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Approved Blocked Days</Label>
+          <Input
+            type="number"
+            min="0"
+            value={form.approved_blocked_days}
+            onChange={(e) => setForm((f) => ({ ...f, approved_blocked_days: e.target.value }))}
+          />
+          <p className="text-xs text-(--muted)">Approved external blocked business days removed from delay calculation.</p>
+        </div>
+        {isCeo && (
+          <Button type="submit" disabled={saving || !projectId}>
+            {saving ? 'Saving...' : 'Update Delivery'}
+          </Button>
+        )}
+      </form>
+
+      {result && (
+        <Card className="p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-(--foreground)">Result</h3>
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-(--muted) text-xs uppercase tracking-wide font-semibold">Delivery Date</p>
+              <p className="text-(--foreground) font-medium mt-0.5">{result.actual_delivery_date ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-(--muted) text-xs uppercase tracking-wide font-semibold">Status</p>
+              <p className="text-(--foreground) font-medium mt-0.5">{result.delivery_status ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-(--muted) text-xs uppercase tracking-wide font-semibold">Approved Blocked Days</p>
+              <p className="text-(--foreground) font-medium mt-0.5">{result.approved_blocked_days}</p>
+            </div>
+            <div>
+              <p className="text-(--muted) text-xs uppercase tracking-wide font-semibold">Real Delay Days</p>
+              <p className={cn('font-semibold mt-0.5', result.real_delay_days > 3 ? 'text-rose-400' : 'text-emerald-400')}>
+                {result.real_delay_days} {result.real_delay_days > 3 && '⚠ deduction candidate'}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function DeveloperKpiPage() {
@@ -1299,7 +1426,7 @@ export function DeveloperKpiPage() {
 
   const monthOptions = MONTHS.map((m, i) => ({ value: String(i + 1), label: m }))
 
-  const tabsWithPeriod: Tab[] = ['salary_estimates', 'features', 'deductions', 'snapshots', 'quality_events']
+  const tabsWithPeriod: Tab[] = ['salary_estimates', 'features', 'deductions', 'snapshots', 'quality_events', 'blocked_periods']
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -1365,6 +1492,9 @@ export function DeveloperKpiPage() {
         )}
         {activeTab === 'features' && (
           <FeaturesTab year={year} month={month} users={users} isCeo={isCeo} />
+        )}
+        {activeTab === 'project_delivery' && (
+          <ProjectDeliveryTab isCeo={isCeo} />
         )}
         {activeTab === 'deductions' && (
           <DeductionsTab year={year} month={month} users={users} isCeo={isCeo} selfId={user?.id} />

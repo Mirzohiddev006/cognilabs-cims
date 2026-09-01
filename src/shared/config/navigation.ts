@@ -231,6 +231,5 @@ export const navigationItems: readonly NavigationItem[] = [
     permissionKey: undefined,
     sidebar: true,
     defaultRedirect: false,
-    audience: 'member',
   },
 ]

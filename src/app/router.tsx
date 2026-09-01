@@ -490,7 +490,7 @@ export const router = createBrowserRouter([
               {
                 path: 'developer-kpi',
                 element: (
-                  <ProtectedRoute audience="member">
+                  <ProtectedRoute>
                     {withPageLoader(<DeveloperKpiPage />)}
                   </ProtectedRoute>
                 ),
