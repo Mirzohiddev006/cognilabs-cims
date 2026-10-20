@@ -780,5 +780,7 @@
   "outbound_crm.statuses.toast.created": "Status yaratildi",
   "outbound_crm.statuses.toast.deleted": "Status o'chirildi",
   "outbound_crm.statuses.toast.updated": "Status yangilandi",
-  "outbound_crm.statuses.total": "Jami"
+  "outbound_crm.statuses.total": "Jami",
+  "outbound_crm.sidebar.leads": "Leadlar",
+  "outbound_crm.sidebar.archive": "Arxiv"
 }

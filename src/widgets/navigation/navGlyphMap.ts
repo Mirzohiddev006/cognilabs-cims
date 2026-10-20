@@ -14,6 +14,9 @@ export type GlyphName =
   | 'cognilabsai-integrations'
   | 'audit'
   | 'attendance'
+  | 'archive'
+  | 'statuses'
+  | 'exit'
   | 'default'
 
 export function getNavigationGlyphName(pathname: string): GlyphName {

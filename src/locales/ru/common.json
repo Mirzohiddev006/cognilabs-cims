@@ -780,5 +780,7 @@
   "outbound_crm.statuses.toast.created": "Статус создан",
   "outbound_crm.statuses.toast.deleted": "Статус удалён",
   "outbound_crm.statuses.toast.updated": "Статус обновлён",
-  "outbound_crm.statuses.total": "Всего"
+  "outbound_crm.statuses.total": "Всего",
+  "outbound_crm.sidebar.leads": "Лиды",
+  "outbound_crm.sidebar.archive": "Архив"
 }

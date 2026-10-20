@@ -780,5 +780,7 @@
   "outbound_crm.statuses.toast.created": "Status created",
   "outbound_crm.statuses.toast.deleted": "Status deleted",
   "outbound_crm.statuses.toast.updated": "Status updated",
-  "outbound_crm.statuses.total": "Total"
+  "outbound_crm.statuses.total": "Total",
+  "outbound_crm.sidebar.leads": "Leads",
+  "outbound_crm.sidebar.archive": "Archive"
 }

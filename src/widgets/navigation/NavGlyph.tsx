@@ -139,6 +139,31 @@ function glyphPath(name: GlyphName) {
           <path d="M12 12.5V14l1 1" />
         </>
       )
+    case 'archive':
+      return (
+        <>
+          <rect x="4" y="5" width="16" height="4" rx="1" />
+          <path d="M5.5 9v9a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9" />
+          <path d="M10 13h4" />
+        </>
+      )
+    case 'statuses':
+      return (
+        <>
+          <circle cx="6.5" cy="7" r="1.75" />
+          <circle cx="6.5" cy="12" r="1.75" />
+          <circle cx="6.5" cy="17" r="1.75" />
+          <path d="M10.5 7h8M10.5 12h8M10.5 17h8" />
+        </>
+      )
+    case 'exit':
+      return (
+        <>
+          <path d="M10 6H6.5A1.5 1.5 0 0 0 5 7.5v9A1.5 1.5 0 0 0 6.5 18H10" />
+          <path d="M14 8.5 10.5 12l3.5 3.5" />
+          <path d="M10.5 12H19" />
+        </>
+      )
     default:
       return (
         <>

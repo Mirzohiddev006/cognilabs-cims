@@ -18,7 +18,7 @@ import { Dialog } from '../../shared/ui/dialog'
 import { Input } from '../../shared/ui/input'
 import { PROJECTS_NAVIGATION_UPDATED_EVENT } from '../../features/projects/lib/navigationSync'
 import { NavGlyph } from './NavGlyph'
-import { getNavigationGlyphName } from './navGlyphMap'
+import { getNavigationGlyphName, type GlyphName } from './navGlyphMap'
 
 const DONE_COLUMN_PATTERN = /\b(done|complete|completed|closed|finished|resolved)\b/i
 
@@ -47,6 +47,13 @@ const sidebarItemInactive =
   'text-[var(--sidebar-foreground)]/75 hover:bg-[var(--sidebar-accent)] hover:text-[var(--sidebar-accent-foreground)]'
 const sidebarItemActive =
   'bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] shadow-[inset_0_0_0_1px_var(--sidebar-border)]'
+type OutboundSidebarItem = {
+  to: string
+  label: string
+  glyph: GlyphName
+  isActive: (pathname: string) => boolean
+}
+
 const sidebarSectionLabel =
   'px-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-[var(--sidebar-foreground)]/55'
 
@@ -71,6 +78,27 @@ export function AppSidebar() {
     return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
+  const isOutboundCrmRoute = location.pathname === '/outbound-crm' || location.pathname.startsWith('/outbound-crm/')
+  const outboundNavigation: OutboundSidebarItem[] = [
+    {
+      to: '/outbound-crm',
+      label: t('outbound_crm.sidebar.leads', 'Leads'),
+      glyph: 'crm',
+      isActive: (pathname) => pathname === '/outbound-crm' || pathname.startsWith('/outbound-crm/customers/'),
+    },
+    {
+      to: '/outbound-crm/statuses',
+      label: t('outbound_crm.actions.statuses', 'Statuses'),
+      glyph: 'statuses',
+      isActive: (pathname) => pathname.startsWith('/outbound-crm/statuses'),
+    },
+    {
+      to: '/outbound-crm/archived',
+      label: t('outbound_crm.sidebar.archive', 'Archive'),
+      glyph: 'archive',
+      isActive: (pathname) => pathname.startsWith('/outbound-crm/archived'),
+    },
+  ]
   const visibleNavigation = getAccessibleNavigation(user, { sidebarOnly: true })
   const sidebarNavigation = useMemo(() => visibleNavigation, [visibleNavigation])
   const hasProjectsAccess = sidebarNavigation.some((item) => item.to === '/projects')
@@ -269,151 +297,192 @@ export function AppSidebar() {
           >
             <div className="min-w-0 flex-1">
               <p className="truncate text-xl font-black tracking-tight">CIMS</p>
+              {isOutboundCrmRoute ? (
+                <p className="mt-0.5 truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-(--blue-text)">
+                  Outbound CRM
+                </p>
+              ) : null}
             </div>
           </button>
 
-          <div className="flex-1 overflow-y-auto px-2 py-3">
-            <div className="flex items-center justify-between">
-              <p className={sidebarSectionLabel}>{t('shell.menu')}</p>
-              <Badge className="rounded-full border border-(--sidebar-border) bg-(--sidebar-background) px-2 py-0.5 text-[10px]">
-                {sidebarNavigation.length}
-              </Badge>
-            </div>
+          {isOutboundCrmRoute ? (
+            <div className="flex-1 overflow-y-auto px-2 py-3">
+              <div className="flex items-center justify-between">
+                <p className={sidebarSectionLabel}>Outbound CRM</p>
+                <Badge className="rounded-full border border-(--sidebar-border) bg-(--sidebar-background) px-2 py-0.5 text-[10px]">
+                  {outboundNavigation.length}
+                </Badge>
+              </div>
 
-            <div className="mt-2 flex flex-col gap-1">
-              {sidebarNavigation.map((item) => {
-                const itemLabel = getNavigationLabel(item.to, item.label)
-
-                if (item.to === '/projects') {
-                  return (
-                    <div key={item.to} className="flex flex-col gap-1">
-                      <div className="relative">
-                        <NavLink
-                          to={item.to}
-                          aria-label={itemLabel}
-                          onClick={() => setIsProjectsExpanded(true)}
-                          className={({ isActive }) =>
-                            cn(
-                              sidebarItemBase,
-                              isActive || isProjectsRoute ? sidebarItemActive : sidebarItemInactive,
-                              'pr-10',
-                            )
-                          }
-                        >
-                          <NavGlyph name={getNavigationGlyphName(item.to)} />
-                          <span className="truncate">{itemLabel}</span>
-                          {sidebarProjects.length > 0 && (
-                            <Badge
-                              size="sm"
-                              variant={isProjectsRoute ? 'blue' : 'secondary'}
-                              className="ml-auto rounded-full px-1.5 py-0 shadow-none"
-                            >
-                              {sidebarProjects.length}
-                            </Badge>
-                          )}
-                        </NavLink>
-
-                        <button
-                          type="button"
-                          onClick={toggleProjectsExpanded}
-                          aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
-                          className={cn(
-                            'absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-transparent text-(--sidebar-foreground)/70 transition-colors',
-                            'hover:border-(--sidebar-border) hover:bg-(--sidebar-accent) hover:text-(--sidebar-accent-foreground)',
-                          )}
-                        >
-                          <svg
-                            viewBox="0 0 16 16"
-                            className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                          >
-                            <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {isProjectsExpanded && (
-                        <div className="ml-3.5 flex flex-col gap-1 border-l border-(--sidebar-border) pl-3">
-                          {projectsQuery.isLoading ? (
-                            Array.from({ length: 4 }).map((_, i) => (
-                              <div key={i} className="skeleton h-8" />
-                            ))
-                          ) : projectsQuery.isError ? (
-                            <button
-                              type="button"
-                              onClick={() => void projectsQuery.refetch()}
-                              className={cn(
-                                sidebarItemBase,
-                                'text-(--danger-text) hover:bg-(--danger-dim)',
-                              )}
-                            >
-                              <span className="truncate">
-                                {t('shell.failed_load_projects')} — {t('shell.retry')}
-                              </span>
-                            </button>
-                          ) : sidebarProjects.length === 0 ? (
-                            <div className={cn(sidebarItemBase, 'text-(--sidebar-foreground)/60')}>
-                              <span className="truncate">{t('shell.no_projects')}</span>
-                            </div>
-                          ) : (
-                            sidebarProjects.map((project) => {
-                              const isActiveProject =
-                                location.pathname === `/projects/${project.id}` ||
-                                location.pathname.startsWith(`/projects/${project.id}/`) ||
-                                location.pathname.startsWith(`/boards/`)
-                              const openCount = openTaskCountByProject.get(project.id) ?? 0
-
-                              return (
-                                <NavLink
-                                  key={project.id}
-                                  to={`/projects/${project.id}`}
-                                  className={({ isActive }) =>
-                                    cn(
-                                      sidebarItemBase,
-                                      isActive || isActiveProject ? sidebarItemActive : sidebarItemInactive,
-                                      'pl-3',
-                                    )
-                                  }
-                                >
-                                  <span className="h-1.5 w-1.5 rounded-full bg-(--sidebar-foreground)/50" />
-                                  <span className="truncate">{project.project_name}</span>
-                                  {openCount > 0 && (
-                                    <Badge
-                                      size="sm"
-                                      variant={isActiveProject ? 'blue' : 'secondary'}
-                                      className="ml-auto rounded-full px-1.5 py-0 shadow-none"
-                                    >
-                                      {openCount}
-                                    </Badge>
-                                  )}
-                                </NavLink>
-                              )
-                            })
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                }
-
-                return (
+              <div className="mt-2 flex flex-col gap-1">
+                {outboundNavigation.map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    aria-label={itemLabel}
-                    className={({ isActive }) =>
-                      cn(sidebarItemBase, isActive ? sidebarItemActive : sidebarItemInactive)
-                    }
+                    aria-label={item.label}
+                    className={cn(sidebarItemBase, item.isActive(location.pathname) ? sidebarItemActive : sidebarItemInactive)}
                   >
-                    <NavGlyph name={getNavigationGlyphName(item.to)} />
-                    <span className="truncate">{itemLabel}</span>
+                    <NavGlyph name={item.glyph} />
+                    <span className="truncate">{item.label}</span>
                   </NavLink>
-                )
-              })}
+                ))}
+              </div>
+
+              <div className="mt-4 border-t border-(--sidebar-border) pt-3">
+                <NavLink
+                  to="/crm"
+                  aria-label={t('outbound_crm.header.back_to_crm', 'Main CRM')}
+                  className={cn(sidebarItemBase, sidebarItemInactive)}
+                >
+                  <NavGlyph name="exit" />
+                  <span className="truncate">{t('outbound_crm.header.back_to_crm', 'Main CRM')}</span>
+                </NavLink>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex-1 overflow-y-auto px-2 py-3">
+              <div className="flex items-center justify-between">
+                <p className={sidebarSectionLabel}>{t('shell.menu')}</p>
+                <Badge className="rounded-full border border-(--sidebar-border) bg-(--sidebar-background) px-2 py-0.5 text-[10px]">
+                  {sidebarNavigation.length}
+                </Badge>
+              </div>
+
+              <div className="mt-2 flex flex-col gap-1">
+                {sidebarNavigation.map((item) => {
+                  const itemLabel = getNavigationLabel(item.to, item.label)
+
+                  if (item.to === '/projects') {
+                    return (
+                      <div key={item.to} className="flex flex-col gap-1">
+                        <div className="relative">
+                          <NavLink
+                            to={item.to}
+                            aria-label={itemLabel}
+                            onClick={() => setIsProjectsExpanded(true)}
+                            className={({ isActive }) =>
+                              cn(
+                                sidebarItemBase,
+                                isActive || isProjectsRoute ? sidebarItemActive : sidebarItemInactive,
+                                'pr-10',
+                              )
+                            }
+                          >
+                            <NavGlyph name={getNavigationGlyphName(item.to)} />
+                            <span className="truncate">{itemLabel}</span>
+                            {sidebarProjects.length > 0 && (
+                              <Badge
+                                size="sm"
+                                variant={isProjectsRoute ? 'blue' : 'secondary'}
+                                className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                              >
+                                {sidebarProjects.length}
+                              </Badge>
+                            )}
+                          </NavLink>
+
+                          <button
+                            type="button"
+                            onClick={toggleProjectsExpanded}
+                            aria-label={isProjectsExpanded ? t('shell.collapse_projects') : t('shell.expand_projects')}
+                            className={cn(
+                              'absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-transparent text-(--sidebar-foreground)/70 transition-colors',
+                              'hover:border-(--sidebar-border) hover:bg-(--sidebar-accent) hover:text-(--sidebar-accent-foreground)',
+                            )}
+                          >
+                            <svg
+                              viewBox="0 0 16 16"
+                              className={cn('h-3.5 w-3.5 transition-transform duration-200', isProjectsExpanded && 'rotate-180')}
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                            >
+                              <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {isProjectsExpanded && (
+                          <div className="ml-3.5 flex flex-col gap-1 border-l border-(--sidebar-border) pl-3">
+                            {projectsQuery.isLoading ? (
+                              Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="skeleton h-8" />
+                              ))
+                            ) : projectsQuery.isError ? (
+                              <button
+                                type="button"
+                                onClick={() => void projectsQuery.refetch()}
+                                className={cn(
+                                  sidebarItemBase,
+                                  'text-(--danger-text) hover:bg-(--danger-dim)',
+                                )}
+                              >
+                                <span className="truncate">
+                                  {t('shell.failed_load_projects')} — {t('shell.retry')}
+                                </span>
+                              </button>
+                            ) : sidebarProjects.length === 0 ? (
+                              <div className={cn(sidebarItemBase, 'text-(--sidebar-foreground)/60')}>
+                                <span className="truncate">{t('shell.no_projects')}</span>
+                              </div>
+                          ) : (
+                              sidebarProjects.map((project) => {
+                                const isActiveProject =
+                                  location.pathname === `/projects/${project.id}` ||
+                                  location.pathname.startsWith(`/projects/${project.id}/`) ||
+                                  location.pathname.startsWith(`/boards/`)
+                                const openCount = openTaskCountByProject.get(project.id) ?? 0
+
+                                return (
+                                  <NavLink
+                                    key={project.id}
+                                    to={`/projects/${project.id}`}
+                                    className={({ isActive }) =>
+                                      cn(
+                                        sidebarItemBase,
+                                        isActive || isActiveProject ? sidebarItemActive : sidebarItemInactive,
+                                        'pl-3',
+                                      )
+                                    }
+                                  >
+                                    <span className="h-1.5 w-1.5 rounded-full bg-(--sidebar-foreground)/50" />
+                                    <span className="truncate">{project.project_name}</span>
+                                    {openCount > 0 && (
+                                      <Badge
+                                        size="sm"
+                                        variant={isActiveProject ? 'blue' : 'secondary'}
+                                        className="ml-auto rounded-full px-1.5 py-0 shadow-none"
+                                      >
+                                        {openCount}
+                                      </Badge>
+                                    )}
+                                  </NavLink>
+                                )
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      aria-label={itemLabel}
+                      className={({ isActive }) =>
+                        cn(sidebarItemBase, isActive ? sidebarItemActive : sidebarItemInactive)
+                      }
+                    >
+                      <NavGlyph name={getNavigationGlyphName(item.to)} />
+                      <span className="truncate">{itemLabel}</span>
+                    </NavLink>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           <button
             type="button"
