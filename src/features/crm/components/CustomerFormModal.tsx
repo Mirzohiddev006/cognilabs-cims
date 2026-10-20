@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { crmService } from '../../../shared/api/services/crm.service'
+import { useCrmScope } from '../lib/crmScope'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { formatNumericDateTime } from '../../../shared/lib/format'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -58,6 +58,7 @@ export function CustomerFormModal({
   const { t } = useTranslation()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const { service: crmService } = useCrmScope()
 
   const [showAddInput, setShowAddInput] = useState(false)
   const [newNote, setNewNote] = useState('')

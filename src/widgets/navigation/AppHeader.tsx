@@ -11,6 +11,7 @@ import { useToast } from '../../shared/toast/useToast'
 import { Badge } from '../../shared/ui/badge'
 import { Button } from '../../shared/ui/button'
 import { cn } from '../../shared/lib/cn'
+import { hasPermission } from '../../shared/lib/permissions'
 import { NavGlyph } from './NavGlyph'
 import { getNavigationGlyphName } from './navGlyphMap'
 
@@ -19,6 +20,15 @@ function SunIcon() {
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
       <circle cx="10" cy="10" r="3.5" />
       <path d="M10 2v1.5M10 16.5V18M2 10h1.5M16.5 10H18M4.22 4.22l1.06 1.06M14.72 14.72l1.06 1.06M4.22 15.78l1.06-1.06M14.72 5.28l1.06-1.06" />
+    </svg>
+  )
+}
+
+function OutboundIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+      <path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5V12" />
+      <path d="M11 4h5v5M16 4l-7 7" />
     </svg>
   )
 }
@@ -45,7 +55,9 @@ export function AppHeader() {
   const [isMobileViewport, setIsMobileViewport] = useState(
     typeof window !== 'undefined' ? window.matchMedia('(max-width: 960px)').matches : false,
   )
-  const hideRouteContext = location.pathname.startsWith('/crm')
+  const hideRouteContext = location.pathname.startsWith('/crm') || location.pathname.startsWith('/outbound-crm')
+  const isOutboundCrmRoute = location.pathname === '/outbound-crm' || location.pathname.startsWith('/outbound-crm/')
+  const canUseCrm = hasPermission(user, 'crm')
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -145,6 +157,22 @@ export function AppHeader() {
 
         <div className="flex w-full md:w-auto md:justify-end">
           <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-(--border) bg-(--accent-soft) p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] md:w-auto md:flex-nowrap">
+            {canUseCrm ? (
+              <button
+                type="button"
+                onClick={() => navigate(isOutboundCrmRoute ? '/crm' : '/outbound-crm')}
+                aria-pressed={isOutboundCrmRoute}
+                className={cn(
+                  'ui-button-text inline-flex min-h-9 items-center gap-2 rounded-xl border px-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/35',
+                  isOutboundCrmRoute
+                    ? 'border-(--blue-border) bg-(--blue-soft) text-(--blue-text) hover:border-(--border-hover)'
+                    : 'border-(--border) bg-(--muted-surface) text-(--foreground) hover:border-(--blue-border) hover:bg-(--blue-soft) hover:text-(--blue-text)',
+                )}
+              >
+                <OutboundIcon />
+                {isOutboundCrmRoute ? t('outbound_crm.header.back_to_crm', 'Main CRM') : 'Outbound CRM'}
+              </button>
+            ) : null}
             {user?.job_title?.trim() ? (
               <Badge className={cn(headerMetaChipClassName, 'border-(--border) bg-(--muted-surface) text-(--muted-strong)')}>
                 {user.job_title}

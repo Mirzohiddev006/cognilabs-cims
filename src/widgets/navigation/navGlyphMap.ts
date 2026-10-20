@@ -22,7 +22,7 @@ export function getNavigationGlyphName(pathname: string): GlyphName {
   if (pathname.startsWith('/ceo/ai')) return 'ai'
   if (pathname.startsWith('/ceo/attendance')) return 'attendance'
   if (pathname.startsWith('/ceo')) return 'ceo'
-  if (pathname.startsWith('/crm')) return 'crm'
+  if (pathname.startsWith('/crm') || pathname.startsWith('/outbound-crm')) return 'crm'
   if (pathname.startsWith('/faults')) return 'faults'
   if (pathname.startsWith('/payment')) return 'payment'
   if (pathname.startsWith('/wordpress')) return 'wordpress'

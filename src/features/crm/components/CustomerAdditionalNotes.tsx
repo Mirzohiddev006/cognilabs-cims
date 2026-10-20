@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { crmService } from '../../../shared/api/services/crm.service'
+import { useCrmScope } from '../lib/crmScope'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useToast } from '../../../shared/toast/useToast'
 import { Button } from '../../../shared/ui/button'
@@ -16,6 +16,7 @@ export function CustomerAdditionalNotes({ customerId }: { customerId: number }) 
   const { t } = useTranslation()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const { service: crmService } = useCrmScope()
   const [newNote, setNewNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null)

@@ -1,45 +1,13 @@
 import { Suspense, lazy, type ReactElement } from 'react'
-import { Navigate, createBrowserRouter, useRouteError } from 'react-router-dom'
+import { Navigate, createBrowserRouter } from 'react-router-dom'
 import { AuthLayout } from './layouts/AuthLayout'
 import { RootLayout } from './layouts/RootLayout'
 import { GuestRoute } from '../features/auth/components/GuestRoute'
 import { ProtectedRoute } from '../features/auth/components/ProtectedRoute'
 import { RouterAuthBoundary } from './providers/RouterAuthBoundary'
 import { AsyncContentLoader } from '../shared/ui/async-content-loader'
-import { StateBlock } from '../shared/ui/state-block'
-
-const CHUNK_RELOAD_KEY = 'cims:chunk-reload'
-
-function isDynamicImportError(error: unknown) {
-  if (!(error instanceof Error)) {
-    return false
-  }
-
-  const message = error.message.toLowerCase()
-
-  return (
-    message.includes('failed to fetch dynamically imported module')
-    || message.includes('importing a module script failed')
-    || message.includes('chunk')
-  )
-}
-
-function tryRecoverFromChunkError() {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  const currentPath = `${window.location.pathname}${window.location.search}`
-  const lastAttempt = window.sessionStorage.getItem(CHUNK_RELOAD_KEY)
-
-  if (lastAttempt === currentPath) {
-    return false
-  }
-
-  window.sessionStorage.setItem(CHUNK_RELOAD_KEY, currentPath)
-  window.location.reload()
-  return true
-}
+import { RouteErrorBoundary } from './RouteErrorBoundary'
+import { CHUNK_RELOAD_KEY, isDynamicImportError, tryRecoverFromChunkError } from './lib/chunkRecovery'
 
 function lazyPage<T extends string>(
   loader: () => Promise<Record<T, () => ReactElement | null>>,
@@ -71,34 +39,6 @@ function withPageLoader(element: ReactElement, variant: 'page' | 'panel' = 'page
     <Suspense fallback={<AsyncContentLoader variant={variant} />}>
       {element}
     </Suspense>
-  )
-}
-
-function RouteErrorBoundary() {
-  const error = useRouteError()
-  const isChunkError = isDynamicImportError(error)
-  const message = error instanceof Error ? error.message : 'Unexpected application error'
-
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center p-6">
-      <div className="w-full max-w-2xl">
-        <StateBlock
-          tone="error"
-          eyebrow={isChunkError ? 'App update' : 'Application error'}
-          title={isChunkError ? 'The app was updated. Please reload this page.' : 'Something went wrong'}
-          description={isChunkError
-            ? 'A new frontend build was deployed and this page is still pointing to an old JS chunk.'
-            : message}
-          actionLabel="Reload page"
-          onAction={() => {
-            if (typeof window !== 'undefined') {
-              window.sessionStorage.removeItem(CHUNK_RELOAD_KEY)
-              window.location.reload()
-            }
-          }}
-        />
-      </div>
-    </div>
   )
 }
 
@@ -160,6 +100,22 @@ const MyLeadsPage = lazyPage(
 const CustomerDetailPage = lazyPage(
   () => import('../features/crm/pages/CustomerDetailPage'),
   'CustomerDetailPage',
+)
+const OutboundCrmDashboardPage = lazyPage(
+  () => import('../features/outbound-crm/pages/OutboundCrmPages'),
+  'OutboundCrmDashboardPage',
+)
+const OutboundCrmArchivedPage = lazyPage(
+  () => import('../features/outbound-crm/pages/OutboundCrmPages'),
+  'OutboundCrmArchivedPage',
+)
+const OutboundCustomerDetailPage = lazyPage(
+  () => import('../features/outbound-crm/pages/OutboundCrmPages'),
+  'OutboundCustomerDetailPage',
+)
+const OutboundCrmStatusesPage = lazyPage(
+  () => import('../features/outbound-crm/pages/OutboundCrmStatusesPage'),
+  'OutboundCrmStatusesPage',
 )
 const FaultsMemberDetailPage = lazyPage(
   () => import('../features/faults/pages/FaultsMemberDetailPage'),
@@ -380,6 +336,38 @@ export const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute permissionKey="crm" audience="sales_manager">
                     {withPageLoader(<MyLeadsPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'outbound-crm',
+                element: (
+                  <ProtectedRoute permissionKey="crm">
+                    {withPageLoader(<OutboundCrmDashboardPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'outbound-crm/customers/:customerId',
+                element: (
+                  <ProtectedRoute permissionKey="crm">
+                    {withPageLoader(<OutboundCustomerDetailPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'outbound-crm/archived',
+                element: (
+                  <ProtectedRoute permissionKey="crm">
+                    {withPageLoader(<OutboundCrmArchivedPage />)}
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: 'outbound-crm/statuses',
+                element: (
+                  <ProtectedRoute permissionKey="crm">
+                    {withPageLoader(<OutboundCrmStatusesPage />)}
                   </ProtectedRoute>
                 ),
               },

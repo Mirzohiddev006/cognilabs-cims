@@ -8,6 +8,9 @@ import type {
   CustomerStatusSummaryResponse,
   CustomerSummary,
   DynamicStatusOption,
+  ManagementStatusCreatePayload,
+  ManagementStatusRecord,
+  ManagementStatusUpdatePayload,
   SalesDashboardChartsResponse,
   SalesStatsResponse,
   SuccessResponse,
@@ -103,177 +106,213 @@ type CrmDashboardParams = {
   page_size?: number
 }
 
+export function createCrmCustomerService(basePath: string) {
+  const service = {
+    latest(limit = 50) {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/latest`,
+        query: { limit },
+      })
+    },
+
+    dashboard(params?: CrmDashboardParams) {
+      return request<CrmDashboardResponse>({
+        path: `${basePath}/dashboard`,
+        query: params,
+      })
+    },
+
+    async dashboardWithAllCustomers(pageSize = 50) {
+      const firstPage = await service.dashboard({ page: 1, page_size: pageSize, show_all: true })
+      const totalPages = Math.max(firstPage.total_pages ?? 1, 1)
+
+      if (totalPages <= 1) {
+        return firstPage
+      }
+
+      const remainingPages = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, index) =>
+          service.dashboard({ page: index + 2, page_size: pageSize, show_all: true }),
+        ),
+      )
+
+      return {
+        ...firstPage,
+        customers: [
+          ...firstPage.customers,
+          ...remainingPages.flatMap((page) => page.customers),
+        ],
+        page: 1,
+      }
+    },
+
+    detail(customerId: number) {
+      return request<CustomerSummary>({
+        path: `${basePath}/detail/${customerId}`,
+      })
+    },
+
+    dynamicStatuses() {
+      return request<DynamicStatusOption[]>({
+        path: `${basePath}/statuses/dynamic`,
+      })
+    },
+
+    createCustomer(formData: FormData) {
+      return request<CreateResponse>({
+        path: `${basePath}/customers`,
+        method: 'POST',
+        body: formData,
+      })
+    },
+
+    updateCustomer(customerId: number, formData: FormData) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}`,
+        method: 'PATCH',
+        body: formData,
+      })
+    },
+
+    patchCustomer(customerId: number, formData: FormData) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}`,
+        method: 'PATCH',
+        body: formData,
+      })
+    },
+
+    deleteCustomer(customerId: number) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}`,
+        method: 'DELETE',
+      })
+    },
+
+    bulkDelete(customerIds: number[]) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/bulk-delete`,
+        method: 'DELETE',
+        body: { customer_ids: customerIds },
+      })
+    },
+
+    getAdditionalNotes(customerId: number) {
+      return request<{ customer_id: number; items: AdditionalNote[]; total_count: number }>({
+        path: `${basePath}/customers/${customerId}/notes`,
+      })
+    },
+
+    addAdditionalNote(customerId: number, note: string) {
+      return request<AdditionalNote>({
+        path: `${basePath}/customers/${customerId}/notes`,
+        method: 'POST',
+        body: { note },
+      })
+    },
+
+    updateAdditionalNote(customerId: number, noteId: number, note: string) {
+      return request<AdditionalNote>({
+        path: `${basePath}/customers/${customerId}/notes/${noteId}`,
+        method: 'PATCH',
+        body: { note },
+      })
+    },
+
+    deleteAdditionalNote(customerId: number, noteId: number) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}/notes/${noteId}`,
+        method: 'DELETE',
+      })
+    },
+
+    filterByStatus(status: string) {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/filter/status`,
+        query: { status_filter: status },
+      })
+    },
+
+    filterByPlatform(platform: string) {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/filter/platform`,
+        query: { platform },
+      })
+    },
+
+    summaryStats() {
+      return request<CustomerStatsResponse>({
+        path: `${basePath}/stats`,
+      })
+    },
+
+    basicView(limit = 50) {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/bazakorinish`,
+        query: { limit },
+      })
+    },
+
+    periodStats() {
+      return request<unknown>({
+        path: `${basePath}/stats/period`,
+      })
+    },
+
+    filterByDate(start_date: string, end_date?: string) {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/filter/date`,
+        query: { start_date, end_date },
+      })
+    },
+
+    statusSummary() {
+      return request<CustomerStatusSummaryResponse>({
+        path: `${basePath}/customers/stats/summary`,
+      })
+    },
+
+    periodReport(params?: CustomerPeriodReportParams) {
+      return request<CustomerPeriodReportResponse>({
+        path: `${basePath}/customers/report/period`,
+        query: params,
+      })
+    },
+
+    archivedCustomers() {
+      return request<CustomerSummary[]>({
+        path: `${basePath}/customers/archived`,
+      })
+    },
+
+    restoreCustomer(customerId: number) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}/restore`,
+        method: 'POST',
+      })
+    },
+
+    hardDeleteCustomer(customerId: number) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/${customerId}/hard`,
+        method: 'DELETE',
+      })
+    },
+
+    bulkHardDelete(customerIds: number[]) {
+      return request<SuccessResponse>({
+        path: `${basePath}/customers/bulk-hard-delete`,
+        method: 'DELETE',
+        body: { customer_ids: customerIds },
+      })
+    },
+  }
+
+  return service
+}
+
 export const crmService = {
-  latest(limit = 50) {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/latest',
-      query: { limit },
-    })
-  },
-
-  dashboard(params?: CrmDashboardParams) {
-    return request<CrmDashboardResponse>({
-      path: '/crm/dashboard',
-      query: params,
-    })
-  },
-
-  async dashboardWithAllCustomers(pageSize = 50) {
-    const firstPage = await this.dashboard({ page: 1, page_size: pageSize, show_all: true })
-    const totalPages = Math.max(firstPage.total_pages ?? 1, 1)
-
-    if (totalPages <= 1) {
-      return firstPage
-    }
-
-    const remainingPages = await Promise.all(
-      Array.from({ length: totalPages - 1 }, (_, index) =>
-        this.dashboard({ page: index + 2, page_size: pageSize, show_all: true }),
-      ),
-    )
-
-    return {
-      ...firstPage,
-      customers: [
-        ...firstPage.customers,
-        ...remainingPages.flatMap((page) => page.customers),
-      ],
-      page: 1,
-    }
-  },
-
-  detail(customerId: number) {
-    return request<CustomerSummary>({
-      path: `/crm/detail/${customerId}`,
-    })
-  },
-
-  dynamicStatuses() {
-    return request<DynamicStatusOption[]>({
-      path: '/crm/statuses/dynamic',
-    })
-  },
-
-  createCustomer(formData: FormData) {
-    return request<CreateResponse>({
-      path: '/crm/customers',
-      method: 'POST',
-      body: formData,
-    })
-  },
-
-  updateCustomer(customerId: number, formData: FormData) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}`,
-      method: 'PATCH',
-      body: formData,
-    })
-  },
-
-  patchCustomer(customerId: number, formData: FormData) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}`,
-      method: 'PATCH',
-      body: formData,
-    })
-  },
-
-  deleteCustomer(customerId: number) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}`,
-      method: 'DELETE',
-    })
-  },
-
-  bulkDelete(customerIds: number[]) {
-    return request<SuccessResponse>({
-      path: '/crm/customers/bulk-delete',
-      method: 'DELETE',
-      body: { customer_ids: customerIds },
-    })
-  },
-
-  getAdditionalNotes(customerId: number) {
-    return request<{ customer_id: number; items: AdditionalNote[]; total_count: number }>({
-      path: `/crm/customers/${customerId}/notes`,
-    })
-  },
-
-  addAdditionalNote(customerId: number, note: string) {
-    return request<AdditionalNote>({
-      path: `/crm/customers/${customerId}/notes`,
-      method: 'POST',
-      body: { note },
-    })
-  },
-
-  updateAdditionalNote(customerId: number, noteId: number, note: string) {
-    return request<AdditionalNote>({
-      path: `/crm/customers/${customerId}/notes/${noteId}`,
-      method: 'PATCH',
-      body: { note },
-    })
-  },
-
-  deleteAdditionalNote(customerId: number, noteId: number) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}/notes/${noteId}`,
-      method: 'DELETE',
-    })
-  },
-
-  filterByStatus(status: string) {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/filter/status',
-      query: { status_filter: status },
-    })
-  },
-
-  filterByPlatform(platform: string) {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/filter/platform',
-      query: { platform },
-    })
-  },
-
-  summaryStats() {
-    return request<CustomerStatsResponse>({
-      path: '/crm/stats',
-    })
-  },
-
-  basicView(limit = 50) {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/bazakorinish',
-      query: { limit },
-    })
-  },
-
-  periodStats() {
-    return request<unknown>({
-      path: '/crm/stats/period',
-    })
-  },
-
-  filterByDate(start_date: string, end_date?: string) {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/filter/date',
-      query: { start_date, end_date },
-    })
-  },
-
-  statusSummary() {
-    return request<CustomerStatusSummaryResponse>({
-      path: '/crm/customers/stats/summary',
-    })
-  },
-
-  periodReport(params?: CustomerPeriodReportParams) {
-    return request<CustomerPeriodReportResponse>({
-      path: '/crm/customers/report/period',
-      query: params,
-    })
-  },
+  ...createCrmCustomerService('/crm'),
 
   salesStats(customer_type?: string) {
     return request<SalesStatsResponse>({
@@ -344,34 +383,6 @@ export const crmService = {
     })
   },
 
-  archivedCustomers() {
-    return request<CustomerSummary[]>({
-      path: '/crm/customers/archived',
-    })
-  },
-
-  restoreCustomer(customerId: number) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}/restore`,
-      method: 'POST',
-    })
-  },
-
-  hardDeleteCustomer(customerId: number) {
-    return request<SuccessResponse>({
-      path: `/crm/customers/${customerId}/hard`,
-      method: 'DELETE',
-    })
-  },
-
-  bulkHardDelete(customerIds: number[]) {
-    return request<SuccessResponse>({
-      path: '/crm/customers/bulk-hard-delete',
-      method: 'DELETE',
-      body: { customer_ids: customerIds },
-    })
-  },
-
   salesManagerCustomers(salesManagerId: number, params?: SalesManagerLeadsParams) {
     return request<SalesManagerLeadsResponse>({
       path: `/crm/sales-managers/${salesManagerId}/customers`,
@@ -400,3 +411,56 @@ export const crmService = {
     })
   },
 }
+
+const outboundCrmBasePath = '/outbound-crm'
+const outboundCrmCustomers = createCrmCustomerService(outboundCrmBasePath)
+
+export const outboundCrmService = {
+  ...outboundCrmCustomers,
+
+  listStatuses() {
+    return request<ManagementStatusRecord[]>({
+      path: `${outboundCrmBasePath}/statuses`,
+    })
+  },
+
+  // Outbound CRM has no /statuses/dynamic endpoint, so active statuses are mapped to the same shape.
+  async dynamicStatuses(): Promise<DynamicStatusOption[]> {
+    const statuses = await outboundCrmService.listStatuses()
+
+    return statuses
+      .filter((status) => status.is_active)
+      .sort((left, right) => left.order - right.order)
+      .map((status) => ({
+        value: status.name,
+        label: status.display_name || status.name,
+        color: status.color || '#64748b',
+        order: status.order,
+      }))
+  },
+
+  createStatus(payload: ManagementStatusCreatePayload) {
+    return request<ManagementStatusRecord>({
+      path: `${outboundCrmBasePath}/statuses`,
+      method: 'POST',
+      body: payload,
+    })
+  },
+
+  updateStatus(statusId: number, payload: Partial<ManagementStatusUpdatePayload>) {
+    return request<ManagementStatusRecord>({
+      path: `${outboundCrmBasePath}/statuses/${statusId}`,
+      method: 'PATCH',
+      body: payload,
+    })
+  },
+
+  deleteStatus(statusId: number) {
+    return request<SuccessResponse>({
+      path: `${outboundCrmBasePath}/statuses/${statusId}`,
+      method: 'DELETE',
+    })
+  },
+}
+
+export type CrmCustomerService = ReturnType<typeof createCrmCustomerService>

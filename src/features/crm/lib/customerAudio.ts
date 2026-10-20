@@ -1,6 +1,6 @@
 import { env } from '../../../shared/config/env'
 
-export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: string | null) {
+export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: string | null, apiBasePath = '/crm') {
   if (audioUrl) {
     return audioUrl
   }
@@ -9,5 +9,5 @@ export function resolveCustomerAudioUrl(audioFileId?: string | null, audioUrl?: 
     return null
   }
 
-  return `${env.apiBaseUrl.replace(/\/$/, '')}/crm/customers/audio/${audioFileId}`
+  return `${env.apiBaseUrl.replace(/\/$/, '')}${apiBasePath}/customers/audio/${audioFileId}`
 }

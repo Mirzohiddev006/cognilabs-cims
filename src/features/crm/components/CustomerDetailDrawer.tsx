@@ -2,7 +2,7 @@ import { createPortal } from 'react-dom'
 import React, { useEffect, useMemo, useState } from 'react'
 import { cn } from '../../../shared/lib/cn'
 import { useTranslation } from 'react-i18next'
-import { crmService } from '../../../shared/api/services/crm.service'
+import { useCrmScope } from '../lib/crmScope'
 import type { CustomerSummary } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import {
@@ -116,6 +116,7 @@ export function CustomerDetailContent({
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const { user: currentUser } = useAuth()
+  const { service: crmService } = useCrmScope()
   const customerName = getCustomerDisplayName(customer)
   const formattedNotes = formatCustomerNotes(customer.notes)
   const recallTone = getRecallTimeTone(customer.recall_time)
@@ -520,6 +521,7 @@ export function CustomerDetailDrawer({
   onEdit?: (customer: CustomerSummary) => void
 }) {
   const { t } = useTranslation()
+  const { service: crmService, apiBasePath } = useCrmScope()
   const detailQuery = useAsyncData(
     () => crmService.detail(customerId ?? 0),
     [customerId, open],
@@ -551,8 +553,8 @@ export function CustomerDetailDrawer({
   const customer = detailQuery.data?.id === customerId ? detailQuery.data : initialCustomer ?? null
   const customerPhoneNumber = (customer?.phone_number ?? customer?.phone ?? '').trim()
   const audioSource = useMemo(
-    () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url),
-    [customer?.audio_file_id, customer?.audio_url],
+    () => resolveCustomerAudioUrl(customer?.audio_file_id, customer?.audio_url, apiBasePath),
+    [apiBasePath, customer?.audio_file_id, customer?.audio_url],
   )
 
   if (!open) {

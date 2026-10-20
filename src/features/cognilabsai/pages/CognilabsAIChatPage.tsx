@@ -1328,7 +1328,8 @@ export function CognilabsAIChatPage() {
   ]
 
   function handleReturnToCrm() {
-    navigate('/crm')
+    const returnTo = searchParams.get('return_to')
+    navigate(returnTo === '/outbound-crm' ? returnTo : '/crm')
   }
 
   return (

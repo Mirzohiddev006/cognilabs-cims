@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { crmService } from '../../../shared/api/services/crm.service'
+import { useNavigate } from 'react-router-dom'
+import { useCrmScope } from '../lib/crmScope'
 import type { CustomerSummary } from '../../../shared/api/types'
 import { useAsyncData } from '../../../shared/hooks/useAsyncData'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -28,6 +29,8 @@ export function CrmArchivedPage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const { confirm } = useConfirm()
+  const { service: crmService, routeBasePath, title } = useCrmScope()
+  const navigate = useNavigate()
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
@@ -111,7 +114,7 @@ export function CrmArchivedPage() {
   if (archivedQuery.isLoading && !archivedQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow="CRM"
+        eyebrow={title}
         title="Arxiv yuklanmoqda"
         description="Arxivlangan mijozlar ro'yxati yuklanmoqda..."
       />
@@ -121,7 +124,7 @@ export function CrmArchivedPage() {
   if (archivedQuery.isError && !archivedQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow="CRM"
+        eyebrow={title}
         title="Arxiv yuklanmadi"
         description="Arxivlangan mijozlar ro'yxatini yuklashda xato yuz berdi."
         actionLabel={t('common.retry')}
@@ -136,7 +139,7 @@ export function CrmArchivedPage() {
         <div className="px-6 py-5 sm:px-8 sm:py-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--blue-text)]">CRM</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[var(--blue-text)]">{title}</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
                 Arxiv
               </h1>
@@ -145,6 +148,14 @@ export function CrmArchivedPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(routeBasePath)}
+                className="rounded-xl"
+              >
+                {t('customers.detail.back_to', 'Back to {{title}}', { title })}
+              </Button>
               <Button
                 variant="secondary"
                 size="sm"
@@ -177,7 +188,7 @@ export function CrmArchivedPage() {
         <CardContent>
           {customers.length === 0 ? (
             <EmptyStateBlock
-              eyebrow="CRM"
+              eyebrow={title}
               title="Arxiv bo'sh"
               description="Hozircha arxivlangan mijozlar yo'q."
             />

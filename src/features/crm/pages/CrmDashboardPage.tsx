@@ -3,7 +3,6 @@ import { useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAppShell } from '../../../app/hooks/useAppShell'
-import { crmService } from '../../../shared/api/services/crm.service'
 import { env } from '../../../shared/config/env'
 import type { CustomerSummary, DynamicStatusOption } from '../../../shared/api/types'
 import { useConfirm } from '../../../shared/confirm/useConfirm'
@@ -30,9 +29,12 @@ import { EmptyStateBlock, ErrorStateBlock, LoadingStateBlock } from '../../../sh
 import { AudioPlayerModal } from '../components/AudioPlayerModal'
 import { CustomerDetailDrawer } from '../components/CustomerDetailDrawer'
 import { CustomerFormModal, type CustomerFormValues } from '../components/CustomerFormModal'
+import { useCrmScope } from '../lib/crmScope'
 const emptyCustomers: CustomerSummary[] = []
 const emptyStatuses: DynamicStatusOption[] = []
-const CRM_RETURN_STATE_KEY = 'cims:crm-return-state'
+function getCrmReturnStateKey(scopeKey: string) {
+  return `cims:${scopeKey}-return-state`
+}
 
 const initialFormValues: CustomerFormValues = {
   full_name: '',
@@ -220,13 +222,13 @@ type CrmReturnState = {
 
 type CrmViewState = Omit<CrmReturnState, 'customerId' | 'customerIndex'>
 
-function readCrmReturnState(): CrmReturnState | null {
+function readCrmReturnState(scopeKey: string): CrmReturnState | null {
   if (typeof window === 'undefined') {
     return null
   }
 
   try {
-    const raw = window.sessionStorage.getItem(CRM_RETURN_STATE_KEY)
+    const raw = window.sessionStorage.getItem(getCrmReturnStateKey(scopeKey))
     if (!raw) return null
 
     const parsed = JSON.parse(raw) as CrmReturnState
@@ -246,23 +248,23 @@ function readCrmReturnState(): CrmReturnState | null {
   }
 }
 
-function saveCrmReturnState(state: CrmReturnState) {
+function saveCrmReturnState(scopeKey: string, state: CrmReturnState) {
   if (typeof window === 'undefined') {
     return
   }
 
-  window.sessionStorage.setItem(CRM_RETURN_STATE_KEY, JSON.stringify(state))
+  window.sessionStorage.setItem(getCrmReturnStateKey(scopeKey), JSON.stringify(state))
 }
 
-function clearCrmReturnState() {
+function clearCrmReturnState(scopeKey: string) {
   if (typeof window === 'undefined') {
     return
   }
 
-  window.sessionStorage.removeItem(CRM_RETURN_STATE_KEY)
+  window.sessionStorage.removeItem(getCrmReturnStateKey(scopeKey))
 }
 
-function resolveAudioUrl(customer: CustomerSummary) {
+function resolveAudioUrl(customer: CustomerSummary, apiBasePath: string) {
   if (customer.audio_url) {
     return customer.audio_url
   }
@@ -271,7 +273,7 @@ function resolveAudioUrl(customer: CustomerSummary) {
     return null
   }
 
-  return `${env.apiBaseUrl.replace(/\/$/, '')}/crm/customers/audio/${customer.audio_file_id}`
+  return `${env.apiBaseUrl.replace(/\/$/, '')}${apiBasePath}/customers/audio/${customer.audio_file_id}`
 }
 
 function normalizeDateValue(value?: string | null) {
@@ -468,7 +470,8 @@ export function CrmDashboardPage() {
   const { showToast } = useToast()
   const { confirm } = useConfirm()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [initialReturnState] = useState(() => readCrmReturnState())
+  const { service: crmService, apiBasePath, routeBasePath, storageKey, kind: crmKind } = useCrmScope()
+  const [initialReturnState] = useState(() => readCrmReturnState(storageKey))
 
   const [search, setSearch] = useState(() => initialReturnState?.search ?? '')
   const deferredSearch = useDeferredValue(search)
@@ -572,7 +575,7 @@ export function CrmDashboardPage() {
         }, { replace: true })
       })
 
-  }, [searchParams, setSearchParams])
+  }, [crmService, searchParams, setSearchParams])
 
   useEffect(() => {
     const conversationIdParam = searchParams.get('conversation_id')
@@ -761,7 +764,7 @@ export function CrmDashboardPage() {
     const targetIndex = displayedCustomers.findIndex((customer) => customer.id === targetCustomerId)
     if (targetIndex < 0) {
       hasRestoredReturnTargetRef.current = true
-      clearCrmReturnState()
+      clearCrmReturnState(storageKey)
       return
     }
 
@@ -777,7 +780,7 @@ export function CrmDashboardPage() {
         row.scrollIntoView({ block: 'center', behavior: 'smooth' })
         hasRestoredReturnTargetRef.current = true
         restoreScrollAttemptsRef.current = 0
-        clearCrmReturnState()
+        clearCrmReturnState(storageKey)
         restoreScrollTimerRef.current = null
         return
       }
@@ -808,6 +811,7 @@ export function CrmDashboardPage() {
     selectedStatusCustomersQuery.data,
     selectedStatusFilterValues.length,
     shouldRestoreReturnState,
+    storageKey,
     tablePage,
   ])
 
@@ -855,13 +859,13 @@ export function CrmDashboardPage() {
     const customerIndex = displayedCustomers.findIndex((customer) => customer.id === customerId)
     const effectiveIndex = customerIndex >= 0 ? customerIndex : Math.max(0, (currentViewState.tablePage - 1) * pageSizeValue)
 
-    saveCrmReturnState({
+    saveCrmReturnState(storageKey, {
       ...currentViewState,
       customerId,
       customerIndex: effectiveIndex,
     })
     setDetailCustomer(null)
-    navigate(`/cognilabsai/chat?telegram_search=${encodeURIComponent(phoneNumber)}&return_customer_id=${customerId}`)
+    navigate(`/cognilabsai/chat?telegram_search=${encodeURIComponent(phoneNumber)}&return_customer_id=${customerId}&return_to=${encodeURIComponent(routeBasePath)}`)
   }
 
   function syncCustomerInUi(nextCustomer: CustomerSummary) {
@@ -984,7 +988,7 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isLoading && !dashboardQuery.data) {
     return (
       <LoadingStateBlock
-        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+        eyebrow={crmKind === 'outbound' ? t('outbound_crm.page.eyebrow', 'Outbound CRM workspace') : t('customers.page.eyebrow', 'CRM workspace')}
         title={t('customers.loading.dashboard.title', 'CRM dashboard loading')}
         description={t('customers.loading.dashboard.description', 'Retrieving customers and summary statistics.')}
       />
@@ -994,7 +998,7 @@ export function CrmDashboardPage() {
   if (dashboardQuery.isError && !dashboardQuery.data) {
     return (
       <ErrorStateBlock
-        eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+        eyebrow={crmKind === 'outbound' ? t('outbound_crm.page.eyebrow', 'Outbound CRM workspace') : t('customers.page.eyebrow', 'CRM workspace')}
         title={t('customers.errors.dashboard.title', 'CRM dashboard failed to load')}
         description={t('customers.errors.dashboard.description', 'Could not retrieve CRM data. Please retry.')}
         actionLabel={t('common.retry', 'Retry')}
@@ -1067,7 +1071,12 @@ export function CrmDashboardPage() {
           <Button variant="secondary" onClick={() => void refreshAll()}>
             {t('customers.actions.refresh', 'Refresh')}
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/crm/archived')}>
+          {crmKind === 'outbound' ? (
+            <Button variant="secondary" onClick={() => navigate(`${routeBasePath}/statuses`)}>
+              {t('outbound_crm.actions.statuses', 'Statuses')}
+            </Button>
+          ) : null}
+          <Button variant="secondary" onClick={() => navigate(`${routeBasePath}/archived`)}>
             Arxiv
           </Button>
           <Button onClick={openCreateModal}>{t('customers.actions.add', 'Add customer')}</Button>
@@ -1259,7 +1268,7 @@ export function CrmDashboardPage() {
             className="rounded-none border-x-0 border-b-0"
             emptyState={
               <EmptyStateBlock
-                eyebrow={t('customers.page.eyebrow', 'CRM workspace')}
+                eyebrow={crmKind === 'outbound' ? t('outbound_crm.page.eyebrow', 'Outbound CRM workspace') : t('customers.page.eyebrow', 'CRM workspace')}
                 title={t('customers.table.empty_title', 'No customers found')}
                 description={t('customers.table.empty_description', 'The current filters returned no customer records.')}
               />
@@ -1349,7 +1358,7 @@ export function CrmDashboardPage() {
                 header: t('customers.table.audio', 'Audio'),
                 width: '140px',
                 render: (row) => {
-                  const audioSource = resolveAudioUrl(row)
+                  const audioSource = resolveAudioUrl(row, apiBasePath)
 
                   if (!audioSource) {
                     return '-'
